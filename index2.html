@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>归档 · 樱花物语</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600&family=Noto+Serif+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- APlayer 和 MetingJS 核心库，用于支持音乐播放 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/meting@2/dist/Meting.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(145deg, #fff9f7 0%, #ffeef4 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            color: #2e2a2b;
+            line-height: 1.5;
+            scroll-behavior: smooth;
+        }
+
+        .sakura-flurry {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+            overflow: hidden;
+        }
+
+        .petal {
+            position: absolute;
+            background: radial-gradient(circle, #ffdfe6, #ffb7c5);
+            width: 12px;
+            height: 12px;
+            border-radius: 80% 0 55% 40% / 60% 45% 55% 40%;
+            opacity: 0.7;
+            filter: blur(0.3px);
+            transform: rotate(15deg);
+            box-shadow: 0 1px 2px rgba(255, 140, 170, 0.2);
+            animation: fall linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translateY(-20vh) rotate(0deg);
+                opacity: 0.5;
+            }
+            80% {
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .archive-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 2rem 4rem;
+            position: relative;
+            z-index: 20;
+        }
+
+        .archive-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .blog-title {
+            font-size: 2.8rem;
+            font-weight: 600;
+            font-family: 'Noto Serif SC', serif;
+            background: linear-gradient(135deg, #e6728f, #b34262);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            letter-spacing: -0.5px;
+        }
+
+        .blog-title i {
+            background: none;
+            color: #ec8ca8;
+            font-size: 2.2rem;
+        }
+
+        .subhead {
+            margin-top: 0.5rem;
+            font-size: 0.95rem;
+            color: #b45f6e;
+            background: #fff0f3aa;
+            display: inline-block;
+            padding: 0.3rem 1.2rem;
+            border-radius: 40px;
+            backdrop-filter: blur(2px);
+        }
+
+        .nav-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin: 2rem 0 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            font-weight: 500;
+            color: #b34e6b;
+            padding: 0.4rem 0;
+            border-bottom: 2px solid transparent;
+            transition: 0.2s;
+            font-size: 1rem;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            border-bottom-color: #f6a5c0;
+            color: #9e3c58;
+        }
+
+        .archive-sections {
+            display: flex;
+            flex-direction: column;
+            gap: 2.5rem;
+            margin: 2rem 0 2rem;
+        }
+
+        .section-block {
+            background: rgba(255, 250, 252, 0.88);
+            backdrop-filter: blur(2px);
+            border-radius: 2rem;
+            border: 1px solid #ffe2ec;
+            overflow: hidden;
+            transition: all 0.2s;
+            box-shadow: 0 8px 18px rgba(233, 130, 156, 0.05);
+        }
+
+        .section-block:hover {
+            box-shadow: 0 14px 26px -8px #ffb7c980;
+            background: #fffffcee;
+        }
+
+        .section-title {
+            padding: 1.2rem 2rem 0.6rem 2rem;
+            font-size: 1.6rem;
+            font-weight: 600;
+            font-family: 'Noto Serif SC', serif;
+            color: #4f2f39;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 2px solid #ffe0ea;
+            margin-bottom: 1rem;
+        }
+
+        .section-title i {
+            font-size: 1.7rem;
+            color: #e982a2;
+        }
+
+        .section-title span {
+            background: #ffeef3;
+            padding: 0.2rem 0.8rem;
+            border-radius: 60px;
+            font-size: 0.75rem;
+            font-weight: normal;
+            color: #bf6c86;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 1.5rem;
+            padding: 0.8rem 2rem 2rem 2rem;
+        }
+
+        .media-card {
+            background: rgba(255, 255, 250, 0.95);
+            border-radius: 1.6rem;
+            overflow: hidden;
+            border: 1px solid #ffecf0;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.02);
+        }
+
+        .media-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 16px 24px -8px #f7bfd280;
+            background: #fffffffa;
+        }
+
+        /* 嵌入式视频容器 */
+        .video-wrapper {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: #1a1116;
+        }
+        .video-wrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* 音乐播放器容器 - MetingJS 自动渲染 */
+        .music-player {
+            padding: 1rem;
+            background: #1a1116;
+        }
+
+        /* 外链卡片样式 */
+        .link-card-content {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .external-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #ffe9ef;
+            padding: 0.6rem 1rem;
+            border-radius: 1.2rem;
+            color: #b95272;
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: 0.2s;
+            word-break: break-all;
+        }
+        .external-link:hover {
+            background: #ffdfe8;
+            color: #9c405e;
+            transform: translateX(2px);
+        }
+
+        /* 网盘卡片样式 — 纯链接+复制 */
+        .drive-link-area {
+            background: #fff5f7;
+            border-radius: 1rem;
+            padding: 0.7rem 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            border: 1px solid #ffe0ea;
+        }
+        .drive-url {
+            font-size: 0.7rem;
+            color: #be6b84;
+            font-family: monospace;
+            word-break: break-all;
+            flex: 1;
+            background: #fff0f3;
+            padding: 0.4rem 0.7rem;
+            border-radius: 30px;
+        }
+        .copy-drive-btn {
+            background: #ffe9ef;
+            border: none;
+            padding: 0.4rem 1rem;
+            border-radius: 30px;
+            color: #b95272;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .copy-drive-btn:hover {
+            background: #ffdfe8;
+            color: #9c405e;
+        }
+
+        .card-info {
+            padding: 0.9rem 1rem 1rem;
+            flex: 1;
+        }
+
+        .card-title {
+            font-weight: 600;
+            font-size: 1rem;
+            color: #4f2f39;
+            margin-bottom: 0.2rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .card-desc {
+            font-size: 0.7rem;
+            color: #b27b88;
+            margin-bottom: 0.7rem;
+            word-break: break-word;
+        }
+
+        .type-badge {
+            background: #ffe4ec;
+            border-radius: 20px;
+            font-size: 0.6rem;
+            padding: 0.2rem 0.6rem;
+            color: #c7708b;
+        }
+
+        .placeholder-marker {
+            background: #fff0f0;
+            border-left: 4px solid #ff98b9;
+            padding: 0.6rem 1rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            color: #c25070;
+            margin: 0.5rem 2rem 1.5rem 2rem;
+        }
+
+        hr.sakura-divider {
+            margin: 2rem 0;
+            border: none;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #f7bfd2, #ff90b5, #f7bfd2, transparent);
+        }
+
+        .blog-footer {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 1.2rem;
+            border-top: 1px solid #ffd5e2;
+            font-size: 0.8rem;
+            color: #b1798a;
+        }
+
+        @media (max-width: 760px) {
+            .archive-container { padding: 1rem 1rem 2rem; }
+            .card-grid { padding: 0.8rem 1rem 1.5rem 1rem; }
+            .section-title { padding: 1rem 1rem 0.5rem 1rem; font-size: 1.3rem; }
+            .blog-title { font-size: 2rem; }
+        }
+
+        .sakura-icon { color: #f290ae; }
+    </style>
+</head>
+<body>
+<div class="sakura-flurry" id="sakura-flurry"></div>
+
+<main class="archive-container">
+    <header class="archive-header">
+        <div class="blog-title">
+            <i class="fas fa-dharmachakra"></i>
+            归档
+            <i class="fas fa-palette"></i>
+        </div>
+        <div class="subhead"><i class="fas fa-cherry-blossom"></i> 一切都被我归档了喵</div>
+        <div class="nav-links">
+            <a href="index1.html">首页</a>
+            <a href="index.html">关于</a>
+            <a href="index2.html" class="active">归档</a>
+            <a href="index3.html">留言</a>
+        </div>
+    </header>
+
+    <div class="archive-sections">
+        <!-- ========= 1. 视频区域 ========= B站嵌入式 -->
+        <div class="section-block">
+            <div class="section-title">
+                <i class="fas fa-video"></i> 视频区域
+                <span>🎬 影绘</span>
+            </div>
+            <div class="card-grid">
+                <!-- 视频卡片 1：B站嵌入示例 -->
+                <div class="media-card">
+                    <div class="video-wrapper">
+                        <iframe src="https://player.bilibili.com/player.html?isOutside=true&aid=114163972047630&bvid=BV1KbQ1YGEY8&cid=28870445519&p=1&autoplay=0&high_quality=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;"></iframe>
+                    </div>
+                    <div class="card-info">
+                        <div class="card-title">《少女乐队的呐喊》官方MV <span class="type-badge">🎬 视频</span></div>
+                        <div class="card-desc"># 爆ぜて咲く (爆裂绽放) 中文字幕</div>
+                    </div>
+                </div>
+                <!-- 视频卡片 2：B站嵌入，待填 -->
+                <div class="media-card">
+                    <div class="video-wrapper">
+                        <iframe src="https://player.bilibili.com/player.html?isOutside=true&aid=114402980267160&bvid=BV1cuLdzUECX&cid=29621028633&p=1&autoplay=0&high_quality=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;"></iframe>
+                    </div>
+                    <div class="card-info">
+                        <div class="card-title"># <span class="type-badge">🎬 视频</span></div>
+                        <div class="card-desc"># 请替换 bvid=你的BV号</div>
+                    </div>
+                </div>
+                <!-- 视频卡片 3：B站嵌入，待填 -->
+                <div class="media-card">
+                    <div class="video-wrapper">
+                        <iframe src="https://player.bilibili.com/player.html?isOutside=true&aid=114150047090866&bvid=BV1JzQpYTEft&cid=28831646887&p=1&autoplay=0&high_quality=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;"></iframe>
+                    </div>
+                    <div class="card-info">
+                        <div class="card-title"># <span class="type-badge">🎬 视频</span></div>
+                        <div class="card-desc"># 请替换 bvid=你的BV号</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========= 2. 音乐区域 ========= 极简 <audio> 标签，贴直链即用 -->
+        <div class="section-block">
+            <div class="section-title">
+                <i class="fas fa-headphones"></i> 音乐区域
+                <span>🎵 音律</span>
+            </div>
+            <div class="card-grid">
+                <!-- 音乐卡片 1：把你的 mp3 直链填到 src 里 -->
+                <div class="media-card">
+                    <div class="media-player">
+                        <audio controls preload="metadata" style="width: 100%;">
+                            <source src="AIscream.mp3" type="audio/mpeg">
+                            您的浏览器不支持 audio 标签。
+                        </audio>
+                    </div>
+                    <div class="card-info">
+                        <div class="card-title"># 音乐标题 <span class="type-badge">🎵 音乐</span></div>
+                        <div class="card-desc"># 音乐描述</div>
+                    </div>
+                </div>
+                <!-- 音乐卡片 2 -->
+                <div class="media-card">
+                    <div class="media-player">
+                        <audio controls preload="metadata" style="width: 100%;">
+                            <source src="BOW%20AND%20ARROW.mp3" type="audio/mpeg">
+                            您的浏览器不支持 audio 标签。
+                        </audio>
+                    </div>
+                    <div class="card-info">
+                        <div class="card-title"># 音乐标题 <span class="type-badge">🎵 音乐</span></div>
+                        <div class="card-desc"># 音乐描述</div>
+                    </div>
+                </div>
+                <!-- 音乐卡片 3 -->
+                <div class="media-card">
+                    <div class="media-player">
+                        <audio controls preload="metadata" style="width: 100%;">
+                            <source src="https://cdn.jsdelivr.net/gh/U1s1-king/flac@main/TWO_AS_ONE.mp3" type="audio/mpeg">
+                            您的浏览器不支持 audio 标签。
+                        </audio>
+                    </div>
+                    <div class="card-info">
+                        <div class="card-title"># 音乐标题 <span class="type-badge">🎵 音乐</span></div>
+                        <div class="card-desc"># 音乐描述</div>
+                    </div>
+                </div>
+            </div>
+            <div class="placeholder-marker">
+                <i class="fas fa-info-circle"></i> # 使用方法：把 .mp3 直链填到上面 <code style="background:#ffe0e8; padding:2px 5px; border-radius:12px;">src=""</code> 的引号里 #
+            </div>
+        </div>
+
+        <!-- ========= 3. 网站外链区域 ========= 使用 a 标签，直接可点 -->
+        <div class="section-block">
+            <div class="section-title">
+                <i class="fas fa-link"></i> 网站外链区域
+                <span>🔗 友邻</span>
+            </div>
+            <div class="card-grid">
+                <!-- 外链卡片 1 -->
+                <div class="media-card">
+                    <div class="card-info" style="padding: 1.2rem;">
+                        <div class="card-title"><span class="type-badge">🔗 cloudflare网站外链</span></div>
+                        <div class="card-desc">cloudflare</div>
+                        <div class="link-card-content">
+                            <a href="https://www.cloudflare.com/" target="_blank" rel="noopener noreferrer" class="external-link">
+                                <i class="fas fa-external-link-alt"></i> 点击访问网站
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <!-- 外链卡片 2 -->
+                <div class="media-card">
+                    <div class="card-info" style="padding: 1.2rem;">
+                        <div class="card-title"><span class="type-badge">🔗 telegram网站外链</span></div>
+                        <div class="card-desc">telegram</div>
+                        <div class="link-card-content">
+                            <a href="https://web.telegram.org" target="_blank" rel="noopener noreferrer" class="external-link">
+                                <i class="fas fa-external-link-alt"></i> 点击访问网站
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <!-- 外链卡片 3 -->
+                <div class="media-card">
+                    <div class="card-info" style="padding: 1.2rem;">
+                        <div class="card-title"><span class="type-badge">🔗 pixiv网站外链</span></div>
+                        <div class="card-desc">pixiv</div>
+                        <div class="link-card-content">
+                            <a href="https://www.pixiv.net/" target="_blank" rel="noopener noreferrer" class="external-link">
+                                <i class="fas fa-external-link-alt"></i> 点击访问网站
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========= 4. 网盘资源区域 =========-->
+        <div class="section-block">
+            <div class="section-title">
+                <i class="fas fa-cloud-download-alt"></i> 网盘资源区域
+                <span>📦 仓储</span>
+            </div>
+            <div class="card-grid">
+                <!-- 网盘卡片 1 -->
+                <div class="media-card">
+                    <div class="card-info" style="padding: 1.2rem;">
+                        <div class="card-title"># <span class="type-badge">📦 网盘资源</span></div>
+                        <div class="card-desc">#</div>
+                        <div class="drive-link-area">
+                            <span class="drive-url" id="drive_url_1"># (请填写网盘链接)</span>
+                            <button class="copy-drive-btn" data-clip="drive_url_1"><i class="fas fa-copy"></i> 复制链接</button>
+                        </div>
+                    </div>
+                </div>
+                <!-- 网盘卡片 2 -->
+                <div class="media-card">
+                    <div class="card-info" style="padding: 1.2rem;">
+                        <div class="card-title"># <span class="type-badge">📦 网盘资源</span></div>
+                        <div class="card-desc">#</div>
+                        <div class="drive-link-area">
+                            <span class="drive-url" id="drive_url_2"># (请填写网盘链接)</span>
+                            <button class="copy-drive-btn" data-clip="drive_url_2"><i class="fas fa-copy"></i> 复制链接</button>
+                        </div>
+                    </div>
+                </div>
+                <!-- 网盘卡片 3 -->
+                <div class="media-card">
+                    <div class="card-info" style="padding: 1.2rem;">
+                        <div class="card-title"># <span class="type-badge">📦 网盘资源</span></div>
+                        <div class="card-desc">#</div>
+                        <div class="drive-link-area">
+                            <span class="drive-url" id="drive_url_3"># (请填写网盘链接)</span>
+                            <button class="copy-drive-btn" data-clip="drive_url_3"><i class="fas fa-copy"></i> 复制链接</button>
+                        </div>
+                    </div>
+                </div>
+                <!-- 网盘卡片 4 -->
+                <div class="media-card">
+                    <div class="card-info" style="padding: 1.2rem;">
+                        <div class="card-title"># <span class="type-badge">📦 网盘资源</span></div>
+                        <div class="card-desc">#</div>
+                        <div class="drive-link-area">
+                            <span class="drive-url" id="drive_url_4">#</span>
+                            <button class="copy-drive-btn" data-clip="drive_url_4"><i class="fas fa-copy"></i> 复制链接</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <hr class="sakura-divider">
+    <footer class="blog-footer">
+        <p><i class="fas fa-cherry-blossom sakura-icon"></i> 万物皆可归档</p>
+        <p>© 2026 樱花物语 | 归档</p>
+    </footer>
+</main>
+
+<div id="lightbox" class="lightbox" style="display: none;"></div>
+
+<script>
+    // 樱花飘落效果（纯视觉，不影响结构）
+    (function() {
+        const flurry = document.getElementById('sakura-flurry');
+        if (!flurry) return;
+        let count = window.innerWidth < 700 ? 32 : 50;
+        function createPetal() {
+            const p = document.createElement('div');
+            p.classList.add('petal');
+            let size = 8 + Math.random() * 14;
+            p.style.width = size + 'px';
+            p.style.height = size * 0.9 + 'px';
+            p.style.left = Math.random() * 100 + '%';
+            p.style.animationDuration = 6 + Math.random() * 12 + 's';
+            p.style.animationDelay = Math.random() * 15 + 's';
+            p.style.opacity = 0.4 + Math.random() * 0.5;
+            return p;
+        }
+        for (let i = 0; i < count; i++) flurry.appendChild(createPetal());
+        setInterval(() => {
+            if (flurry.children.length < count - 6) {
+                for(let i=0;i<3;i++) flurry.appendChild(createPetal());
+            }
+            [...flurry.children].forEach(p => {
+                let rect = p.getBoundingClientRect();
+                if (rect.top > window.innerHeight + 100) p.remove();
+            });
+        }, 3200);
+    })();
+
+    // 复制功能（只用于网盘区域的复制按钮）
+    function copyToClipboard(text, msg) {
+        navigator.clipboard.writeText(text).then(() => {
+            let tip = document.getElementById('floatingTip');
+            if (!tip) {
+                tip = document.createElement('div');
+                tip.id = 'floatingTip';
+                tip.style.cssText = 'position:fixed; bottom:20px; left:50%; transform:translatex(-50%); background:#fff0f3; color:#c76f8b; padding:0.5rem 1rem; border-radius:30px; font-size:0.8rem; z-index:1000; border:1px solid #ffc2d4; backdrop-filter:blur(4px); font-family:monospace; white-space: nowrap;';
+                document.body.appendChild(tip);
+            }
+            tip.innerHTML = `<i class="fas fa-cherry-blossom"></i> ${msg}`;
+            tip.style.opacity = '1';
+            setTimeout(() => tip.style.opacity = '0', 1800);
+        }).catch(() => {
+            alert("手动复制吧：" + text);
+        });
+    }
+
+    // 绑定所有复制按钮
+    document.querySelectorAll('.copy-drive-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            let targetId = this.getAttribute('data-clip');
+            let elem = document.getElementById(targetId);
+            if (elem) {
+                let text = elem.innerText;
+                if (text === '# (请填写网盘链接)' || text === '#') {
+                    copyToClipboard('', '⚠️ 网盘链接未填写，请先在HTML中填入链接');
+                } else {
+                    copyToClipboard(text, '📋 网盘链接已复制');
+                }
+            }
+        });
+    });
+</script>
+</body>
+</html>
