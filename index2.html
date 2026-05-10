@@ -354,8 +354,37 @@
             .section-title { padding: 1rem 1rem 0.5rem 1rem; font-size: 1.3rem; }
             .blog-title { font-size: 2rem; }
         }
-
         .sakura-icon { color: #f290ae; }
+
+        /* 社交媒体/链接区 */
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 1.8rem;
+            margin: 2rem 0 1rem;
+            flex-wrap: wrap;
+        }
+
+        .social-links a {
+            background: #fff1f4;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #dc7c99;
+            font-size: 1.4rem;
+            transition: 0.2s;
+            text-decoration: none;
+            border: 1px solid #ffd2df;
+        }
+
+        .social-links a:hover {
+            background: #ffe2ea;
+            color: #b84f6e;
+            transform: translateY(-3px);
+        }
     </style>
 </head>
 <body>
@@ -382,7 +411,7 @@
         <div class="section-block">
             <div class="section-title">
                 <i class="fas fa-video"></i> 视频区域
-                <span>🎬 影绘</span>
+                <span>🎬 影视</span>
             </div>
             <div class="card-grid">
                 <!-- 视频卡片 1：B站嵌入示例 -->
@@ -392,7 +421,7 @@
                     </div>
                     <div class="card-info">
                         <div class="card-title">《少女乐队的呐喊》官方MV <span class="type-badge">🎬 视频</span></div>
-                        <div class="card-desc"># 爆ぜて咲く (爆裂绽放) 中文字幕</div>
+                        <div class="card-desc"># 爆ぜて咲く</div>
                     </div>
                 </div>
                 <!-- 视频卡片 2：B站嵌入，待填 -->
@@ -401,8 +430,8 @@
                         <iframe src="https://player.bilibili.com/player.html?isOutside=true&aid=114402980267160&bvid=BV1cuLdzUECX&cid=29621028633&p=1&autoplay=0&high_quality=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;"></iframe>
                     </div>
                     <div class="card-info">
-                        <div class="card-title"># <span class="type-badge">🎬 视频</span></div>
-                        <div class="card-desc"># 请替换 bvid=你的BV号</div>
+                        <div class="card-title">《少女乐队的呐喊》官方MV <span class="type-badge">🎬 视频</span></div>
+                        <div class="card-desc">「飛べない蝶は夢を見る」</div>
                     </div>
                 </div>
                 <!-- 视频卡片 3：B站嵌入，待填 -->
@@ -411,8 +440,8 @@
                         <iframe src="https://player.bilibili.com/player.html?isOutside=true&aid=114150047090866&bvid=BV1JzQpYTEft&cid=28831646887&p=1&autoplay=0&high_quality=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;"></iframe>
                     </div>
                     <div class="card-info">
-                        <div class="card-title"># <span class="type-badge">🎬 视频</span></div>
-                        <div class="card-desc"># 请替换 bvid=你的BV号</div>
+                        <div class="card-title">《少女乐队的呐喊》官方MV <span class="type-badge">🎬 视频</span></div>
+                        <div class="card-desc">「気鬱、白濁す」</div>
                     </div>
                 </div>
             </div>
@@ -422,7 +451,7 @@
         <div class="section-block">
             <div class="section-title">
                 <i class="fas fa-headphones"></i> 音乐区域
-                <span>🎵 音律</span>
+                <span>🎵 音乐</span>
             </div>
             <div class="card-grid">
                 <!-- 音乐卡片 1：把你的 mp3 直链填到 src 里 -->
@@ -434,8 +463,8 @@
                         </audio>
                     </div>
                     <div class="card-info">
-                        <div class="card-title"># 音乐标题 <span class="type-badge">🎵 音乐</span></div>
-                        <div class="card-desc"># 音乐描述</div>
+                        <div class="card-title">愛♡スクリ～ム！ <span class="type-badge">🎵 音乐</span></div>
+                        <div class="card-desc">AI scream</div>
                     </div>
                 </div>
                 <!-- 音乐卡片 2 -->
@@ -447,8 +476,8 @@
                         </audio>
                     </div>
                     <div class="card-info">
-                        <div class="card-title"># 音乐标题 <span class="type-badge">🎵 音乐</span></div>
-                        <div class="card-desc"># 音乐描述</div>
+                        <div class="card-title">BOW AND ARROW <span class="type-badge">🎵 音乐</span></div>
+                        <div class="card-desc">米津玄師</div>
                     </div>
                 </div>
                 <!-- 音乐卡片 3 -->
@@ -460,8 +489,8 @@
                         </audio>
                     </div>
                     <div class="card-info">
-                        <div class="card-title"># 音乐标题 <span class="type-badge">🎵 音乐</span></div>
-                        <div class="card-desc"># 音乐描述</div>
+                        <div class="card-title">TWO AS ONE <span class="type-badge">🎵 音乐</span></div>
+                        <div class="card-desc">Da-iCE</div>
                     </div>
                 </div>
             </div>
@@ -474,7 +503,7 @@
         <div class="section-block">
             <div class="section-title">
                 <i class="fas fa-link"></i> 网站外链区域
-                <span>🔗 友邻</span>
+                <span>🔗 链接</span>
             </div>
             <div class="card-grid">
                 <!-- 外链卡片 1 -->
@@ -523,13 +552,13 @@
                 <span>📦 仓储</span>
             </div>
             <div class="card-grid">
-                <!-- 网盘卡片 1 -->
+
                 <div class="media-card">
                     <div class="card-info" style="padding: 1.2rem;">
                         <div class="card-title"># <span class="type-badge">📦 网盘资源</span></div>
                         <div class="card-desc">#</div>
                         <div class="drive-link-area">
-                            <span class="drive-url" id="drive_url_1"># (请填写网盘链接)</span>
+                            <span class="drive-url" id="drive_url_1"></span>
                             <button class="copy-drive-btn" data-clip="drive_url_1"><i class="fas fa-copy"></i> 复制链接</button>
                         </div>
                     </div>
@@ -540,7 +569,7 @@
                         <div class="card-title"># <span class="type-badge">📦 网盘资源</span></div>
                         <div class="card-desc">#</div>
                         <div class="drive-link-area">
-                            <span class="drive-url" id="drive_url_2"># (请填写网盘链接)</span>
+                            <span class="drive-url" id="drive_url_2"></span>
                             <button class="copy-drive-btn" data-clip="drive_url_2"><i class="fas fa-copy"></i> 复制链接</button>
                         </div>
                     </div>
@@ -551,7 +580,7 @@
                         <div class="card-title"># <span class="type-badge">📦 网盘资源</span></div>
                         <div class="card-desc">#</div>
                         <div class="drive-link-area">
-                            <span class="drive-url" id="drive_url_3"># (请填写网盘链接)</span>
+                            <span class="drive-url" id="drive_url_3">#</span>
                             <button class="copy-drive-btn" data-clip="drive_url_3"><i class="fas fa-copy"></i> 复制链接</button>
                         </div>
                     </div>
@@ -573,6 +602,14 @@
 
     <hr class="sakura-divider">
     <footer class="blog-footer">
+        <div class="social-links">
+            <a href="https://space.bilibili.com/1113834956?spm_id_from=333.1007.0.0" target="_blank" rel="noopener noreferrer"><i class="fab fa-bilibili"></i></a>
+            <a href="https://www.youtube.com/@kaneKing-l7l" target="_blank" rel="noopener noreferrer"><i class="fab fa-youtube"></i></a>
+            <a href="https://x.com/arry_kane" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+            <a href="https://www.instagram.com/kane_kingasiatic/" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+            <a href="https://github.com/U1s1-king" aria-label="GitHub"><i class="fab fa-github"></i></a>
+            <a href="https://mail.google.com/mail/?view=cm&fs=1&to=kaneking114@gmail.com" aria-label="Email"><i class="fas fa-envelope"></i></a>
+        </div>
         <p><i class="fas fa-cherry-blossom sakura-icon"></i> 万物皆可归档</p>
         <p>© 2026 樱花物语 | 归档</p>
     </footer>
