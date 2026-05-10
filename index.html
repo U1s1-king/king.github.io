@@ -281,6 +281,134 @@
             color: #b15672;
             margin-bottom: 1rem;
         }
+        .blog-container img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* 单张配图：限制最大宽度，同时不超过卡片宽度 */
+        .blog-img {
+            max-width: 100%;
+            width: auto;
+            max-height: 500px;        /* 限制最大高度，防止巨型图 */
+            height: auto;
+            border-radius: 24px;
+            box-shadow: 0 12px 20px -10px rgba(233, 110, 140, 0.25);
+            transition: transform 0.3s ease, box-shadow 0.2s;
+            margin: 0 auto;
+            object-fit: cover;        /* 保持比例裁剪，避免变形 */
+        }
+
+        /* 可选：让配图在手机端更舒适 */
+        @media (max-width: 650px) {
+            .blog-img {
+                max-height: 350px;
+            }
+        }
+
+        /* 樱花装饰边框的图片 */
+        .sakura-img {
+            border: 2px solid #ffe2ec;
+            background: #fff6f8;
+        }
+
+        /* 圆形头像：固定宽高，防止变形 */
+        .sakura-avatar-frame {
+            width: 130px;
+            height: 130px;
+            margin: 0 auto;           /* 居中 */
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ffd9e4, #ffb7cb);
+            padding: 4px;
+            box-shadow: 0 12px 20px rgba(238, 125, 156, 0.2);
+            transition: 0.2s;
+        }
+
+        .avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;        /* 头像强制裁剪为正方形圆形，不变形 */
+            border-radius: 50%;
+            border: 2px solid white;
+            background: #ffeef2;
+        }
+
+        /* 画廊网格：图片卡片有固定的宽高比限制 */
+        .sakura-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .gallery-item {
+            background: rgba(255, 248, 250, 0.7);
+            border-radius: 28px;
+            padding: 0.8rem;
+            transition: all 0.25s;
+            backdrop-filter: blur(1px);
+            border: 1px solid #ffe1ea;
+            text-align: center;
+        }
+
+        .gallery-img {
+            width: 100%;              /* 完全填满父容器宽度 */
+            aspect-ratio: 4 / 3;      /* 固定宽高比 4:3，统一尺寸 */
+            object-fit: cover;        /* 裁剪多余部分，保持比例，不变形 */
+            border-radius: 20px;
+            box-shadow: 0 8px 14px rgba(202, 94, 119, 0.1);
+            transition: transform 0.2s;
+        }
+
+        .gallery-img:hover {
+            transform: scale(1.02);
+        }
+
+        .gallery-caption {
+            display: block;
+            margin-top: 0.6rem;
+            font-size: 0.8rem;
+            background: #fff5f7;
+            border-radius: 60px;
+            padding: 0.2rem 0.5rem;
+            text-align: center;
+            word-break: break-word;
+        }
+
+        /* 额外的安全锁：任何自己插入的非特殊图片也会被限制 */
+        .sakura-image-placeholder img,
+        img[class*="blog-img"],
+        img[class*="gallery-img"] {
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* 图片说明文字不限制大小（保持原样） */
+        .img-caption {
+            font-size: 0.85rem;
+            color: #d1718d;
+            background: #fff3f5;
+            display: inline-block;
+            padding: 0.3rem 1rem;
+            border-radius: 60px;
+            max-width: 100%;
+        }
+
+        /* 手机端画廊调整为1列时可适当缩小圆角 */
+        @media (max-width: 680px) {
+            .sakura-gallery {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            .sakura-avatar-frame {
+                width: 100px;
+                height: 100px;
+            }
+            .gallery-img {
+                aspect-ratio: 16 / 9;   /* 手机上用更扁的比例，也可保留4:3 */
+            }
+        }
     </style>
 </head>
 <body>
@@ -324,6 +452,11 @@
             </div>
             <p>✦ 樱花树下，每一阵风都温柔。近来常常感到无聊</p>
 
+            <div class="sakura-image-placeholder" style="margin: 1.5rem 0;">
+                <img src="https://i.ibb.co/mFXDRwYQ/hina-7.jpg" alt="hina (7)" border="0">
+                <div class="img-caption placeholder-marker"></div>
+            </div>
+
             <div class="cherry-placeholder" style="margin-top: 12px;">
                 <i class="fas fa-regular fa-pen-nib"></i> ✨ 我总在想太阳轻吻我的脸颊，风抚摸我的发丝，摇曳的青草抱着我的腰，我算不算被他们猥亵了
             </div>
@@ -342,7 +475,15 @@
                 <i class="fas fa-image"></i> 今天拿着相机想拍东西结果一到工位上全都忘记了 <br>
                 图片先欠着吧等我哪天有空
             </div>
+
             <p style="margin-top: 0.8rem;">✨ 拍摄心得： 逆光下的花瓣像会呼吸的薄绢...</p>
+
+            <div class="sakura-image-placeholder" style="margin: 1.5rem 0;">
+                <img src="https://i.ibb.co/mFXDRwYQ/hina-7.jpg" alt="hina (7)" border="0">
+                <div class="img-caption placeholder-marker"></div>
+            </div>
+
+
             <div class="cherry-placeholder">
                 <i class="fas fa-regular fa-comment"></i> 他年我若为青帝，报与桃花一处开
             </div>
@@ -360,6 +501,13 @@
                 <i class="fas fa-book-open"></i> 今天无聊的在听23年的歌原来时间已经这么快了吗 <br>
                 lovelive好有活力跟我一点也不搭，不过歌很好听就是了
             </div>
+
+            <div class="sakura-image-placeholder" style="margin: 1.5rem 0;">
+                <img src="https://i.ibb.co/mFXDRwYQ/hina-7.jpg" alt="hina (7)" border="0">
+                <div class="img-caption placeholder-marker"></div>
+            </div>
+
+
             <div class="cherry-placeholder" style="margin-top: 12px;">
                 <i class="fas fa-music"></i>  许我放荡三十年，千金难买少年弦
             </div>
@@ -378,6 +526,13 @@
                 刚好赶上今天的zzz了这期神了，梦魇吓哭了
             </div>
             <p>窗外微风，樱花让时间变得柔缓。</p>
+
+            <div class="sakura-image-placeholder" style="margin: 1.5rem 0;">
+                <img src="https://i.ibb.co/mFXDRwYQ/hina-7.jpg" alt="hina (7)" border="0">
+                <div class="img-caption placeholder-marker"></div>
+            </div>
+
+
             <div class="cherry-placeholder">
                 怎么大家都有甜甜的恋爱我不活了
             </div>
