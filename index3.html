@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>留言板</title>
+    <!-- 樱花主题字体 & 图标 -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600&family=Noto+Serif+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(145deg, #fff9f7 0%, #ffeef4 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            color: #2e2a2b;
+            line-height: 1.5;
+            scroll-behavior: smooth;
+            min-height: 100vh;
+        }
+
+        /* 樱花飘落容器 */
+        .sakura-flurry {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+            overflow: hidden;
+        }
+
+        .petal {
+            position: absolute;
+            background: radial-gradient(circle, #ffdfe6, #ffb7c5);
+            width: 12px;
+            height: 12px;
+            border-radius: 80% 0 55% 40% / 60% 45% 55% 40%;
+            opacity: 0.7;
+            filter: blur(0.3px);
+            transform: rotate(15deg);
+            box-shadow: 0 1px 2px rgba(255, 140, 170, 0.2);
+            animation: fall linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translateY(-20vh) rotate(0deg);
+                opacity: 0.5;
+            }
+            80% {
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* 主容器 */
+        .guestbook-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem 2rem 4rem;
+            position: relative;
+            z-index: 20;
+        }
+
+        /* 页眉 */
+        .guestbook-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .blog-title {
+            font-size: 2.8rem;
+            font-weight: 600;
+            font-family: 'Noto Serif SC', serif;
+            background: linear-gradient(135deg, #e6728f, #b34262);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            letter-spacing: -0.5px;
+        }
+
+        .blog-title i {
+            background: none;
+            color: #ec8ca8;
+            font-size: 2.2rem;
+        }
+
+        .subhead {
+            margin-top: 0.5rem;
+            font-size: 0.95rem;
+            color: #b45f6e;
+            background: #fff0f3aa;
+            display: inline-block;
+            padding: 0.3rem 1.2rem;
+            border-radius: 40px;
+            backdrop-filter: blur(2px);
+        }
+
+        /* 导航栏 */
+        .nav-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin: 2rem 0 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            font-weight: 500;
+            color: #b34e6b;
+            padding: 0.4rem 0;
+            border-bottom: 2px solid transparent;
+            transition: 0.2s;
+            font-size: 1rem;
+        }
+
+        .nav-links a:hover {
+            border-bottom-color: #f6a5c0;
+            color: #9e3c58;
+        }
+
+        /* 留言表单卡片 */
+        .form-card {
+            background: rgba(255, 250, 252, 0.88);
+            backdrop-filter: blur(3px);
+            border-radius: 2rem;
+            padding: 1.8rem 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 12px 28px -8px rgba(233, 130, 156, 0.2);
+            border: 1px solid #ffe2ec;
+        }
+
+        .form-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            font-family: 'Noto Serif SC', serif;
+            color: #4f2f39;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-title i {
+            color: #e982a2;
+            font-size: 1.6rem;
+        }
+
+        .form-desc {
+            font-size: 0.85rem;
+            color: #b27b88;
+            margin-bottom: 1.5rem;
+            border-left: 3px solid #f6a5c0;
+            padding-left: 0.8rem;
+        }
+
+        .input-group {
+            margin-bottom: 1.2rem;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #ac5d76;
+            margin-bottom: 0.4rem;
+        }
+
+        .input-group label i {
+            margin-right: 5px;
+            color: #e189a4;
+        }
+
+        .input-group input,
+        .input-group textarea {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border: 1.5px solid #ffe0e8;
+            border-radius: 1.5rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            background: #fffefb;
+            transition: all 0.2s;
+            resize: vertical;
+        }
+
+        .input-group input:focus,
+        .input-group textarea:focus {
+            outline: none;
+            border-color: #f6a5c0;
+            box-shadow: 0 0 0 3px #ffd9e4;
+        }
+
+        .submit-btn {
+            background: #ffe9ef;
+            border: 1px solid #ffc2d4;
+            padding: 0.7rem 1.8rem;
+            border-radius: 2rem;
+            color: #b95272;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .submit-btn:hover {
+            background: #ffdfe8;
+            color: #9c405e;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 12px rgba(231, 118, 142, 0.2);
+        }
+
+        /* 留言列表区域 */
+        .messages-section {
+            margin-top: 1rem;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            margin-bottom: 1.2rem;
+            gap: 12px;
+        }
+
+        .section-header h3 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            font-family: 'Noto Serif SC', serif;
+            color: #4f2f39;
+        }
+
+        .message-count {
+            background: #ffe4ec;
+            padding: 0.2rem 0.8rem;
+            border-radius: 30px;
+            font-size: 0.75rem;
+            color: #c76f8b;
+        }
+
+        /* 留言卡片 */
+        .message-card {
+            background: rgba(255, 248, 250, 0.85);
+            backdrop-filter: blur(2px);
+            border-radius: 1.5rem;
+            padding: 1.3rem 1.5rem;
+            margin-bottom: 1.2rem;
+            border: 1px solid #ffe2ec;
+            transition: all 0.2s;
+        }
+
+        .message-card:hover {
+            background: #fffffcee;
+            transform: translateX(4px);
+            box-shadow: 0 8px 18px rgba(233, 130, 156, 0.1);
+        }
+
+        .message-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            margin-bottom: 0.6rem;
+            gap: 8px;
+        }
+
+        .message-name {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            color: #b34e6b;
+        }
+
+        .message-name i {
+            font-size: 1.1rem;
+            color: #ec8ca8;
+        }
+
+        .message-date {
+            font-size: 0.7rem;
+            color: #b98b97;
+        }
+
+        .message-content {
+            color: #3e2c30;
+            line-height: 1.55;
+            font-size: 0.92rem;
+            word-break: break-word;
+            white-space: pre-wrap;
+            margin: 0.6rem 0 0.4rem;
+        }
+
+        .message-footer {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.6rem;
+            font-size: 0.7rem;
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #df9bb0;
+            cursor: pointer;
+            font-size: 0.7rem;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .delete-btn:hover {
+            color: #e06a8c;
+        }
+
+        .empty-message {
+            text-align: center;
+            padding: 2rem;
+            background: #fff5f7;
+            border-radius: 2rem;
+            color: #b98898;
+        }
+
+        /* 樱花占位符辅助样式 */
+        .placeholder-marker {
+            background: #fff0f0;
+            border-left: 4px solid #ff98b9;
+            padding: 0.8rem 1.2rem;
+            border-radius: 20px;
+            font-family: monospace;
+            color: #c25070;
+            font-size: 0.8rem;
+            margin: 0.5rem 0;
+        }
+
+        hr.sakura-divider {
+            margin: 2rem 0;
+            border: none;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #f7bfd2, #ff90b5, #f7bfd2, transparent);
+        }
+
+        .blog-footer {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 1.2rem;
+            border-top: 1px solid #ffd5e2;
+            font-size: 0.8rem;
+            color: #b1798a;
+        }
+
+        @media (max-width: 650px) {
+            .guestbook-container {
+                padding: 1rem 1.2rem 2.5rem;
+            }
+            .blog-title {
+                font-size: 2rem;
+            }
+            .form-card {
+                padding: 1.2rem;
+            }
+        }
+
+        /* 社交媒体/链接区 */
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 1.8rem;
+            margin: 2rem 0 1rem;
+            flex-wrap: wrap;
+        }
+
+        .social-links a {
+            background: #fff1f4;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #dc7c99;
+            font-size: 1.4rem;
+            transition: 0.2s;
+            text-decoration: none;
+            border: 1px solid #ffd2df;
+        }
+
+        .social-links a:hover {
+            background: #ffe2ea;
+            color: #b84f6e;
+            transform: translateY(-3px);
+        }
+    </style>
+</head>
+<body>
+
+<div class="sakura-flurry" id="sakura-flurry"></div>
+
+<main class="guestbook-container">
+    <header class="guestbook-header">
+        <div class="blog-title">
+            <i class="fas fa-fan"></i> 
+            留言
+            <i class="fas fa-comment-dots"></i>
+        </div>
+        <div class="subhead">
+            <i class="fas fa-seedling"></i> 这里是留言板喵
+        </div>
+        <div class="nav-links">
+            <a href="./index1.html">首页</a>
+            <a href="./index.html">关于</a>
+            <a href="./index.html">归档</a>
+            <a href="./index3.html">留言</a>
+        </div>
+    </header>
+
+    <!-- 留言表单 -->
+    <div class="form-card">
+        <div class="form-title">
+            <i class="fas fa-pen-fancy"></i> 
+            <span>留下你的足迹吧喵 ✨</span>
+        </div>
+        <div class="form-desc">
+            春风同樱花皆闻汝等之声，请随意留言喵 ~ 可以分享心情、建议或者想说的。
+        </div>
+        <div class="input-group">
+            <label><i class="fas fa-user-circle"></i> 昵称</label>
+            <input type="text" id="nameInput" placeholder="来者何人"  maxlength="30">
+        </div>
+        <div class="input-group">
+            <label><i class="fas fa-comment"></i> 留言内容</label>
+            <textarea id="msgInput" rows="3" placeholder="写点什么喵" maxlength="300"></textarea>
+        </div>
+        <div style="text-align: right;">
+            <button class="submit-btn" id="submitBtn">
+                <i class="fas fa-feather-alt"></i> 留言
+            </button>
+        </div>
+        <div class="placeholder-marker" style="margin-top: 1rem; font-size:0.75rem;">
+            <i class="fas fa-info-circle"></i>
+        </div>
+    </div>
+
+    <!-- 留言列表展示区 -->
+    <div class="messages-section">
+        <div class="section-header">
+            <h3><i class="fas fa-comments" style="color: #e982a2;"></i>留言板</h3>
+            <span class="message-count" id="messageCount">0留言</span>
+        </div>
+        <div id="messagesList">
+            <!-- 动态留言会渲染在此 -->
+            <div class="empty-message">
+                <i class="fas fa-cherry-blossom" style="font-size: 1.8rem; opacity: 0.6;"></i>
+                <p style="margin-top: 8px;">✨ 还没有留言，来做第一个留言的人吧 ✨</p>
+            </div>
+        </div>
+    </div>
+
+    <hr class="sakura-divider">
+    <footer class="blog-footer">
+        <p><i class="fas fa-cherry-blossom sakura-icon"></i> 留言板 <i class="fas fa-wind"></i></p>
+        <p>© 2026 樱花物语 | 留言板</p>
+        <p style="margin-top: 0.2rem;">🌸 所有留言都会存到浏览器喵 🌸</p>
+        <div class="social-links">
+            <a href="https://space.bilibili.com/1113834956?spm_id_from=333.1007.0.0" target="_blank" rel="noopener noreferrer"><i class="fab fa-bilibili"></i></a>
+            <a href="https://www.youtube.com/@kaneKing-l7l" target="_blank" rel="noopener noreferrer"><i class="fab fa-youtube"></i></a>
+            <a href="https://x.com/arry_kane" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+            <a href="https://www.instagram.com/kane_kingasiatic/" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+            <a href="https://github.com/U1s1-king" aria-label="GitHub"><i class="fab fa-github"></i></a>
+            <a href="https://mail.google.com/mail/?view=cm&fs=1&to=kaneking114@gmail.com" aria-label="Email"><i class="fas fa-envelope"></i></a>
+        </div>
+    </footer>
+</main>
+
+<script>
+    (function(){
+        // 樱花飘落逻辑 (与主页个人介绍页统一)
+        const flurryContainer = document.getElementById('sakura-flurry');
+        if (!flurryContainer) return;
+        let petalCount = 45;
+        if (window.innerWidth < 700) petalCount = 28;
+        
+        function createPetal() {
+            const petal = document.createElement('div');
+            petal.classList.add('petal');
+            const size = 8 + Math.random() * 14;
+            petal.style.width = size + 'px';
+            petal.style.height = size * 0.9 + 'px';
+            petal.style.left = Math.random() * 100 + '%';
+            const duration = 6 + Math.random() * 12;
+            petal.style.animationDuration = duration + 's';
+            petal.style.animationDelay = Math.random() * 15 + 's';
+            petal.style.opacity = 0.4 + Math.random() * 0.5;
+            petal.style.background = `radial-gradient(circle, #ffdfe6, #ffb0c2)`;
+            petal.style.filter = `blur(${Math.random() * 1.2}px)`;
+            return petal;
+        }
+        
+        for (let i = 0; i < petalCount; i++) {
+            flurryContainer.appendChild(createPetal());
+        }
+        
+        function replenishPetals() {
+            const currentCount = flurryContainer.children.length;
+            if (currentCount < petalCount - 8) {
+                const need = petalCount - currentCount;
+                for (let i = 0; i < Math.min(need, 8); i++) {
+                    flurryContainer.appendChild(createPetal());
+                }
+            }
+            const allPetals = flurryContainer.querySelectorAll('.petal');
+            for (let p of allPetals) {
+                const rect = p.getBoundingClientRect();
+                if (rect.top > window.innerHeight + 100 || rect.bottom < -100) {
+                    p.remove();
+                }
+            }
+        }
+        setInterval(replenishPetals, 4000);
+        
+        window.addEventListener('resize', function() {
+            let expected = window.innerWidth < 700 ? 28 : 45;
+            if (Math.abs(flurryContainer.children.length - expected) > 12) {
+                while(flurryContainer.firstChild) {
+                    flurryContainer.removeChild(flurryContainer.firstChild);
+                }
+                petalCount = expected;
+                for (let i=0; i<petalCount; i++) {
+                    flurryContainer.appendChild(createPetal());
+                }
+            }
+        });
+        
+        setTimeout(() => {
+            if(flurryContainer.children.length < 20) {
+                for(let i=0;i<12;i++) flurryContainer.appendChild(createPetal());
+            }
+        }, 500);
+    })();
+
+    // ----------------- 留言板核心逻辑 (localStorage 存储) -----------------
+    let messages = [];
+
+    // 从 localStorage 加载留言
+    function loadMessages() {
+        const stored = localStorage.getItem('sakura_guestbook');
+        if (stored) {
+            try {
+                messages = JSON.parse(stored);
+            } catch(e) { messages = []; }
+        } else {
+            // 初始樱花示例留言 (占位符风格，用户可以自行保留/删除)
+            messages = [
+                {
+                    id: Date.now() + 1,
+                    name: "🌸 樱花喵",
+                    content: "你们喜欢我的博客吗喵",
+                    date: new Date(Date.now() - 86400000).toLocaleString()
+                },
+                {
+                    id: Date.now() + 2,
+                    name: "春风喵",
+                    content: "这是本喵自己的测试留言",
+                    date: new Date(Date.now() - 172800000).toLocaleString()
+                }
+            ];
+            saveMessages();
+        }
+        renderMessages();
+    }
+
+    function saveMessages() {
+        localStorage.setItem('sakura_guestbook', JSON.stringify(messages));
+    }
+
+    // 渲染留言列表
+    function renderMessages() {
+        const container = document.getElementById('messagesList');
+        const countSpan = document.getElementById('messageCount');
+        if (!container) return;
+        
+        if (messages.length === 0) {
+            container.innerHTML = `
+                <div class="empty-message">
+                    <i class="fas fa-cherry-blossom" style="font-size: 1.8rem; opacity: 0.6;"></i>
+                    <p style="margin-top: 8px;">✨ 还没有留言，来做第一个留言的人吧 ✨</p>
+                </div>
+            `;
+            if (countSpan) countSpan.innerText = `0 则留言`;
+            return;
+        }
+        
+        // 按日期倒序排列（最新的在上方）
+        const sorted = [...messages].reverse();
+        let html = '';
+        for (let msg of sorted) {
+            html += `
+                <div class="message-card" data-id="${msg.id}">
+                    <div class="message-header">
+                        <div class="message-name">
+                            <i class="fas fa-user-astronaut"></i>
+                            <span>${escapeHtml(msg.name)}</span>
+                        </div>
+                        <div class="message-date">
+                            <i class="far fa-calendar-alt"></i> ${escapeHtml(msg.date)}
+                        </div>
+                    </div>
+                    <div class="message-content">
+                        ${escapeHtml(msg.content).replace(/\n/g, '<br>')}
+                    </div>
+                    <div class="message-footer">
+                        <button class="delete-btn" data-id="${msg.id}">
+                            <i class="fas fa-trash-alt"></i> 删除
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        container.innerHTML = html;
+        if (countSpan) countSpan.innerText = `${messages.length} 则留言`;
+        
+        // 绑定删除事件 (因为动态生成需要使用事件委托或重新绑定)
+        const deleteBtns = document.querySelectorAll('.delete-btn');
+        deleteBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const id = Number(btn.getAttribute('data-id'));
+                deleteMessageById(id);
+            });
+        });
+    }
+    
+    // 删除留言
+    function deleteMessageById(id) {
+        messages = messages.filter(msg => msg.id !== id);
+        saveMessages();
+        renderMessages();
+        // 添加轻柔提示(可选)
+        showFloatingTip('🌸 留言已随花瓣飘走');
+    }
+    
+    // 新增留言
+    function addMessage(name, content) {
+        if (!name.trim()) {
+            showFloatingTip('✨ 请留下你的昵称吧 ✨');
+            return false;
+        }
+        if (!content.trim()) {
+            showFloatingTip('🌸 写点什么再飘落呀～');
+            return false;
+        }
+        if (name.trim().length > 30) {
+            showFloatingTip('昵称过长，不超过30字哦');
+            return false;
+        }
+        if (content.trim().length > 300) {
+            showFloatingTip('留言最多300字，精简一点更加樱花味');
+            return false;
+        }
+        
+        const newMsg = {
+            id: Date.now(),
+            name: name.trim(),
+            content: content.trim(),
+            date: new Date().toLocaleString()
+        };
+        messages.push(newMsg);
+        saveMessages();
+        renderMessages();
+        return true;
+    }
+    
+    // 简易防XSS
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+    
+    // 轻提示浮层（非侵入）
+    let tipTimeout = null;
+    function showFloatingTip(msg) {
+        let tipDiv = document.getElementById('floatingTip');
+        if (!tipDiv) {
+            tipDiv = document.createElement('div');
+            tipDiv.id = 'floatingTip';
+            tipDiv.style.position = 'fixed';
+            tipDiv.style.bottom = '20px';
+            tipDiv.style.left = '50%';
+            tipDiv.style.transform = 'translateX(-50%)';
+            tipDiv.style.backgroundColor = '#fff0f3';
+            tipDiv.style.color = '#c76f8b';
+            tipDiv.style.padding = '0.6rem 1.2rem';
+            tipDiv.style.borderRadius = '40px';
+            tipDiv.style.fontSize = '0.8rem';
+            tipDiv.style.fontWeight = '500';
+            tipDiv.style.boxShadow = '0 4px 12px rgba(0,0,0,0.05)';
+            tipDiv.style.border = '1px solid #ffc2d4';
+            tipDiv.style.zIndex = '1000';
+            tipDiv.style.backdropFilter = 'blur(8px)';
+            tipDiv.style.whiteSpace = 'nowrap';
+            tipDiv.style.fontFamily = 'monospace';
+            document.body.appendChild(tipDiv);
+        }
+        tipDiv.innerHTML = `<i class="fas fa-cherry-blossom"></i> ${msg}`;
+        tipDiv.style.opacity = '1';
+        clearTimeout(tipTimeout);
+        tipTimeout = setTimeout(() => {
+            if(tipDiv) tipDiv.style.opacity = '0';
+        }, 2000);
+    }
+    
+    // 初始化 与 事件绑定
+    document.addEventListener('DOMContentLoaded', () => {
+        loadMessages();
+        
+        const submitBtn = document.getElementById('submitBtn');
+        const nameInput = document.getElementById('nameInput');
+        const msgInput = document.getElementById('msgInput');
+        
+        if (submitBtn) {
+            submitBtn.addEventListener('click', () => {
+                const nameVal = nameInput ? nameInput.value : '';
+                const msgVal = msgInput ? msgInput.value : '';
+                const success = addMessage(nameVal, msgVal);
+                if (success) {
+                    if (nameInput) nameInput.value = '';
+                    if (msgInput) msgInput.value = '';
+                    showFloatingTip('🍃 留言飘落成功，感谢陪伴');
+                }
+            });
+        }
+        
+        // 允许回车提交 (ctrl+enter 或 cmd+enter 方便)
+        if (msgInput) {
+            msgInput.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    submitBtn.click();
+                }
+            });
+        }
+    });
+    
+    // 给占位符区域增加悬浮效果 (柔和交互)
+    const placeholders = document.querySelectorAll('.placeholder-marker');
+    placeholders.forEach(elem => {
+        elem.style.transition = 'all 0.2s';
+        elem.addEventListener('mouseenter', () => {
+            elem.style.opacity = '0.95';
+            elem.style.boxShadow = '0 0 0 2px #ffb7c980';
+        });
+        elem.addEventListener('mouseleave', () => {
+            elem.style.opacity = '';
+            elem.style.boxShadow = '';
+        });
+    });
+</script>
+</body>
+</html>

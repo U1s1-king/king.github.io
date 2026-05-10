@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>樱花物语 · 个人博客</title>
+    <title>关于</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600&family=Noto+Serif+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
 
@@ -409,6 +409,36 @@
                 aspect-ratio: 16 / 9;   /* 手机上用更扁的比例，也可保留4:3 */
             }
         }
+
+        /* 社交媒体/链接区 */
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 1.8rem;
+            margin: 2rem 0 1rem;
+            flex-wrap: wrap;
+        }
+
+        .social-links a {
+            background: #fff1f4;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #dc7c99;
+            font-size: 1.4rem;
+            transition: 0.2s;
+            text-decoration: none;
+            border: 1px solid #ffd2df;
+        }
+
+        .social-links a:hover {
+            background: #ffe2ea;
+            color: #b84f6e;
+            transform: translateY(-3px);
+        }
     </style>
 </head>
 <body>
@@ -420,20 +450,20 @@
     <header class="blog-header">
         <div class="blog-title">
             <i class="fas fa-fan"></i> 
-            樱·日志
+            关于
             <i class="fas fa-leaf"></i>
         </div>
         <div class="subhead">
-            <i class="fas fa-seedling"></i> 花見 · 心事记录
+            <i class="fas fa-seedling"></i> 花谢
         </div>
         <div class="info-note">
             <i class="fas fa-pen-fancy"></i>  <span style="background:#ffdae3; padding:2px 8px; border-radius:40px;"></span>✨
         </div>
         <nav class="blog-nav">
-            <a href="index1.html">首页</a>
-            <a href="#">关于</a>
+            <a href="./index1.html">首页</a>
+            <a href="./index.html">关于</a>
             <a href="#">归档</a>
-            <a href="#">留言</a>
+            <a href="./index3.html">留言</a>
         </nav>
     </header>
 
@@ -548,7 +578,14 @@
             <div class="placeholder-marker" style="background: #fff0f2; text-align: left; max-width: 80%; margin: 1rem auto;">
                 <i class="fas fa-edit"></i> 博主很抽象十分的抽象，写这个也是写着玩的
             </div>
-            <p style="font-size: 0.8rem; color:#d17d98;"><i class="fab fa-twitter"></i> <i class="fab fa-instagram"></i></p>
+            <div class="social-links">
+                <a href="https://space.bilibili.com/1113834956?spm_id_from=333.1007.0.0" target="_blank" rel="noopener noreferrer"><i class="fab fa-bilibili"></i></a>
+                <a href="https://www.youtube.com/@kaneKing-l7l" target="_blank" rel="noopener noreferrer"><i class="fab fa-youtube"></i></a>
+                <a href="https://x.com/arry_kane" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                <a href="https://www.instagram.com/kane_kingasiatic/" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                <a href="https://github.com/U1s1-king" aria-label="GitHub"><i class="fab fa-github"></i></a>
+                <a href="https://mail.google.com/mail/?view=cm&fs=1&to=kaneking114@gmail.com" aria-label="Email"><i class="fas fa-envelope"></i></a>
+            </div>
         </div>
     </div>
 
