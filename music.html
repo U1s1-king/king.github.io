@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>🎵 樱花音乐 · 本喵的播放器</title>
-    <!-- 樱花主题字体 & 图标 (与首页一致) -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600&family=Noto+Serif+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
@@ -23,7 +22,6 @@
             min-height: 100vh;
         }
 
-        /* 樱花飘落容器 (与博客主页一致) */
         .sakura-flurry {
             position: fixed;
             top: 0;
@@ -49,7 +47,6 @@
             }
         }
 
-        /* 主容器 + 柔和卡片质感 */
         .music-container {
             max-width: 1100px;
             margin: 0 auto;
@@ -58,7 +55,6 @@
             z-index: 20;
         }
 
-        /* 页眉 & 导航栏 */
         .music-header {
             text-align: center;
             margin-bottom: 2rem;
@@ -118,7 +114,6 @@
             color: #9e3c58;
         }
 
-        /* 樱花音乐卡片 */
         .player-card {
             background: rgba(255, 250, 252, 0.92);
             backdrop-filter: blur(6px);
@@ -130,7 +125,6 @@
             transition: all 0.2s;
         }
 
-        /* 播放器内部布局 - 优雅两栏 (封面+控制 / 列表) */
         .player-dual {
             display: flex;
             flex-wrap: wrap;
@@ -147,7 +141,6 @@
             min-width: 260px;
         }
 
-        /* 黑胶区域 樱花化 */
         .disc-zone {
             display: flex;
             justify-content: center;
@@ -210,7 +203,6 @@
             font-weight: 500;
         }
 
-        /* 进度条樱花风格 */
         .progress-area {
             padding: 0 8px;
             margin-top: 0.5rem;
@@ -239,7 +231,6 @@
             color: #b77d8f;
         }
 
-        /* 控制按钮 樱花粉 */
         .controls-row {
             display: flex;
             justify-content: center;
@@ -275,7 +266,6 @@
             box-shadow: 0 6px 14px rgba(224, 106, 143, 0.3);
         }
 
-        /* 模式标签 */
         .mode-strip {
             display: flex;
             justify-content: center;
@@ -298,7 +288,6 @@
             border: 1px solid #ffcdda;
         }
 
-        /* 音量区 */
         .mixer {
             padding: 0.5rem 0.5rem;
             display: flex;
@@ -323,14 +312,6 @@
             cursor: pointer;
         }
 
-        .viz-bar {
-            display: flex;
-            gap: 3px;
-            align-items: flex-end;
-            height: 28px;
-        }
-
-        /* 歌词滚动区（柔光） */
         .lyric-panel {
             background: #fff2f6cc;
             border-radius: 1.8rem;
@@ -344,7 +325,6 @@
             border: 1px solid #ffe0ea;
         }
 
-        /* 播放列表区域完全樱花化 */
         .playlist-section {
             margin-top: 0.5rem;
         }
@@ -393,7 +373,6 @@
             color: #da95ae;
         }
 
-        /* 樱花占位符提示 (迷你) */
         .cherry-tip {
             background: #fbebef;
             border-radius: 18px;
@@ -406,7 +385,41 @@
             margin-top: 0.8rem;
         }
 
-        /* 模态框 樱花主题 */
+        /* 频谱动画区域 - 纯线条版 */
+        .spectrum-line {
+            margin: 15px auto 5px;
+            width: 100%;
+            position: relative;
+        }
+
+        .spectrum-line::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, #e06a8f, #f0a0ba, #e06a8f);
+            border-radius: 2px;
+        }
+
+        .spectrum-line .spectrum-bars {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 4px;
+            height: 48px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .spectrum-line .spectrum-bar {
+            width: 8px;
+            background: linear-gradient(180deg, #e06a8f, #b84c6c);
+            border-radius: 3px 3px 0 0;
+            transition: height 0.05s ease;
+        }
+
         .modal-global {
             display: none;
             position: fixed;
@@ -500,6 +513,13 @@
             .track-title {
                 font-size: 1.2rem;
             }
+            .spectrum-line .spectrum-bars {
+                gap: 3px;
+                height: 38px;
+            }
+            .spectrum-line .spectrum-bar {
+                width: 6px;
+            }
         }
 
         ::-webkit-scrollbar {
@@ -514,7 +534,6 @@
             border-radius: 10px;
         }
 
-        /* 社交媒体/链接区 */
         .social-links {
             display: flex;
             justify-content: center;
@@ -547,7 +566,6 @@
 </head>
 <body>
 
-<!-- 樱花飘落 -->
 <div class="sakura-flurry" id="sakura-flurry"></div>
 
 <main class="music-container">
@@ -572,7 +590,6 @@
 
     <div class="player-card">
         <div class="player-dual">
-            <!-- 左侧封面信息 + 控制 -->
             <div class="player-left">
                 <div class="disc-zone">
                     <div class="vinyl">
@@ -603,11 +620,9 @@
                     <i class="fas fa-volume-down" style="color:#ce809b;"></i>
                     <input type="range" id="volumeRange" min="0" max="1" step="0.01" value="0.7" class="volume-slider">
                     <i class="fas fa-volume-up" style="color:#ce809b;"></i>
-                    <div class="viz-bar" id="vizContainer"></div>
                 </div>
             </div>
 
-            <!-- 右侧播放列表 + 歌词 -->
             <div class="player-right">
                 <div class="lyric-panel" id="lyricBox">
                     🎵 喵 ~ 点击右侧➕ 上传本地音乐，一起摇摆吧 ✨
@@ -629,6 +644,11 @@
         </div>
     </div>
 
+    <!-- 频谱动画区域-->
+    <div class="spectrum-line">
+        <div class="spectrum-bars" id="spectrumBars"></div>
+    </div>
+
     <div style="text-align: center; margin-top: 1rem;">
         <a href="index.html" class="btn-cherry"><i class="fas fa-chevron-circle-left"></i> 回喵星首页</a>
     </div>
@@ -648,7 +668,7 @@
 </main>
 
 <audio id="nativeAudio" style="display: none;"></audio>
-<!-- 上传模态框 -->
+
 <div class="modal-global" id="uploadModal">
     <div class="modal-card">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
@@ -663,7 +683,7 @@
 <div class="toast" id="toastMsg"></div>
 
 <script>
-    // ========= 移除所有预设音乐，歌单完全由用户上传决定 =========
+    // 歌单数据
     let playlist = [
         { name: "AIscream", artist: "", path: "/music/AIscream.mp3", dur: "0:00" },
         { name: "BOW AND ARROW", artist: "米津玄师", path: "/music/BOW AND ARROW.mp3", dur: "0:00" },
@@ -693,19 +713,16 @@
         { name: "碧いif", artist: "トゲナシトゲアリ", path: "/music/碧いif.mp3", dur: "0:00" },
         { name: "吹き消した灯火", artist: "トゲナシトゲアリ", path: "/music/吹き消した灯火.mp3", dur: "0:00" },
         { name: "春日影", artist: "mygo！！！！！", path: "/music/春日影.mp3", dur: "0:00" },
-        // { name: "渇く、憂う", artist: "トゲナシトゲアリ", path: "/music/渇く、憂う.mp3", dur: "0:00" },
         { name: "無知のち私", artist: "トゲナシトゲアリ", path: "/music/無知のち私.mp3", dur: "0:00" },
         { name: "臆病な白夜", artist: "トゲナシトゲアリ", path: "/music/臆病な白夜.mp3", dur: "0:00" },
         { name: "最期の禱り", artist: "トゲナシトゲアリ", path: "/music/最期の禱り.mp3", dur: "0:00" }
     ];
-    // 空歌单，无任何预设
     let currentIndex = 0;
     let isPlaying = false;
-    let playMode = "normal";     // normal / repeat / shuffle
+    let playMode = "normal";
     let shuffleIndices = [];
     let playbackRateVal = 1.0;
 
-    // 统一的默认封面 (wink)
     const DEFAULT_COVER = "https://i.ibb.co/3Ydz4krV/wink.png";
 
     // DOM 元素
@@ -729,18 +746,55 @@
     const repeatBtn = document.getElementById('repeatModeBtn');
     const shuffleBtn = document.getElementById('shuffleModeBtn');
     const speedValSpan = document.getElementById('speedVal');
-    const vizContainer = document.getElementById('vizContainer');
-    let vizBars = [];
-    let animFrame = null;
-    let audioCtx = null, analyser = null;
 
-    // 辅助函数
+    // 频谱相关变量
+    let spectrumBars = [];
+    let spectrumInterval = null;
+
     function formatTime(sec) { if(isNaN(sec)) return '0:00'; let m = Math.floor(sec/60), s = Math.floor(sec%60); return `${m}:${s<10?'0'+s:s}`; }
     function showMsg(msg) { let t = document.getElementById('toastMsg'); t.textContent = msg; t.style.display='block'; setTimeout(()=>t.style.display='none',2000); }
+    function escapeHtml(str) { return str.replace(/[&<>]/g, function(m){return m==='&'?'&amp;':m==='<'?'&lt;':'&gt;';}); }
 
     // 初始化频谱柱
-    function initViz() { vizContainer.innerHTML = ''; for(let i=0;i<28;i++){ let b=document.createElement('div'); b.className='viz'; b.style.height='3px'; vizContainer.appendChild(b); } vizBars = document.querySelectorAll('.viz'); }
-    initViz();
+    function initSpectrum() {
+        const container = document.getElementById('spectrumBars');
+        if (!container) return;
+        container.innerHTML = '';
+        const barCount = window.innerWidth < 700 ? 20 : 28;
+        for(let i = 0; i < barCount; i++) {
+            let bar = document.createElement('div');
+            bar.className = 'spectrum-bar';
+            container.appendChild(bar);
+            spectrumBars.push(bar);
+        }
+    }
+
+    // 启动频谱动画（随机律动，兼容所有设备）
+    function startSpectrum() {
+        if (spectrumInterval) clearInterval(spectrumInterval);
+        spectrumInterval = setInterval(() => {
+            if (!isPlaying) return;
+            const vol = audio.volume || 0.7;
+            for (let i = 0; i < spectrumBars.length; i++) {
+                // 根据音量、随机因子和正弦波产生跳动
+                const randomPeak = Math.random() * 45 * vol;
+                const sineFactor = Math.sin(Date.now() / 180 + i * 0.25) * 12;
+                let height = 6 + randomPeak + sineFactor;
+                height = Math.min(62, Math.max(6, height));
+                spectrumBars[i].style.height = height + 'px';
+            }
+        }, 85);
+    }
+
+    function stopSpectrum() {
+        if (spectrumInterval) {
+            clearInterval(spectrumInterval);
+            spectrumInterval = null;
+        }
+        for (let bar of spectrumBars) {
+            bar.style.height = '6px';
+        }
+    }
 
     // 更新播放列表 UI
     function updateList() {
@@ -758,14 +812,12 @@
             playlistContainer.innerHTML = html;
         }
         songCountSpan.innerText = `${playlist.length} 首`;
-        // 绑定点击事件
         document.querySelectorAll('.track-item').forEach(el => {
             el.addEventListener('click', () => { let idx = parseInt(el.dataset.idx); if(!isNaN(idx)) play(idx); });
         });
     }
-    function escapeHtml(str) { return str.replace(/[&<>]/g, function(m){return m==='&'?'&amp;':m==='<'?'&lt;':'&gt;';}); }
 
-    // 播放指定索引的歌曲 (所有歌曲都用默认封面，除非用户显式传入cover，但本地上传无cover所以统一使用默认)
+    // 播放指定索引的歌曲
     function play(idx) {
         if(playlist.length === 0) {
             showMsg('歌单空空如也，请先添加音乐喵~');
@@ -776,14 +828,12 @@
         let s = playlist[currentIndex];
         trackNameSpan.innerText = s.name;
         trackArtistSpan.innerText = s.artist;
-        // 统一使用默认封面 wink (没有例外，完全统一)
         coverImg.src = DEFAULT_COVER;
         audio.src = s.path;
         audio.load();
         audio.playbackRate = playbackRateVal;
         audio.addEventListener('loadedmetadata', function onLoad() {
             totalDurSpan.innerText = formatTime(audio.duration);
-            // 更新歌单里的时长显示
             if(playlist[currentIndex] && !playlist[currentIndex].durFixed) {
                 playlist[currentIndex].dur = formatTime(audio.duration);
                 playlist[currentIndex].durFixed = true;
@@ -805,11 +855,9 @@
             isPlaying=false;
             playIcon.className='fas fa-play';
             coverInner.classList.remove('playing');
-            if(animFrame)cancelAnimationFrame(animFrame);
-            if(audioCtx)audioCtx.suspend();
+            stopSpectrum();
         } else {
             if(!audio.src || audio.ended) {
-                // 如果没有src或播放结束，则从当前索引播放
                 if(currentIndex >= playlist.length) currentIndex = 0;
                 if(playlist[currentIndex]) play(currentIndex);
                 else return;
@@ -818,8 +866,7 @@
                 isPlaying=true;
                 playIcon.className='fas fa-pause';
                 coverInner.classList.add('playing');
-                startViz();
-                if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume();
+                startSpectrum();
             }).catch((e)=>showMsg('播放出错喵'+e.message));
         }
     }
@@ -834,6 +881,7 @@
             play((currentIndex+1) % playlist.length);
         }
     }
+
     function prev() {
         if(playlist.length === 0) return;
         if(playMode === 'shuffle'){
@@ -844,41 +892,13 @@
             play((currentIndex-1+playlist.length) % playlist.length);
         }
     }
+
     function reshuffle() {
         shuffleIndices = [...Array(playlist.length).keys()];
         for(let i=shuffleIndices.length-1;i>0;i--){
             let j=Math.floor(Math.random()*(i+1));
             [shuffleIndices[i],shuffleIndices[j]]=[shuffleIndices[j],shuffleIndices[i]];
         }
-    }
-
-    function startViz() {
-        if(!audioCtx && audio.src){
-            try{
-                audioCtx = new (window.AudioContext||window.webkitAudioContext)();
-                analyser = audioCtx.createAnalyser();
-                analyser.fftSize=256;
-                let src = audioCtx.createMediaElementSource(audio);
-                src.connect(analyser);
-                analyser.connect(audioCtx.destination);
-            } catch(e){}
-        }
-        function draw(){
-            if(!isPlaying){ if(animFrame)cancelAnimationFrame(animFrame); return; }
-            if(analyser){
-                let freq = new Uint8Array(analyser.frequencyBinCount);
-                analyser.getByteFrequencyData(freq);
-                for(let i=0;i<vizBars.length;i++){
-                    let h = Math.min(26, 3 + (freq[i*2]||0)/12);
-                    vizBars[i].style.height = `${h}px`;
-                }
-            } else {
-                for(let i=0;i<vizBars.length;i++) vizBars[i].style.height = `${5+Math.random()*10}px`;
-            }
-            animFrame = requestAnimationFrame(draw);
-        }
-        if(animFrame) cancelAnimationFrame(animFrame);
-        draw();
     }
 
     function updateProgress() {
@@ -889,7 +909,7 @@
         if(totalDurSpan.innerText === '0:00' && audio.duration>0) totalDurSpan.innerText = formatTime(audio.duration);
     }
 
-    // 添加本地音乐 (无预设，全部靠上传)
+    // 添加本地音乐
     let pendingFiles = [];
     const uploadModal = document.getElementById('uploadModal');
     document.getElementById('uploadTrigger').onclick = () => uploadModal.style.display = 'flex';
@@ -918,13 +938,12 @@
                 path: url,
                 dur: dur,
                 durFixed: true,
-                cover: null   // 不使用任何自定义封面，统一走默认
+                cover: null
             });
             addedCount++;
         }
         updateList();
         if(playlist.length > 0 && (!audio.src || audio.ended)) {
-            // 如果当前没有播放任何歌曲，自动播放第一首
             play(0);
         }
         uploadModal.style.display = 'none';
@@ -956,12 +975,12 @@
     audio.volume = 0.7;
     volumeRange.value = 0.7;
 
-    // 初始空歌单展示
+    // 初始化
     updateList();
-    // 设置默认封面为wink (已在html中预设)
     coverImg.src = DEFAULT_COVER;
+    initSpectrum();
 
-    // 樱花飘落逻辑 (与首页一致)
+    // 樱花飘落逻辑
     (function(){
         const flurryContainer = document.getElementById('sakura-flurry');
         if (!flurryContainer) return;
