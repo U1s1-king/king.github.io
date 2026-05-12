@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>🌸 樱花转换器 · 中文/图片/二进制喵</title>
-    <!-- 樱花主题字体 & 图标 -->
+    <title>🌸 樱花工具箱 · 喵喵小助手</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600&family=Noto+Serif+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
@@ -35,7 +34,6 @@
             overflow: hidden;
         }
 
-        /* 樱花花瓣基础样式和动画 */
         .petal {
             position: absolute;
             top: -10%;
@@ -61,8 +59,8 @@
         }
 
         /* 主容器 */
-        .converter-container {
-            max-width: 1000px;
+        .toolbox-container {
+            max-width: 1200px;
             margin: 0 auto;
             padding: 2rem 2rem 4rem;
             position: relative;
@@ -70,7 +68,7 @@
         }
 
         /* 页眉 & 导航 */
-        .converter-header {
+        .toolbox-header {
             text-align: center;
             margin-bottom: 2rem;
         }
@@ -129,18 +127,7 @@
             color: #9e3c58;
         }
 
-        /* 主卡片 */
-        .card {
-            background: rgba(255, 250, 252, 0.92);
-            backdrop-filter: blur(6px);
-            border-radius: 2rem;
-            padding: 1.8rem;
-            margin: 1rem 0;
-            box-shadow: 0 18px 32px -12px rgba(216, 112, 140, 0.2);
-            border: 1px solid #ffe2ec;
-        }
-
-        /* 背景控制栏 樱花小巧 */
+        /* 背景控制栏 */
         .bg-controls {
             display: flex;
             gap: 12px;
@@ -170,45 +157,59 @@
             transform: translateY(-2px);
         }
 
-        /* 选项卡樱花风格 */
-        .tab-container {
-            margin-top: 1rem;
+        /* 主卡片 */
+        .main-card {
+            background: rgba(255, 250, 252, 0.92);
+            backdrop-filter: blur(6px);
+            border-radius: 2rem;
+            padding: 1.8rem;
+            margin: 1rem 0;
+            box-shadow: 0 18px 32px -12px rgba(216, 112, 140, 0.2);
+            border: 1px solid #ffe2ec;
         }
 
-        .tab-buttons {
+        /* 工具标签页 */
+        .tools-tabs {
             display: flex;
+            flex-wrap: wrap;
             gap: 0.5rem;
             border-bottom: 2px solid #ffdee8;
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
         }
 
-        .tab-button {
+        .tool-tab {
             background: none;
             border: none;
-            padding: 0.8rem 1.8rem;
-            font-size: 1rem;
+            padding: 0.7rem 1.4rem;
+            font-size: 0.9rem;
             font-weight: 500;
             color: #b5768c;
             cursor: pointer;
             transition: 0.2s;
-            border-radius: 30px 30px 0 0;
-            position: relative;
+            border-radius: 30px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .tab-button.active {
-            color: #da6f91;
+        .tool-tab i {
+            font-size: 1rem;
+        }
+
+        .tool-tab.active {
             background: #fff5f8;
-            border-bottom: 3px solid #f09ebc;
+            color: #da6f91;
+            box-shadow: 0 2px 8px rgba(218, 111, 145, 0.15);
         }
 
-        .tab-content {
+        .tool-panel {
             display: none;
-            padding: 0.5rem 0;
+            animation: fadeIn 0.25s ease;
         }
 
-        .tab-content.active {
+        .tool-panel.active {
             display: block;
-            animation: fadeIn 0.3s ease;
         }
 
         @keyframes fadeIn {
@@ -216,20 +217,19 @@
             to { opacity: 1; transform: translateY(0);}
         }
 
-        textarea {
+        /* 表单元素 */
+        textarea, input, select {
             width: 100%;
-            height: 150px;
-            padding: 14px;
+            padding: 12px 16px;
             border: 1px solid #ffd5e2;
-            border-radius: 1.5rem;
+            border-radius: 1.2rem;
             font-size: 0.9rem;
             font-family: 'Inter', monospace;
             background: #fffcfd;
-            resize: vertical;
             transition: 0.2s;
         }
 
-        textarea:focus {
+        textarea:focus, input:focus, select:focus {
             outline: none;
             border-color: #f0a0ba;
             box-shadow: 0 0 0 3px rgba(240, 160, 186, 0.2);
@@ -238,7 +238,7 @@
         .button-group {
             display: flex;
             gap: 12px;
-            margin: 1.2rem 0;
+            margin: 1rem 0;
             flex-wrap: wrap;
         }
 
@@ -251,10 +251,8 @@
             font-weight: 600;
             cursor: pointer;
             transition: 0.2s;
-            flex: 1;
             display: inline-flex;
             align-items: center;
-            justify-content: center;
             gap: 8px;
             font-size: 0.9rem;
         }
@@ -276,26 +274,13 @@
             transition: 0.2s;
         }
 
-        .result-container {
-            margin-top: 1.5rem;
-        }
-
-        .result-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            margin-bottom: 0.8rem;
-        }
-
-        .result {
+        .result-area {
+            margin-top: 1.2rem;
             background: #fffbfd;
             border-left: 5px solid #f3a0bb;
             padding: 1rem;
             border-radius: 1rem;
-            min-height: 100px;
-            max-height: 280px;
-            overflow-y: auto;
+            min-height: 80px;
             font-family: 'SF Mono', monospace;
             font-size: 0.85rem;
             word-break: break-all;
@@ -303,33 +288,36 @@
             color: #4d353e;
         }
 
-        .copy-success {
-            color: #b9708b;
-            font-size: 0.75rem;
-            margin-left: 8px;
-            opacity: 0;
-            transition: 0.2s;
+        .result-area h4 {
+            color: #bf6d8a;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
         }
 
-        .image-preview {
-            max-width: 100%;
-            max-height: 200px;
-            border-radius: 20px;
-            margin: 12px 0;
-            display: none;
-            border: 2px solid #ffd5e2;
-            object-fit: contain;
-            background: #fff3f6;
+        .inline-input-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 12px;
         }
 
-        .file-info {
-            background: #fff2f6;
-            border-radius: 20px;
-            padding: 10px 16px;
+        .inline-input-group label {
+            font-size: 0.85rem;
+            color: #ac5d76;
+        }
+
+        .inline-input-group input {
+            width: auto;
+            flex: 1;
+            min-width: 100px;
+        }
+
+        .slider-value {
+            background: #ffeef2;
+            padding: 4px 12px;
+            border-radius: 30px;
             font-size: 0.8rem;
-            color: #a45672;
-            margin: 12px 0;
-            display: none;
         }
 
         .progress-container {
@@ -355,6 +343,26 @@
             margin: 10px 0;
             display: none;
             font-size: 0.85rem;
+        }
+
+        .image-preview {
+            max-width: 100%;
+            max-height: 150px;
+            border-radius: 20px;
+            margin: 12px 0;
+            display: none;
+            border: 2px solid #ffd5e2;
+            object-fit: contain;
+        }
+
+        .file-info {
+            background: #fff2f6;
+            border-radius: 20px;
+            padding: 10px 16px;
+            font-size: 0.8rem;
+            color: #a45672;
+            margin: 12px 0;
+            display: none;
         }
 
         .info-box {
@@ -391,20 +399,6 @@
             margin-top: 1rem;
         }
 
-        @media (max-width: 640px) {
-            .converter-container {
-                padding: 1rem;
-            }
-            .button-group {
-                flex-direction: column;
-            }
-            .tab-button {
-                padding: 0.6rem 1rem;
-                font-size: 0.9rem;
-            }
-        }
-
-        /* 社交媒体/链接区 */
         .social-links {
             display: flex;
             justify-content: center;
@@ -433,21 +427,46 @@
             color: #b84f6e;
             transform: translateY(-3px);
         }
+
+        @media (max-width: 720px) {
+            .toolbox-container {
+                padding: 1rem;
+            }
+            .tool-tab {
+                padding: 0.5rem 1rem;
+                font-size: 0.8rem;
+            }
+            .button-group {
+                flex-direction: column;
+            }
+            .tools-tabs {
+                justify-content: center;
+            }
+        }
+
+        .copy-tip {
+            display: inline-block;
+            margin-left: 10px;
+            font-size: 0.7rem;
+            color: #e57397;
+            opacity: 0;
+            transition: 0.2s;
+        }
     </style>
 </head>
 <body>
 
 <div class="sakura-flurry" id="sakura-flurry"></div>
 
-<main class="converter-container">
-    <header class="converter-header">
+<main class="toolbox-container">
+    <header class="toolbox-header">
         <div class="blog-title">
             <i class="fas fa-fan"></i>
-            樱花转换器
-            <i class="fas fa-exchange-alt"></i>
+            樱花工具箱
+            <i class="fas fa-toolbox"></i>
         </div>
         <div class="subhead">
-            <i class="fas fa-code"></i> 中文 · 图片 · 二进制 喵喵互转
+            <i class="fas fa-magic"></i> 喵喵小助手 · 常用工具一网打尽
         </div>
         <div class="nav-links">
             <a href="index.html">首页</a>
@@ -455,95 +474,197 @@
             <a href="index2.html">归档</a>
             <a href="index3.html">留言</a>
             <a href="music.html">音乐</a>
-            <a href="index4.html">转换</a>
+            <a href="index4.html">工具</a>
         </div>
     </header>
 
-    <div class="card">
-        <div class="bg-controls">
-            <button class="cherry-btn" id="defaultBgBtn"><i class="fas fa-palette"></i> 默认背景</button>
-            <button class="cherry-btn" id="uploadBgBtn"><i class="fas fa-cloud-upload-alt"></i> 上传背景</button>
-            <input type="file" id="bgImageUpload" accept="image/*" style="display:none">
-            <button class="cherry-btn" id="clearBgBtn"><i class="fas fa-times-circle"></i> 清除背景</button>
+    <div class="bg-controls">
+        <button class="cherry-btn" id="defaultBgBtn"><i class="fas fa-palette"></i> 默认背景</button>
+        <button class="cherry-btn" id="uploadBgBtn"><i class="fas fa-cloud-upload-alt"></i> 上传背景</button>
+        <input type="file" id="bgImageUpload" accept="image/*" style="display:none">
+        <button class="cherry-btn" id="clearBgBtn"><i class="fas fa-times-circle"></i> 清除背景</button>
+    </div>
+
+    <div class="main-card">
+        <!-- 工具标签页 -->
+        <div class="tools-tabs">
+            <button class="tool-tab active" data-tool="converter"><i class="fas fa-exchange-alt"></i> 转换器</button>
+            <button class="tool-tab" data-tool="random"><i class="fas fa-dice-d6"></i> 随机数</button>
+            <button class="tool-tab" data-tool="countdown"><i class="fas fa-hourglass-half"></i> 倒计时</button>
+            <button class="tool-tab" data-tool="password"><i class="fas fa-lock"></i> 密码生成</button>
+            <button class="tool-tab" data-tool="lottery"><i class="fas fa-gift"></i> 抽签</button>
+            <button class="tool-tab" data-tool="color"><i class="fas fa-eye-dropper"></i> 颜色</button>
+            <button class="tool-tab" data-tool="counter"><i class="fas fa-calculator"></i> 字符统计</button>
         </div>
 
-        <div class="tab-container">
-            <div class="tab-buttons">
-                <button class="tab-button active" data-tab="text-tab"><i class="fas fa-language"></i> 文本转换</button>
-                <button class="tab-button" data-tab="image-tab"><i class="fas fa-image"></i> 图片转换</button>
+        <!-- ==================== 1. 转换器 ==================== -->
+        <div id="tool-converter" class="tool-panel active">
+            <textarea id="converterInput" placeholder="✨ 输入中文文本 或 二进制代码 (8位一组，空格隔开) ✨" rows="4"></textarea>
+            <div class="button-group">
+                <button class="btn-primary" id="toBinaryBtn"><i class="fas fa-code"></i> 中文 → 二进制</button>
+                <button class="btn-primary" id="toTextBtn"><i class="fas fa-font"></i> 二进制 → 中文</button>
+                <button class="btn-secondary" id="clearConverterBtn"><i class="fas fa-trash-alt"></i> 清空</button>
             </div>
-
-            <!-- 文本转换Tab -->
-            <div id="text-tab" class="tab-content active">
-                <textarea id="inputText" placeholder="✨ 在这里输入中文文本 或 二进制代码 (8位一组，空格隔开) ✨"></textarea>
-                <div class="button-group">
-                    <button class="btn-primary" id="toBinaryBtn"><i class="fas fa-code"></i> 中文 → 二进制</button>
-                    <button class="btn-primary" id="toTextBtn"><i class="fas fa-font"></i> 二进制 → 中文</button>
-                    <button class="btn-secondary" id="clearTextBtn"><i class="fas fa-trash-alt"></i> 清空</button>
-                </div>
+            <div class="button-group">
+                <button class="btn-primary" id="uploadImageBtn"><i class="fas fa-file-image"></i> 图片转二进制</button>
+                <input type="file" id="imageToBinaryUpload" accept="image/*" style="display:none">
+                <button class="btn-primary" id="binaryToImageBtn"><i class="fas fa-sync-alt"></i> 二进制 → 图片</button>
+                <button class="btn-secondary" id="downloadBinaryBtn"><i class="fas fa-download"></i> 下载二进制</button>
             </div>
-
-            <!-- 图片转换Tab -->
-            <div id="image-tab" class="tab-content">
-                <div class="button-group">
-                    <button class="btn-primary" id="uploadImageBtn"><i class="fas fa-file-image"></i> 选择图片转二进制</button>
-                    <input type="file" id="imageToBinaryUpload" accept="image/*" style="display:none">
-                    <button class="btn-primary" id="binaryToImageBtn"><i class="fas fa-sync-alt"></i> 二进制 → 图片</button>
-                </div>
-                <div class="file-info" id="fileInfo"></div>
-                <div class="progress-container" id="progressContainer"><div class="progress-bar" id="progressBar"></div></div>
-                <img id="imagePreview" class="image-preview" alt="樱花预览">
-                <div class="button-group">
-                    <button class="btn-secondary" id="downloadBinaryBtn"><i class="fas fa-download"></i> 下载二进制文件</button>
-                    <button class="btn-secondary" id="clearImageTabBtn"><i class="fas fa-eraser"></i> 清空图片转换</button>
-                </div>
+            <div id="imageFileInfo" class="file-info"></div>
+            <div class="progress-container" id="progressContainer"><div class="progress-bar" id="progressBar"></div></div>
+            <img id="imagePreview" class="image-preview" alt="预览">
+            <div class="status-message" id="converterStatus"></div>
+            <div class="result-area" id="converterResult">
+                <h4><i class="fas fa-cherry-blossom"></i> 转换结果</h4>
+                <div id="converterOutput">🌸 等待转换 ...</div>
+                <button class="cherry-btn" id="copyConverterBtn" style="margin-top:8px; padding:4px 16px;"><i class="fas fa-copy"></i> 复制结果</button>
             </div>
         </div>
 
-        <div class="status-message" id="statusMessage"></div>
+        <!-- ==================== 2. 随机数生成器 ==================== -->
+        <div id="tool-random" class="tool-panel">
+            <div class="inline-input-group">
+                <label>最小值：</label>
+                <input type="number" id="randomMin" value="1">
+                <label>最大值：</label>
+                <input type="number" id="randomMax" value="100">
+            </div>
+            <div class="inline-input-group">
+                <label>生成数量：</label>
+                <input type="number" id="randomCount" value="1" min="1" max="50">
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" id="generateRandomBtn"><i class="fas fa-dice"></i> 生成随机数</button>
+            </div>
+            <div class="result-area" id="randomResult">
+                <h4><i class="fas fa-chart-simple"></i> 随机结果</h4>
+                <div id="randomOutput">——</div>
+                <button class="cherry-btn" id="copyRandomBtn" style="margin-top:8px;"><i class="fas fa-copy"></i> 复制</button>
+            </div>
+        </div>
 
-        <div class="result-container">
-            <div class="result-header">
-                <h3 style="color:#b34e6b;"><i class="fas fa-cherry-blossom"></i> 转换结果</h3>
-                <div>
-                    <button id="copyBtn" class="cherry-btn" style="padding:5px 16px;"><i class="fas fa-copy"></i> 复制</button>
-                    <span id="copySuccess" class="copy-success">✓ 复制成功喵</span>
+        <!-- ==================== 3. 倒计时器 ==================== -->
+        <div id="tool-countdown" class="tool-panel">
+            <div class="inline-input-group">
+                <label>目标日期：</label>
+                <input type="datetime-local" id="targetDate">
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" id="startCountdownBtn"><i class="fas fa-play"></i> 开始倒计时</button>
+                <button class="btn-secondary" id="stopCountdownBtn"><i class="fas fa-stop"></i> 停止</button>
+            </div>
+            <div class="result-area" id="countdownResult">
+                <h4><i class="fas fa-clock"></i> 距离目标</h4>
+                <div id="countdownOutput" style="font-size: 1.2rem; text-align: center;">——</div>
+            </div>
+        </div>
+
+        <!-- ==================== 4. 密码生成器 ==================== -->
+        <div id="tool-password" class="tool-panel">
+            <div class="inline-input-group">
+                <label>密码长度：</label>
+                <input type="range" id="podLength" min="4" max="32" value="12">
+                <span class="slider-value" id="podLengthVal">12</span>
+            </div>
+            <div class="inline-input-group">
+                <label><input type="checkbox" id="podUppercase" checked> 大写字母</label>
+                <label><input type="checkbox" id="podLowercase" checked> 小写字母</label>
+                <label><input type="checkbox" id="podNumbers" checked> 数字</label>
+                <label><input type="checkbox" id="podSymbols"> 符号</label>
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" id="generatePwdBtn"><i class="fas fa-key"></i> 生成密码</button>
+            </div>
+            <div class="result-area" id="podResult">
+                <h4><i class="fas fa-lock"></i> 生成的密码</h4>
+                <div id="podOutput" style="font-family: monospace;">——</div>
+                <button class="cherry-btn" id="copyPodBtn"><i class="fas fa-copy"></i> 复制密码</button>
+            </div>
+        </div>
+
+        <!-- ==================== 5. 抽签工具 ==================== -->
+        <div id="tool-lottery" class="tool-panel">
+            <textarea id="lotteryItems" rows="4" placeholder="输入抽签选项，每行一个喵~&#10;例如：&#10;吃火锅&#10;看电影&#10;睡大觉&#10;踢足球"></textarea>
+            <div class="button-group">
+                <button class="btn-primary" id="drawBtn"><i class="fas fa-random"></i> 抽一个！</button>
+                <button class="btn-secondary" id="clearLotteryBtn"><i class="fas fa-eraser"></i> 清空</button>
+            </div>
+            <div class="result-area" id="lotteryResult">
+                <h4><i class="fas fa-star"></i> 抽签结果</h4>
+                <div id="lotteryOutput" style="font-size: 1.2rem;">——</div>
+            </div>
+        </div>
+
+        <!-- ==================== 6. 颜色工具 ==================== -->
+        <div id="tool-color" class="tool-panel">
+            <div class="inline-input-group">
+                <label>取色器：</label>
+                <input type="color" id="colorPicker" value="#e57397">
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" id="applyColorBtn"><i class="fas fa-palette"></i> 应用到预览</button>
+                <button class="btn-secondary" id="randomColorBtn"><i class="fas fa-dice"></i> 随机颜色</button>
+            </div>
+            <div class="result-area" id="colorResult">
+                <h4><i class="fas fa-fill-drip"></i> 颜色信息</h4>
+                <div id="colorOutput">
+                    <p>HEX: <span id="hexValue">#e57397</span></p>
+                    <p>RGB: <span id="rgbValue">rgb(229, 115, 151)</span></p>
+                </div>
+                <div id="colorPreview" style="width: 100%; height: 60px; border-radius: 16px; background: #e57397; margin-top: 10px;"></div>
+            </div>
+        </div>
+
+        <!-- ==================== 7. 字符统计 ==================== -->
+        <div id="tool-counter" class="tool-panel">
+            <textarea id="counterInput" rows="5" placeholder="输入文字，实时统计喵~"></textarea>
+            <div class="result-area" id="counterResult">
+                <h4><i class="fas fa-chart-simple"></i> 统计结果</h4>
+                <div id="counterOutput">
+                    字符数: <span id="charCount">0</span><br>
+                    汉字数: <span id="chineseCount">0</span><br>
+                    字母数: <span id="letterCount">0</span><br>
+                    数字数: <span id="digitCount">0</span><br>
+                    行数: <span id="lineCount">0</span>
                 </div>
             </div>
-            <div class="result" id="outputText">🌸 等待转换 ...</div>
         </div>
 
         <div class="info-box">
             <h3><i class="fas fa-info-circle"></i> 喵喵小贴士</h3>
             <ul>
-                <li><strong>中文↔二进制</strong>：基于 UTF-8，中文字符转为8位字节组（空格分隔）</li>
-                <li><strong>图片↔二进制</strong>：上传图片→生成二进制字符流；将二进制文本反向还原图片</li>
-                <li><strong>优化</strong>：大文件分块处理 / 自动检测 / 进度条展示 / 友好提示</li>
-                <li><i class="fas fa-heart" style="color:#e982a2;"></i> 二进制代码需为8位一组，支持空格或任意分隔符</li>
+                <li><strong>转换器</strong>：支持中文↔二进制、图片↔二进制（大文件带进度条）</li>
+                <li><strong>随机数</strong>：可生成多个不重复随机数</li>
+                <li><strong>倒计时</strong>：设置目标时间，实时更新剩余天数/小时/分钟</li>
+                <li><strong>密码生成</strong>：自定义长度和字符类型，一键复制</li>
+                <li><strong>抽签</strong>：每行一个选项，随机抽取</li>
+                <li><strong>颜色工具</strong>：取色器 + HEX/RGB 显示</li>
+                <li><strong>字符统计</strong>：实时统计中英文数字行数</li>
             </ul>
         </div>
     </div>
+
     <hr>
+
     <footer>
         <div class="social-links">
-            <a href="https://space.bilibili.com/1113834956?spm_id_from=333.1007.0.0" target="_blank" rel="noopener noreferrer"><i class="fab fa-bilibili"></i></a>
-            <a href="https://www.youtube.com/@kaneKing-l7l" target="_blank" rel="noopener noreferrer"><i class="fab fa-youtube"></i></a>
-            <a href="https://x.com/arry_kane" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
-            <a href="https://www.instagram.com/kane_kingasiatic/" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-            <a href="https://github.com/U1s1-king" aria-label="GitHub"><i class="fab fa-github"></i></a>
-            <a href="https://mail.google.com/mail/?view=cm&fs=1&to=kaneking114@gmail.com" aria-label="Email"><i class="fas fa-envelope"></i></a>
+            <a href="https://space.bilibili.com/1113834956?spm_id_from=333.1007.0.0" target="_blank"><i class="fab fa-bilibili"></i></a>
+            <a href="https://www.youtube.com/@kaneKing-l7l" target="_blank"><i class="fab fa-youtube"></i></a>
+            <a href="https://x.com/arry_kane" target="_blank"><i class="fab fa-twitter"></i></a>
+            <a href="https://www.instagram.com/kane_kingasiatic/" target="_blank"><i class="fab fa-instagram"></i></a>
+            <a href="https://github.com/U1s1-king" target="_blank"><i class="fab fa-github"></i></a>
+            <a href="https://mail.google.com/mail/?view=cm&fs=1&to=kaneking114@gmail.com"><i class="fas fa-envelope"></i></a>
         </div>
-        <i class="fas fa-cherry-blossom"></i>© 2026 樱花物语 | 转换 <i class="fas fa-fan"></i>
+        <i class="fas fa-cherry-blossom"></i> © 2026 樱花物语 | 工具箱 <i class="fas fa-tools"></i>
     </footer>
 </main>
 
 <script>
-    // ----------------------------------------------
-    // 樱花飘落 (修复版)
+    // ==================== 樱花飘落 ====================
     (function() {
         const flurry = document.getElementById('sakura-flurry');
         if (!flurry) return;
-
         function createPetal() {
             const p = document.createElement('div');
             p.classList.add('petal');
@@ -555,21 +676,19 @@
             p.style.animationDelay = Math.random() * 12 + 's';
             p.style.opacity = String(0.4 + Math.random() * 0.5);
             p.style.background = `radial-gradient(circle, #ffdfe6, #ffb0c2)`;
-            p.style.filter = `blur(${(Math.random())}px)`;
+            p.style.filter = `blur(${Math.random()}px)`;
             return p;
         }
-
         let petalCount = window.innerWidth < 700 ? 30 : 48;
         for (let i = 0; i < petalCount; i++) flurry.appendChild(createPetal());
-
         setInterval(() => {
             if (flurry.children.length < petalCount - 8) {
                 for (let i = 0; i < 4; i++) flurry.appendChild(createPetal());
             }
-            const petals = flurry.querySelectorAll('.petal');
-            petals.forEach(p => { if (p.getBoundingClientRect().top > window.innerHeight + 100) p.remove(); });
+            document.querySelectorAll('.petal').forEach(p => {
+                if (p.getBoundingClientRect().top > window.innerHeight + 100) p.remove();
+            });
         }, 3000);
-
         window.addEventListener('resize', function() {
             let expected = window.innerWidth < 700 ? 30 : 48;
             if (Math.abs(flurry.children.length - expected) > 12) {
@@ -580,281 +699,253 @@
         });
     })();
 
-    // ----------------------------------------------
-    // App 核心
-    const App = {
-        currentBinaryData: '',
-        currentImageInfo: null,
+    // ==================== 背景管理 ====================
+    const savedBg = localStorage.getItem('customBg');
+    if (savedBg && savedBg !== 'undefined') {
+        document.body.style.background = `url(${savedBg}) no-repeat center center fixed`;
+        document.body.style.backgroundSize = 'cover';
+    }
+    document.getElementById('defaultBgBtn').onclick = () => {
+        document.body.style.background = "linear-gradient(145deg, #fff9f7 0%, #ffeef4 100%)";
+        localStorage.removeItem('customBg');
+        showToast('已恢复默认背景');
+    };
+    document.getElementById('clearBgBtn').onclick = () => {
+        document.body.style.background = "";
+        localStorage.removeItem('customBg');
+        showToast('背景已清除');
+    };
+    document.getElementById('uploadBgBtn').onclick = () => document.getElementById('bgImageUpload').click();
+    document.getElementById('bgImageUpload').onchange = (e) => {
+        if(e.target.files.length) {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                document.body.style.background = `url(${ev.target.result}) no-repeat center center fixed`;
+                document.body.style.backgroundSize = 'cover';
+                localStorage.setItem('customBg', String(ev.target.result));
+                showToast('背景更新成功');
+            };
+            reader.readAsDataURL(e.target.files[0]);
+        }
+    };
 
-        showStatus(msg, type = 'success') {
-            const el = document.getElementById('statusMessage');
-            el.textContent = msg;
-            el.className = `status-message status-${type}`;
-            el.style.display = 'block';
-            setTimeout(() => { if(el) el.style.display = 'none'; }, 4000);
-        },
+    function showToast(msg) {
+        let t = document.getElementById('toastMsg');
+        if(!t) {
+            t = document.createElement('div');
+            t.id = 'toastMsg';
+            t.style.cssText = 'position:fixed; bottom:20px; left:50%; transform:translatex(-50%); background:#e27e9be0; backdrop-filter:blur(8px); padding:8px 20px; border-radius:60px; font-size:0.8rem; z-index:1100; color:white;';
+            document.body.appendChild(t);
+        }
+        t.textContent = msg;
+        t.style.display = 'block';
+        setTimeout(() => t.style.display = 'none', 2000);
+    }
 
+    // ==================== 标签页切换 ====================
+    const tabs = document.querySelectorAll('.tool-tab');
+    const panels = document.querySelectorAll('.tool-panel');
+    tabs.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const toolId = btn.dataset.tool;
+            tabs.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            panels.forEach(p => p.classList.remove('active'));
+            document.getElementById(`tool-${toolId}`).classList.add('active');
+        });
+    });
+
+    // ==================== 通用复制 ====================
+    function copyText(text, onSuccess) {
+        navigator.clipboard.writeText(text).then(() => { showToast('✓ 复制成功喵'); if(onSuccess) onSuccess(); }).catch(() => showToast('复制失败'));
+    }
+
+    // ==================== 1. 转换器 ====================
+    const converter = {
+        currentBinary: '',
         updateProgress(percent) {
             const container = document.getElementById('progressContainer');
             const bar = document.getElementById('progressBar');
             if (!container) return;
             if (percent === 0) container.style.display = 'block';
             bar.style.width = percent + '%';
-            if (percent >= 100) {
-                setTimeout(() => { container.style.display = 'none'; }, 800);
-            }
+            if (percent >= 100) setTimeout(() => container.style.display = 'none', 800);
         },
-
-        copyResult() {
-            const output = document.getElementById('outputText').innerText;
-            if (!output || output === '🌸 等待转换 ...') {
-                this.showStatus('没有可复制的内容喵', 'error');
-                return;
-            }
-            navigator.clipboard.writeText(output).then(() => {
-                const span = document.getElementById('copySuccess');
-                span.style.opacity = '1';
-                setTimeout(() => span.style.opacity = '0', 1800);
-                this.showStatus('复制成功~', 'success');
-            }).catch(() => this.showStatus('复制失败', 'error'));
-        },
-
-        setDefaultBg() {
-            document.body.style.background = "linear-gradient(145deg, #fff9f7 0%, #ffeef4 100%)";
-            localStorage.removeItem('customBg');
-            this.showStatus('已恢复樱花默认背景', 'success');
-        },
-        clearBg() {
-            document.body.style.background = "";
-            localStorage.removeItem('customBg');
-            this.showStatus('背景已清除', 'success');
-        },
-        uploadBg(file) {
-            if (!file || !file.type.startsWith('image/')) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                document.body.style.background = `url(${e.target.result}) no-repeat center center fixed`;
-                document.body.style.backgroundSize = 'cover';
-                localStorage.setItem('customBg', String(e.target.result));
-                this.showStatus('背景更新成功', 'success');
-            };
-            reader.readAsDataURL(file);
-        }
-    };
-
-    // 文本转换模块
-    const TextConverter = {
         toBinary() {
-            const input = document.getElementById('inputText').value;
-            if (!input.trim()) { App.showStatus('请输入要转换的文本或二进制', 'error'); return; }
-            App.showStatus('转换中...', 'warning');
-            setTimeout(() => {
-                try {
-                    const encoder = new TextEncoder();
-                    const bytes = encoder.encode(input);
-                    let binaryStr = '';
-                    for (let i = 0; i < bytes.length; i++) {
-                        binaryStr += bytes[i].toString(2).padStart(8, '0') + ' ';
-                        if (i % 100 === 0) App.updateProgress((i / bytes.length) * 100);
-                    }
-                    const result = binaryStr.trim();
-                    document.getElementById('outputText').innerText = result || '(无数据)';
-                    App.updateProgress(100);
-                    App.showStatus('转换完成喵 ✓', 'success');
-                } catch(e) { App.showStatus('转换失败: '+e.message, 'error'); }
-            }, 20);
+            const input = document.getElementById('converterInput').value;
+            if (!input.trim()) { showToast('请输入内容'); return; }
+            try {
+                const bytes = new TextEncoder().encode(input);
+                let binary = '';
+                for (let i = 0; i < bytes.length; i++) {
+                    binary += bytes[i].toString(2).padStart(8, '0') + ' ';
+                    if (i % 500 === 0) this.updateProgress((i / bytes.length) * 100);
+                }
+                document.getElementById('converterOutput').innerText = binary.trim();
+                this.updateProgress(100);
+            } catch(e) { showToast('转换失败'); }
         },
-
         toText() {
-            let input = document.getElementById('inputText').value;
-            if (!input.trim()) { App.showStatus('请输入二进制代码', 'error'); return; }
+            let input = document.getElementById('converterInput').value;
             const clean = input.replace(/[^01]/g, '');
-            if (clean.length === 0 || clean.length % 8 !== 0) {
-                App.showStatus('无效的二进制格式，请确保是8位一组(支持空格分隔)', 'error');
-                return;
-            }
-            App.showStatus('解码中...', 'warning');
-            setTimeout(() => {
-                try {
-                    const byteArray = [];
-                    for (let i = 0; i < clean.length; i += 8) {
-                        byteArray.push(parseInt(clean.substring(i, i + 8), 2));
-                    }
-                    const decoder = new TextDecoder('utf-8');
-                    const uint8 = new Uint8Array(byteArray);
-                    const text = decoder.decode(uint8);
-                    document.getElementById('outputText').innerText = text || '(空字符串)';
-                    App.updateProgress(100);
-                    App.showStatus('解码成功', 'success');
-                } catch(e) { App.showStatus('解码失败: '+e.message, 'error'); }
-            }, 20);
+            if (clean.length === 0 || clean.length % 8 !== 0) { showToast('二进制格式不对，需要8位一组'); return; }
+            try {
+                const bytes = [];
+                for (let i = 0; i < clean.length; i += 8) bytes.push(parseInt(clean.substr(i, 8), 2));
+                document.getElementById('converterOutput').innerText = new TextDecoder().decode(new Uint8Array(bytes));
+            } catch(e) { showToast('解码失败'); }
         },
-
-        clear() {
-            document.getElementById('inputText').value = '';
-            document.getElementById('outputText').innerText = '🌸 等待转换 ...';
-            App.showStatus('已清空', 'success');
-        }
-    };
-
-    // 图片转换模块
-    const ImageConverter = {
-        currentBinary: '',
-        currentFileName: '',
-
         async handleImageUpload(file) {
-            if (!file || !file.type.startsWith('image/')) {
-                App.showStatus('请选择图片文件', 'error');
-                return;
-            }
-            this.currentFileName = file.name;
-            const fileInfoDiv = document.getElementById('fileInfo');
-            fileInfoDiv.innerHTML = `<i class="fas fa-camera"></i> 文件名: ${file.name} | 大小: ${(file.size/1024).toFixed(2)} KB`;
-            fileInfoDiv.style.display = 'block';
-
+            if (!file || !file.type.startsWith('image/')) return;
+            document.getElementById('imageFileInfo').innerHTML = `<i class="fas fa-camera"></i> ${file.name} (${(file.size/1024).toFixed(1)} KB)`;
+            document.getElementById('imageFileInfo').style.display = 'block';
             const preview = document.getElementById('imagePreview');
             preview.style.display = 'block';
-            const readerPreview = new FileReader();
-            readerPreview.onload = (e) => { preview.src = e.target.result; };
-            readerPreview.readAsDataURL(file);
-
-            App.showStatus('正在转换图片为二进制...', 'warning');
-            App.updateProgress(0);
-
-            try {
-                const arrayBuffer = await file.arrayBuffer();
-                const bytes = new Uint8Array(arrayBuffer);
-                let binaryString = '';
-                const total = bytes.length;
-                for (let i = 0; i < total; i++) {
-                    binaryString += bytes[i].toString(2).padStart(8, '0') + ' ';
-                    if (i % 500 === 0) App.updateProgress((i / total) * 100);
-                }
-                this.currentBinary = binaryString.trim();
-                const previewBinary = this.currentBinary.split(' ').slice(0, 60).join(' ');
-                document.getElementById('outputText').innerText = `✨图片已转二进制 (共 ${Math.ceil(total * 8 / 8)} 字节)\n\n预览(前60字节):\n${previewBinary}...`;
-                App.updateProgress(100);
-                App.showStatus('图片转换完成✓ 可下载.bin文件', 'success');
-            } catch(e) {
-                App.showStatus('转换失败: '+e.message, 'error');
+            preview.src = URL.createObjectURL(file);
+            this.updateProgress(0);
+            const buffer = await file.arrayBuffer();
+            const bytes = new Uint8Array(buffer);
+            let binary = '';
+            for (let i = 0; i < bytes.length; i++) {
+                binary += bytes[i].toString(2).padStart(8, '0') + ' ';
+                if (i % 500 === 0) this.updateProgress((i / bytes.length) * 100);
             }
+            this.currentBinary = binary.trim();
+            document.getElementById('converterOutput').innerText = `图片转二进制完成 (共${bytes.length}字节)\n预览:\n${binary.slice(0, 200)}...`;
+            this.updateProgress(100);
         },
-
         binaryToImage() {
-            const binaryInput = document.getElementById('inputText').value;
-            if (!binaryInput.trim()) {
-                App.showStatus('请在输入框内填写二进制文本 (图片转换生成的二进制码)', 'error');
-                return;
-            }
-            const clean = binaryInput.replace(/[^01]/g, '');
-            if (clean.length === 0 || clean.length % 8 !== 0) {
-                App.showStatus('二进制格式不对(须是8位组)', 'error');
-                return;
-            }
-            App.showStatus('正在重建图片...', 'warning');
-            setTimeout(() => {
-                try {
-                    const bytes = [];
-                    for (let i = 0; i < clean.length; i += 8) {
-                        bytes.push(parseInt(clean.substring(i, i + 8), 2));
-                    }
-                    const blob = new Blob([new Uint8Array(bytes)], { type: 'image/png' });
-                    const url = URL.createObjectURL(blob);
-                    const preview = document.getElementById('imagePreview');
-                    preview.src = url;
-                    preview.style.display = 'block';
-                    document.getElementById('outputText').innerText = '二进制已成功还原为图片，预览如上～';
-                    App.showStatus('图片还原成功', 'success');
-                    this.currentBinary = binaryInput;
-                } catch(e) {
-                    App.showStatus('还原失败，二进制可能不是有效的图片数据', 'error');
-                }
-            }, 50);
+            const input = document.getElementById('converterInput').value;
+            const clean = input.replace(/[^01]/g, '');
+            if (clean.length === 0 || clean.length % 8 !== 0) { showToast('请输入有效的二进制'); return; }
+            try {
+                const bytes = [];
+                for (let i = 0; i < clean.length; i += 8) bytes.push(parseInt(clean.substr(i, 8), 2));
+                const blob = new Blob([new Uint8Array(bytes)], { type: 'image/png' });
+                const url = URL.createObjectURL(blob);
+                const preview = document.getElementById('imagePreview');
+                preview.src = url;
+                preview.style.display = 'block';
+                document.getElementById('converterOutput').innerText = '二进制已还原为图片，预览如上~';
+            } catch(e) { showToast('还原失败'); }
         },
-
         downloadBinary() {
-            if (!this.currentBinary && !ImageConverter.currentBinary) {
-                const maybe = document.getElementById('outputText').innerText;
-                if (maybe.includes('图片已转二进制')) {
-                    App.showStatus('请先使用"选择图片转二进制"生成二进制流', 'error');
-                    return;
-                }
-                App.showStatus('没有可下载的二进制数据，请先转换图片', 'error');
-                return;
-            }
-            const data = this.currentBinary || ImageConverter.currentBinary;
-            if (!data) { App.showStatus('无二进制数据', 'error'); return; }
-            const blob = new Blob([data], { type: 'text/plain' });
+            const output = document.getElementById('converterOutput').innerText;
+            if (!output || output.includes('等待转换')) { showToast('没有可下载的二进制数据'); return; }
+            const blob = new Blob([output], { type: 'text/plain' });
             const link = document.createElement('a');
-            const name = this.currentFileName ? this.currentFileName.replace(/\.[^/.]+$/, '') + '.bin' : '樱花二进制.bin';
             link.href = URL.createObjectURL(blob);
-            link.download = name;
+            link.download = '樱花二进制.bin';
             link.click();
             URL.revokeObjectURL(link.href);
-            App.showStatus('下载开始喵', 'success');
-        },
-
-        clearImageTab() {
-            document.getElementById('inputText').value = '';
-            document.getElementById('outputText').innerText = '🌸 等待转换 ...';
-            document.getElementById('imagePreview').style.display = 'none';
-            document.getElementById('fileInfo').style.display = 'none';
-            document.getElementById('imageToBinaryUpload').value = '';
-            this.currentBinary = '';
-            this.currentFileName = '';
-            App.showStatus('已清空图片转换区', 'success');
         }
     };
+    document.getElementById('toBinaryBtn').onclick = () => converter.toBinary();
+    document.getElementById('toTextBtn').onclick = () => converter.toText();
+    document.getElementById('clearConverterBtn').onclick = () => { document.getElementById('converterInput').value = ''; document.getElementById('converterOutput').innerText = '🌸 等待转换 ...'; document.getElementById('imagePreview').style.display = 'none'; document.getElementById('imageFileInfo').style.display = 'none'; };
+    document.getElementById('uploadImageBtn').onclick = () => document.getElementById('imageToBinaryUpload').click();
+    document.getElementById('imageToBinaryUpload').onchange = (e) => { if(e.target.files.length) converter.handleImageUpload(e.target.files[0]); };
+    document.getElementById('binaryToImageBtn').onclick = () => converter.binaryToImage();
+    document.getElementById('downloadBinaryBtn').onclick = () => converter.downloadBinary();
+    document.getElementById('copyConverterBtn').onclick = () => copyText(document.getElementById('converterOutput').innerText);
 
-    // 绑定UI事件 & 初始化背景记忆
-    document.addEventListener('DOMContentLoaded', () => {
-        const savedBg = localStorage.getItem('customBg');
-        if (savedBg && savedBg !== 'undefined') {
-            document.body.style.background = `url(${savedBg}) no-repeat center center fixed`;
-            document.body.style.backgroundSize = 'cover';
-        } else {
-            document.body.style.background = "linear-gradient(145deg, #fff9f7 0%, #ffeef4 100%)";
+    // ==================== 2. 随机数 ====================
+    document.getElementById('generateRandomBtn').onclick = () => {
+        let min = parseInt(document.getElementById('randomMin').value);
+        let max = parseInt(document.getElementById('randomMax').value);
+        let count = parseInt(document.getElementById('randomCount').value);
+        if (isNaN(min) || isNaN(max) || isNaN(count)) return;
+        if (min > max) [min, max] = [max, min];
+        const results = new Set();
+        if (count > max - min + 1) count = max - min + 1;
+        while (results.size < count) {
+            results.add(Math.floor(Math.random() * (max - min + 1)) + min);
         }
+        const output = Array.from(results).join(', ');
+        document.getElementById('randomOutput').innerText = output || '无结果';
+    };
+    document.getElementById('copyRandomBtn').onclick = () => copyText(document.getElementById('randomOutput').innerText);
 
-        // 选项卡切换
-        const tabs = document.querySelectorAll('.tab-button');
-        tabs.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const tabId = btn.dataset.tab;
-                document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
-                document.getElementById(tabId).classList.add('active');
-                tabs.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-            });
-        });
+    // ==================== 3. 倒计时 ====================
+    let countdownInterval = null;
+    function updateCountdown() {
+        const target = new Date(document.getElementById('targetDate').value);
+        if (isNaN(target.getTime())) { document.getElementById('countdownOutput').innerHTML = '请设置目标日期'; return; }
+        const now = new Date();
+        const diff = target - now;
+        if (diff <= 0) { document.getElementById('countdownOutput').innerHTML = '🎉 时间到啦！ 🎉'; if(countdownInterval) clearInterval(countdownInterval); return; }
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (86400000)) / 3600000);
+        const minutes = Math.floor((diff % 3600000) / 60000);
+        const seconds = Math.floor((diff % 60000) / 1000);
+        document.getElementById('countdownOutput').innerHTML = `<span style="font-size:1rem;">${days}天 ${hours}小时 ${minutes}分 ${seconds}秒</span>`;
+    }
+    document.getElementById('startCountdownBtn').onclick = () => {
+        if (countdownInterval) clearInterval(countdownInterval);
+        updateCountdown();
+        countdownInterval = setInterval(updateCountdown, 1000);
+    };
+    document.getElementById('stopCountdownBtn').onclick = () => { if(countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; } };
 
-        // 文本按钮
-        document.getElementById('toBinaryBtn').addEventListener('click', () => TextConverter.toBinary());
-        document.getElementById('toTextBtn').addEventListener('click', () => TextConverter.toText());
-        document.getElementById('clearTextBtn').addEventListener('click', () => TextConverter.clear());
+    // ==================== 4. 密码生成 ====================
+    document.getElementById('podLength').oninput = () => { document.getElementById('podLengthVal').innerText = document.getElementById('podLength').value; };
+    document.getElementById('generatePwdBtn').onclick = () => {
+        const len = parseInt(document.getElementById('podLength').value);
+        const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+        const lower = 'abcdefghijkmnpqrstuvwxyz';
+        const numbers = '23456789';
+        const symbols = '!@#$%^&*()_+[]{}<>?';
+        let chars = '';
+        if (document.getElementById('podUppercase').checked) chars += upper;
+        if (document.getElementById('podLowercase').checked) chars += lower;
+        if (document.getElementById('podNumbers').checked) chars += numbers;
+        if (document.getElementById('podSymbols').checked) chars += symbols;
+        if (chars === '') { showToast('至少选择一种字符类型'); return; }
+        let pwd = '';
+        for (let i = 0; i < len; i++) pwd += chars[Math.floor(Math.random() * chars.length)];
+        document.getElementById('podOutput').innerText = pwd;
+    };
+    document.getElementById('copyPodBtn').onclick = () => copyText(document.getElementById('podOutput').innerText);
 
-        // 图片按钮
-        const uploadImageBtn = document.getElementById('uploadImageBtn');
-        const fileInputImg = document.getElementById('imageToBinaryUpload');
-        uploadImageBtn.addEventListener('click', () => fileInputImg.click());
-        fileInputImg.addEventListener('change', (e) => {
-            if(e.target.files.length) ImageConverter.handleImageUpload(e.target.files[0]);
-        });
-        document.getElementById('binaryToImageBtn').addEventListener('click', () => ImageConverter.binaryToImage());
-        document.getElementById('downloadBinaryBtn').addEventListener('click', () => ImageConverter.downloadBinary());
-        document.getElementById('clearImageTabBtn').addEventListener('click', () => ImageConverter.clearImageTab());
+    // ==================== 5. 抽签 ====================
+    document.getElementById('drawBtn').onclick = () => {
+        const text = document.getElementById('lotteryItems').value;
+        const items = text.split(/\n/).filter(s => s.trim().length > 0);
+        if (items.length === 0) { showToast('请填写抽签选项'); return; }
+        const result = items[Math.floor(Math.random() * items.length)];
+        document.getElementById('lotteryOutput').innerHTML = `🎋 ${result} 🎋`;
+    };
+    document.getElementById('clearLotteryBtn').onclick = () => { document.getElementById('lotteryItems').value = ''; document.getElementById('lotteryOutput').innerHTML = '——'; };
 
-        // 复制 & 背景
-        document.getElementById('copyBtn').addEventListener('click', () => App.copyResult());
-        document.getElementById('defaultBgBtn').addEventListener('click', () => App.setDefaultBg());
-        document.getElementById('uploadBgBtn').addEventListener('click', () => document.getElementById('bgImageUpload').click());
-        document.getElementById('clearBgBtn').addEventListener('click', () => App.clearBg());
-        document.getElementById('bgImageUpload').addEventListener('change', (e) => {
-            if(e.target.files.length) App.uploadBg(e.target.files[0]);
-        });
+    // ==================== 6. 颜色工具 ====================
+    function updateColorInfo(hex) {
+        const r = parseInt(hex.slice(1,3), 16);
+        const g = parseInt(hex.slice(3,5), 16);
+        const b = parseInt(hex.slice(5,7), 16);
+        document.getElementById('hexValue').innerText = hex;
+        document.getElementById('rgbValue').innerText = `rgb(${r}, ${g}, ${b})`;
+        document.getElementById('colorPreview').style.background = hex;
+    }
+    document.getElementById('colorPicker').oninput = () => updateColorInfo(document.getElementById('colorPicker').value);
+    document.getElementById('applyColorBtn').onclick = () => updateColorInfo(document.getElementById('colorPicker').value);
+    document.getElementById('randomColorBtn').onclick = () => {
+        const randomHex = '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
+        document.getElementById('colorPicker').value = randomHex;
+        updateColorInfo(randomHex);
+    };
+    updateColorInfo('#e57397');
 
-        TextConverter.clear();
-    });
+    // ==================== 7. 字符统计 ====================
+    function updateCounter() {
+        const text = document.getElementById('counterInput').value;
+        document.getElementById('charCount').innerText = String(text.length);
+        document.getElementById('chineseCount').innerText = String((text.match(/[\u4e00-\u9fa5]/g) || []).length);
+        document.getElementById('letterCount').innerText = String((text.match(/[a-zA-Z]/g) || []).length);
+        document.getElementById('digitCount').innerText = String((text.match(/[0-9]/g) || []).length);
+        document.getElementById('lineCount').innerText = text === '' ? '0' : String(text.split(/\n/).length);
+    }
+    document.getElementById('counterInput').oninput = updateCounter;
+    updateCounter();
 </script>
 </body>
 </html>
