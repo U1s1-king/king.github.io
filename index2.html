@@ -35,20 +35,6 @@
             overflow: hidden;
         }
 
-        .petal {
-            position: absolute;
-            background: radial-gradient(circle, #ffdfe6, #ffb7c5);
-            width: 12px;
-            height: 12px;
-            border-radius: 80% 0 55% 40% / 60% 45% 55% 40%;
-            opacity: 0.7;
-            filter: blur(0.3px);
-            transform: rotate(15deg);
-            box-shadow: 0 1px 2px rgba(255, 140, 170, 0.2);
-            animation: fall linear infinite;
-            pointer-events: none;
-        }
-
         @keyframes fall {
             0% {
                 transform: translateY(-20vh) rotate(0deg);
@@ -220,10 +206,6 @@
         }
 
         /* 音乐播放器容器 - MetingJS 自动渲染 */
-        .music-player {
-            padding: 1rem;
-            background: #1a1116;
-        }
 
         /* 外链卡片样式 */
         .link-card-content {
@@ -398,10 +380,11 @@
         </div>
         <div class="subhead"><i class="fas fa-cherry-blossom"></i> 一切都被我归档了喵</div>
         <div class="nav-links">
-            <a href="index1.html">首页</a>
-            <a href="index.html">关于</a>
-            <a href="index2.html" class="active">归档</a>
+            <a href="index.html">首页</a>
+            <a href="index1.html">关于</a>
+            <a href="index2.html">归档</a>
             <a href="index3.html">留言</a>
+            <a href="music.html">音乐</a>
         </div>
     </header>
 
@@ -416,17 +399,17 @@
                 <!-- 视频卡片 1：B站嵌入示例 -->
                 <div class="media-card">
                     <div class="video-wrapper">
-                        <iframe src="https://player.bilibili.com/player.html?isOutside=true&aid=114163972047630&bvid=BV1KbQ1YGEY8&cid=28870445519&p=1&autoplay=0&high_quality=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;"></iframe>
+                        <iframe src="https://player.bilibili.com/player.html?isOutside=true&aid=114163972047630&bvid=BV1KbQ1YGEY8&cid=28870445519&p=1&autoplay=0&high_quality=1" allowfullscreen="allowfullscreen" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0; border: none;"></iframe>
                     </div>
                     <div class="card-info">
                         <div class="card-title">《少女乐队的呐喊》官方MV <span class="type-badge">🎬 视频</span></div>
-                        <div class="card-desc"># 爆ぜて咲く</div>
+                        <div class="card-desc">爆ぜて咲く</div>
                     </div>
                 </div>
                 <!-- 视频卡片 2：B站嵌入，待填 -->
                 <div class="media-card">
                     <div class="video-wrapper">
-                        <iframe src="https://player.bilibili.com/player.html?isOutside=true&aid=114402980267160&bvid=BV1cuLdzUECX&cid=29621028633&p=1&autoplay=0&high_quality=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;"></iframe>
+                        <iframe src="https://player.bilibili.com/player.html?isOutside=true&aid=114402980267160&bvid=BV1cuLdzUECX&cid=29621028633&p=1&autoplay=0&high_quality=1" allowfullscreen="allowfullscreen" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0; border: none;"></iframe>
                     </div>
                     <div class="card-info">
                         <div class="card-title">《少女乐队的呐喊》官方MV <span class="type-badge">🎬 视频</span></div>
@@ -436,7 +419,7 @@
                 <!-- 视频卡片 3：B站嵌入，待填 -->
                 <div class="media-card">
                     <div class="video-wrapper">
-                        <iframe src="https://player.bilibili.com/player.html?isOutside=true&aid=114150047090866&bvid=BV1JzQpYTEft&cid=28831646887&p=1&autoplay=0&high_quality=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;"></iframe>
+                        <iframe src="https://player.bilibili.com/player.html?isOutside=true&aid=114150047090866&bvid=BV1JzQpYTEft&cid=28831646887&p=1&autoplay=0&high_quality=1" allowfullscreen="allowfullscreen" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0; border: none;"></iframe>
                     </div>
                     <div class="card-info">
                         <div class="card-title">《少女乐队的呐喊》官方MV <span class="type-badge">🎬 视频</span></div>
@@ -730,7 +713,7 @@
             p.style.left = Math.random() * 100 + '%';
             p.style.animationDuration = 6 + Math.random() * 12 + 's';
             p.style.animationDelay = Math.random() * 15 + 's';
-            p.style.opacity = 0.4 + Math.random() * 0.5;
+            p.style.opacity = String(0.4 + Math.random() * 0.5);
             return p;
         }
         for (let i = 0; i < count; i++) flurry.appendChild(createPetal());

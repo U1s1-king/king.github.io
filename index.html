@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>🌸关于</title>
-
+    <title>🌸首页</title>
+    <!-- 樱花主题字体 & 图标 -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600&family=Noto+Serif+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         * {
@@ -23,7 +22,7 @@
             scroll-behavior: smooth;
         }
 
-        /* 樱花飘落动画容器 */
+        /* 樱花飘落容器 (与博客主页一致) */
         .sakura-flurry {
             position: fixed;
             top: 0;
@@ -33,21 +32,6 @@
             pointer-events: none;
             z-index: 10;
             overflow: hidden;
-        }
-
-        /* 自定义花瓣样式 */
-        .petal {
-            position: absolute;
-            background: radial-gradient(circle, #ffdfe6, #ffb7c5);
-            width: 12px;
-            height: 12px;
-            border-radius: 80% 0 55% 40% / 60% 45% 55% 40%;
-            opacity: 0.7;
-            filter: blur(0.3px);
-            transform: rotate(15deg);
-            box-shadow: 0 1px 2px rgba(255, 140, 170, 0.2);
-            animation: fall linear infinite;
-            pointer-events: none;
         }
 
         @keyframes fall {
@@ -64,54 +48,45 @@
             }
         }
 
-        /* 博客主容器 */
-        .blog-container {
-            max-width: 1000px;
+        /* 主容器 — 个人介绍更偏重留白与卡片细节 */
+        .about-container {
+            max-width: 880px;
             margin: 0 auto;
-            padding: 1.5rem 2rem 4rem;
+            padding: 2rem 2rem 4rem;
             position: relative;
             z-index: 20;
         }
 
-        /* 页眉区域 — 樱花主题 */
-        .blog-header {
+        /* 页眉 & 导航栏 (适配博客跳转) */
+        .about-header {
             text-align: center;
-            margin-bottom: 3rem;
-            padding: 2rem 0 1rem;
-            border-bottom: 2px dashed #ffc0cb80;
+            margin-bottom: 2rem;
         }
 
         .blog-title {
-            font-size: 3.2rem;
+            font-size: 2.8rem;
             font-weight: 600;
             font-family: 'Noto Serif SC', serif;
             background: linear-gradient(135deg, #e6728f, #b34262);
             background-clip: text;
             -webkit-background-clip: text;
             color: transparent;
-            letter-spacing: -0.5px;
             display: inline-flex;
             align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-            justify-content: center;
+            gap: 10px;
+            letter-spacing: -0.5px;
         }
 
         .blog-title i {
             background: none;
             color: #ec8ca8;
-            font-size: 2.5rem;
-            background-clip: unset;
-            -webkit-background-clip: unset;
-            color: #ea8eaa;
+            font-size: 2.2rem;
         }
 
         .subhead {
-            margin-top: 0.75rem;
-            font-size: 1rem;
+            margin-top: 0.5rem;
+            font-size: 0.95rem;
             color: #b45f6e;
-            letter-spacing: 1px;
-            font-weight: 400;
             background: #fff0f3aa;
             display: inline-block;
             padding: 0.3rem 1.2rem;
@@ -119,16 +94,15 @@
             backdrop-filter: blur(2px);
         }
 
-        /* 导航樱花小菜单 (极简) */
-        .blog-nav {
+        .nav-links {
             display: flex;
             justify-content: center;
             gap: 2rem;
-            margin: 2rem 0 1.5rem;
+            margin: 2rem 0 1rem;
             flex-wrap: wrap;
         }
 
-        .blog-nav a {
+        .nav-links a {
             text-decoration: none;
             font-weight: 500;
             color: #b34e6b;
@@ -138,276 +112,142 @@
             font-size: 1rem;
         }
 
-        .blog-nav a:hover {
+        .nav-links a:hover {
             border-bottom-color: #f6a5c0;
             color: #9e3c58;
         }
 
-        /* 文章卡片样式 */
-        .post-card {
-            background: rgba(255, 250, 252, 0.85);
-            backdrop-filter: blur(2px);
-            border-radius: 2rem;
-            padding: 1.8rem 2rem;
-            margin-bottom: 2.5rem;
-            box-shadow: 0 12px 28px -8px rgba(233, 130, 156, 0.2);
-            transition: all 0.25s ease;
+        /* 个人介绍主卡片 */
+        .profile-card {
+            background: rgba(255, 250, 252, 0.88);
+            backdrop-filter: blur(3px);
+            border-radius: 2.5rem;
+            padding: 2rem 2rem 2.5rem;
+            margin: 1.2rem 0 2rem;
+            box-shadow: 0 18px 32px -12px rgba(216, 112, 140, 0.2);
             border: 1px solid #ffe2ec;
+            transition: all 0.2s;
         }
 
-        .post-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 20px 32px -12px #ffb7c980;
-            background: #fffffcee;
-        }
-
-        .post-title {
-            font-size: 1.9rem;
-            font-weight: 600;
-            font-family: 'Noto Serif SC', serif;
-            margin-bottom: 1rem;
-            color: #442b32;
-            letter-spacing: -0.3px;
-            border-left: 6px solid #f6a5c0;
-            padding-left: 1rem;
-        }
-
-        .post-meta {
+        /* 头像区域 (樱花环+大图限制) */
+        .avatar-section {
             display: flex;
-            gap: 1.5rem;
-            align-items: center;
-            font-size: 0.85rem;
-            color: #b27b88;
-            margin-bottom: 1.5rem;
-            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 1.8rem;
         }
 
-        .post-meta i {
-            margin-right: 5px;
-            color: #e189a4;
-        }
-
-        .post-content {
-            font-size: 1rem;
-            color: #3e2c30;
-            line-height: 1.65;
-            margin-bottom: 1.5rem;
-        }
-
-        /* 占位符醒目提醒样式 (保留原文 # 占位符用户自行填) */
-        .placeholder-marker {
-            background: #fff0f0;
-            border-left: 4px solid #ff98b9;
-            padding: 1rem 1.2rem;
-            border-radius: 20px;
-            font-family: 'SF Mono', 'Fira Code', monospace;
-            color: #c25070;
-            font-size: 0.9rem;
-            white-space: pre-wrap;
-            word-break: break-word;
-            margin: 0.8rem 0;
-        }
-
-        .placeholder-marker i {
-            margin-right: 6px;
-            color: #eb80a2;
-        }
-
-        /* 通用占位符样式 (如用户自己复制也会保留明示) */
-        .cherry-placeholder {
-            background: #fbebef;
-            border-radius: 16px;
-            padding: 0.8rem 1rem;
-            color: #be6b84;
-            font-style: normal;
-            font-weight: 400;
-            font-family: monospace;
-            border: 1px dashed #ffb3c6;
-        }
-
-        hr.sakura-divider {
-            margin: 2rem 0;
-            border: none;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, #f7bfd2, #ff90b5, #f7bfd2, transparent);
-        }
-
-        /* 底部 */
-        .blog-footer {
-            text-align: center;
-            margin-top: 3.5rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid #ffd5e2;
-            font-size: 0.85rem;
-            color: #b1798a;
-        }
-
-        .sakura-icon {
-            color: #f290ae;
-            margin: 0 4px;
-        }
-
-        /* 响应式 */
-        @media (max-width: 650px) {
-            .blog-container {
-                padding: 1rem 1.2rem 2.5rem;
-            }
-            .blog-title {
-                font-size: 2.2rem;
-            }
-            .post-title {
-                font-size: 1.5rem;
-            }
-            .post-card {
-                padding: 1.2rem;
-            }
-        }
-
-        /* 侧边小樱花装饰(可选) */
-        .header-cherry-blossom {
-            position: relative;
-            display: inline-block;
-        }
-
-        /* 用于提示标记的额外说明 */
-        .info-note {
-            background: #fff1f3;
-            border-radius: 30px;
-            padding: 0.5rem 1.2rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 0.8rem;
-            color: #b15672;
-            margin-bottom: 1rem;
-        }
-        .blog-container img {
-            max-width: 100%;
-            height: auto;
-            display: block;
-        }
-
-        /* 单张配图：限制最大宽度，同时不超过卡片宽度 */
-        .blog-img {
-            max-width: 100%;
-            width: auto;
-            max-height: 500px;        /* 限制最大高度，防止巨型图 */
-            height: auto;
-            border-radius: 24px;
-            box-shadow: 0 12px 20px -10px rgba(233, 110, 140, 0.25);
-            transition: transform 0.3s ease, box-shadow 0.2s;
-            margin: 0 auto;
-            object-fit: cover;        /* 保持比例裁剪，避免变形 */
-        }
-
-        /* 可选：让配图在手机端更舒适 */
-        @media (max-width: 650px) {
-            .blog-img {
-                max-height: 350px;
-            }
-        }
-
-        /* 樱花装饰边框的图片 */
-        .sakura-img {
-            border: 2px solid #ffe2ec;
-            background: #fff6f8;
-        }
-
-        /* 圆形头像：固定宽高，防止变形 */
         .sakura-avatar-frame {
-            width: 130px;
-            height: 130px;
-            margin: 0 auto;           /* 居中 */
+            width: 150px;
+            height: 150px;
             border-radius: 50%;
             background: linear-gradient(135deg, #ffd9e4, #ffb7cb);
-            padding: 4px;
-            box-shadow: 0 12px 20px rgba(238, 125, 156, 0.2);
-            transition: 0.2s;
+            padding: 5px;
+            box-shadow: 0 15px 25px rgba(231, 103, 136, 0.25);
+            transition: 0.25s ease;
+        }
+
+        .sakura-avatar-frame:hover {
+            transform: scale(1.02) rotate(2deg);
         }
 
         .avatar-img {
             width: 100%;
             height: 100%;
-            object-fit: cover;        /* 头像强制裁剪为正方形圆形，不变形 */
+            object-fit: cover;
             border-radius: 50%;
-            border: 2px solid white;
+            border: 3px solid white;
             background: #ffeef2;
         }
 
-        /* 画廊网格：图片卡片有固定的宽高比限制 */
-        .sakura-gallery {
+        /* 姓名 + 简短标语 */
+        .intro-name {
+            text-align: center;
+            font-size: 2.2rem;
+            font-weight: 600;
+            font-family: 'Noto Serif SC', serif;
+            color: #4f2f39;
+            margin-bottom: 0.5rem;
+        }
+
+        .intro-tagline {
+            text-align: center;
+            color: #da889f;
+            font-weight: 400;
+            letter-spacing: 1px;
+            font-size: 1rem;
+            margin-bottom: 1.6rem;
+            border-bottom: 1px dashed #ffcdda;
+            display: inline-block;
+            width: auto;
+            padding-bottom: 0.4rem;
+        }
+
+        /* 关于文字段落 (占位符与真实内容混合) */
+        .bio-text {
+            font-size: 1rem;
+            line-height: 1.7;
+            color: #3a2c2f;
+            margin: 1.5rem 0;
+        }
+
+        /* 保留樱花占位符风格 (用于后续填空) */
+        .placeholder-marker {
+            background: #fff0f0;
+            border-left: 4px solid #ff98b9;
+            padding: 0.9rem 1.2rem;
+            border-radius: 20px;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            color: #c25070;
+            font-size: 0.9rem;
+            margin: 1rem 0;
+            white-space: pre-wrap;
+        }
+
+        .cherry-placeholder {
+            background: #fbebef;
+            border-radius: 18px;
+            padding: 0.8rem 1rem;
+            color: #be6b84;
+            font-family: monospace;
+            border: 1px dashed #ffb3c6;
+            margin: 0.8rem 0;
+        }
+
+        /* 信息网格: 喜好/个人档案 */
+        .info-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.2rem;
             margin: 2rem 0;
         }
 
-        .gallery-item {
-            background: rgba(255, 248, 250, 0.7);
-            border-radius: 28px;
-            padding: 0.8rem;
-            transition: all 0.25s;
-            backdrop-filter: blur(1px);
+        .info-item {
+            background: #fff6f9;
+            border-radius: 1.8rem;
+            padding: 1rem;
+            text-align: center;
             border: 1px solid #ffe1ea;
-            text-align: center;
+            transition: all 0.2s;
         }
 
-        .gallery-img {
-            width: 100%;              /* 完全填满父容器宽度 */
-            aspect-ratio: 4 / 3;      /* 固定宽高比 4:3，统一尺寸 */
-            object-fit: cover;        /* 裁剪多余部分，保持比例，不变形 */
-            border-radius: 20px;
-            box-shadow: 0 8px 14px rgba(202, 94, 119, 0.1);
-            transition: transform 0.2s;
-        }
-
-        .gallery-img:hover {
-            transform: scale(1.02);
-        }
-
-        .gallery-caption {
-            display: block;
-            margin-top: 0.6rem;
-            font-size: 0.8rem;
-            background: #fff5f7;
-            border-radius: 60px;
-            padding: 0.2rem 0.5rem;
-            text-align: center;
-            word-break: break-word;
-        }
-
-        /* 额外的安全锁：任何自己插入的非特殊图片也会被限制 */
-        .sakura-image-placeholder img,
-        img[class*="blog-img"],
-        img[class*="gallery-img"] {
-            max-width: 100%;
-            height: auto;
-        }
-
-        /* 图片说明文字不限制大小（保持原样） */
-        .img-caption {
-            font-size: 0.85rem;
-            color: #d1718d;
-            background: #fff3f5;
+        .info-item i {
+            font-size: 1.6rem;
+            color: #e982a2;
+            margin-bottom: 0.5rem;
             display: inline-block;
-            padding: 0.3rem 1rem;
-            border-radius: 60px;
-            max-width: 100%;
         }
 
-        /* 手机端画廊调整为1列时可适当缩小圆角 */
-        @media (max-width: 680px) {
-            .sakura-gallery {
-                grid-template-columns: 1fr;
-                gap: 1rem;
-            }
-            .sakura-avatar-frame {
-                width: 100px;
-                height: 100px;
-            }
-            .gallery-img {
-                aspect-ratio: 16 / 9;   /* 手机上用更扁的比例，也可保留4:3 */
-            }
+        .info-label {
+            font-weight: 600;
+            color: #ac5d76;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+
+        .info-desc {
+            font-size: 0.9rem;
+            margin-top: 0.3rem;
+            color: #4c353c;
         }
 
         /* 社交媒体/链接区 */
@@ -439,207 +279,240 @@
             color: #b84f6e;
             transform: translateY(-3px);
         }
+
+        /* 回到博客专用按钮 */
+        .back-to-blog {
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .btn-cherry {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #ffe9ef;
+            padding: 0.7rem 1.6rem;
+            border-radius: 50px;
+            color: #b95272;
+            font-weight: 500;
+            text-decoration: none;
+            border: 1px solid #ffc2d4;
+            transition: all 0.2s;
+        }
+
+        .btn-cherry:hover {
+            background: #ffdfe8;
+            color: #9c405e;
+            box-shadow: 0 5px 12px rgba(231, 118, 142, 0.25);
+            transform: translateY(-2px);
+        }
+
+        hr.sakura-divider {
+            margin: 2rem 0;
+            border: none;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #f7bfd2, #ff90b5, #f7bfd2, transparent);
+        }
+
+        .blog-footer {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 1.2rem;
+            border-top: 1px solid #ffd5e2;
+            font-size: 0.8rem;
+            color: #b1798a;
+        }
+
+        @media (max-width: 650px) {
+            .about-container {
+                padding: 1rem 1.2rem 2.5rem;
+            }
+            .blog-title {
+                font-size: 2rem;
+            }
+            .intro-name {
+                font-size: 1.8rem;
+            }
+            .sakura-avatar-frame {
+                width: 120px;
+                height: 120px;
+            }
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 引入图片限制防溢出 */
+        .about-container img {
+            max-width: 100%;
+            height: auto;
+        }
+
     </style>
 </head>
 <body>
 
-<!-- 随机樱花飘落背景 (JS生成动态花瓣) -->
+<!-- 樱花飘落背景 (与博客主页相同) -->
 <div class="sakura-flurry" id="sakura-flurry"></div>
 
-<main class="blog-container">
-    <header class="blog-header">
+<main class="about-container">
+    <header class="about-header">
         <div class="blog-title">
-            <i class="fas fa-fan"></i> 
-            关于
+            <i class="fas fa-fan"></i>
+            首页
             <i class="fas fa-leaf"></i>
         </div>
         <div class="subhead">
-            <i class="fas fa-seedling"></i> 花谢
+            <i class="fas fa-seedling"></i> 樱花许风摇曳，我许你
         </div>
-        <div class="info-note">
-            <i class="fas fa-pen-fancy"></i>  <span style="background:#ffdae3; padding:2px 8px; border-radius:40px;"></span>✨
-        </div>
-        <nav class="blog-nav">
-            <a href="index1.html">首页</a>
-            <a href="index.html">关于</a>
+
+        <div class="nav-links">
+            <a href="index.html" >首页</a>
+            <a href="index1.html" >关于</a>
             <a href="index2.html">归档</a>
             <a href="index3.html">留言</a>
-        </nav>
+            <a href="music.html">音乐</a>
+        </div>
     </header>
 
-    <article class="post-card">
-        <h2 class="post-title">🌸 春日絮语</h2>
-        <div class="post-meta">
-            <span><i class="far fa-calendar-alt"></i> 2026年5月10日</span>
-            <span><i class="fas fa-tag"></i> 季节 / 春</span>
-            <span><i class="far fa-heart"></i> 时光集</span>
-        </div>
-        <div class="post-content">
-
-            <div class="placeholder-marker">
-                <i class="fas fa-paste"></i>  <br>
-                <span style="font-family: monospace;">拜仁欧冠丢了我不开心！o(╥﹏╥)o😭</span>
-            </div>
-            <p>✦ 今天是难过的一天</p>
-
-            <div class="sakura-image-placeholder" style="margin: 1.5rem 0;">
-                <img src="https://i.ibb.co/VpQGf9Sg/image.png" alt="生气" border="0">
-                <div class="img-caption placeholder-marker"></div>
-            </div>
-
-            <div class="cherry-placeholder" style="margin-top: 12px;">
-                <i class="fas fa-regular fa-pen-nib"></i> ✨ 我在想太阳轻吻我的脸颊，风抚摸我的发丝，摇曳的青草抱着我的腰，我算不算被他们猥亵了
+    <!-- 个人资料卡片 -->
+    <div class="profile-card">
+        <div class="avatar-section">
+            <div class="sakura-avatar-frame">
+                <img class="avatar-img" src="https://i.ibb.co/27wQkhPF/tomo-10.png" alt="tomo (10)">
             </div>
         </div>
-        <div><i class="fas fa-chevron-circle-right sakura-icon"></i> <span style="color:#d47393; font-size:0.85rem;">感觉自己好抽象 <i class="fas fa-long-arrow-alt-right"></i></span></div>
-    </article>
-
-    <article class="post-card">
-        <h2 class="post-title">📷 花见 · 摄影</h2>
-        <div class="post-meta">
-            <span><i class="far fa-calendar-alt"></i> 2026年5月8日</span>
-            <span><i class="fas fa-camera"></i> 日常/光影</span>
-        </div>
-        <div class="post-content">
-            <div class="placeholder-marker">
-                <i class="fas fa-image"></i> 今天拿着相机想拍东西结果一到工位上全都忘记了 <br>
-                图片先欠着吧等我哪天有空
-            </div>
-
-            <p style="margin-top: 0.8rem;">✨ 拍摄心得喵： 逆光下的花瓣像会呼吸的薄绢喵</p>
-
-            <div class="sakura-image-placeholder" style="margin: 1.5rem 0;">
-                <img src="https://i.ibb.co/XxnhP7gd/image.png" alt="吐舌" border="0">
-                <div class="img-caption placeholder-marker"></div>
-            </div>
-
-
-            <div class="cherry-placeholder">
-                <i class="fas fa-regular fa-comment"></i> 他年我若为青帝，报与桃花一处开喵
-            </div>
-        </div>
-    </article>
-
-    <article class="post-card">
-        <h2 class="post-title">🎧 耳畔 · 春日影</h2>
-        <div class="post-meta">
-            <span><i class="far fa-calendar-alt"></i> 2026年5月8日</span>
-            <span><i class="fas fa-headphones"></i> 歌单/书摘</span>
-        </div>
-        <div class="post-content">
-            <div class="placeholder-marker">
-                <i class="fas fa-book-open"></i> 今天无聊的在听23年的歌原来时间已经这么快了吗 <br>
-                lovelive好有活力跟我一点也不搭，不过歌很好听就是了
-            </div>
-
-            <div class="sakura-image-placeholder" style="margin: 1.5rem 0;">
-                <img src="https://i.ibb.co/3Ydz4krV/wink.png" alt="wink" border="0">
-                <div class="img-caption placeholder-marker"></div>
-            </div>
-
-
-            <div class="cherry-placeholder" style="margin-top: 12px;">
-                <i class="fas fa-music"></i>  许我放荡三十年，千金难买少年弦喵
-            </div>
-        </div>
-    </article>
-
-    <article class="post-card">
-        <h2 class="post-title">🍵 休闲一下</h2>
-        <div class="post-meta">
-            <span><i class="far fa-calendar-alt"></i> 2026年5月10日</span>
-            <span><i class="fas fa-mug-hot"></i> 生活 / 慢时光</span>
-        </div>
-        <div class="post-content">
-            <div class="placeholder-marker">
-                <i class="fas fa-cloud-sun"></i> 早上9:58醒了 <br>
-                刚好赶上今天的zzz了这期神了，梦魇吓哭了
-            </div>
-            <p></p>
-
-            <div class="sakura-image-placeholder" style="margin: 1.5rem 0;">
-                <img src="https://i.ibb.co/S8Xf0Sh/image.png" alt="乐" border="0">
-                <div class="img-caption placeholder-marker"></div>
-            </div>
-
-
-            <div class="cherry-placeholder">
-                怎么大家都有甜甜的恋爱我不活了
-            </div>
-        </div>
-    </article>
-
-    <!-- 额外插入一个关于博主板块，也可以用占位符 -->
-    <div style="margin: 2rem 0 1rem;">
-        <hr class="sakura-divider">
-        <div style="background: #fff5f7; border-radius: 2rem; padding: 1.8rem 2rem; text-align: center;">
-            <i class="fas fa-user-astronaut" style="font-size: 2rem; color:#e0809d;"></i>
-            <h3 style="font-weight: 500; margin: 0.5rem 0; font-family: 'Noto Serif SC'; color:#7f4c5c;">✎ 关于博主</h3>
-            <div class="placeholder-marker" style="background: #fff0f2; text-align: left; max-width: 80%; margin: 1rem auto;">
-                <i class="fas fa-edit"></i> 博主很抽象喵十分的抽象吗喵，写这个也是写着玩的喵
-            </div>
-            <div class="social-links">
-                <a href="https://space.bilibili.com/1113834956?spm_id_from=333.1007.0.0" target="_blank" rel="noopener noreferrer"><i class="fab fa-bilibili"></i></a>
-                <a href="https://www.youtube.com/@kaneKing-l7l" target="_blank" rel="noopener noreferrer"><i class="fab fa-youtube"></i></a>
-                <a href="https://x.com/arry_kane" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
-                <a href="https://www.instagram.com/kane_kingasiatic/" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-                <a href="https://github.com/U1s1-king" aria-label="GitHub"><i class="fab fa-github"></i></a>
-                <a href="https://mail.google.com/mail/?view=cm&fs=1&to=kaneking114@gmail.com" aria-label="Email"><i class="fas fa-envelope"></i></a>
-            </div>
+        <div class="intro-name">king</div>
+        <div style="text-align: center;">
+            <span class="intro-tagline">✧ 我要当国王喵 ✧</span>
         </div>
     </div>
 
+
+    <div class="bio-text">
+        <div class="placeholder-marker">
+            <i class="fas fa-pen-fancy"></i> 这里是自我介绍喵<br>
+            本喵是懒虫喵，喜欢踢球跟听歌，再一个就是睡大觉喵
+        </div>
+        <p>🌸 这个地方放的是本喵的座右铭喵</p>
+        <div class="cherry-placeholder">
+            <i class="fas fa-heart"></i> 睡觉喵
+        </div>
+    </div>
+
+
+    <div class="info-grid">
+        <div class="info-item">
+            <i class="fas fa-map-marker-alt"></i>
+            <div class="info-label">📍本喵的所在地</div>
+            <div class="info-desc">慕尼黑</div>
+        </div>
+        <div class="info-item">
+            <i class="fas fa-laptop-code"></i>
+            <div class="info-label">💻 本喵的职业</div>
+            <div class="info-desc">本人还是学生喵</div>
+        </div>
+        <div class="info-item">
+            <i class="fas fa-music"></i>
+            <div class="info-label">🎵 本喵最近在听</div>
+            <div class="info-desc">AIscream_-_愛♡スクリ～ム！</div>
+        </div>
+        <div class="info-item">
+            <i class="fas fa-camera-retro"></i>
+            <div class="info-label">📷 这里是本猫猫的日常爱好</div>
+            <div class="info-desc">摄影/阅读/踢球</div>
+        </div>
+    </div>
+
+
+    <div style="margin: 1.2rem 0 0.5rem;">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+            <i class="fas fa-images" style="color: #e188a5;"></i>
+            <span style="font-weight: 500; color:#aa6c80;">📸 纪念册喵</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 8px;">
+            <div class="cherry-placeholder" style="text-align:center; padding: 0.5rem; background:#ffeaef; border-radius: 20px;">
+                <img src="https://i.ibb.co/qM8xZSsB/1.jpg" alt="1" style="width: 100%; aspect-ratio: 1 / 1; object-fit: cover; border-radius: 16px;">
+            </div>
+            <div class="cherry-placeholder" style="text-align:center; padding: 0.5rem; background:#ffeaef; border-radius: 20px;">
+                <img src="https://i.ibb.co/vvh7BtyQ/2.jpg" alt="2" style="width: 100%; aspect-ratio: 1 / 1; object-fit: cover; border-radius: 16px;">
+            </div>
+            <div class="cherry-placeholder" style="text-align:center; padding: 0.5rem; background:#ffeaef; border-radius: 20px;">
+                <img src="https://i.ibb.co/NQRK01F/3.jpg" alt="3" style="width: 100%; aspect-ratio: 1 / 1; object-fit: cover; border-radius: 16px;">
+            </div>
+        </div>
+        <a href="index3.html" style="text-decoration: none;">
+            <div class="placeholder-marker" style="margin-top: 12px; font-size:0.8rem; cursor: pointer; transition: 0.2s;">
+                <i class="fas fa-edit"></i> 日常点滴 📷
+            </div>
+        </a>
+    </div>
+
+    <!-- 社交媒体模拟占位 -->
+    <div class="social-links">
+        <a href="https://space.bilibili.com/1113834956?spm_id_from=333.1007.0.0" target="_blank" rel="noopener noreferrer"><i class="fab fa-bilibili"></i></a>
+        <a href="https://www.youtube.com/@kaneKing-l7l" target="_blank" rel="noopener noreferrer"><i class="fab fa-youtube"></i></a>
+        <a href="https://x.com/arry_kane" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+        <a href="https://www.instagram.com/kane_kingasiatic/" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+        <a href="https://github.com/U1s1-king" aria-label="GitHub"><i class="fab fa-github"></i></a>
+        <a href="https://mail.google.com/mail/?view=cm&fs=1&to=kaneking114@gmail.com" aria-label="Email"><i class="fas fa-envelope"></i></a>
+    </div>
+    <div class="cherry-placeholder" style="text-align:center; margin-top: -0.5rem; background: none; border: none;">
+
+    </div>
+
+
+    <div style="background: #fff5f7; border-radius: 2rem; padding: 1.4rem 1.8rem; margin: 1rem 0;">
+        <h3 style="font-weight: 500; color:#9f5d74; display: flex; align-items: center; gap: 12px;">
+            <i class="fas fa-comment-dots"></i> 联络与寄语
+        </h3>
+        <div class="placeholder-marker" style="margin: 1rem 0 0 0;">
+            <i class="fas fa-envelope-open-text"></i> 如果你想跟本喵联系的话留下你的邮件喵
+        </div>
+        <div class="back-to-blog">
+            <a href="index.html" class="btn-cherry">
+                <i class="fas fa-chevron-circle-left"></i> 这里可以去异次元喵
+            </a>
+        </div>
+    </div>
+
+    <hr class="sakura-divider">
     <footer class="blog-footer">
-        <p><i class="fas fa-cherry-blossom sakura-icon"></i> 风轻吻 <i class="fas fa-wind"></i></p>
-        <p>© 2026 樱花物语 |对于 </p>
-        <p style="margin-top: 0.3rem;"><i class="fas fa-code-branch"></i> 博客</p>
+        <p><i class="fas fa-cherry-blossom sakura-icon"></i> 这一页是来介绍本喵的 <i class="fas fa-feather-alt"></i></p>
+        <p>© 2026 樱花物语 | 首页</p>
+        <p style="margin-top: 0.2rem;">✨ 喵喵喵 ✨</p>
     </footer>
 </main>
 
 <script>
     (function(){
-        // 动态生成樱花飘落花瓣 —— 增强樱花氛围
+        // 樱花飘落逻辑 (与主页相同保持氛围一致)
         const flurryContainer = document.getElementById('sakura-flurry');
         if (!flurryContainer) return;
-
-        // 控制花瓣数量，适应性能 (桌面端约40~55，移动适当减少)
         let petalCount = 45;
         if (window.innerWidth < 700) petalCount = 28;
-        
-        // 存储petal elements方便后续可扩展(不需要额外清理)
+
         function createPetal() {
             const petal = document.createElement('div');
             petal.classList.add('petal');
-            // 随机尺寸 8px ~ 20px
             const size = 8 + Math.random() * 14;
             petal.style.width = size + 'px';
             petal.style.height = size * 0.9 + 'px';
-            // 随机起始水平位置 (0% ~ 100%)
-            const leftPos = Math.random() * 100;
-            petal.style.left = leftPos + '%';
-            // 动画持续时间 6s ~ 15s
+            petal.style.left = Math.random() * 100 + '%';
             const duration = 6 + Math.random() * 12;
             petal.style.animationDuration = duration + 's';
-            // 延迟执行
-            const delay = Math.random() * 15;
-            petal.style.animationDelay = delay + 's';
-            // 随机透明度范围
-            const opacityVal = 0.4 + Math.random() * 0.5;
-            petal.style.opacity = opacityVal;
-            // 轻微颜色变化 (粉色深浅)
-            const pinkHue = 340 + Math.random() * 20;
+            petal.style.animationDelay = Math.random() * 15 + 's';
+            petal.style.opacity = String(0.4 + Math.random() * 0.5);
             petal.style.background = `radial-gradient(circle, #ffdfe6, #ffb0c2)`;
             petal.style.filter = `blur(${Math.random() * 1.2}px)`;
             return petal;
         }
 
-        // 生成初始花瓣
         for (let i = 0; i < petalCount; i++) {
-            const petal = createPetal();
-            flurryContainer.appendChild(petal);
+            flurryContainer.appendChild(createPetal());
         }
 
-        // 定时补充花瓣：当容器内花瓣数量小于阈值时，补充到 petalCount 左右，保证一直有飘落感
         function replenishPetals() {
             const currentCount = flurryContainer.children.length;
             if (currentCount < petalCount - 8) {
@@ -648,28 +521,19 @@
                     flurryContainer.appendChild(createPetal());
                 }
             }
-            // 同时为了避免过多（长时间运行可能老旧动画无限累积？ 但无大碍，因为动画结束不会自动移除。为了性能优雅，移除动画结束的花瓣）
             const allPetals = flurryContainer.querySelectorAll('.petal');
             for (let p of allPetals) {
-                // 检查是否已经超出视图且动画快要结束但未移除？但移除机制: 监听animationiteration并不是完美，最好主动清理出界的
                 const rect = p.getBoundingClientRect();
                 if (rect.top > window.innerHeight + 100 || rect.bottom < -100) {
                     p.remove();
                 }
             }
         }
+        setInterval(replenishPetals, 4000);
 
-        // 定期清理和补充
-        setInterval(() => {
-            replenishPetals();
-        }, 4000);
-
-        // 如果需要防页面残留，窗口resize时候重新调整一些花瓣 (简单处理，让原有花瓣继续)
         window.addEventListener('resize', function() {
-            // 确保容器存在，移动设备可调整数量
             let expected = window.innerWidth < 700 ? 28 : 45;
             if (Math.abs(flurryContainer.children.length - expected) > 12) {
-                // 如果相差太多，做一次温和重置：删除所有 重新生成
                 while(flurryContainer.firstChild) {
                     flurryContainer.removeChild(flurryContainer.firstChild);
                 }
@@ -680,7 +544,6 @@
             }
         });
 
-        // 增加防初始加载空白花瓣太少
         setTimeout(() => {
             if(flurryContainer.children.length < 20) {
                 for(let i=0;i<12;i++) flurryContainer.appendChild(createPetal());
@@ -688,12 +551,10 @@
         }, 500);
     })();
 
-    // 可选小功能: 对于所有 placeholder-marker .cherry-placeholder 添加一个很小的点击提示效果(辅助用户识别占位符)
-    // 只是为了在控制台不报错 并且增加用户友好 但不影响主要结构。    
+    // 轻柔提示占位符可编辑，保持与博客一致的辅助体验
     const placeholders = document.querySelectorAll('.placeholder-marker, .cherry-placeholder');
     placeholders.forEach(elem => {
         elem.setAttribute('data-placeholder-hint', '樱花占位符区域，请替换为个人内容');
-        // 添加非常淡的鼠标悬浮显亮
         elem.style.transition = 'all 0.2s';
         elem.addEventListener('mouseenter', () => {
             elem.style.opacity = '0.95';
@@ -704,8 +565,7 @@
             elem.style.boxShadow = '';
         });
     });
-    // 增加控制台友好提醒
-    console.log('🌸 樱花博客已加载 | 所有标记 # 的位置均可自由填写文本，祝你书写愉快~');
+    console.log('🌸 个人介绍页已加载 | 与博客主页共享樱花氛围。所有带 # 标记的地方自由填写，让世界认识你～');
 </script>
 </body>
 </html>

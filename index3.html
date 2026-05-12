@@ -35,20 +35,6 @@
             overflow: hidden;
         }
 
-        .petal {
-            position: absolute;
-            background: radial-gradient(circle, #ffdfe6, #ffb7c5);
-            width: 12px;
-            height: 12px;
-            border-radius: 80% 0 55% 40% / 60% 45% 55% 40%;
-            opacity: 0.7;
-            filter: blur(0.3px);
-            transform: rotate(15deg);
-            box-shadow: 0 1px 2px rgba(255, 140, 170, 0.2);
-            animation: fall linear infinite;
-            pointer-events: none;
-        }
-
         @keyframes fall {
             0% {
                 transform: translateY(-20vh) rotate(0deg);
@@ -189,7 +175,7 @@
         .input-group textarea {
             width: 100%;
             padding: 0.8rem 1rem;
-            border: 1.5px solid #ffe0e8;
+            border: 2px solid #ffe0e8;
             border-radius: 1.5rem;
             font-family: 'Inter', sans-serif;
             font-size: 0.9rem;
@@ -426,10 +412,11 @@
             <i class="fas fa-seedling"></i> 这里是留言板喵
         </div>
         <div class="nav-links">
-            <a href="index1.html">首页</a>
-            <a href="index.html">关于</a>
+            <a href="index.html">首页</a>
+            <a href="index1.html">关于</a>
             <a href="index2.html">归档</a>
             <a href="index3.html">留言</a>
+            <a href="music.html">音乐</a>
         </div>
     </header>
 
@@ -509,7 +496,7 @@
             const duration = 6 + Math.random() * 12;
             petal.style.animationDuration = duration + 's';
             petal.style.animationDelay = Math.random() * 15 + 's';
-            petal.style.opacity = 0.4 + Math.random() * 0.5;
+            petal.style.opacity = String(0.4 + Math.random() * 0.5);
             petal.style.background = `radial-gradient(circle, #ffdfe6, #ffb0c2)`;
             petal.style.filter = `blur(${Math.random() * 1.2}px)`;
             return petal;
