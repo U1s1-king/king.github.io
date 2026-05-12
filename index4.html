@@ -35,13 +35,24 @@
             overflow: hidden;
         }
 
+        /* 樱花花瓣基础样式和动画 */
+        .petal {
+            position: absolute;
+            top: -10%;
+            pointer-events: none;
+            z-index: 10;
+            border-radius: 40% 60% 70% 30%;
+            animation: fall linear forwards;
+            will-change: transform, opacity;
+        }
+
         @keyframes fall {
             0% {
                 transform: translateY(-20vh) rotate(0deg);
-                opacity: 0.5;
+                opacity: 0.6;
             }
             80% {
-                opacity: 0.8;
+                opacity: 0.9;
             }
             100% {
                 transform: translateY(100vh) rotate(360deg);
@@ -506,7 +517,7 @@
             <h3><i class="fas fa-info-circle"></i> 喵喵小贴士</h3>
             <ul>
                 <li><strong>中文↔二进制</strong>：基于 UTF-8，中文字符转为8位字节组（空格分隔）</li>
-                <li><strong>图片↔二进制</strong>：上传图片→生成二进制字符流；将二进制文本反向还原图片 (自动识别格式)</li>
+                <li><strong>图片↔二进制</strong>：上传图片→生成二进制字符流；将二进制文本反向还原图片</li>
                 <li><strong>优化</strong>：大文件分块处理 / 自动检测 / 进度条展示 / 友好提示</li>
                 <li><i class="fas fa-heart" style="color:#e982a2;"></i> 二进制代码需为8位一组，支持空格或任意分隔符</li>
             </ul>
@@ -528,11 +539,11 @@
 
 <script>
     // ----------------------------------------------
-    // 樱花飘落 (与首页相同)
+    // 樱花飘落 (修复版)
     (function() {
         const flurry = document.getElementById('sakura-flurry');
         if (!flurry) return;
-        let petalCount = window.innerWidth < 700 ? 30 : 48;
+
         function createPetal() {
             const p = document.createElement('div');
             p.classList.add('petal');
@@ -547,7 +558,10 @@
             p.style.filter = `blur(${(Math.random())}px)`;
             return p;
         }
+
+        let petalCount = window.innerWidth < 700 ? 30 : 48;
         for (let i = 0; i < petalCount; i++) flurry.appendChild(createPetal());
+
         setInterval(() => {
             if (flurry.children.length < petalCount - 8) {
                 for (let i = 0; i < 4; i++) flurry.appendChild(createPetal());
@@ -555,12 +569,21 @@
             const petals = flurry.querySelectorAll('.petal');
             petals.forEach(p => { if (p.getBoundingClientRect().top > window.innerHeight + 100) p.remove(); });
         }, 3000);
+
+        window.addEventListener('resize', function() {
+            let expected = window.innerWidth < 700 ? 30 : 48;
+            if (Math.abs(flurry.children.length - expected) > 12) {
+                while(flurry.firstChild) flurry.removeChild(flurry.firstChild);
+                petalCount = expected;
+                for (let i = 0; i < petalCount; i++) flurry.appendChild(createPetal());
+            }
+        });
     })();
 
     // ----------------------------------------------
     // App 核心
     const App = {
-        currentBinaryData: '',     // 当前图片转换的二进制字符串
+        currentBinaryData: '',
         currentImageInfo: null,
 
         showStatus(msg, type = 'success') {
@@ -590,13 +613,12 @@
             }
             navigator.clipboard.writeText(output).then(() => {
                 const span = document.getElementById('copySuccess');
-                span.classList.add('show');
-                setTimeout(() => span.classList.remove('show'), 1800);
+                span.style.opacity = '1';
+                setTimeout(() => span.style.opacity = '0', 1800);
                 this.showStatus('复制成功~', 'success');
             }).catch(() => this.showStatus('复制失败', 'error'));
         },
 
-        // 背景处理
         setDefaultBg() {
             document.body.style.background = "linear-gradient(145deg, #fff9f7 0%, #ffeef4 100%)";
             localStorage.removeItem('customBg');
@@ -620,9 +642,8 @@
         }
     };
 
-    // 文本转换模块 (UTF-8 完整支持)
+    // 文本转换模块
     const TextConverter = {
-        // 中文/文本 -> 二进制 (UTF-8字节序列)
         toBinary() {
             const input = document.getElementById('inputText').value;
             if (!input.trim()) { App.showStatus('请输入要转换的文本或二进制', 'error'); return; }
@@ -632,22 +653,18 @@
                     const encoder = new TextEncoder();
                     const bytes = encoder.encode(input);
                     let binaryStr = '';
-                    const chunk = 500;
-                    for (let i = 0; i < bytes.length; i += chunk) {
-                        const end = Math.min(i + chunk, bytes.length);
-                        for (let j = i; j < end; j++) {
-                            binaryStr += bytes[j].toString(2).padStart(8, '0') + ' ';
-                        }
-                        App.updateProgress((end / bytes.length) * 100);
+                    for (let i = 0; i < bytes.length; i++) {
+                        binaryStr += bytes[i].toString(2).padStart(8, '0') + ' ';
+                        if (i % 100 === 0) App.updateProgress((i / bytes.length) * 100);
                     }
                     const result = binaryStr.trim();
                     document.getElementById('outputText').innerText = result || '(无数据)';
+                    App.updateProgress(100);
                     App.showStatus('转换完成喵 ✓', 'success');
                 } catch(e) { App.showStatus('转换失败: '+e.message, 'error'); }
             }, 20);
         },
 
-        // 二进制 -> 中文/文本
         toText() {
             let input = document.getElementById('inputText').value;
             if (!input.trim()) { App.showStatus('请输入二进制代码', 'error'); return; }
@@ -680,7 +697,7 @@
         }
     };
 
-    // 图片转换模块 (优化 + 大文件支持)
+    // 图片转换模块
     const ImageConverter = {
         currentBinary: '',
         currentFileName: '',
@@ -695,7 +712,6 @@
             fileInfoDiv.innerHTML = `<i class="fas fa-camera"></i> 文件名: ${file.name} | 大小: ${(file.size/1024).toFixed(2)} KB`;
             fileInfoDiv.style.display = 'block';
 
-            // 预览
             const preview = document.getElementById('imagePreview');
             preview.style.display = 'block';
             const readerPreview = new FileReader();
@@ -710,17 +726,14 @@
                 const bytes = new Uint8Array(arrayBuffer);
                 let binaryString = '';
                 const total = bytes.length;
-                const chunkSize = 4000;
-                for (let i = 0; i < total; i += chunkSize) {
-                    const end = Math.min(i + chunkSize, total);
-                    for (let j = i; j < end; j++) {
-                        binaryString += bytes[j].toString(2).padStart(8, '0') + ' ';
-                    }
-                    App.updateProgress((end / total) * 100);
+                for (let i = 0; i < total; i++) {
+                    binaryString += bytes[i].toString(2).padStart(8, '0') + ' ';
+                    if (i % 500 === 0) App.updateProgress((i / total) * 100);
                 }
                 this.currentBinary = binaryString.trim();
                 const previewBinary = this.currentBinary.split(' ').slice(0, 60).join(' ');
                 document.getElementById('outputText').innerText = `✨图片已转二进制 (共 ${Math.ceil(total * 8 / 8)} 字节)\n\n预览(前60字节):\n${previewBinary}...`;
+                App.updateProgress(100);
                 App.showStatus('图片转换完成✓ 可下载.bin文件', 'success');
             } catch(e) {
                 App.showStatus('转换失败: '+e.message, 'error');
@@ -745,14 +758,13 @@
                     for (let i = 0; i < clean.length; i += 8) {
                         bytes.push(parseInt(clean.substring(i, i + 8), 2));
                     }
-                    const blob = new Blob([new Uint8Array(bytes)], { type: 'image/png' }); // 尝试png/jpeg
+                    const blob = new Blob([new Uint8Array(bytes)], { type: 'image/png' });
                     const url = URL.createObjectURL(blob);
                     const preview = document.getElementById('imagePreview');
                     preview.src = url;
                     preview.style.display = 'block';
                     document.getElementById('outputText').innerText = '二进制已成功还原为图片，预览如上～';
                     App.showStatus('图片还原成功', 'success');
-                    // 可选保存当前二进制流以便下载
                     this.currentBinary = binaryInput;
                 } catch(e) {
                     App.showStatus('还原失败，二进制可能不是有效的图片数据', 'error');
@@ -764,7 +776,7 @@
             if (!this.currentBinary && !ImageConverter.currentBinary) {
                 const maybe = document.getElementById('outputText').innerText;
                 if (maybe.includes('图片已转二进制')) {
-                    App.showStatus('请先使用“选择图片转二进制”生成二进制流', 'error');
+                    App.showStatus('请先使用"选择图片转二进制"生成二进制流', 'error');
                     return;
                 }
                 App.showStatus('没有可下载的二进制数据，请先转换图片', 'error');
@@ -796,7 +808,6 @@
 
     // 绑定UI事件 & 初始化背景记忆
     document.addEventListener('DOMContentLoaded', () => {
-        // 背景记忆
         const savedBg = localStorage.getItem('customBg');
         if (savedBg && savedBg !== 'undefined') {
             document.body.style.background = `url(${savedBg}) no-repeat center center fixed`;
@@ -814,7 +825,6 @@
                 document.getElementById(tabId).classList.add('active');
                 tabs.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-                // 清空结果提示但不自动清空输入
             });
         });
 
@@ -843,7 +853,6 @@
             if(e.target.files.length) App.uploadBg(e.target.files[0]);
         });
 
-        // 初始清空占位
         TextConverter.clear();
     });
 </script>

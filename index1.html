@@ -23,7 +23,7 @@
             scroll-behavior: smooth;
         }
 
-        /* 樱花飘落动画容器 */
+        /* 樱花飘落容器 */
         .sakura-flurry {
             position: fixed;
             top: 0;
@@ -35,15 +35,24 @@
             overflow: hidden;
         }
 
-        /* 自定义花瓣样式 */
+        /* 樱花花瓣基础样式和动画 */
+        .petal {
+            position: absolute;
+            top: -10%;
+            pointer-events: none;
+            z-index: 10;
+            border-radius: 40% 60% 70% 30%;
+            animation: fall linear forwards;
+            will-change: transform, opacity;
+        }
 
         @keyframes fall {
             0% {
                 transform: translateY(-20vh) rotate(0deg);
-                opacity: 0.5;
+                opacity: 0.6;
             }
             80% {
-                opacity: 0.8;
+                opacity: 0.9;
             }
             100% {
                 transform: translateY(100vh) rotate(360deg);
@@ -495,7 +504,6 @@
         </div>
     </article>
 
-    <!-- 额外插入一个关于博主板块，也可以用占位符 -->
     <div style="margin: 2rem 0 1rem;">
         <hr class="sakura-divider">
         <div style="background: #fff5f7; border-radius: 2rem; padding: 1.8rem 2rem; text-align: center;">
@@ -524,46 +532,32 @@
 
 <script>
     (function(){
-        // 动态生成樱花飘落花瓣 —— 增强樱花氛围
+        // 樱花飘落逻辑 (修复版)
         const flurryContainer = document.getElementById('sakura-flurry');
         if (!flurryContainer) return;
 
-        // 控制花瓣数量，适应性能 (桌面端约40~55，移动适当减少)
-        let petalCount = 45;
-        if (window.innerWidth < 700) petalCount = 28;
-
-        // 存储petal elements方便后续可扩展(不需要额外清理)
         function createPetal() {
             const petal = document.createElement('div');
             petal.classList.add('petal');
-            // 随机尺寸 8px ~ 20px
             const size = 8 + Math.random() * 14;
             petal.style.width = size + 'px';
             petal.style.height = size * 0.9 + 'px';
-            // 随机起始水平位置 (0% ~ 100%)
-            const leftPos = Math.random() * 100;
-            petal.style.left = leftPos + '%';
-            // 动画持续时间 6s ~ 15s
+            petal.style.left = Math.random() * 100 + '%';
             const duration = 6 + Math.random() * 12;
             petal.style.animationDuration = duration + 's';
-            // 延迟执行
-            const delay = Math.random() * 15;
-            petal.style.animationDelay = delay + 's';
-            // 随机透明度范围
+            petal.style.animationDelay = Math.random() * 15 + 's';
             petal.style.opacity = String(0.4 + Math.random() * 0.5);
-            // 轻微颜色变化 (粉色深浅)
             petal.style.background = `radial-gradient(circle, #ffdfe6, #ffb0c2)`;
             petal.style.filter = `blur(${Math.random() * 1.2}px)`;
             return petal;
         }
 
-        // 生成初始花瓣
+        let petalCount = window.innerWidth < 700 ? 28 : 45;
+
         for (let i = 0; i < petalCount; i++) {
-            const petal = createPetal();
-            flurryContainer.appendChild(petal);
+            flurryContainer.appendChild(createPetal());
         }
 
-        // 定时补充花瓣：当容器内花瓣数量小于阈值时，补充到 petalCount 左右，保证一直有飘落感
         function replenishPetals() {
             const currentCount = flurryContainer.children.length;
             if (currentCount < petalCount - 8) {
@@ -572,10 +566,8 @@
                     flurryContainer.appendChild(createPetal());
                 }
             }
-            // 同时为了避免过多（长时间运行可能老旧动画无限累积？ 但无大碍，因为动画结束不会自动移除。为了性能优雅，移除动画结束的花瓣）
             const allPetals = flurryContainer.querySelectorAll('.petal');
             for (let p of allPetals) {
-                // 检查是否已经超出视图且动画快要结束但未移除？但移除机制: 监听animationiteration并不是完美，最好主动清理出界的
                 const rect = p.getBoundingClientRect();
                 if (rect.top > window.innerHeight + 100 || rect.bottom < -100) {
                     p.remove();
@@ -583,17 +575,11 @@
             }
         }
 
-        // 定期清理和补充
-        setInterval(() => {
-            replenishPetals();
-        }, 4000);
+        setInterval(replenishPetals, 4000);
 
-        // 如果需要防页面残留，窗口resize时候重新调整一些花瓣 (简单处理，让原有花瓣继续)
         window.addEventListener('resize', function() {
-            // 确保容器存在，移动设备可调整数量
             let expected = window.innerWidth < 700 ? 28 : 45;
             if (Math.abs(flurryContainer.children.length - expected) > 12) {
-                // 如果相差太多，做一次温和重置：删除所有 重新生成
                 while(flurryContainer.firstChild) {
                     flurryContainer.removeChild(flurryContainer.firstChild);
                 }
@@ -604,7 +590,6 @@
             }
         });
 
-        // 增加防初始加载空白花瓣太少
         setTimeout(() => {
             if(flurryContainer.children.length < 20) {
                 for(let i=0;i<12;i++) flurryContainer.appendChild(createPetal());
@@ -612,12 +597,10 @@
         }, 500);
     })();
 
-    // 可选小功能: 对于所有 placeholder-marker .cherry-placeholder 添加一个很小的点击提示效果(辅助用户识别占位符)
-    // 只是为了在控制台不报错 并且增加用户友好 但不影响主要结构。
+    // 可选小功能: 对于所有 placeholder-marker .cherry-placeholder 添加一个很小的点击提示效果
     const placeholders = document.querySelectorAll('.placeholder-marker, .cherry-placeholder');
     placeholders.forEach(elem => {
         elem.setAttribute('data-placeholder-hint', '樱花占位符区域，请替换为个人内容');
-        // 添加非常淡的鼠标悬浮显亮
         elem.style.transition = 'all 0.2s';
         elem.addEventListener('mouseenter', () => {
             elem.style.opacity = '0.95';
@@ -628,7 +611,6 @@
             elem.style.boxShadow = '';
         });
     });
-    // 增加控制台友好提醒
     console.log('🌸 樱花博客已加载 | 所有标记 # 的位置均可自由填写文本，祝你书写愉快~');
 </script>
 </body>

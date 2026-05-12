@@ -35,13 +35,24 @@
             overflow: hidden;
         }
 
+        /* 樱花花瓣基础样式和动画 */
+        .petal {
+            position: absolute;
+            top: -10%;
+            pointer-events: none;
+            z-index: 10;
+            border-radius: 40% 60% 70% 30%;
+            animation: fall linear forwards;
+            will-change: transform, opacity;
+        }
+
         @keyframes fall {
             0% {
                 transform: translateY(-20vh) rotate(0deg);
-                opacity: 0.5;
+                opacity: 0.6;
             }
             80% {
-                opacity: 0.8;
+                opacity: 0.9;
             }
             100% {
                 transform: translateY(100vh) rotate(360deg);
@@ -404,7 +415,7 @@
 <main class="guestbook-container">
     <header class="guestbook-header">
         <div class="blog-title">
-            <i class="fas fa-fan"></i> 
+            <i class="fas fa-fan"></i>
             留言
             <i class="fas fa-comment-dots"></i>
         </div>
@@ -424,7 +435,7 @@
     <!-- 留言表单 -->
     <div class="form-card">
         <div class="form-title">
-            <i class="fas fa-pen-fancy"></i> 
+            <i class="fas fa-pen-fancy"></i>
             <span>留下你的足迹吧喵 ✨</span>
         </div>
         <div class="form-desc">
@@ -432,7 +443,7 @@
         </div>
         <div class="input-group">
             <label><i class="fas fa-user-circle"></i> 昵称</label>
-            <input type="text" id="nameInput" placeholder="来者何人"  maxlength="30">
+            <input type="text" id="nameInput" placeholder="来者何人" maxlength="30">
         </div>
         <div class="input-group">
             <label><i class="fas fa-comment"></i> 留言内容</label>
@@ -444,14 +455,14 @@
             </button>
         </div>
         <div class="placeholder-marker" style="margin-top: 1rem; font-size:0.75rem;">
-            <i class="fas fa-info-circle"></i>
+            <i class="fas fa-info-circle"></i> 留言会保存在浏览器中，不会丢失喵~
         </div>
     </div>
 
     <!-- 留言列表展示区 -->
     <div class="messages-section">
         <div class="section-header">
-            <h3><i class="fas fa-comments" style="color: #e982a2;"></i>留言板</h3>
+            <h3><i class="fas fa-comments" style="color: #e982a2;"></i> 留言板</h3>
             <span class="message-count" id="messageCount">0留言</span>
         </div>
         <div id="messagesList">
@@ -481,12 +492,10 @@
 
 <script>
     (function(){
-        // 樱花飘落逻辑 (与主页个人介绍页统一)
+        // 樱花飘落逻辑 (修复版)
         const flurryContainer = document.getElementById('sakura-flurry');
         if (!flurryContainer) return;
-        let petalCount = 45;
-        if (window.innerWidth < 700) petalCount = 28;
-        
+
         function createPetal() {
             const petal = document.createElement('div');
             petal.classList.add('petal');
@@ -502,11 +511,13 @@
             petal.style.filter = `blur(${Math.random() * 1.2}px)`;
             return petal;
         }
-        
+
+        let petalCount = window.innerWidth < 700 ? 28 : 45;
+
         for (let i = 0; i < petalCount; i++) {
             flurryContainer.appendChild(createPetal());
         }
-        
+
         function replenishPetals() {
             const currentCount = flurryContainer.children.length;
             if (currentCount < petalCount - 8) {
@@ -523,8 +534,9 @@
                 }
             }
         }
+
         setInterval(replenishPetals, 4000);
-        
+
         window.addEventListener('resize', function() {
             let expected = window.innerWidth < 700 ? 28 : 45;
             if (Math.abs(flurryContainer.children.length - expected) > 12) {
@@ -537,7 +549,7 @@
                 }
             }
         });
-        
+
         setTimeout(() => {
             if(flurryContainer.children.length < 20) {
                 for(let i=0;i<12;i++) flurryContainer.appendChild(createPetal());
@@ -585,7 +597,7 @@
         const container = document.getElementById('messagesList');
         const countSpan = document.getElementById('messageCount');
         if (!container) return;
-        
+
         if (messages.length === 0) {
             container.innerHTML = `
                 <div class="empty-message">
@@ -596,7 +608,7 @@
             if (countSpan) countSpan.innerText = `0 则留言`;
             return;
         }
-        
+
         // 按日期倒序排列（最新的在上方）
         const sorted = [...messages].reverse();
         let html = '';
@@ -625,8 +637,8 @@
         }
         container.innerHTML = html;
         if (countSpan) countSpan.innerText = `${messages.length} 则留言`;
-        
-        // 绑定删除事件 (因为动态生成需要使用事件委托或重新绑定)
+
+        // 绑定删除事件
         const deleteBtns = document.querySelectorAll('.delete-btn');
         deleteBtns.forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -636,16 +648,15 @@
             });
         });
     }
-    
+
     // 删除留言
     function deleteMessageById(id) {
         messages = messages.filter(msg => msg.id !== id);
         saveMessages();
         renderMessages();
-        // 添加轻柔提示(可选)
         showFloatingTip('🌸 留言已随花瓣飘走');
     }
-    
+
     // 新增留言
     function addMessage(name, content) {
         if (!name.trim()) {
@@ -664,7 +675,7 @@
             showFloatingTip('留言最多300字，精简一点更加樱花味');
             return false;
         }
-        
+
         const newMsg = {
             id: Date.now(),
             name: name.trim(),
@@ -676,7 +687,7 @@
         renderMessages();
         return true;
     }
-    
+
     // 简易防XSS
     function escapeHtml(str) {
         if (!str) return '';
@@ -687,8 +698,8 @@
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#39;');
     }
-    
-    // 轻提示浮层（非侵入）
+
+    // 轻提示浮层
     let tipTimeout = null;
     function showFloatingTip(msg) {
         let tipDiv = document.getElementById('floatingTip');
@@ -720,15 +731,15 @@
             if(tipDiv) tipDiv.style.opacity = '0';
         }, 2000);
     }
-    
+
     // 初始化 与 事件绑定
     document.addEventListener('DOMContentLoaded', () => {
         loadMessages();
-        
+
         const submitBtn = document.getElementById('submitBtn');
         const nameInput = document.getElementById('nameInput');
         const msgInput = document.getElementById('msgInput');
-        
+
         if (submitBtn) {
             submitBtn.addEventListener('click', () => {
                 const nameVal = nameInput ? nameInput.value : '';
@@ -741,8 +752,8 @@
                 }
             });
         }
-        
-        // 允许回车提交 (ctrl+enter 或 cmd+enter 方便)
+
+        // 允许回车提交 (ctrl+enter 或 cmd+enter)
         if (msgInput) {
             msgInput.addEventListener('keydown', (e) => {
                 if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
@@ -752,8 +763,8 @@
             });
         }
     });
-    
-    // 给占位符区域增加悬浮效果 (柔和交互)
+
+    // 给占位符区域增加悬浮效果
     const placeholders = document.querySelectorAll('.placeholder-marker');
     placeholders.forEach(elem => {
         elem.style.transition = 'all 0.2s';

@@ -22,7 +22,7 @@
             scroll-behavior: smooth;
         }
 
-        /* 樱花飘落容器 (与博客主页一致) */
+        /* 樱花飘落容器 */
         .sakura-flurry {
             position: fixed;
             top: 0;
@@ -34,13 +34,24 @@
             overflow: hidden;
         }
 
+        /* 樱花花瓣基础样式和动画 */
+        .petal {
+            position: absolute;
+            top: -10%;
+            pointer-events: none;
+            z-index: 10;
+            border-radius: 40% 60% 70% 30%;
+            animation: fall linear forwards;
+            will-change: transform, opacity;
+        }
+
         @keyframes fall {
             0% {
                 transform: translateY(-20vh) rotate(0deg);
-                opacity: 0.5;
+                opacity: 0.6;
             }
             80% {
-                opacity: 0.8;
+                opacity: 0.9;
             }
             100% {
                 transform: translateY(100vh) rotate(360deg);
@@ -347,7 +358,6 @@
             max-width: 100%;
             height: auto;
         }
-
     </style>
 </head>
 <body>
@@ -488,11 +498,9 @@
 
 <script>
     (function(){
-        // 樱花飘落逻辑 (与主页相同保持氛围一致)
+        // 樱花飘落逻辑 (修复版)
         const flurryContainer = document.getElementById('sakura-flurry');
         if (!flurryContainer) return;
-        let petalCount = 45;
-        if (window.innerWidth < 700) petalCount = 28;
 
         function createPetal() {
             const petal = document.createElement('div');
@@ -509,6 +517,8 @@
             petal.style.filter = `blur(${Math.random() * 1.2}px)`;
             return petal;
         }
+
+        let petalCount = window.innerWidth < 700 ? 28 : 45;
 
         for (let i = 0; i < petalCount; i++) {
             flurryContainer.appendChild(createPetal());
@@ -530,6 +540,7 @@
                 }
             }
         }
+
         setInterval(replenishPetals, 4000);
 
         window.addEventListener('resize', function() {
@@ -566,7 +577,6 @@
             elem.style.boxShadow = '';
         });
     });
-    console.log('🌸 个人介绍页已加载 | 与博客主页共享樱花氛围。所有带 # 标记的地方自由填写，让世界认识你～');
 </script>
 </body>
 </html>

@@ -33,13 +33,24 @@
             overflow: hidden;
         }
 
+        /* 【新增】樱花花瓣基础样式和动画 */
+        .petal {
+            position: absolute;
+            top: -10%;
+            pointer-events: none;
+            z-index: 10;
+            border-radius: 40% 60% 70% 30%;
+            animation: fall linear forwards;
+            will-change: transform, opacity;
+        }
+
         @keyframes fall {
             0% {
                 transform: translateY(-20vh) rotate(0deg);
-                opacity: 0.5;
+                opacity: 0.6;
             }
             80% {
-                opacity: 0.8;
+                opacity: 0.9;
             }
             100% {
                 transform: translateY(100vh) rotate(360deg);
@@ -769,14 +780,13 @@
         }
     }
 
-    // 启动频谱动画（随机律动，兼容所有设备）
+    // 启动频谱动画
     function startSpectrum() {
         if (spectrumInterval) clearInterval(spectrumInterval);
         spectrumInterval = setInterval(() => {
             if (!isPlaying) return;
             const vol = audio.volume || 0.7;
             for (let i = 0; i < spectrumBars.length; i++) {
-                // 根据音量、随机因子和正弦波产生跳动
                 const randomPeak = Math.random() * 45 * vol;
                 const sineFactor = Math.sin(Date.now() / 180 + i * 0.25) * 12;
                 let height = 6 + randomPeak + sineFactor;
@@ -980,11 +990,11 @@
     coverImg.src = DEFAULT_COVER;
     initSpectrum();
 
-    // 樱花飘落逻辑
+    // 【修改】樱花飘落逻辑 - 只修改了这一部分
     (function(){
         const flurryContainer = document.getElementById('sakura-flurry');
         if (!flurryContainer) return;
-        let petalCount = window.innerWidth < 700 ? 28 : 45;
+
         function createPetal() {
             const petal = document.createElement('div');
             petal.classList.add('petal');
@@ -998,23 +1008,52 @@
             petal.style.opacity = String(0.4 + Math.random() * 0.5);
             petal.style.background = `radial-gradient(circle, #ffdfe6, #ffb0c2)`;
             petal.style.filter = `blur(${Math.random() * 1.2}px)`;
-            petal.style.position = 'absolute';
-            petal.style.top = '-10%';
-            petal.style.borderRadius = '40% 60% 70% 30%';
-            petal.style.animation = 'fall linear forwards';
             return petal;
         }
-        for (let i = 0; i < petalCount; i++) flurryContainer.appendChild(createPetal());
-        setInterval(() => {
-            if(flurryContainer.children.length < petalCount-5){
-                for(let i=0;i<3;i++) flurryContainer.appendChild(createPetal());
+
+        let petalCount = window.innerWidth < 700 ? 28 : 45;
+
+        for (let i = 0; i < petalCount; i++) {
+            flurryContainer.appendChild(createPetal());
+        }
+
+        function replenishPetals() {
+            const currentCount = flurryContainer.children.length;
+            if (currentCount < petalCount - 8) {
+                const need = petalCount - currentCount;
+                for (let i = 0; i < Math.min(need, 8); i++) {
+                    flurryContainer.appendChild(createPetal());
+                }
             }
             const allPetals = flurryContainer.querySelectorAll('.petal');
-            for(let p of allPetals){
+            for (let p of allPetals) {
                 const rect = p.getBoundingClientRect();
-                if(rect.top > window.innerHeight+100) p.remove();
+                if (rect.top > window.innerHeight + 100 || rect.bottom < -100) {
+                    p.remove();
+                }
             }
-        }, 3000);
+        }
+
+        setInterval(replenishPetals, 4000);
+
+        window.addEventListener('resize', function() {
+            let expected = window.innerWidth < 700 ? 28 : 45;
+            if (Math.abs(flurryContainer.children.length - expected) > 12) {
+                while(flurryContainer.firstChild) {
+                    flurryContainer.removeChild(flurryContainer.firstChild);
+                }
+                petalCount = expected;
+                for (let i=0; i<petalCount; i++) {
+                    flurryContainer.appendChild(createPetal());
+                }
+            }
+        });
+
+        setTimeout(() => {
+            if(flurryContainer.children.length < 20) {
+                for(let i=0;i<12;i++) flurryContainer.appendChild(createPetal());
+            }
+        }, 500);
     })();
 </script>
 </body>
