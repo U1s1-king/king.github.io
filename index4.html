@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>🌸 樱花转换器 · 中文/图片/二进制喵</title>
+    <!-- 樱花主题字体 & 图标 -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600&family=Noto+Serif+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(145deg, #fff9f7 0%, #ffeef4 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            color: #2e2a2b;
+            line-height: 1.5;
+            scroll-behavior: smooth;
+            min-height: 100vh;
+        }
+
+        /* 樱花飘落容器 */
+        .sakura-flurry {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+            overflow: hidden;
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translateY(-20vh) rotate(0deg);
+                opacity: 0.5;
+            }
+            80% {
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* 主容器 */
+        .converter-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem 2rem 4rem;
+            position: relative;
+            z-index: 20;
+        }
+
+        /* 页眉 & 导航 */
+        .converter-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .blog-title {
+            font-size: 2.8rem;
+            font-weight: 600;
+            font-family: 'Noto Serif SC', serif;
+            background: linear-gradient(135deg, #e6728f, #b34262);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            letter-spacing: -0.5px;
+        }
+
+        .blog-title i {
+            background: none;
+            color: #ec8ca8;
+            font-size: 2.2rem;
+        }
+
+        .subhead {
+            margin-top: 0.5rem;
+            font-size: 0.95rem;
+            color: #b45f6e;
+            background: #fff0f3aa;
+            display: inline-block;
+            padding: 0.3rem 1.2rem;
+            border-radius: 40px;
+            backdrop-filter: blur(2px);
+        }
+
+        .nav-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin: 2rem 0 1rem;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            font-weight: 500;
+            color: #b34e6b;
+            padding: 0.4rem 0;
+            border-bottom: 2px solid transparent;
+            transition: 0.2s;
+            font-size: 1rem;
+        }
+
+        .nav-links a:hover {
+            border-bottom-color: #f6a5c0;
+            color: #9e3c58;
+        }
+
+        /* 主卡片 */
+        .card {
+            background: rgba(255, 250, 252, 0.92);
+            backdrop-filter: blur(6px);
+            border-radius: 2rem;
+            padding: 1.8rem;
+            margin: 1rem 0;
+            box-shadow: 0 18px 32px -12px rgba(216, 112, 140, 0.2);
+            border: 1px solid #ffe2ec;
+        }
+
+        /* 背景控制栏 樱花小巧 */
+        .bg-controls {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+            justify-content: center;
+        }
+
+        .cherry-btn {
+            background: #ffeef2;
+            border: 1px solid #ffcdda;
+            padding: 8px 18px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #bf6a85;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .cherry-btn:hover {
+            background: #ffe2ea;
+            color: #a34f6b;
+            transform: translateY(-2px);
+        }
+
+        /* 选项卡樱花风格 */
+        .tab-container {
+            margin-top: 1rem;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 0.5rem;
+            border-bottom: 2px solid #ffdee8;
+            margin-bottom: 1rem;
+        }
+
+        .tab-button {
+            background: none;
+            border: none;
+            padding: 0.8rem 1.8rem;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #b5768c;
+            cursor: pointer;
+            transition: 0.2s;
+            border-radius: 30px 30px 0 0;
+            position: relative;
+        }
+
+        .tab-button.active {
+            color: #da6f91;
+            background: #fff5f8;
+            border-bottom: 3px solid #f09ebc;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 0.5rem 0;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px);}
+            to { opacity: 1; transform: translateY(0);}
+        }
+
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 14px;
+            border: 1px solid #ffd5e2;
+            border-radius: 1.5rem;
+            font-size: 0.9rem;
+            font-family: 'Inter', monospace;
+            background: #fffcfd;
+            resize: vertical;
+            transition: 0.2s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #f0a0ba;
+            box-shadow: 0 0 0 3px rgba(240, 160, 186, 0.2);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin: 1.2rem 0;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #f3a0bb, #e57397);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 40px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            flex: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.02);
+            box-shadow: 0 6px 14px rgba(229, 115, 151, 0.3);
+        }
+
+        .btn-secondary {
+            background: #ffecf0;
+            border: 1px solid #ffcdda;
+            color: #c25f7e;
+            padding: 10px 20px;
+            border-radius: 40px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .result-container {
+            margin-top: 1.5rem;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 0.8rem;
+        }
+
+        .result {
+            background: #fffbfd;
+            border-left: 5px solid #f3a0bb;
+            padding: 1rem;
+            border-radius: 1rem;
+            min-height: 100px;
+            max-height: 280px;
+            overflow-y: auto;
+            font-family: 'SF Mono', monospace;
+            font-size: 0.85rem;
+            word-break: break-all;
+            white-space: pre-wrap;
+            color: #4d353e;
+        }
+
+        .copy-success {
+            color: #b9708b;
+            font-size: 0.75rem;
+            margin-left: 8px;
+            opacity: 0;
+            transition: 0.2s;
+        }
+
+        .image-preview {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 20px;
+            margin: 12px 0;
+            display: none;
+            border: 2px solid #ffd5e2;
+            object-fit: contain;
+            background: #fff3f6;
+        }
+
+        .file-info {
+            background: #fff2f6;
+            border-radius: 20px;
+            padding: 10px 16px;
+            font-size: 0.8rem;
+            color: #a45672;
+            margin: 12px 0;
+            display: none;
+        }
+
+        .progress-container {
+            background: #ffdee8;
+            border-radius: 20px;
+            height: 8px;
+            margin: 10px 0;
+            display: none;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            width: 0;
+            height: 100%;
+            background: linear-gradient(90deg, #f39bbc, #e06a8f);
+            border-radius: 20px;
+            transition: width 0.2s;
+        }
+
+        .status-message {
+            padding: 10px 16px;
+            border-radius: 50px;
+            margin: 10px 0;
+            display: none;
+            font-size: 0.85rem;
+        }
+
+        .info-box {
+            background: #fff5f8;
+            border-radius: 1.5rem;
+            padding: 1rem 1.5rem;
+            margin-top: 1.5rem;
+            border: 1px solid #ffdfe8;
+            font-size: 0.8rem;
+        }
+
+        .info-box h3 {
+            color: #bf6d8a;
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+
+        .info-box ul {
+            padding-left: 1.2rem;
+            color: #805c6b;
+        }
+
+        hr {
+            margin: 1.5rem 0;
+            border: none;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #f2bbd0, #f4a5be, transparent);
+        }
+
+        footer {
+            text-align: center;
+            font-size: 0.7rem;
+            color: #c68ea3;
+            margin-top: 1rem;
+        }
+
+        @media (max-width: 640px) {
+            .converter-container {
+                padding: 1rem;
+            }
+            .button-group {
+                flex-direction: column;
+            }
+            .tab-button {
+                padding: 0.6rem 1rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* 社交媒体/链接区 */
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 1.8rem;
+            margin: 2rem 0 1rem;
+            flex-wrap: wrap;
+        }
+
+        .social-links a {
+            background: #fff1f4;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #dc7c99;
+            font-size: 1.4rem;
+            transition: 0.2s;
+            text-decoration: none;
+            border: 1px solid #ffd2df;
+        }
+
+        .social-links a:hover {
+            background: #ffe2ea;
+            color: #b84f6e;
+            transform: translateY(-3px);
+        }
+    </style>
+</head>
+<body>
+
+<div class="sakura-flurry" id="sakura-flurry"></div>
+
+<main class="converter-container">
+    <header class="converter-header">
+        <div class="blog-title">
+            <i class="fas fa-fan"></i>
+            樱花转换器
+            <i class="fas fa-exchange-alt"></i>
+        </div>
+        <div class="subhead">
+            <i class="fas fa-code"></i> 中文 · 图片 · 二进制 喵喵互转
+        </div>
+        <div class="nav-links">
+            <a href="index.html">首页</a>
+            <a href="index1.html">关于</a>
+            <a href="index2.html">归档</a>
+            <a href="index3.html">留言</a>
+            <a href="music.html">音乐</a>
+            <a href="index4.html">转换</a>
+        </div>
+    </header>
+
+    <div class="card">
+        <div class="bg-controls">
+            <button class="cherry-btn" id="defaultBgBtn"><i class="fas fa-palette"></i> 默认背景</button>
+            <button class="cherry-btn" id="uploadBgBtn"><i class="fas fa-cloud-upload-alt"></i> 上传背景</button>
+            <input type="file" id="bgImageUpload" accept="image/*" style="display:none">
+            <button class="cherry-btn" id="clearBgBtn"><i class="fas fa-times-circle"></i> 清除背景</button>
+        </div>
+
+        <div class="tab-container">
+            <div class="tab-buttons">
+                <button class="tab-button active" data-tab="text-tab"><i class="fas fa-language"></i> 文本转换</button>
+                <button class="tab-button" data-tab="image-tab"><i class="fas fa-image"></i> 图片转换</button>
+            </div>
+
+            <!-- 文本转换Tab -->
+            <div id="text-tab" class="tab-content active">
+                <textarea id="inputText" placeholder="✨ 在这里输入中文文本 或 二进制代码 (8位一组，空格隔开) ✨"></textarea>
+                <div class="button-group">
+                    <button class="btn-primary" id="toBinaryBtn"><i class="fas fa-code"></i> 中文 → 二进制</button>
+                    <button class="btn-primary" id="toTextBtn"><i class="fas fa-font"></i> 二进制 → 中文</button>
+                    <button class="btn-secondary" id="clearTextBtn"><i class="fas fa-trash-alt"></i> 清空</button>
+                </div>
+            </div>
+
+            <!-- 图片转换Tab -->
+            <div id="image-tab" class="tab-content">
+                <div class="button-group">
+                    <button class="btn-primary" id="uploadImageBtn"><i class="fas fa-file-image"></i> 选择图片转二进制</button>
+                    <input type="file" id="imageToBinaryUpload" accept="image/*" style="display:none">
+                    <button class="btn-primary" id="binaryToImageBtn"><i class="fas fa-sync-alt"></i> 二进制 → 图片</button>
+                </div>
+                <div class="file-info" id="fileInfo"></div>
+                <div class="progress-container" id="progressContainer"><div class="progress-bar" id="progressBar"></div></div>
+                <img id="imagePreview" class="image-preview" alt="樱花预览">
+                <div class="button-group">
+                    <button class="btn-secondary" id="downloadBinaryBtn"><i class="fas fa-download"></i> 下载二进制文件</button>
+                    <button class="btn-secondary" id="clearImageTabBtn"><i class="fas fa-eraser"></i> 清空图片转换</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="status-message" id="statusMessage"></div>
+
+        <div class="result-container">
+            <div class="result-header">
+                <h3 style="color:#b34e6b;"><i class="fas fa-cherry-blossom"></i> 转换结果</h3>
+                <div>
+                    <button id="copyBtn" class="cherry-btn" style="padding:5px 16px;"><i class="fas fa-copy"></i> 复制</button>
+                    <span id="copySuccess" class="copy-success">✓ 复制成功喵</span>
+                </div>
+            </div>
+            <div class="result" id="outputText">🌸 等待转换 ...</div>
+        </div>
+
+        <div class="info-box">
+            <h3><i class="fas fa-info-circle"></i> 喵喵小贴士</h3>
+            <ul>
+                <li><strong>中文↔二进制</strong>：基于 UTF-8，中文字符转为8位字节组（空格分隔）</li>
+                <li><strong>图片↔二进制</strong>：上传图片→生成二进制字符流；将二进制文本反向还原图片 (自动识别格式)</li>
+                <li><strong>优化</strong>：大文件分块处理 / 自动检测 / 进度条展示 / 友好提示</li>
+                <li><i class="fas fa-heart" style="color:#e982a2;"></i> 二进制代码需为8位一组，支持空格或任意分隔符</li>
+            </ul>
+        </div>
+    </div>
+    <hr>
+    <footer>
+        <div class="social-links">
+            <a href="https://space.bilibili.com/1113834956?spm_id_from=333.1007.0.0" target="_blank" rel="noopener noreferrer"><i class="fab fa-bilibili"></i></a>
+            <a href="https://www.youtube.com/@kaneKing-l7l" target="_blank" rel="noopener noreferrer"><i class="fab fa-youtube"></i></a>
+            <a href="https://x.com/arry_kane" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+            <a href="https://www.instagram.com/kane_kingasiatic/" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+            <a href="https://github.com/U1s1-king" aria-label="GitHub"><i class="fab fa-github"></i></a>
+            <a href="https://mail.google.com/mail/?view=cm&fs=1&to=kaneking114@gmail.com" aria-label="Email"><i class="fas fa-envelope"></i></a>
+        </div>
+        <i class="fas fa-cherry-blossom"></i>© 2026 樱花物语 | 转换 <i class="fas fa-fan"></i>
+    </footer>
+</main>
+
+<script>
+    // ----------------------------------------------
+    // 樱花飘落 (与首页相同)
+    (function() {
+        const flurry = document.getElementById('sakura-flurry');
+        if (!flurry) return;
+        let petalCount = window.innerWidth < 700 ? 30 : 48;
+        function createPetal() {
+            const p = document.createElement('div');
+            p.classList.add('petal');
+            const size = 7 + Math.random() * 14;
+            p.style.width = size + 'px';
+            p.style.height = size * 0.9 + 'px';
+            p.style.left = Math.random() * 100 + '%';
+            p.style.animationDuration = 5 + Math.random() * 12 + 's';
+            p.style.animationDelay = Math.random() * 12 + 's';
+            p.style.opacity = String(0.4 + Math.random() * 0.5);
+            p.style.background = `radial-gradient(circle, #ffdfe6, #ffb0c2)`;
+            p.style.filter = `blur(${(Math.random())}px)`;
+            return p;
+        }
+        for (let i = 0; i < petalCount; i++) flurry.appendChild(createPetal());
+        setInterval(() => {
+            if (flurry.children.length < petalCount - 8) {
+                for (let i = 0; i < 4; i++) flurry.appendChild(createPetal());
+            }
+            const petals = flurry.querySelectorAll('.petal');
+            petals.forEach(p => { if (p.getBoundingClientRect().top > window.innerHeight + 100) p.remove(); });
+        }, 3000);
+    })();
+
+    // ----------------------------------------------
+    // App 核心
+    const App = {
+        currentBinaryData: '',     // 当前图片转换的二进制字符串
+        currentImageInfo: null,
+
+        showStatus(msg, type = 'success') {
+            const el = document.getElementById('statusMessage');
+            el.textContent = msg;
+            el.className = `status-message status-${type}`;
+            el.style.display = 'block';
+            setTimeout(() => { if(el) el.style.display = 'none'; }, 4000);
+        },
+
+        updateProgress(percent) {
+            const container = document.getElementById('progressContainer');
+            const bar = document.getElementById('progressBar');
+            if (!container) return;
+            if (percent === 0) container.style.display = 'block';
+            bar.style.width = percent + '%';
+            if (percent >= 100) {
+                setTimeout(() => { container.style.display = 'none'; }, 800);
+            }
+        },
+
+        copyResult() {
+            const output = document.getElementById('outputText').innerText;
+            if (!output || output === '🌸 等待转换 ...') {
+                this.showStatus('没有可复制的内容喵', 'error');
+                return;
+            }
+            navigator.clipboard.writeText(output).then(() => {
+                const span = document.getElementById('copySuccess');
+                span.classList.add('show');
+                setTimeout(() => span.classList.remove('show'), 1800);
+                this.showStatus('复制成功~', 'success');
+            }).catch(() => this.showStatus('复制失败', 'error'));
+        },
+
+        // 背景处理
+        setDefaultBg() {
+            document.body.style.background = "linear-gradient(145deg, #fff9f7 0%, #ffeef4 100%)";
+            localStorage.removeItem('customBg');
+            this.showStatus('已恢复樱花默认背景', 'success');
+        },
+        clearBg() {
+            document.body.style.background = "";
+            localStorage.removeItem('customBg');
+            this.showStatus('背景已清除', 'success');
+        },
+        uploadBg(file) {
+            if (!file || !file.type.startsWith('image/')) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.body.style.background = `url(${e.target.result}) no-repeat center center fixed`;
+                document.body.style.backgroundSize = 'cover';
+                localStorage.setItem('customBg', String(e.target.result));
+                this.showStatus('背景更新成功', 'success');
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    // 文本转换模块 (UTF-8 完整支持)
+    const TextConverter = {
+        // 中文/文本 -> 二进制 (UTF-8字节序列)
+        toBinary() {
+            const input = document.getElementById('inputText').value;
+            if (!input.trim()) { App.showStatus('请输入要转换的文本或二进制', 'error'); return; }
+            App.showStatus('转换中...', 'warning');
+            setTimeout(() => {
+                try {
+                    const encoder = new TextEncoder();
+                    const bytes = encoder.encode(input);
+                    let binaryStr = '';
+                    const chunk = 500;
+                    for (let i = 0; i < bytes.length; i += chunk) {
+                        const end = Math.min(i + chunk, bytes.length);
+                        for (let j = i; j < end; j++) {
+                            binaryStr += bytes[j].toString(2).padStart(8, '0') + ' ';
+                        }
+                        App.updateProgress((end / bytes.length) * 100);
+                    }
+                    const result = binaryStr.trim();
+                    document.getElementById('outputText').innerText = result || '(无数据)';
+                    App.showStatus('转换完成喵 ✓', 'success');
+                } catch(e) { App.showStatus('转换失败: '+e.message, 'error'); }
+            }, 20);
+        },
+
+        // 二进制 -> 中文/文本
+        toText() {
+            let input = document.getElementById('inputText').value;
+            if (!input.trim()) { App.showStatus('请输入二进制代码', 'error'); return; }
+            const clean = input.replace(/[^01]/g, '');
+            if (clean.length === 0 || clean.length % 8 !== 0) {
+                App.showStatus('无效的二进制格式，请确保是8位一组(支持空格分隔)', 'error');
+                return;
+            }
+            App.showStatus('解码中...', 'warning');
+            setTimeout(() => {
+                try {
+                    const byteArray = [];
+                    for (let i = 0; i < clean.length; i += 8) {
+                        byteArray.push(parseInt(clean.substring(i, i + 8), 2));
+                    }
+                    const decoder = new TextDecoder('utf-8');
+                    const uint8 = new Uint8Array(byteArray);
+                    const text = decoder.decode(uint8);
+                    document.getElementById('outputText').innerText = text || '(空字符串)';
+                    App.updateProgress(100);
+                    App.showStatus('解码成功', 'success');
+                } catch(e) { App.showStatus('解码失败: '+e.message, 'error'); }
+            }, 20);
+        },
+
+        clear() {
+            document.getElementById('inputText').value = '';
+            document.getElementById('outputText').innerText = '🌸 等待转换 ...';
+            App.showStatus('已清空', 'success');
+        }
+    };
+
+    // 图片转换模块 (优化 + 大文件支持)
+    const ImageConverter = {
+        currentBinary: '',
+        currentFileName: '',
+
+        async handleImageUpload(file) {
+            if (!file || !file.type.startsWith('image/')) {
+                App.showStatus('请选择图片文件', 'error');
+                return;
+            }
+            this.currentFileName = file.name;
+            const fileInfoDiv = document.getElementById('fileInfo');
+            fileInfoDiv.innerHTML = `<i class="fas fa-camera"></i> 文件名: ${file.name} | 大小: ${(file.size/1024).toFixed(2)} KB`;
+            fileInfoDiv.style.display = 'block';
+
+            // 预览
+            const preview = document.getElementById('imagePreview');
+            preview.style.display = 'block';
+            const readerPreview = new FileReader();
+            readerPreview.onload = (e) => { preview.src = e.target.result; };
+            readerPreview.readAsDataURL(file);
+
+            App.showStatus('正在转换图片为二进制...', 'warning');
+            App.updateProgress(0);
+
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const bytes = new Uint8Array(arrayBuffer);
+                let binaryString = '';
+                const total = bytes.length;
+                const chunkSize = 4000;
+                for (let i = 0; i < total; i += chunkSize) {
+                    const end = Math.min(i + chunkSize, total);
+                    for (let j = i; j < end; j++) {
+                        binaryString += bytes[j].toString(2).padStart(8, '0') + ' ';
+                    }
+                    App.updateProgress((end / total) * 100);
+                }
+                this.currentBinary = binaryString.trim();
+                const previewBinary = this.currentBinary.split(' ').slice(0, 60).join(' ');
+                document.getElementById('outputText').innerText = `✨图片已转二进制 (共 ${Math.ceil(total * 8 / 8)} 字节)\n\n预览(前60字节):\n${previewBinary}...`;
+                App.showStatus('图片转换完成✓ 可下载.bin文件', 'success');
+            } catch(e) {
+                App.showStatus('转换失败: '+e.message, 'error');
+            }
+        },
+
+        binaryToImage() {
+            const binaryInput = document.getElementById('inputText').value;
+            if (!binaryInput.trim()) {
+                App.showStatus('请在输入框内填写二进制文本 (图片转换生成的二进制码)', 'error');
+                return;
+            }
+            const clean = binaryInput.replace(/[^01]/g, '');
+            if (clean.length === 0 || clean.length % 8 !== 0) {
+                App.showStatus('二进制格式不对(须是8位组)', 'error');
+                return;
+            }
+            App.showStatus('正在重建图片...', 'warning');
+            setTimeout(() => {
+                try {
+                    const bytes = [];
+                    for (let i = 0; i < clean.length; i += 8) {
+                        bytes.push(parseInt(clean.substring(i, i + 8), 2));
+                    }
+                    const blob = new Blob([new Uint8Array(bytes)], { type: 'image/png' }); // 尝试png/jpeg
+                    const url = URL.createObjectURL(blob);
+                    const preview = document.getElementById('imagePreview');
+                    preview.src = url;
+                    preview.style.display = 'block';
+                    document.getElementById('outputText').innerText = '二进制已成功还原为图片，预览如上～';
+                    App.showStatus('图片还原成功', 'success');
+                    // 可选保存当前二进制流以便下载
+                    this.currentBinary = binaryInput;
+                } catch(e) {
+                    App.showStatus('还原失败，二进制可能不是有效的图片数据', 'error');
+                }
+            }, 50);
+        },
+
+        downloadBinary() {
+            if (!this.currentBinary && !ImageConverter.currentBinary) {
+                const maybe = document.getElementById('outputText').innerText;
+                if (maybe.includes('图片已转二进制')) {
+                    App.showStatus('请先使用“选择图片转二进制”生成二进制流', 'error');
+                    return;
+                }
+                App.showStatus('没有可下载的二进制数据，请先转换图片', 'error');
+                return;
+            }
+            const data = this.currentBinary || ImageConverter.currentBinary;
+            if (!data) { App.showStatus('无二进制数据', 'error'); return; }
+            const blob = new Blob([data], { type: 'text/plain' });
+            const link = document.createElement('a');
+            const name = this.currentFileName ? this.currentFileName.replace(/\.[^/.]+$/, '') + '.bin' : '樱花二进制.bin';
+            link.href = URL.createObjectURL(blob);
+            link.download = name;
+            link.click();
+            URL.revokeObjectURL(link.href);
+            App.showStatus('下载开始喵', 'success');
+        },
+
+        clearImageTab() {
+            document.getElementById('inputText').value = '';
+            document.getElementById('outputText').innerText = '🌸 等待转换 ...';
+            document.getElementById('imagePreview').style.display = 'none';
+            document.getElementById('fileInfo').style.display = 'none';
+            document.getElementById('imageToBinaryUpload').value = '';
+            this.currentBinary = '';
+            this.currentFileName = '';
+            App.showStatus('已清空图片转换区', 'success');
+        }
+    };
+
+    // 绑定UI事件 & 初始化背景记忆
+    document.addEventListener('DOMContentLoaded', () => {
+        // 背景记忆
+        const savedBg = localStorage.getItem('customBg');
+        if (savedBg && savedBg !== 'undefined') {
+            document.body.style.background = `url(${savedBg}) no-repeat center center fixed`;
+            document.body.style.backgroundSize = 'cover';
+        } else {
+            document.body.style.background = "linear-gradient(145deg, #fff9f7 0%, #ffeef4 100%)";
+        }
+
+        // 选项卡切换
+        const tabs = document.querySelectorAll('.tab-button');
+        tabs.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tabId = btn.dataset.tab;
+                document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+                document.getElementById(tabId).classList.add('active');
+                tabs.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                // 清空结果提示但不自动清空输入
+            });
+        });
+
+        // 文本按钮
+        document.getElementById('toBinaryBtn').addEventListener('click', () => TextConverter.toBinary());
+        document.getElementById('toTextBtn').addEventListener('click', () => TextConverter.toText());
+        document.getElementById('clearTextBtn').addEventListener('click', () => TextConverter.clear());
+
+        // 图片按钮
+        const uploadImageBtn = document.getElementById('uploadImageBtn');
+        const fileInputImg = document.getElementById('imageToBinaryUpload');
+        uploadImageBtn.addEventListener('click', () => fileInputImg.click());
+        fileInputImg.addEventListener('change', (e) => {
+            if(e.target.files.length) ImageConverter.handleImageUpload(e.target.files[0]);
+        });
+        document.getElementById('binaryToImageBtn').addEventListener('click', () => ImageConverter.binaryToImage());
+        document.getElementById('downloadBinaryBtn').addEventListener('click', () => ImageConverter.downloadBinary());
+        document.getElementById('clearImageTabBtn').addEventListener('click', () => ImageConverter.clearImageTab());
+
+        // 复制 & 背景
+        document.getElementById('copyBtn').addEventListener('click', () => App.copyResult());
+        document.getElementById('defaultBgBtn').addEventListener('click', () => App.setDefaultBg());
+        document.getElementById('uploadBgBtn').addEventListener('click', () => document.getElementById('bgImageUpload').click());
+        document.getElementById('clearBgBtn').addEventListener('click', () => App.clearBg());
+        document.getElementById('bgImageUpload').addEventListener('change', (e) => {
+            if(e.target.files.length) App.uploadBg(e.target.files[0]);
+        });
+
+        // 初始清空占位
+        TextConverter.clear();
+    });
+</script>
+</body>
+</html>
