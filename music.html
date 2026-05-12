@@ -625,7 +625,20 @@
 
 <script>
     // ========= 移除所有预设音乐，歌单完全由用户上传决定 =========
-    let playlist = [];           // 空歌单，无任何预设
+    let playlist = [
+        { name: "曲目01", artist: "纯音乐", path: "", dur: "3:00" },
+        { name: "曲目02", artist: "纯音乐", path: "", dur: "4:00" },
+        { name: "曲目03", artist: "纯音乐", path: "", dur: "3:30" },
+        { name: "曲目04", artist: "纯音乐", path: "", dur: "2:50" },
+        { name: "曲目05", artist: "纯音乐", path: "", dur: "4:20" },
+        { name: "曲目06", artist: "纯音乐", path: "", dur: "3:15" },
+        { name: "曲目07", artist: "纯音乐", path: "", dur: "3:45" },
+        { name: "曲目08", artist: "纯音乐", path: "", dur: "4:05" },
+        { name: "曲目09", artist: "纯音乐", path: "", dur: "3:25" },
+        { name: "曲目10", artist: "纯音乐", path: "", dur: "3:55" }
+    ];
+
+    // 空歌单，无任何预设
     let currentIndex = 0;
     let isPlaying = false;
     let playMode = "normal";     // normal / repeat / shuffle
