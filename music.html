@@ -626,18 +626,40 @@
 <script>
     // ========= 移除所有预设音乐，歌单完全由用户上传决定 =========
     let playlist = [
-        { name: "曲目01", artist: "纯音乐", path: "", dur: "3:00" },
-        { name: "曲目02", artist: "纯音乐", path: "", dur: "4:00" },
-        { name: "曲目03", artist: "纯音乐", path: "", dur: "3:30" },
-        { name: "曲目04", artist: "纯音乐", path: "", dur: "2:50" },
-        { name: "曲目05", artist: "纯音乐", path: "", dur: "4:20" },
-        { name: "曲目06", artist: "纯音乐", path: "", dur: "3:15" },
-        { name: "曲目07", artist: "纯音乐", path: "", dur: "3:45" },
-        { name: "曲目08", artist: "纯音乐", path: "", dur: "4:05" },
-        { name: "曲目09", artist: "纯音乐", path: "", dur: "3:25" },
-        { name: "曲目10", artist: "纯音乐", path: "", dur: "3:55" }
+        { name: "AIscream", artist: "", path: "/music/AIscream.mp3", dur: "0:00" },
+        { name: "BOW AND ARROW", artist: "米津玄师", path: "/music/BOW AND ARROW.mp3", dur: "0:00" },
+        { name: "TWO_AS_ONE", artist: "トゲナシトゲアリ", path: "/music/TWO_AS_ONE.mp3", dur: "0:00" },
+        { name: "サヨナラサヨナラサヨナラ", artist: "トゲナシトゲアリ", path: "/music/トゲナシトゲアリ - サヨナラサヨナラサヨナラ (再见再见再见).mp3", dur: "0:00" },
+        { name: "ダレモ", artist: "トゲナシトゲアリ", path: "/music/トゲナシトゲアリ - ダレモ.mp3", dur: "0:00" },
+        { name: "闇に溶けてく", artist: "トゲナシトゲアリ", path: "/music/トゲナシトゲアリ - 闇に溶けてく.mp3", dur: "0:00" },
+        { name: "爆ぜて咲く", artist: "トゲナシトゲアリ", path: "/music/トゲナシトゲアリ - 爆ぜて咲く (爆裂绽放).mp3", dur: "0:00" },
+        { name: "蝶に結いた赤い糸", artist: "トゲナシトゲアリ", path: "/music/トゲナシトゲアリ - 蝶に結いた赤い糸.mp3", dur: "0:00" },
+        { name: "飛べない蝶は夢を見る", artist: "トゲナシトゲアリ", path: "/music/トゲナシトゲアリ - 飛べない蝶は夢を見る.mp3", dur: "0:00" },
+        { name: "極私的極彩色アンサー", artist: "トゲナシトゲアリ", path: "/music/トゲナシトゲアリ - 極私的極彩色アンサー.mp3", dur: "0:00" },
+        { name: "空の箱", artist: "トゲナシトゲアリ", path: "/music/トゲナシトゲアリ - 空の箱.mp3", dur: "0:00" },
+        { name: "空白とカタルシス", artist: "トゲナシトゲアリ", path: "/music/トゲナシトゲアリ - 空白とカタルシス.mp3", dur: "0:00" },
+        { name: "黎明を穿つ", artist: "トゲナシトゲアリ", path: "/music/トゲナシトゲアリ - 黎明を穿つ.mp3", dur: "0:00" },
+        { name: "理想的パラドクスとは", artist: "トゲナシトゲアリ", path: "/music/トゲナシトゲアリ - 理想的パラドクスとは.mp3", dur: "0:00" },
+        { name: "名もなき何もかも", artist: "トゲナシトゲアリ", path: "/music/トゲナシトゲアリ - 名もなき何もかも.mp3", dur: "0:00" },
+        { name: "気鬱、白濁す", artist: "トゲナシトゲアリ", path: "/music/トゲナシトゲアリ - 気鬱、白濁す (white drizzle in gloom).mp3", dur: "0:00" },
+        { name: "傷つき傷つけ痛くて辛い", artist: "トゲナシトゲアリ", path: "/music/トゲナシトゲアリ - 傷つき傷つけ痛くて辛い.mp3", dur: "0:00" },
+        { name: "視界の隅 朽ちる音", artist: "トゲナシトゲアリ", path: "/music/トゲナシトゲアリ - 視界の隅 朽ちる音.mp3", dur: "0:00" },
+        { name: "声なき魚", artist: "トゲナシトゲアリ", path: "/music/トゲナシトゲアリ - 声なき魚.mp3", dur: "0:00" },
+        { name: "誰にもなれない私だから", artist: "トゲナシトゲアリ", path: "/music/トゲナシトゲアリ - 誰にもなれない私だから.mp3", dur: "0:00" },
+        { name: "偽りの理", artist: "トゲナシトゲアリ", path: "/music/トゲナシトゲアリ - 偽りの理.mp3", dur: "0:00" },
+        { name: "心象的フラクタル", artist: "トゲナシトゲアリ", path: "/music/トゲナシトゲアリ - 心象的フラクタル.mp3", dur: "0:00" },
+        { name: "運命に賭けたい論理", artist: "トゲナシトゲアリ", path: "/music/トゲナシトゲアリ - 運命に賭けたい論理.mp3", dur: "0:00" },
+        { name: "運命の華", artist: "トゲナシトゲアリ", path: "/music/トゲナシトゲアリ - 運命の華.mp3", dur: "0:00" },
+        { name: "雑踏、僕らの街", artist: "トゲナシトゲアリ", path: "/music/トゲナシトゲアリ - 雑踏、僕らの街.mp3", dur: "0:00" },
+        { name: "碧いif", artist: "トゲナシトゲアリ", path: "/music/碧いif.mp3", dur: "0:00" },
+        { name: "吹き消した灯火", artist: "トゲナシトゲアリ", path: "/music/吹き消した灯火.mp3", dur: "0:00" },
+        { name: "春日影", artist: "トゲナシトゲアリ", path: "/music/春日影.mp3", dur: "0:00" },
+        { name: "渇く、憂う", artist: "トゲナシトゲアリ", path: "/music/渇く、憂う.mp3", dur: "0:00" },
+        { name: "生きて生きていく", artist: "トゲナシトゲアリ", path: "/music/生きて生きていく.mp3", dur: "0:00" },
+        { name: "無知のち私", artist: "トゲナシトゲアリ", path: "/music/無知のち私.mp3", dur: "0:00" },
+        { name: "臆病な白夜", artist: "トゲナシトゲアリ", path: "/music/臆病な白夜.mp3", dur: "0:00" },
+        { name: "最期の禱り", artist: "トゲナシトゲアリ", path: "/music/最期の禱り.mp3", dur: "0:00" }
     ];
-
     // 空歌单，无任何预设
     let currentIndex = 0;
     let isPlaying = false;
