@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>🎵 樱花音乐 · 本喵的播放器</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600&family=Noto+Serif+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(145deg, #fff9f7 0%, #ffeef4 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            color: #2e2a2b;
+            line-height: 1.5;
+            scroll-behavior: smooth;
+            min-height: 100vh;
+        }
+
+        .sakura-flurry {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+            overflow: hidden;
+        }
+
+        /* 【新增】樱花花瓣基础样式和动画 */
+        .petal {
+            position: absolute;
+            top: -10%;
+            pointer-events: none;
+            z-index: 10;
+            border-radius: 40% 60% 70% 30%;
+            animation: fall linear forwards;
+            will-change: transform, opacity;
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translateY(-20vh) rotate(0deg);
+                opacity: 0.6;
+            }
+            80% {
+                opacity: 0.9;
+            }
+            100% {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .music-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 2rem 2rem 4rem;
+            position: relative;
+            z-index: 20;
+        }
+
+        .music-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .blog-title {
+            font-size: 2.8rem;
+            font-weight: 600;
+            font-family: 'Noto Serif SC', serif;
+            background: linear-gradient(135deg, #e6728f, #b34262);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            letter-spacing: -0.5px;
+        }
+
+        .blog-title i {
+            background: none;
+            color: #ec8ca8;
+            font-size: 2.2rem;
+        }
+
+        .subhead {
+            margin-top: 0.5rem;
+            font-size: 0.95rem;
+            color: #b45f6e;
+            background: #fff0f3aa;
+            display: inline-block;
+            padding: 0.3rem 1.2rem;
+            border-radius: 40px;
+            backdrop-filter: blur(2px);
+        }
+
+        .nav-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin: 2rem 0 1rem;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            font-weight: 500;
+            color: #b34e6b;
+            padding: 0.4rem 0;
+            border-bottom: 2px solid transparent;
+            transition: 0.2s;
+            font-size: 1rem;
+        }
+
+        .nav-links a:hover {
+            border-bottom-color: #f6a5c0;
+            color: #9e3c58;
+        }
+
+        .player-card {
+            background: rgba(255, 250, 252, 0.92);
+            backdrop-filter: blur(6px);
+            border-radius: 2.5rem;
+            padding: 1.5rem 2rem 2rem;
+            margin: 1rem 0 2rem;
+            box-shadow: 0 18px 32px -12px rgba(216, 112, 140, 0.2);
+            border: 1px solid #ffe2ec;
+            transition: all 0.2s;
+        }
+
+        .player-dual {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+        }
+
+        .player-left {
+            flex: 1.2;
+            min-width: 240px;
+        }
+
+        .player-right {
+            flex: 1.8;
+            min-width: 260px;
+        }
+
+        .disc-zone {
+            display: flex;
+            justify-content: center;
+            margin: 0.5rem 0 1rem;
+        }
+
+        .vinyl {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #fbd9e4, #efbfcf);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 12px 25px rgba(203, 106, 128, 0.3);
+            position: relative;
+            border: 2px solid #ffd2e0;
+        }
+
+        .cover-inner {
+            width: 86%;
+            height: 86%;
+            border-radius: 50%;
+            overflow: hidden;
+            animation: rotateVinyl 20s linear infinite paused;
+            background: #ffeef4;
+            box-shadow: inset 0 0 0 2px #fff8f9, 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        @keyframes rotateVinyl {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .cover-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .song-details {
+            text-align: center;
+            margin: 0.8rem 0 0.6rem;
+        }
+
+        .track-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            font-family: 'Noto Serif SC', serif;
+            background: linear-gradient(135deg, #b84c6c, #e27e9b);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .track-artist {
+            color: #c78299;
+            margin-top: 4px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .progress-area {
+            padding: 0 8px;
+            margin-top: 0.5rem;
+        }
+
+        .progress-bar-bg {
+            width: 100%;
+            height: 5px;
+            background: #ffdee8;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        .progress-fill {
+            width: 0;
+            height: 100%;
+            background: linear-gradient(90deg, #f39bb9, #db7b9b);
+            border-radius: 10px;
+        }
+
+        .time-row {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 0.7rem;
+            color: #b77d8f;
+        }
+
+        .controls-row {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            padding: 1rem 0 0.5rem;
+        }
+
+        .ctrl-btn {
+            background: #ffeef2;
+            border: none;
+            color: #c45c7c;
+            font-size: 1.3rem;
+            width: 44px;
+            height: 44px;
+            border-radius: 60px;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 3px 8px rgba(165, 79, 99, 0.1);
+        }
+
+        .ctrl-btn:hover {
+            background: #ffe2ea;
+            color: #ab4a68;
+            transform: scale(1.02);
+        }
+
+        .play-main {
+            background: linear-gradient(145deg, #f0a0ba, #e06a8f);
+            color: white;
+            width: 58px;
+            height: 58px;
+            font-size: 1.6rem;
+            box-shadow: 0 6px 14px rgba(224, 106, 143, 0.3);
+        }
+
+        .mode-strip {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 0.8rem 0 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .mode-chip {
+            background: #fff4f7;
+            padding: 5px 14px;
+            border-radius: 40px;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            color: #ac6b80;
+            transition: 0.2s;
+            border: 1px solid #ffcdda;
+        }
+
+        .mixer {
+            padding: 0.5rem 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .volume-slider {
+            flex: 1;
+            height: 4px;
+            -webkit-appearance: none;
+            background: #ffd5e2;
+            border-radius: 5px;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            background: #e4779a;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .lyric-panel {
+            background: #fff2f6cc;
+            border-radius: 1.8rem;
+            padding: 0.6rem 1rem;
+            max-height: 80px;
+            overflow-y: auto;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #a65875;
+            margin: 1rem 0;
+            border: 1px solid #ffe0ea;
+        }
+
+        .playlist-section {
+            margin-top: 0.5rem;
+        }
+
+        .playlist-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #ba6f88;
+            padding: 0 6px;
+        }
+
+        .playlist-scroll {
+            max-height: 280px;
+            overflow-y: auto;
+        }
+
+        .track-item {
+            background: #fffafc;
+            border-radius: 80px;
+            padding: 8px 16px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: 0.15s;
+            border: 1px solid #ffdee8;
+        }
+
+        .track-info {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 0.85rem;
+            color: #5b3f48;
+            font-weight: 500;
+        }
+
+        .track-duration {
+            font-size: 0.7rem;
+            margin: 0 6px;
+            color: #da95ae;
+        }
+
+        .cherry-tip {
+            background: #fbebef;
+            border-radius: 18px;
+            padding: 0.2rem 0.8rem;
+            color: #be6b84;
+            font-family: monospace;
+            border: 1px dashed #ffb3c6;
+            text-align: center;
+            font-size: 0.7rem;
+            margin-top: 0.8rem;
+        }
+
+        /* 频谱动画区域 - 纯线条版 */
+        .spectrum-line {
+            margin: 15px auto 5px;
+            width: 100%;
+            position: relative;
+        }
+
+        .spectrum-line::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, #e06a8f, #f0a0ba, #e06a8f);
+            border-radius: 2px;
+        }
+
+        .spectrum-line .spectrum-bars {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 4px;
+            height: 48px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .spectrum-line .spectrum-bar {
+            width: 8px;
+            background: linear-gradient(180deg, #e06a8f, #b84c6c);
+            border-radius: 3px 3px 0 0;
+            transition: height 0.05s ease;
+        }
+
+        .modal-global {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(255, 240, 245, 0.95);
+            backdrop-filter: blur(12px);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-card {
+            background: #fffafc;
+            max-width: 440px;
+            width: 90%;
+            border-radius: 2rem;
+            padding: 1.5rem;
+            border: 1px solid #ffb7cc;
+            box-shadow: 0 20px 35px rgba(162, 81, 104, 0.2);
+        }
+
+        .upload-area {
+            border: 2px dashed #e282a2;
+            border-radius: 1.5rem;
+            padding: 18px;
+            text-align: center;
+            margin: 12px 0;
+            cursor: pointer;
+            background: #fff5f8;
+        }
+
+        .submit-glow {
+            background: linear-gradient(95deg, #f39bbc, #e06a8f);
+            width: 100%;
+            padding: 12px;
+            border-radius: 40px;
+            font-weight: bold;
+            margin-top: 16px;
+            border: none;
+            color: white;
+            cursor: pointer;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 25px;
+            left: 25px;
+            background: #e27e9be0;
+            backdrop-filter: blur(8px);
+            padding: 8px 20px;
+            border-radius: 60px;
+            font-size: 0.8rem;
+            z-index: 1100;
+            display: none;
+            color: white;
+            font-weight: 500;
+        }
+
+        .btn-cherry {
+            background: #ffe9ef;
+            padding: 0.4rem 1.2rem;
+            border-radius: 40px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #b95272;
+            text-decoration: none;
+            border: 1px solid #ffc2d4;
+            font-size: 0.8rem;
+        }
+
+        hr.sakura-divider {
+            margin: 1.2rem 0;
+            border: none;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #f7bfd2, #ff90b5, #f7bfd2, transparent);
+        }
+
+        @media (max-width: 720px) {
+            .music-container {
+                padding: 1rem 1rem 2rem;
+            }
+            .player-dual {
+                flex-direction: column;
+            }
+            .vinyl {
+                width: 160px;
+                height: 160px;
+            }
+            .track-title {
+                font-size: 1.2rem;
+            }
+            .spectrum-line .spectrum-bars {
+                gap: 3px;
+                height: 38px;
+            }
+            .spectrum-line .spectrum-bar {
+                width: 6px;
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #ffdee8;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #e294b0;
+            border-radius: 10px;
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 1.8rem;
+            margin: 2rem 0 1rem;
+            flex-wrap: wrap;
+        }
+
+        .social-links a {
+            background: #fff1f4;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #dc7c99;
+            font-size: 1.4rem;
+            transition: 0.2s;
+            text-decoration: none;
+            border: 1px solid #ffd2df;
+        }
+
+        .social-links a:hover {
+            background: #ffe2ea;
+            color: #b84f6e;
+            transform: translateY(-3px);
+        }
+    </style>
+</head>
+<body>
+
+<div class="sakura-flurry" id="sakura-flurry"></div>
+
+<main class="music-container">
+    <header class="music-header">
+        <div class="blog-title">
+            <i class="fas fa-fan"></i>
+            本喵的音乐盒
+            <i class="fas fa-head-side-headphones"></i>
+        </div>
+        <div class="subhead">
+            <i class="fas fa-cherry-blossom"></i> 喵耳律动 · 樱花摇
+        </div>
+        <div class="nav-links">
+            <a href="index.html">首页</a>
+            <a href="index1.html">关于</a>
+            <a href="index2.html">归档</a>
+            <a href="index3.html">留言</a>
+            <a href="music.html">音乐</a>
+            <a href="index4.html">工具</a>
+        </div>
+    </header>
+
+    <div class="player-card">
+        <div class="player-dual">
+            <div class="player-left">
+                <div class="disc-zone">
+                    <div class="vinyl">
+                        <div class="cover-inner" id="coverInner">
+                            <img class="cover-img" id="coverImg" src="https://i.ibb.co/3Ydz4krV/wink.png" alt="wink">
+                        </div>
+                    </div>
+                </div>
+                <div class="song-details">
+                    <div class="track-title" id="trackName">🌸 空空的喵</div>
+                    <div class="track-artist" id="trackArtist">点击➕ 添加音乐</div>
+                </div>
+                <div class="progress-area">
+                    <div class="progress-bar-bg" id="progressBg"><div class="progress-fill" id="progressFill"></div></div>
+                    <div class="time-row"><span id="currentTime">0:00</span><span id="totalDuration">0:00</span></div>
+                </div>
+                <div class="controls-row">
+                    <button class="ctrl-btn" id="prevBtn"><i class="fas fa-backward-step"></i></button>
+                    <button class="ctrl-btn play-main" id="playPauseBtn"><i class="fas fa-play" id="playPauseIcon"></i></button>
+                    <button class="ctrl-btn" id="nextBtn"><i class="fas fa-forward-step"></i></button>
+                </div>
+                <div class="mode-strip">
+                    <div class="mode-chip" id="repeatModeBtn"><i class="fas fa-redo-alt"></i> 单曲循环</div>
+                    <div class="mode-chip" id="shuffleModeBtn"><i class="fas fa-random"></i> 随机播放</div>
+                    <div class="mode-chip" id="speedBtn"><i class="fas fa-tachometer-alt"></i> 倍速 <span id="speedVal">1.0x</span></div>
+                </div>
+                <div class="mixer">
+                    <i class="fas fa-volume-down" style="color:#ce809b;"></i>
+                    <input type="range" id="volumeRange" min="0" max="1" step="0.01" value="0.7" class="volume-slider">
+                    <i class="fas fa-volume-up" style="color:#ce809b;"></i>
+                </div>
+            </div>
+
+            <div class="player-right">
+                <div class="lyric-panel" id="lyricBox">
+                    🎵 喵 ~ 点击右侧➕ 上传本地音乐，一起摇摆吧 ✨
+                </div>
+                <div class="playlist-section">
+                    <div class="playlist-header">
+                        <span><i class="fas fa-list-ul"></i> 喵喵歌单</span>
+                        <span id="songCount">0 首</span>
+                        <div class="glass-icon" id="uploadTrigger" style="cursor:pointer;background:#ffeef2; width:32px;height:32px;border-radius:30px;display:flex;align-items:center;justify-content:center;">
+                            <i class="fas fa-plus-circle" style="color:#e07f9d;"></i>
+                        </div>
+                    </div>
+                    <div class="playlist-scroll" id="playlistContainer"></div>
+                </div>
+                <div class="cherry-tip">
+                    <i class="fas fa-music"></i> 想听新歌？点击➕ 上传本地音频喵~ 封面默认 wink 喵
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 频谱动画区域-->
+    <div class="spectrum-line">
+        <div class="spectrum-bars" id="spectrumBars"></div>
+    </div>
+
+    <div style="text-align: center; margin-top: 1rem;">
+        <a href="index.html" class="btn-cherry"><i class="fas fa-chevron-circle-left"></i> 回喵星首页</a>
+    </div>
+    <hr class="sakura-divider">
+    <footer style="text-align: center; padding: 1rem 0; color:#c2829b; font-size:0.75rem;">
+        <p><i class="fas fa-cherry-blossom"></i> 樱花摇·本喵的音乐收藏 <i class="fas fa-feather-alt"></i></p>
+        <div class="social-links">
+            <a href="https://space.bilibili.com/1113834956?spm_id_from=333.1007.0.0" target="_blank" rel="noopener noreferrer"><i class="fab fa-bilibili"></i></a>
+            <a href="https://www.youtube.com/@kaneKing-l7l" target="_blank" rel="noopener noreferrer"><i class="fab fa-youtube"></i></a>
+            <a href="https://x.com/arry_kane" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+            <a href="https://www.instagram.com/kane_kingasiatic/" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+            <a href="https://github.com/U1s1-king" aria-label="GitHub"><i class="fab fa-github"></i></a>
+            <a href="https://mail.google.com/mail/?view=cm&fs=1&to=kaneking114@gmail.com" aria-label="Email"><i class="fas fa-envelope"></i></a>
+        </div>
+        <p>© 2026 樱花物语 | 音乐</p>
+    </footer>
+</main>
+
+<audio id="nativeAudio" style="display: none;"></audio>
+
+<div class="modal-global" id="uploadModal">
+    <div class="modal-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
+            <h3 style="color:#be6f8b;"><i class="fas fa-cloud-upload-alt"></i> 添加本地音乐</h3>
+            <button id="closeUploadModal" style="background:none;border:none;font-size:1.8rem;color:#dc8aa7;">&times;</button>
+        </div>
+        <div class="upload-area" id="dropArea"><i class="fas fa-headphones fa-2x"></i><p>点击选择音乐文件 (mp3/flac/等)</p><input type="file" id="fileInput" multiple accept="audio/*" style="display:none"></div>
+        <div id="filePreviewList" style="font-size:0.75rem;color:#ad6e85;"></div>
+        <button class="submit-glow" id="confirmUploadBtn">✨ 添加到歌单</button>
+    </div>
+</div>
+<div class="toast" id="toastMsg"></div>
+
+<script>
+    // 歌单数据
+    let playlist = [
+        { name: "Don't say \"lazy\"", artist: "放課後ティータイム", path: "/music/放課後ティータイム - Don't saylazy.mp3" },
+        { name: "ふわふわ時間 (轻飘飘时间)(映画「けいおん!」Mix)", artist: "放課後ティータイム", path: "/music/放課後ティータイム - ふわふわ時間 (轻飘飘时间)(映画「けいおん!」Mix).mp3" },
+        { name: "天使にふれたよ!", artist: "放課後ティータイム", path: "/music/放課後ティータイム - 天使にふれたよ!.mp3" },
+        { name: "あのバンド", artist: "結束バンド", path: "/music/結束バンド - あのバンド.mp3" },
+        { name: "ギターと孤独と蒼い惑星 (吉他与孤独与蓝色星球)", artist: "結束バンド", path: "/music/結束バンド - ギターと孤独と蒼い惑星 (吉他与孤独与蓝色星球).mp3" },
+        { name: "ひとりぼっち東京", artist: "結束バンド", path: "/music/結束バンド - ひとりぼっち東京.mp3" },
+        { name: "ひみつ基地 (秘密基地)", artist: "結束バンド", path: "/music/結束バンド - ひみつ基地 (秘密基地).mp3" },
+        { name: "忘れてやらない (绝不会忘记)", artist: "結束バンド", path: "/music/結束バンド - 忘れてやらない (绝不会忘记).mp3" },
+        { name: "星座になれたら", artist: "結束バンド", path: "/music/結束バンド - 星座になれたら.mp3" },
+        { name: "Lemon", artist: "米津玄師", path: "/music/米津玄師 - Lemon.mp3" },
+        { name: "LOSER", artist: "米津玄師", path: "/music/米津玄師 - LOSER.mp3" },
+        { name: "M八七", artist: "米津玄師", path: "/music/米津玄師 - M八七.mp3" },
+        { name: "Pale Blue", artist: "米津玄師", path: "/music/米津玄師 - Pale Blue.mp3" },
+        { name: "感電", artist: "米津玄師", path: "/music/米津玄師 - 感電.mp3" },
+        { name: "海の幽霊", artist: "米津玄師", path: "/music/米津玄師 - 海の幽霊.mp3" },
+        { name: "死神", artist: "米津玄師", path: "/music/米津玄師 - 死神.mp3" },
+        { name: "打上花火", artist: "米津玄師、Daoko", path: "/music/米津玄師、Daoko - 打上花火.mp3" },
+        { name: "AIscream", artist: "", path: "/music/AIscream.mp3" },
+        { name: "BOW AND ARROW", artist: "米津玄师", path: "/music/BOW AND ARROW.mp3" },
+        { name: "TWO_AS_ONE", artist: "トゲナシトゲアリ", path: "/music/TWO_AS_ONE.mp3" },
+        { name: "サヨナラサヨナラサヨナラ", artist: "トゲナシトゲアリ", path: "/music/トゲナシトゲアリ - サヨナラサヨナラサヨナラ (再见再见再见).mp3" },
+        { name: "ダレモ", artist: "トゲナシトゲアリ", path: "/music/トゲナシトゲアリ - ダレモ.mp3" },
+        { name: "闇に溶けてく", artist: "トゲナシトゲアリ", path: "/music/トゲナシトゲアリ - 闇に溶けてく.mp3" },
+        { name: "爆ぜて咲く", artist: "トゲナシトゲアリ", path: "/music/トゲナシトゲアリ - 爆ぜて咲く (爆裂绽放).mp3" },
+        { name: "蝶に結いた赤い糸", artist: "トゲナシトゲアリ", path: "/music/トゲナシトゲアリ - 蝶に結いた赤い糸.mp3" },
+        { name: "飛べない蝶は夢を見る", artist: "トゲナシトゲアリ", path: "/music/トゲナシトゲアリ - 飛べない蝶は夢を見る.mp3" },
+        { name: "極私的極彩色アンサー", artist: "トゲナシトゲアリ", path: "/music/トゲナシトゲアリ - 極私的極彩色アンサー.mp3" },
+        { name: "空の箱", artist: "トゲナシトゲアリ", path: "/music/トゲナシトゲアリ - 空の箱.mp3" },
+        { name: "空白とカタルシス", artist: "トゲナシトゲアリ", path: "/music/トゲナシトゲアリ - 空白とカタルシス.mp3" },
+        { name: "黎明を穿つ", artist: "トゲナシトゲアリ", path: "/music/トゲナシトゲアリ - 黎明を穿つ.mp3" },
+        { name: "理想的パラドクスとは", artist: "トゲナシトゲアリ", path: "/music/トゲナシトゲアリ - 理想的パラドクスとは.mp3" },
+        { name: "名もなき何もかも", artist: "トゲナシトゲアリ", path: "/music/トゲナシトゲアリ - 名もなき何もかも.mp3" },
+        { name: "気鬱、白濁す", artist: "トゲナシトゲアリ", path: "/music/トゲナシトゲアリ - 気鬱、白濁す (white drizzle in gloom).mp3" },
+        { name: "傷つき傷つけ痛くて辛い", artist: "トゲナシトゲアリ", path: "/music/トゲナシトゲアリ - 傷つき傷つけ痛くて辛い.mp3" },
+        { name: "視界の隅 朽ちる音", artist: "トゲナシトゲアリ", path: "/music/トゲナシトゲアリ - 視界の隅 朽ちる音.mp3" },
+        { name: "声なき魚", artist: "トゲナシトゲアリ", path: "/music/トゲナシトゲアリ - 声なき魚.mp3" },
+        { name: "誰にもなれない私だから", artist: "トゲナシトゲアリ", path: "/music/トゲナシトゲアリ - 誰にもなれない私だから.mp3" },
+        { name: "偽りの理", artist: "トゲナシトゲアリ", path: "/music/トゲナシトゲアリ - 偽りの理.mp3" },
+        { name: "心象的フラクタル", artist: "トゲナシトゲアリ", path: "/music/トゲナシトゲアリ - 心象的フラクタル.mp3" },
+        { name: "運命に賭けたい論理", artist: "トゲナシトゲアリ", path: "/music/トゲナシトゲアリ - 運命に賭けたい論理.mp3" },
+        { name: "運命の華", artist: "トゲナシトゲアリ", path: "/music/トゲナシトゲアリ - 運命の華.mp3" },
+        { name: "雑踏、僕らの街", artist: "トゲナシトゲアリ", path: "/music/トゲナシトゲアリ - 雑踏、僕らの街.mp3" },
+        { name: "碧いif", artist: "トゲナシトゲアリ", path: "/music/碧いif.mp3" },
+        { name: "吹き消した灯火", artist: "トゲナシトゲアリ", path: "/music/吹き消した灯火.mp3" },
+        { name: "無知のち私", artist: "トゲナシトゲアリ", path: "/music/無知のち私.mp3" },
+        { name: "臆病な白夜", artist: "トゲナシトゲアリ", path: "/music/臆病な白夜.mp3" },
+        { name: "最期の禱り", artist: "トゲナシトゲアリ", path: "/music/最期の禱り.mp3" },
+        { name: "猛独が襲う (Deathly Loneliness Attacks)", artist: "MyGO!!!!!", path: "/music/MyGO!!!!! - 猛独が襲う (Deathly Loneliness Attacks).mp3" },
+        { name: "迷星叫", artist: "MyGO!!!!!", path: "/music/MyGO!!!!! - 迷星叫.mp3" },
+        { name: "壱雫空", artist: "MyGO!!!!!", path: "/music/MyGO!!!!! - 壱雫空.mp3" },
+        { name: "影色舞", artist: "MyGO!!!!!", path: "/music/MyGO!!!!! - 影色舞.mp3" },
+        { name: "春日影 (MyGO!!!!! ver.)", artist: "MyGO!!!!!", path: "/music/MyGO!!!!! - 春日影 (MyGO!!!!! ver.).mp3" },
+        { name: "スパークル", artist: "RADWIMPS", path: "/music/RADWIMPS - スパークル.mp3" },
+        { name: "なんでもないや", artist: "RADWIMPS", path: "/music/RADWIMPS - なんでもないや.mp3" },
+        { name: "夢灯籠", artist: "RADWIMPS", path: "/music/RADWIMPS - 夢灯籠.mp3" },
+        { name: "前前前世", artist: "RADWIMPS", path: "/music/RADWIMPS - 前前前世.mp3" },
+        { name: "Watch me!", artist: "YOASOBI", path: "/music/YOASOBI - Watch me!.mp3" },
+        { name: "あの夢をなぞって", artist: "YOASOBI", path: "/music/YOASOBI - あの夢をなぞって.mp3" },
+        { name: "アンコール (安可)", artist: "YOASOBI", path: "/music/YOASOBI - アンコール (安可).mp3" },
+        { name: "ラブレター", artist: "YOASOBI", path: "/music/YOASOBI - ラブレター.mp3" },
+        { name: "大正浪漫", artist: "YOASOBI", path: "/music/YOASOBI - 大正浪漫.mp3" },
+        { name: "怪物", artist: "YOASOBI", path: "/music/YOASOBI - 怪物.mp3" },
+        { name: "群青", artist: "YOASOBI", path: "/music/YOASOBI - 群青.mp3" },
+        { name: "夜に駆ける", artist: "YOASOBI", path: "/music/YOASOBI - 夜に駆ける.mp3" },
+        { name: "優しい彗星", artist: "YOASOBI", path: "/music/YOASOBI - 優しい彗星.mp3" }
+    ];
+    let currentIndex = 0;
+    let isPlaying = false;
+    let playMode = "normal";
+    let shuffleIndices = [];
+    let playbackRateVal = 1.0;
+
+    const DEFAULT_COVER = "https://i.ibb.co/3Ydz4krV/wink.png";
+
+    // DOM 元素
+    const audio = document.getElementById('nativeAudio');
+    const playBtn = document.getElementById('playPauseBtn');
+    const playIcon = document.getElementById('playPauseIcon');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const progressFill = document.getElementById('progressFill');
+    const progressBg = document.getElementById('progressBg');
+    const curTimeSpan = document.getElementById('currentTime');
+    const totalDurSpan = document.getElementById('totalDuration');
+    const volumeRange = document.getElementById('volumeRange');
+    const coverImg = document.getElementById('coverImg');
+    const coverInner = document.getElementById('coverInner');
+    const trackNameSpan = document.getElementById('trackName');
+    const trackArtistSpan = document.getElementById('trackArtist');
+    const playlistContainer = document.getElementById('playlistContainer');
+    const songCountSpan = document.getElementById('songCount');
+    const lyricBox = document.getElementById('lyricBox');
+    const repeatBtn = document.getElementById('repeatModeBtn');
+    const shuffleBtn = document.getElementById('shuffleModeBtn');
+    const speedValSpan = document.getElementById('speedVal');
+
+    // 频谱相关变量
+    let spectrumBars = [];
+    let spectrumInterval = null;
+
+    function formatTime(sec) { if(isNaN(sec)) return '0:00'; let m = Math.floor(sec/60), s = Math.floor(sec%60); return `${m}:${s<10?'0'+s:s}`; }
+    function showMsg(msg) { let t = document.getElementById('toastMsg'); t.textContent = msg; t.style.display='block'; setTimeout(()=>t.style.display='none',2000); }
+    function escapeHtml(str) { return str.replace(/[&<>]/g, function(m){return m==='&'?'&amp;':m==='<'?'&lt;':'&gt;';}); }
+
+    // 初始化频谱柱
+    function initSpectrum() {
+        const container = document.getElementById('spectrumBars');
+        if (!container) return;
+        container.innerHTML = '';
+        const barCount = window.innerWidth < 700 ? 20 : 28;
+        for(let i = 0; i < barCount; i++) {
+            let bar = document.createElement('div');
+            bar.className = 'spectrum-bar';
+            container.appendChild(bar);
+            spectrumBars.push(bar);
+        }
+    }
+
+    // 启动频谱动画
+    function startSpectrum() {
+        if (spectrumInterval) clearInterval(spectrumInterval);
+        spectrumInterval = setInterval(() => {
+            if (!isPlaying) return;
+            const vol = audio.volume || 0.7;
+            for (let i = 0; i < spectrumBars.length; i++) {
+                const randomPeak = Math.random() * 45 * vol;
+                const sineFactor = Math.sin(Date.now() / 180 + i * 0.25) * 12;
+                let height = 6 + randomPeak + sineFactor;
+                height = Math.min(62, Math.max(6, height));
+                spectrumBars[i].style.height = height + 'px';
+            }
+        }, 85);
+    }
+
+    function stopSpectrum() {
+        if (spectrumInterval) {
+            clearInterval(spectrumInterval);
+            spectrumInterval = null;
+        }
+        for (let bar of spectrumBars) {
+            bar.style.height = '6px';
+        }
+    }
+
+    // 更新播放列表 UI
+    function updateList() {
+        let html = '';
+        playlist.forEach((s, i) => {
+            let active = i === currentIndex ? 'active' : '';
+            html += `<div class="track-item ${active}" data-idx="${i}">
+                        <div class="track-info"><i class="fas fa-music" style="color:#db8faa;"></i> ${escapeHtml(s.name)}</div>
+                        <div class="track-duration">${s.dur || '0:00'}</div>
+                    </div>`;
+        });
+        if(playlist.length === 0) {
+            playlistContainer.innerHTML = '<div style="text-align:center;color:#b98297;padding:20px;">🌸 暂无歌曲，点击右上角➕上传喵~</div>';
+        } else {
+            playlistContainer.innerHTML = html;
+        }
+        songCountSpan.innerText = `${playlist.length} 首`;
+        document.querySelectorAll('.track-item').forEach(el => {
+            el.addEventListener('click', () => { let idx = parseInt(el.dataset.idx); if(!isNaN(idx)) play(idx); });
+        });
+    }
+
+    // 播放指定索引的歌曲
+    function play(idx) {
+        if(playlist.length === 0) {
+            showMsg('歌单空空如也，请先添加音乐喵~');
+            return;
+        }
+        if(idx < 0 || idx >= playlist.length) return;
+        currentIndex = idx;
+        let s = playlist[currentIndex];
+        trackNameSpan.innerText = s.name;
+        trackArtistSpan.innerText = s.artist;
+        coverImg.src = DEFAULT_COVER;
+        audio.src = s.path;
+        audio.load();
+        audio.playbackRate = playbackRateVal;
+        audio.addEventListener('loadedmetadata', function onLoad() {
+            totalDurSpan.innerText = formatTime(audio.duration);
+            if(playlist[currentIndex] && !playlist[currentIndex].durFixed) {
+                playlist[currentIndex].dur = formatTime(audio.duration);
+                playlist[currentIndex].durFixed = true;
+                updateList();
+            }
+            audio.removeEventListener('loadedmetadata', onLoad);
+        }, { once: true });
+        if(isPlaying) audio.play().catch(()=>showMsg('文件无法播放喵，可能路径失效'));
+        progressFill.style.width = '0%';
+        curTimeSpan.innerText = '0:00';
+        updateList();
+        lyricBox.innerHTML = `🎤 正在播放: ${s.name} · ${s.artist}  🌸 wink喵~`;
+    }
+
+    function playPause() {
+        if(playlist.length === 0){ showMsg('请先添加一些歌曲，点击右侧➕'); return; }
+        if(isPlaying) {
+            audio.pause();
+            isPlaying=false;
+            playIcon.className='fas fa-play';
+            coverInner.classList.remove('playing');
+            stopSpectrum();
+        } else {
+            if(!audio.src || audio.ended) {
+                if(currentIndex >= playlist.length) currentIndex = 0;
+                if(playlist[currentIndex]) play(currentIndex);
+                else return;
+            }
+            audio.play().then(()=>{
+                isPlaying=true;
+                playIcon.className='fas fa-pause';
+                coverInner.classList.add('playing');
+                startSpectrum();
+            }).catch((e)=>showMsg('播放出错喵'+e.message));
+        }
+    }
+
+    function next() {
+        if(playlist.length === 0) return;
+        if(playMode === 'shuffle'){
+            if(shuffleIndices.length !== playlist.length) reshuffle();
+            let pos = (shuffleIndices.indexOf(currentIndex)+1) % shuffleIndices.length;
+            play(shuffleIndices[pos]);
+        } else {
+            play((currentIndex+1) % playlist.length);
+        }
+    }
+
+    function prev() {
+        if(playlist.length === 0) return;
+        if(playMode === 'shuffle'){
+            if(shuffleIndices.length !== playlist.length) reshuffle();
+            let pos = (shuffleIndices.indexOf(currentIndex)-1+shuffleIndices.length) % shuffleIndices.length;
+            play(shuffleIndices[pos]);
+        } else {
+            play((currentIndex-1+playlist.length) % playlist.length);
+        }
+    }
+
+    function reshuffle() {
+        shuffleIndices = [...Array(playlist.length).keys()];
+        for(let i=shuffleIndices.length-1;i>0;i--){
+            let j=Math.floor(Math.random()*(i+1));
+            [shuffleIndices[i],shuffleIndices[j]]=[shuffleIndices[j],shuffleIndices[i]];
+        }
+    }
+
+    function updateProgress() {
+        if(!audio.src || isNaN(audio.duration)) return;
+        let p = (audio.currentTime / audio.duration) * 100;
+        progressFill.style.width = `${p}%`;
+        curTimeSpan.innerText = formatTime(audio.currentTime);
+        if(totalDurSpan.innerText === '0:00' && audio.duration>0) totalDurSpan.innerText = formatTime(audio.duration);
+    }
+
+    // 添加本地音乐
+    let pendingFiles = [];
+    const uploadModal = document.getElementById('uploadModal');
+    document.getElementById('uploadTrigger').onclick = () => uploadModal.style.display = 'flex';
+    document.getElementById('closeUploadModal').onclick = () => uploadModal.style.display = 'none';
+    document.getElementById('dropArea').onclick = () => document.getElementById('fileInput').click();
+    document.getElementById('fileInput').onchange = (e) => {
+        pendingFiles = Array.from(e.target.files);
+        document.getElementById('filePreviewList').innerHTML = pendingFiles.map(f => `<span class="file-chip" style="background:#FCEAF1; padding:2px 12px; border-radius:30px; margin:2px;">📀 ${escapeHtml(f.name)}</span>`).join('');
+    };
+    document.getElementById('confirmUploadBtn').onclick = async () => {
+        if(pendingFiles.length === 0){ showMsg('请选择音乐文件喵'); return; }
+        let addedCount = 0;
+        for(let f of pendingFiles){
+            let url = URL.createObjectURL(f);
+            let name = f.name.replace(/\.[^/.]+$/, '');
+            let temp = new Audio();
+            temp.src = url;
+            let dur = '0:00';
+            await new Promise(resolve => {
+                temp.addEventListener('loadedmetadata', () => { dur = formatTime(temp.duration); resolve(); }, { once: true });
+                setTimeout(resolve, 400);
+            });
+            playlist.push({
+                name: name,
+                artist: '本地音乐喵',
+                path: url,
+                dur: dur,
+                durFixed: true,
+                cover: null
+            });
+            addedCount++;
+        }
+        updateList();
+        if(playlist.length > 0 && (!audio.src || audio.ended)) {
+            play(0);
+        }
+        uploadModal.style.display = 'none';
+        pendingFiles = [];
+        document.getElementById('filePreviewList').innerHTML = '';
+        showMsg(`✅ 成功添加 ${addedCount} 首歌曲~ ヽ(=^･ω･^=)丿`);
+    };
+    window.onclick = (e) => { if(e.target.classList.contains('modal-global')) e.target.style.display = 'none'; };
+
+    // 事件绑定
+    playBtn.addEventListener('click', playPause);
+    prevBtn.addEventListener('click', prev);
+    nextBtn.addEventListener('click', next);
+    volumeRange.addEventListener('input', (e) => audio.volume = e.target.value);
+    progressBg.addEventListener('click', (e) => { if(audio.duration && !isNaN(audio.duration)){ let rect = progressBg.getBoundingClientRect(); let p = (e.clientX - rect.left) / rect.width; audio.currentTime = p * audio.duration; } });
+    audio.addEventListener('timeupdate', updateProgress);
+    audio.addEventListener('ended', () => {
+        if(playMode === 'repeat'){
+            audio.currentTime = 0;
+            audio.play().catch(() => showMsg('自动重播失败'));
+        } else {
+            next();
+        }
+    });
+    repeatBtn.addEventListener('click', () => { playMode = playMode==='repeat'?'normal':'repeat'; repeatBtn.classList.toggle('active',playMode==='repeat'); shuffleBtn.classList.remove('active'); showMsg(playMode==='repeat'?'🔁 单曲循环' : '➡️ 顺序播放'); });
+    shuffleBtn.addEventListener('click', () => { if(playMode!=='shuffle'){ playMode='shuffle'; reshuffle(); shuffleBtn.classList.add('active'); repeatBtn.classList.remove('active'); showMsg('🎲 随机模式'); } else { playMode='normal'; shuffleBtn.classList.remove('active'); showMsg('➡️ 顺序模式'); } });
+    document.getElementById('speedBtn').addEventListener('click', () => { let rates=[0.8,1.0,1.2,1.5]; let idx=rates.indexOf(playbackRateVal); playbackRateVal=rates[(idx+1)%rates.length]; audio.playbackRate=playbackRateVal; speedValSpan.innerText=playbackRateVal.toFixed(2)+'x'; });
+
+    audio.volume = 0.7;
+    volumeRange.value = 0.7;
+
+    // 初始化
+    updateList();
+    coverImg.src = DEFAULT_COVER;
+    initSpectrum();
+
+    // 【修改】樱花飘落逻辑 - 只修改了这一部分
+    (function(){
+        const flurryContainer = document.getElementById('sakura-flurry');
+        if (!flurryContainer) return;
+
+        function createPetal() {
+            const petal = document.createElement('div');
+            petal.classList.add('petal');
+            const size = 8 + Math.random() * 14;
+            petal.style.width = size + 'px';
+            petal.style.height = size * 0.9 + 'px';
+            petal.style.left = Math.random() * 100 + '%';
+            const duration = 6 + Math.random() * 12;
+            petal.style.animationDuration = duration + 's';
+            petal.style.animationDelay = Math.random() * 15 + 's';
+            petal.style.opacity = String(0.4 + Math.random() * 0.5);
+            petal.style.background = `radial-gradient(circle, #ffdfe6, #ffb0c2)`;
+            petal.style.filter = `blur(${Math.random() * 1.2}px)`;
+            return petal;
+        }
+
+        let petalCount = window.innerWidth < 700 ? 28 : 45;
+
+        for (let i = 0; i < petalCount; i++) {
+            flurryContainer.appendChild(createPetal());
+        }
+
+        function replenishPetals() {
+            const currentCount = flurryContainer.children.length;
+            if (currentCount < petalCount - 8) {
+                const need = petalCount - currentCount;
+                for (let i = 0; i < Math.min(need, 8); i++) {
+                    flurryContainer.appendChild(createPetal());
+                }
+            }
+            const allPetals = flurryContainer.querySelectorAll('.petal');
+            for (let p of allPetals) {
+                const rect = p.getBoundingClientRect();
+                if (rect.top > window.innerHeight + 100 || rect.bottom < -100) {
+                    p.remove();
+                }
+            }
+        }
+
+        setInterval(replenishPetals, 4000);
+
+        window.addEventListener('resize', function() {
+            let expected = window.innerWidth < 700 ? 28 : 45;
+            if (Math.abs(flurryContainer.children.length - expected) > 12) {
+                while(flurryContainer.firstChild) {
+                    flurryContainer.removeChild(flurryContainer.firstChild);
+                }
+                petalCount = expected;
+                for (let i=0; i<petalCount; i++) {
+                    flurryContainer.appendChild(createPetal());
+                }
+            }
+        });
+
+        setTimeout(() => {
+            if(flurryContainer.children.length < 20) {
+                for(let i=0;i<12;i++) flurryContainer.appendChild(createPetal());
+            }
+        }, 500);
+    })();
+</script>
+</body>
+</html>
