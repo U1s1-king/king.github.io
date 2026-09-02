@@ -3,7 +3,7 @@
  * 修改 __DSH_VERSION 一处，即可刷新全站静态资源缓存
  * ============================================================ */
 (function () {
-  var __DSH_VERSION = '20260904';
+  var __DSH_VERSION = '20260905';
   window.__DSH_VERSION = __DSH_VERSION;
   function bump(root) {
     if (!root) return;

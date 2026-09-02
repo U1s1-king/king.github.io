@@ -1,5 +1,5 @@
-const CACHE = "king-blog-20260904";
-const CORE = ["/", "/index.html", "/manifest.json", "/css/style.css?v=20260904", "/css/sidebar.css?v=20260904", "/css/all.min.css?v=20260904", "/css/index.css?v=20260904", "/css/Journal.css?v=20260904", "/css/Archives.css?v=20260904", "/css/Guestbook.css?v=20260904", "/css/music.css?v=20260904", "/css/Tools.css?v=20260904", "/css/mobile.css?v=20260904", "/js/version.js?v=20260904", "/js/common.js?v=20260904", "/js/sidebar.js?v=20260904", "/js/particles-config.js", "/icons/icon-192.png", "/icons/icon-512.png"];
+const CACHE = "king-blog-20260905";
+const CORE = ["/", "/index.html", "/manifest.json", "/css/style.css?v=20260905", "/css/sidebar.css?v=20260905", "/css/all.min.css?v=20260905", "/css/index.css?v=20260905", "/css/Journal.css?v=20260905", "/css/Archives.css?v=20260905", "/css/Guestbook.css?v=20260905", "/css/music.css?v=20260905", "/css/Tools.css?v=20260905", "/css/mobile.css?v=20260905", "/js/version.js?v=20260905", "/js/common.js?v=20260905", "/js/sidebar.js?v=20260905", "/js/particles-config.js", "/icons/icon-192.png", "/icons/icon-512.png"];
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(CORE)).then(() => self.skipWaiting()));
 });
