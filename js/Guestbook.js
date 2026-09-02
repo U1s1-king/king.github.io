@@ -156,7 +156,7 @@ html += `
 <div class="message-card" data-id="${msg.id}">
 <div class="message-header">
 <div class="message-name">
-<img class="message-avatar" src="https://api.dicebear.com/9.x/thumbs/svg?seed=${encodeURIComponent(msg.name)}" alt="avatar">
+<img class="message-avatar" src="img/aono头像.png" width="44" height="44" alt="avatar">
 <span class="reply-name">${escapeHtml(msg.name)}</span>
 </div>
 <div class="message-date">
