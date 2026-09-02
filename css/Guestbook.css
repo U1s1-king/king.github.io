@@ -9,4 +9,5 @@
 #giscusPending{color:#b88a98;font-size:0.85rem;text-align:center;padding:1rem 0}
 
 /* ===== 留言头像尺寸修复：约束 SVG 头像大小 ===== */
-.message-avatar{width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0;display:inline-block;vertical-align:middle}
+.message-avatar{width:44px !important;height:44px !important;border-radius:50% !important;object-fit:cover !important;flex-shrink:0;display:inline-block;vertical-align:middle;transition:transform .25s ease,box-shadow .25s ease}
+.message-avatar:hover{border-radius:50% !important;transform:translateY(-3px);box-shadow:0 6px 12px rgba(233,131,160,0.35)}
