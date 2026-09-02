@@ -11,3 +11,9 @@
 /* ===== 留言头像尺寸修复：约束 SVG 头像大小 ===== */
 .message-avatar{width:44px !important;height:44px !important;border-radius:50% !important;object-fit:cover !important;flex-shrink:0;display:inline-block;vertical-align:middle;transition:transform .25s ease,box-shadow .25s ease}
 .message-avatar:hover{border-radius:50% !important;transform:translateY(-3px);box-shadow:0 6px 12px rgba(233,131,160,0.35)}
+
+/* ===== 排序按钮：统一风格 + 靠右 ===== */
+.sort-bar{margin-left:auto;order:3}
+.sort-btn{background:linear-gradient(135deg,#fff0f4,#ffe6ee);color:#c2557a;border:1px solid #ffd2df;border-radius:30px;padding:.35rem .95rem;font-size:.85rem;font-weight:500;cursor:pointer;transition:all .25s ease;box-shadow:0 2px 6px rgba(230,114,143,.12)}
+.sort-btn:hover{background:#ffdbe6;color:#a84562;transform:translateY(-1px);box-shadow:0 4px 10px rgba(230,114,143,.25)}
+.sort-btn.active{background:#f78fb0;color:#fff;border-color:#f78fb0;box-shadow:0 3px 8px rgba(247,143,176,.4)}
