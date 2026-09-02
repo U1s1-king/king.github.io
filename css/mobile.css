@@ -158,6 +158,8 @@
     -webkit-backdrop-filter: blur(10px);
     padding: 4px 2px calc(4px + env(safe-area-inset-bottom, 0px));
     box-shadow: 0 -2px 12px rgba(255, 130, 160, 0.18);
+    transform: none !important; /* 免疫入场 reveal 动画残留的 translateY(26px) */
+    opacity: 1 !important;
   }
   .bot-tab a {
     flex: 1;
