@@ -1,0 +1,72 @@
+{
+  "id": "/",
+  "name": "Tomo Ebizuka",
+  "short_name": "Tomo Ebizuka",
+  "description": "分享生活与代码的个人博客，(O_o)??主题",
+  "start_url": "/index.html",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "background_color": "#fff9f7",
+  "theme_color": "#ffb6c1",
+  "lang": "zh-CN",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "每日日记",
+      "short_name": "日记",
+      "description": "打开每日日记页",
+      "url": "/Journal.html",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "音乐",
+      "short_name": "音乐",
+      "description": "打开音乐播放器",
+      "url": "/music.html",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "工具箱",
+      "short_name": "工具",
+      "description": "打开工具箱",
+      "url": "/Tools.html",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Tomo Ebizuka 桌面视图"
+    },
+    {
+      "src": "/screenshots/mobile.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Tomo Ebizuka 移动视图"
+    }
+  ]
+}

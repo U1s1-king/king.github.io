@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <script src="js/version.js?v=20260902"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>🌸 404 · 页面走丢了喵</title>
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="description" content="404 页面不存在，回首页逛逛喵">
+    <meta property="og:image" content="https://zhaokening.ccwu.cc/og-image.png">
+    <link rel="canonical" href="https://zhaokening.ccwu.cc/">
+    <link rel="stylesheet" href="/css/style.css?v=20260902">
+    <link rel="stylesheet" href="/css/sidebar.css?v=20260902">
+    <link rel="stylesheet" href="/css/all.min.css?v=20260902">
+    <link rel="stylesheet" href="/css/mobile.css?v=20260902">
+    <style>
+        .notfound-wrap{min-height:82vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2rem;position:relative;z-index:1}
+        .notfound-code{font-size:7.5rem;font-weight:800;line-height:1;font-family:'Noto Serif SC',serif;background:linear-gradient(135deg,#f48fb1,#e91e63);-webkit-background-clip:text;background-clip:text;color:transparent}
+        .notfound-code i{font-size:4rem;vertical-align:middle;margin-right:0.6rem}
+        .notfound-text{font-size:1.35rem;color:#ad1457;margin:1.2rem 0 0.4rem}
+        .notfound-sub{color:#999;margin-bottom:2rem;font-size:0.95rem}
+        .notfound-btns{display:flex;gap:0.9rem;flex-wrap:wrap;justify-content:center}
+        .notfound-btns a{text-decoration:none;padding:0.7rem 1.6rem;border-radius:999px;font-weight:600;transition:transform .2s,box-shadow .2s}
+        .btn-cherry404{background:linear-gradient(135deg,#ffc2d1,#f48fb1);color:#7b1fa2;box-shadow:0 4px 14px rgba(244,143,177,.4)}
+        .btn-ghost404{border:2px solid #f8bbd0;color:#c2185b}
+        .notfound-btns a:hover{transform:translateY(-2px)}
+        #sakuraField{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+        .petal404{position:absolute;top:-8vh;width:12px;height:12px;background:linear-gradient(135deg,#ffd6e0,#f48fb1);border-radius:70% 30% 70% 30%;opacity:.75;animation:sakuraFall linear infinite}
+        @keyframes sakuraFall{0%{transform:translateY(-6vh) rotate(0deg);opacity:.75}100%{transform:translateY(112vh) rotate(420deg);opacity:.15}}
+    </style>
+</head>
+<body>
+    <div id="sakuraField"></div>
+    <div class="anon-bg-layer bg-404"></div>
+    
+<aside class="site-sidebar" id="siteSidebar">
+    <a class="sidebar-brand" href="index.html">
+        <i class="fas fa-cherry-blossom"></i>
+        <span class="sidebar-brand-name">Tomo Ebizuka</span>
+        <span class="sidebar-brand-sub">ZhaoKeninG's Blog</span>
+    </a>
+    <nav class="sidebar-nav">
+        <a href="index.html"><i class="fas fa-cat"></i><span>首页</span></a>
+        <a href="Journal.html"><i class="fas fa-book-open"></i><span>日记</span></a>
+        <a href="Archives.html"><i class="fas fa-images"></i><span>归档</span></a>
+        <a href="Guestbook.html"><i class="fas fa-comments"></i><span>留言</span></a>
+        <a href="music.html"><i class="fas fa-music"></i><span>音乐</span></a>
+        <a href="Tools.html"><i class="fas fa-toolbox"></i><span>工具</span></a>
+    </nav>
+    <div class="sidebar-deco">
+        <img loading="lazy" src="img/anon-sidebar.png" alt="千早愛音">
+        <span class="deco-caption">千早愛音</span>
+    </div>
+</aside>
+
+    <main class="notfound-wrap">
+        <div class="notfound-code"><i class="fas fa-feather-alt"></i>404</div>
+        <div class="notfound-text">🌸 哎呀，这一页被风吹走啦喵～</div>
+        <div class="notfound-sub">你访问的页面不存在，可能已被删除或链接有误，回首页逛逛吧</div>
+        <div class="notfound-btns">
+            <a href="/index.html" class="btn-cherry404"><i class="fas fa-home"></i> 回首页</a>
+            <a href="/Journal.html" class="btn-ghost404"><i class="fas fa-book-open"></i> 去日记</a>
+            <a href="/Guestbook.html" class="btn-ghost404"><i class="fas fa-envelope-open-text"></i> 留言板</a>
+        </div>
+    </main>
+    <nav class="bot-tab" aria-label="移动端导航">
+        <a href="/index.html"><i class="fas fa-cat"></i><span>首页</span></a>
+        <a href="/Journal.html"><i class="fas fa-book-open"></i><span>日记</span></a>
+        <a href="/Archives.html"><i class="fas fa-images"></i><span>归档</span></a>
+        <a href="/Guestbook.html"><i class="fas fa-comments"></i><span>留言</span></a>
+        <a href="/music.html"><i class="fas fa-music"></i><span>音乐</span></a>
+        <a href="/Tools.html"><i class="fas fa-toolbox"></i><span>工具</span></a>
+    </nav>
+    <script>
+        (function () {
+            var field = document.getElementById('sakuraField');
+            if (!field) return;
+            var count = 26;
+            for (var i = 0; i < count; i++) {
+                var p = document.createElement('div');
+                p.className = 'petal404';
+                p.style.left = (Math.random() * 100) + 'vw';
+                p.style.width = p.style.height = (9 + Math.random() * 9) + 'px';
+                p.style.animationDuration = (7 + Math.random() * 9) + 's';
+                p.style.animationDelay = (-Math.random() * 12) + 's';
+                field.appendChild(p);
+            }
+        })();
+    </script>
+    <script src="/js/common.js?v=20260902"></script>
+    <script src="/js/sidebar.js?v=20260902"></script>
+    <script src="https://sakura-live2d.pages.dev/live2d/waifu.js?v=20260904" defer></script>
+</body>
+</html>

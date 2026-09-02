@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <script src="js/version.js?v=20260902"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <link rel="stylesheet" href="css/style.css?v=20260902">
+    <link rel="stylesheet" href="css/sidebar.css?v=20260902">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#ffb6c1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+    <link rel="dns-prefetch" href="//v1.hitokoto.cn">
+    <link rel="dns-prefetch" href="//api.open-meteo.com">
+    <link rel="dns-prefetch" href="//api.bilibili.com">
+    <link rel="dns-prefetch" href="//api.github.com">
+    <link rel="preconnect" href="https://api.open-meteo.com" crossorigin>
+    <link rel="preconnect" href="https://api.github.com" crossorigin>
+    <title>🌸 工具箱 · 喵喵小助手</title>
+    <link rel="canonical" href="https://zhaokening.ccwu.cc/Tools.html">
+    
+    <link rel="stylesheet" href="css/all.min.css?v=20260902">
+    <link rel="stylesheet" href="css/Tools.css?v=20260902">
+    <link rel="stylesheet" href="css/mobile.css?v=20260902">
+    <meta name="description" content="工具箱：30+ 实用小工具，包含转换器、随机数、密码生成、翻译、OCR、天气查询等。">
+    <meta name="keywords" content="(O_o)??,工具箱,工具,转换器,随机数,密码生成,翻译,OCR,天气">
+    <meta name="author" content="king">
+    <meta name="robots" content="index, follow">
+    <meta property="og:title" content="🌸工具箱 - (O_o)??">
+    <meta property="og:description" content="工具箱：30+ 实用小工具，包含转换器、随机数、密码生成、翻译、OCR、天气查询等。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://zhaokening.ccwu.cc/Tools.html">
+    <meta property="og:image" content="https://zhaokening.ccwu.cc/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary">
+</head>
+<body>
+<script>document.documentElement.style.background='transparent';document.body.style.background='transparent';</script>
+
+<div class="sakura-flurry" id="sakura-flurry"></div>
+<div class="anon-bg-layer bg-tools"></div>
+<aside class="site-sidebar" id="siteSidebar">
+    <a class="sidebar-brand" href="index.html">
+        <i class="fas fa-cherry-blossom"></i>
+        <span class="sidebar-brand-name">Tomo Ebizuka</span>
+        <span class="sidebar-brand-sub">ZhaoKeninG's Blog</span>
+    </a>
+    <nav class="sidebar-nav">
+        <a href="index.html"><i class="fas fa-cat"></i><span>首页</span></a>
+        <a href="Journal.html"><i class="fas fa-book-open"></i><span>日记</span></a>
+        <a href="Archives.html"><i class="fas fa-images"></i><span>归档</span></a>
+        <a href="Guestbook.html"><i class="fas fa-comments"></i><span>留言</span></a>
+        <a href="music.html"><i class="fas fa-music"></i><span>音乐</span></a>
+        <a href="Tools.html" class="active"><i class="fas fa-toolbox"></i><span>工具</span></a>
+    </nav>
+    <div class="sidebar-deco">
+        <img loading="lazy" src="img/anon-sidebar.png" alt="千早愛音">
+        <span class="deco-caption">千早愛音</span>
+    </div>
+</aside>
+
+<main class="toolbox-container">
+    <header class="toolbox-header">
+        <div class="blog-title">
+            <i class="fas fa-fan"></i>
+            工具箱
+            <i class="fas fa-toolbox"></i>
+        </div>
+        <div class="subhead">
+            <i class="fas fa-magic"></i> 喵喵小助手 · 常用工具一网打尽
+        </div>
+    </header>
+
+    <div class="bg-controls">
+        <button class="cherry-btn" id="defaultBgBtn"><i class="fas fa-palette"></i> 默认背景</button>
+        <button class="cherry-btn" id="uploadBgBtn"><i class="fas fa-cloud-upload-alt"></i> 上传背景</button>
+        <input type="file" id="bgImageUpload" accept="image/*" class="st-cb458930">
+        <button class="cherry-btn" id="clearBgBtn"><i class="fas fa-times-circle"></i> 清除背景</button>
+    </div>
+
+    <div class="main-card">
+        <!-- 工具标签页 -->
+        <div class="tools-tabs">
+            <button class="tool-tab active" data-tool="converter"> 转换器</button>
+            <button class="tool-tab" data-tool="random"> 随机数</button>
+            <button class="tool-tab" data-tool="countdown"> 倒计时</button>
+            <button class="tool-tab" data-tool="password"> 密码生成</button>
+            <button class="tool-tab" data-tool="lottery"> 抽签</button>
+            <button class="tool-tab" data-tool="color"> 颜色</button>
+            <button class="tool-tab" data-tool="counter"> 字符统计</button>
+                        <button class="tool-tab" data-tool="base64"> Base64</button>
+            <button class="tool-tab" data-tool="urlcode"> URL</button>
+            <button class="tool-tab" data-tool="ts"> 时间戳</button>
+            <button class="tool-tab" data-tool="uuid"> UUID</button>
+            <button class="tool-tab" data-tool="textstat"> 统计</button>
+            <button class="tool-tab" data-tool="case"> 大小写</button>
+            <button class="tool-tab" data-tool="jsonfmt"> JSON</button>
+            <button class="tool-tab" data-tool="hash"> Hash</button>
+            <button class="tool-tab" data-tool="colorconv"> 颜色</button>
+            <button class="tool-tab" data-tool="passgen"> 密码</button>
+            <button class="tool-tab" data-tool="regex"> 正则</button>
+            <button class="tool-tab" data-tool="baseconv"> 进制</button>
+            <button class="tool-tab" data-tool="unit"> 单位</button>
+            <button class="tool-tab" data-tool="caesar"> 凯撒</button>
+            <button class="tool-tab" data-tool="datediff"> 日期差</button>
+            <button class="tool-tab" data-tool="pct"> 百分比</button>
+            <button class="tool-tab" data-tool="morse"> 摩斯</button>
+            <button class="tool-tab" data-tool="diff"> 对比</button>
+            <button class="tool-tab" data-tool="rev"> 反转</button>
+            <button class="tool-tab" data-tool="dice"> 随机</button>
+            <button class="tool-tab" data-tool="prime"> 质数</button>
+            <button class="tool-tab" data-tool="bmi"> BMI</button>
+            <button class="tool-tab" data-tool="discount"> 折扣</button>
+            <button class="tool-tab" data-tool="zodiac"> 生肖</button>
+            <button class="tool-tab" data-tool="rmb"> 金额</button>
+            <button class="tool-tab" data-tool="sort"> 排序</button>
+            <button class="tool-tab" data-tool="urlparse"> 网址</button>
+            <button class="tool-tab" data-tool="namegen"> 姓名</button>
+            <button class="tool-tab" data-tool="timecalc"> 时间</button>
+            <button class="tool-tab" data-tool="ascii"> ASCII</button>
+            <button class="tool-tab" data-tool="aes"> AES</button>
+            <button class="tool-tab" data-tool="strength"> 强度</button>
+            <button class="tool-tab" data-tool="hex"> Hex</button>
+            <button class="tool-tab" data-tool="unicode"> Unicode</button>
+            <button class="tool-tab" data-tool="idcard"> 身份证</button>
+            <button class="tool-tab" data-tool="luhn"> Luhn</button>
+            <button class="tool-tab" data-tool="translate"> 翻译</button>
+            <button class="tool-tab" data-tool="qrcode"> 二维码</button>
+            <button class="tool-tab" data-tool="exchange"> 汇率</button>
+            <button class="tool-tab" data-tool="iplookup"> IP查询</button>
+            <button class="tool-tab" data-tool="ocr"> OCR</button>
+            <button class="tool-tab" data-tool="weather"> 天气</button>
+            <button class="tool-tab" data-tool="air"> 空气质量</button>
+            <button class="tool-tab" data-tool="pet"> 云吸猫狗</button>
+            <button class="tool-tab" data-tool="dict"> 词典</button>
+            <button class="tool-tab" data-tool="poem"> 诗词</button>
+        </div>
+
+        <!-- ==================== 1. 转换器 ==================== -->
+        <div id="tool-converter" class="tool-panel active">
+            <label for="converterInput"></label><textarea id="converterInput" placeholder=" 输入中文文本 或 二进制代码 (8位一组，空格隔开) " rows="4"></textarea>
+            <div class="button-group">
+                <button class="btn-primary" id="toBinaryBtn"><i class="fas fa-code"></i> 中文 → 二进制</button>
+                <button class="btn-primary" id="toTextBtn"><i class="fas fa-font"></i> 二进制 → 中文</button>
+                <button class="btn-secondary" id="clearConverterBtn"><i class="fas fa-trash-alt"></i> 清空</button>
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" id="uploadImageBtn"><i class="fas fa-file-image"></i> 图片转二进制</button>
+                <input type="file" id="imageToBinaryUpload" accept="image/*" class="st-cb458930">
+                <button class="btn-primary" id="binaryToImageBtn"><i class="fas fa-sync-alt"></i> 二进制 → 图片</button>
+                <button class="btn-secondary" id="downloadBinaryBtn"><i class="fas fa-download"></i> 下载二进制</button>
+            </div>
+            <div id="imageFileInfo" class="file-info"></div>
+            <div class="progress-container" id="progressContainer"><div class="progress-bar" id="progressBar"></div></div>
+            <img loading="lazy" id="imagePreview" class="image-preview" alt="预览">
+            <div class="status-message" id="converterStatus"></div>
+            <div class="result-area" id="converterResult">
+                <h4><i class="fas fa-cherry-blossom"></i> 转换结果</h4>
+                <div id="converterOutput">🌸 等待转换 ...</div>
+                <button class="cherry-btn btn-sm st-d79ce2bc" id="copyConverterBtn"><i class="fas fa-copy"></i> 复制结果</button>
+            </div>
+        </div>
+
+        <!-- ==================== 2. 随机数生成器 ==================== -->
+        <div id="tool-random" class="tool-panel">
+            <div class="inline-input-group">
+                <label>最小值：</label>
+                <label for="randomMin"></label><input type="number" id="randomMin" value="1">
+                <label>最大值：</label>
+                <label for="randomMax"></label><input type="number" id="randomMax" value="100">
+            </div>
+            <div class="inline-input-group">
+                <label>生成数量：</label>
+                <label for="randomCount"></label><input type="number" id="randomCount" value="1" min="1" max="50">
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" id="generateRandomBtn"><i class="fas fa-dice"></i> 生成随机数</button>
+            </div>
+            <div class="result-area" id="randomResult">
+                <h4><i class="fas fa-chart-simple"></i> 随机结果</h4>
+                <div id="randomOutput">——</div>
+                <button class="cherry-btn st-d79ce2bc" id="copyRandomBtn"><i class="fas fa-copy"></i> 复制</button>
+            </div>
+        </div>
+
+        <!-- ==================== 3. 倒计时器 ==================== -->
+        <div id="tool-countdown" class="tool-panel">
+            <div class="inline-input-group">
+                <label>目标日期：</label>
+                <label for="targetDate"></label><input type="datetime-local" id="targetDate">
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" id="startCountdownBtn"><i class="fas fa-play"></i> 开始倒计时</button>
+                <button class="btn-secondary" id="stopCountdownBtn"><i class="fas fa-stop"></i> 停止</button>
+            </div>
+            <div class="result-area" id="countdownResult">
+                <h4><i class="fas fa-clock"></i> 距离目标</h4>
+                <div id="countdownOutput" class="st-6988eee2">——</div>
+            </div>
+        </div>
+
+        <!-- ==================== 4. 密码生成器 ==================== -->
+        <div id="tool-password" class="tool-panel">
+            <div class="inline-input-group">
+                <label>密码长度：</label>
+                <label for="podLength"></label><input type="range" id="podLength" min="4" max="32" value="12">
+                <span class="slider-value" id="podLengthVal">12</span>
+            </div>
+            <div class="inline-input-group">
+                <label><input type="checkbox" id="podUppercase" checked> 大写字母</label>
+                <label><input type="checkbox" id="podLowercase" checked> 小写字母</label>
+                <label><input type="checkbox" id="podNumbers" checked> 数字</label>
+                <label><input type="checkbox" id="podSymbols"> 符号</label>
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" id="generatePwdBtn"><i class="fas fa-key"></i> 生成密码</button>
+            </div>
+            <div class="result-area" id="podResult">
+                <h4><i class="fas fa-lock"></i> 生成的密码</h4>
+                <div id="podOutput" class="st-3bd72200">——</div>
+                <button class="cherry-btn" id="copyPodBtn"><i class="fas fa-copy"></i> 复制密码</button>
+            </div>
+        </div>
+
+        <!-- ==================== 5. 抽签工具 ==================== -->
+        <div id="tool-lottery" class="tool-panel">
+            <label for="lotteryItems"></label><textarea id="lotteryItems" rows="4" placeholder="输入抽签选项，每行一个喵~&#10;例如：&#10;吃火锅&#10;看电影&#10;睡大觉&#10;踢足球"></textarea>
+            <div class="button-group">
+                <button class="btn-primary" id="drawBtn"><i class="fas fa-random"></i> 抽一个！</button>
+                <button class="btn-secondary" id="clearLotteryBtn"><i class="fas fa-eraser"></i> 清空</button>
+            </div>
+            <div class="result-area" id="lotteryResult">
+                <h4><i class="fas fa-star"></i> 抽签结果</h4>
+                <div id="lotteryOutput" class="st-b28cb14f">——</div>
+            </div>
+        </div>
+
+        <!-- ==================== 6. 颜色工具 ==================== -->
+        <div id="tool-color" class="tool-panel">
+            <div class="inline-input-group">
+                <label>取色器：</label>
+                <label for="colorPicker"></label><input type="color" id="colorPicker" value="#e57397">
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" id="applyColorBtn"><i class="fas fa-palette"></i> 应用到预览</button>
+                <button class="btn-secondary" id="randomColorBtn"><i class="fas fa-dice"></i> 随机颜色</button>
+            </div>
+            <div class="result-area" id="colorResult">
+                <h4><i class="fas fa-fill-drip"></i> 颜色信息</h4>
+                <div id="colorOutput">
+                    <p>HEX: <span id="hexValue">#e57397</span></p>
+                    <p>RGB: <span id="rgbValue">rgb(229, 115, 151)</span></p>
+                </div>
+                <div id="colorPreview" class="st-d6519af5"></div>
+            </div>
+        </div>
+
+        <!-- ==================== 7. 字符统计 ==================== -->
+        <div id="tool-counter" class="tool-panel">
+            <label for="counterInput"></label><textarea id="counterInput" rows="5" placeholder="输入文字，实时统计喵~"></textarea>
+            <div class="result-area" id="counterResult">
+                <h4><i class="fas fa-chart-simple"></i> 统计结果</h4>
+                <div id="counterOutput">
+                    字符数: <span id="charCount">0</span><br>
+                    汉字数: <span id="chineseCount">0</span><br>
+                    字母数: <span id="letterCount">0</span><br>
+                    数字数: <span id="digitCount">0</span><br>
+                    行数: <span id="lineCount">0</span>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ==================== 新：在线翻译 ==================== -->
+        <div id="tool-translate" class="tool-panel">
+            <div class="tool-title"><i class="fas fa-language"></i> 在线翻译</div>
+            <div class="inline-input-group">
+                <label>从：</label>
+                <select id="transFrom">
+                    <option value="auto" selected>自动检测</option>
+                    <option value="zh-CN">中文</option>
+                    <option value="en">英语</option>
+                    <option value="ja">日语</option>
+                    <option value="de">德语</option>
+                    <option value="fr">法语</option>
+                    <option value="ko">韩语</option>
+                </select>
+                <label>到：</label>
+                <select id="transTo">
+                    <option value="zh-CN" selected>中文</option>
+                    <option value="en">英语</option>
+                    <option value="ja">日语</option>
+                    <option value="de">德语</option>
+                    <option value="fr">法语</option>
+                    <option value="ko">韩语</option>
+                </select>
+            </div>
+            <textarea id="transIn" placeholder="? 输入要翻译的文本 ?" rows="3"></textarea>
+            <div class="button-group">
+                <button class="btn-primary" id="transBtn"><i class="fas fa-language"></i> 翻译</button>
+                <button class="btn-secondary" id="transClearBtn"><i class="fas fa-trash-alt"></i> 清空</button>
+            </div>
+            <div class="status-message" id="transStatus"></div>
+            <div class="result-area">
+                <h4><i class="fas fa-cherry-blossom"></i> 翻译结果</h4>
+                <div id="transOut">? 等待翻译 ...</div>
+            </div>
+        </div>
+
+        <!-- ==================== 新：二维码生成 ==================== -->
+        <div id="tool-qrcode" class="tool-panel">
+            <div class="tool-title"><i class="fas fa-qrcode"></i> 二维码生成</div>
+            <div class="bili-input-row"><input type="text" id="qrText" placeholder="? 输入文本或链接 ?"><button class="btn-cherry" id="qrBtn">生成</button></div>
+            <div class="bili-input-row">
+                <label>尺寸：</label>
+                <select id="qrSize">
+                    <option value="160">小 160</option>
+                    <option value="240" selected>中 240</option>
+                    <option value="360">大 360</option>
+                </select>
+            </div>
+            <div class="qr-preview" id="qrPreview"></div>
+            <div class="status-message" id="qrStatus"></div>
+        </div>
+
+        <!-- ==================== 新：汇率换算 ==================== -->
+        <div id="tool-exchange" class="tool-panel">
+            <div class="tool-title"><i class="fas fa-coins"></i> 汇率换算</div>
+            <div class="inline-input-group">
+                <label>金额：</label>
+                <input type="number" id="exAmount" value="1">
+            </div>
+            <div class="inline-input-group">
+                <label>从：</label>
+                <select id="exFrom">
+                    <option value="USD">美元 USD</option>
+                    <option value="EUR">欧元 EUR</option>
+                    <option value="CNY" selected>人民币 CNY</option>
+                    <option value="JPY">日元 JPY</option>
+                    <option value="GBP">英镑 GBP</option>
+                    <option value="KRW">韩元 KRW</option>
+                </select>
+                <label>到：</label>
+                <select id="exTo">
+                    <option value="USD">美元 USD</option>
+                    <option value="EUR" selected>欧元 EUR</option>
+                    <option value="CNY">人民币 CNY</option>
+                    <option value="JPY">日元 JPY</option>
+                    <option value="GBP">英镑 GBP</option>
+                    <option value="KRW">韩元 KRW</option>
+                </select>
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" id="exBtn"><i class="fas fa-exchange-alt"></i> 换算</button>
+                <button class="btn-secondary" id="exSwapBtn"><i class="fas fa-sync-alt"></i> 互换</button>
+            </div>
+            <textarea id="exOut" class="bili-code" rows="3" readonly placeholder="结果"></textarea>
+            <div class="status-message" id="exStatus"></div>
+        </div>
+
+        <!-- ==================== 新：IP 查询 ==================== -->
+        <div id="tool-iplookup" class="tool-panel">
+            <div class="tool-title"><i class="fas fa-globe"></i> IP 归属地查询</div>
+            <div class="bili-input-row"><input type="text" id="ipInput" placeholder="? 输入 IP（留空查询本机） ?"><button class="btn-cherry" id="ipBtn">查询</button></div>
+            <textarea id="ipOut" class="bili-code" rows="5" readonly placeholder="结果"></textarea>
+            <div class="status-message" id="ipStatus"></div>
+        </div>
+
+        <!-- ==================== 新：图片 OCR ==================== -->
+        <div id="tool-ocr" class="tool-panel">
+            <div class="tool-title"><i class="fas fa-eye"></i> 图片文字识别</div>
+            <div class="bili-input-row"><input type="file" id="ocrFile" accept="image/*"><button class="btn-cherry" id="ocrBtn">识别</button></div>
+            <div class="status-message" id="ocrStatus"></div>
+            <div class="result-area">
+                <h4><i class="fas fa-cherry-blossom"></i> 识别结果</h4>
+                <textarea id="ocrOut" class="bili-code" rows="6" readonly placeholder="识别文字会出现在这里"></textarea>
+            </div>
+        </div>
+
+
+        <!-- ==================== 新：全球天气 ==================== -->
+        <div id="tool-weather" class="tool-panel">
+            <div class="tool-title"><i class="fas fa-cloud-sun"></i> 全球天气查询</div>
+            <div class="bili-input-row"><input type="text" id="weatherCity" placeholder="🌸 输入城市名，如：北京 / Tokyo"><button class="btn-cherry" id="weatherBtn">查询</button></div>
+            <div class="result-area">
+                <h4><i class="fas fa-cherry-blossom"></i> 天气信息</h4>
+                <div id="weatherOut">🌸 输入城市开始查询 ...</div>
+            </div>
+            <div class="status-message" id="weatherStatus"></div>
+        </div>
+
+        <!-- ==================== 新：空气质量（Open-Meteo Air Quality API） ==================== -->
+        <div id="tool-air" class="tool-panel">
+            <div class="tool-title"><i class="fas fa-wind"></i> 空气质量查询</div>
+            <div class="bili-input-row"><input type="text" id="airCity" placeholder="🌸 输入城市名，如：北京 / Shanghai"><button class="btn-cherry" id="airBtn">查询</button></div>
+            <div class="result-area">
+                <h4><i class="fas fa-cherry-blossom"></i> 空气质量</h4>
+                <div id="airOut">🌸 输入城市开始查询 ...</div>
+            </div>
+            <div class="status-message" id="airStatus"></div>
+        </div>
+
+        <!-- ==================== 新：云吸猫狗（TheCatAPI / dog.ceo） ==================== -->
+        <div id="tool-pet" class="tool-panel">
+            <div class="tool-title"><i class="fas fa-paw"></i> 云吸猫狗</div>
+            <div class="button-group">
+                <button class="btn-primary" id="petCatBtn"><i class="fas fa-cat"></i> 来只猫</button>
+                <button class="btn-primary" id="petDogBtn"><i class="fas fa-dog"></i> 来只狗</button>
+            </div>
+            <div class="result-area" style="text-align:center;">
+                <img id="petImg" alt="随机猫狗图" style="max-width:100%; max-height:320px; border-radius:14px; display:none;">
+            </div>
+            <div class="status-message" id="petStatus"></div>
+        </div>
+
+        <!-- ==================== 新：在线词典 ==================== -->
+        <div id="tool-dict" class="tool-panel">
+            <div class="tool-title"><i class="fas fa-book-open"></i> 在线词典</div>
+            <div class="bili-input-row"><input type="text" id="dictWord" placeholder="🌸 输入英文单词"><button class="btn-cherry" id="dictBtn">查询</button></div>
+            <div class="result-area">
+                <h4><i class="fas fa-cherry-blossom"></i> 释义</h4>
+                <div id="dictOut">🌸 输入单词开始查询 ...</div>
+            </div>
+            <div class="status-message" id="dictStatus"></div>
+        </div>
+
+        <!-- ==================== 新：随机诗词 ==================== -->
+        <div id="tool-poem" class="tool-panel">
+            <div class="tool-title"><i class="fas fa-feather-alt"></i> 随机诗词</div>
+            <div class="button-group">
+                <button class="btn-primary" id="poemBtn"><i class="fas fa-dice"></i> 来一句</button>
+                <button class="btn-secondary" id="poemCopyBtn"><i class="fas fa-copy"></i> 复制</button>
+            </div>
+            <div class="result-area">
+                <h4><i class="fas fa-cherry-blossom"></i> 今日份诗意</h4>
+                <div id="poemOut">🌸 点击「来一句」获取诗词 ...</div>
+            </div>
+            <div class="status-message" id="poemStatus"></div>
+        </div>
+
+
+        <!-- ==================== 10. 工具箱（36工具平级） ==================== -->
+        <div id="tool-base64" class="tool-panel">
+            <textarea id="b64In" class="bili-code" rows="3" placeholder="输入要编码/解码的文本"></textarea>
+                    <div class="bili-btn-row">
+                        <button class="btn-cherry" id="b64Encode"> 编码</button>
+                        <button class="btn-cherry" id="b64Decode"> 解码</button>
+                    </div>
+                    <textarea id="b64Out" class="bili-code" rows="3" readonly placeholder="结果"></textarea>
+        </div>
+        <div id="tool-urlcode" class="tool-panel">
+            <textarea id="urlIn" class="bili-code" rows="3" placeholder="输入要编码/解码的URL"></textarea>
+                    <div class="bili-btn-row">
+                        <button class="btn-cherry" id="urlEncode"> 编码</button>
+                        <button class="btn-cherry" id="urlDecode"> 解码</button>
+                    </div>
+                    <textarea id="urlOut" class="bili-code" rows="3" readonly placeholder="结果"></textarea>
+        </div>
+        <div id="tool-ts" class="tool-panel">
+            <div class="bili-input-row"><input type="text" id="tsIn" placeholder="时间戳(秒/毫秒) 或 日期如 2026-08-12 15:30:00"><button class="btn-cherry" id="tsConvert"> 转换</button></div>
+                    <textarea id="tsOut" class="bili-code" rows="2" readonly placeholder="结果"></textarea>
+        </div>
+        <div id="tool-uuid" class="tool-panel">
+            <div class="bili-btn-row"><button class="btn-cherry" id="uuidGen"> 生成 UUID v4</button></div>
+                    <textarea id="uuidOut" class="bili-code" rows="3" readonly placeholder="生成结果"></textarea>
+        </div>
+        <div id="tool-textstat" class="tool-panel">
+            <textarea id="tstatIn" class="bili-code" rows="4" placeholder="粘贴文本统计字数"></textarea>
+                    <div class="bili-btn-row"><button class="btn-cherry" id="tstatBtn"> 统计</button></div>
+                    <textarea id="tstatOut" class="bili-code" rows="2" readonly placeholder="结果"></textarea>
+        </div>
+        <div id="tool-case" class="tool-panel">
+            <textarea id="caseIn" class="bili-code" rows="3" placeholder="输入文本"></textarea>
+                    <div class="bili-btn-row">
+                        <button class="btn-cherry" id="caseUpper"> 大写</button>
+                        <button class="btn-cherry" id="caseLower"> 小写</button>
+                        <button class="btn-cherry" id="caseTitle"> 首字母大写</button>
+                    </div>
+                    <textarea id="caseOut" class="bili-code" rows="3" readonly placeholder="结果"></textarea>
+        </div>
+        <div id="tool-jsonfmt" class="tool-panel">
+            <textarea id="jsonIn" class="bili-code" rows="4" placeholder='输入 JSON，如 {"a":1,"b":[2,3]}'></textarea>
+                    <div class="bili-btn-row">
+                        <button class="btn-cherry" id="jsonFmt"> 格式化</button>
+                        <button class="btn-cherry" id="jsonMin"> 压缩</button>
+                        <button class="btn-cherry" id="jsonValidate"> 校验</button>
+                    </div>
+                    <textarea id="jsonOut" class="bili-code" rows="4" readonly placeholder="结果"></textarea>
+        </div>
+        <div id="tool-hash" class="tool-panel">
+            <textarea id="hashIn" class="bili-code" rows="3" placeholder="输入要计算 Hash 的文本"></textarea>
+                    <div class="bili-btn-row">
+                        <button class="btn-cherry" id="hash1">SHA-1</button>
+                        <button class="btn-cherry" id="hash256">SHA-256</button>
+                        <button class="btn-cherry" id="hash512">SHA-512</button>
+                    </div>
+                    <textarea id="hashOut" class="bili-code" rows="4" readonly placeholder="结果"></textarea>
+        </div>
+        <div id="tool-colorconv" class="tool-panel">
+            <div class="bili-input-row"><input type="text" id="colorIn" placeholder="输入颜色，如 #ff8fab 或 rgb(255,143,171)"><button class="btn-cherry" id="colorConv"> 转换</button></div>
+                    <textarea id="colorOut" class="bili-code" rows="4" readonly placeholder="结果"></textarea>
+        </div>
+        <div id="tool-passgen" class="tool-panel">
+            <div class="bili-input-row">
+                        <input type="number" id="passLen" value="16" min="4" max="64" class="st-45e74eed">
+                        <label class="st-fcf03b4c">长度</label>
+                        <button class="btn-cherry" id="passGenBtn"> 生成密码</button>
+                    </div>
+                    <textarea id="passOut" class="bili-code" rows="2" readonly placeholder="生成结果"></textarea>
+        </div>
+        <div id="tool-regex" class="tool-panel">
+            <div class="bili-input-row"><input type="text" id="regexPat" placeholder='正则表达式，如 \d+'><button class="btn-cherry" id="regexTest"> 测试</button></div>
+                    <textarea id="regexIn" class="bili-code" rows="3" placeholder="测试文本"></textarea>
+                    <textarea id="regexOut" class="bili-code" rows="4" readonly placeholder="匹配结果"></textarea>
+        </div>
+        <div id="tool-baseconv" class="tool-panel">
+            <div class="bili-input-row"><input type="text" id="numIn" placeholder="输入数字（十进制/0x十六进制/0b二进制）"><button class="btn-cherry" id="numConv"> 转换</button></div>
+                    <textarea id="numOut" class="bili-code" rows="4" readonly placeholder="2/8/10/16 进制结果"></textarea>
+        </div>
+        <div id="tool-unit" class="tool-panel">
+            <div class="bili-input-row">
+                        <input type="number" id="unitVal" value="1" class="st-8935a6a1">
+                        <select id="unitType" class="st-c9b7c822">
+                            <option value="len">长度(米)</option>
+                            <option value="weight">重量(千克)</option>
+                            <option value="temp">温度(摄氏)</option>
+                            <option value="data">数据(B)</option>
+                        </select>
+                        <button class="btn-cherry" id="unitConv"> 换算</button>
+                    </div>
+                    <textarea id="unitOut" class="bili-code" rows="4" readonly placeholder="结果"></textarea>
+        </div>
+        <div id="tool-caesar" class="tool-panel">
+            <textarea id="caesarIn" class="bili-code" rows="3" placeholder="输入文本"></textarea>
+                    <div class="bili-input-row"><input type="number" id="caesarShift" value="3" min="1" max="25" class="st-45e74eed"><button class="btn-cherry" id="caesarEnc"> 加密</button><button class="btn-cherry" id="caesarDec"> 解密</button></div>
+                    <textarea id="caesarOut" class="bili-code" rows="3" readonly placeholder="结果"></textarea>
+        </div>
+        <div id="tool-datediff" class="tool-panel">
+            <div class="bili-input-row"><input type="text" id="dateA" placeholder="日期A 2026-08-12"><input type="text" id="dateB" placeholder="日期B 2026-01-01"><button class="btn-cherry" id="dateDiffBtn"> 计算</button></div>
+                    <textarea id="dateDiffOut" class="bili-code" rows="3" readonly placeholder="结果"></textarea>
+        </div>
+        <div id="tool-pct" class="tool-panel">
+            <div class="bili-input-row"><input type="number" id="pctA" placeholder="数值A"><input type="number" id="pctB" placeholder="数值B"><button class="btn-cherry" id="pctBtn"> 计算</button></div>
+                    <textarea id="pctOut" class="bili-code" rows="3" readonly placeholder="A是B的百分之几"></textarea>
+        </div>
+        <div id="tool-morse" class="tool-panel">
+            <textarea id="morseIn" class="bili-code" rows="3" placeholder="输入文字 或 摩斯码(空格分隔, / 表示空格)"></textarea>
+                    <div class="bili-btn-row"><button class="btn-cherry" id="morseEnc"> 编码</button><button class="btn-cherry" id="morseDec"> 解码</button></div>
+                    <textarea id="morseOut" class="bili-code" rows="3" readonly placeholder="结果"></textarea>
+        </div>
+        <div id="tool-diff" class="tool-panel">
+            <textarea id="diffA" class="bili-code" rows="3" placeholder="文本A"></textarea>
+                    <textarea id="diffB" class="bili-code" rows="3" placeholder="文本B"></textarea>
+                    <div class="bili-btn-row"><button class="btn-cherry" id="diffBtn"> 对比</button></div>
+                    <textarea id="diffOut" class="bili-code" rows="4" readonly placeholder="结果"></textarea>
+        </div>
+        <div id="tool-rev" class="tool-panel">
+            <textarea id="revIn" class="bili-code" rows="3" placeholder="输入文本"></textarea>
+                    <div class="bili-btn-row"><button class="btn-cherry" id="revBtn"> 反转</button><button class="btn-cherry" id="revWordBtn"> 单词倒序</button></div>
+                    <textarea id="revOut" class="bili-code" rows="3" readonly placeholder="结果"></textarea>
+        </div>
+        <div id="tool-dice" class="tool-panel">
+            <div class="bili-input-row"><input type="number" id="diceMin" value="1" class="st-45e74eed"><input type="number" id="diceMax" value="100" class="st-45e74eed"><button class="btn-cherry" id="diceBtn"> 随机</button></div>
+                    <textarea id="diceOut" class="bili-code" rows="2" readonly placeholder="结果"></textarea>
+        </div>
+        <div id="tool-prime" class="tool-panel">
+            <div class="bili-input-row"><input type="number" id="primeIn" placeholder="输入数字"><button class="btn-cherry" id="primeBtn"> 判断</button></div>
+                    <textarea id="primeOut" class="bili-code" rows="3" readonly placeholder="结果"></textarea>
+        </div>
+        <div id="tool-bmi" class="tool-panel">
+            <div class="bili-input-row"><input type="number" id="bmiH" placeholder="身高cm"><input type="number" id="bmiW" placeholder="体重kg"><button class="btn-cherry" id="bmiBtn"> 计算</button></div>
+                    <textarea id="bmiOut" class="bili-code" rows="3" readonly placeholder="结果"></textarea>
+        </div>
+        <div id="tool-discount" class="tool-panel">
+            <div class="bili-input-row"><input type="number" id="discPrice" placeholder="原价"><input type="number" id="discOff" placeholder="折扣 如8折=80"><button class="btn-cherry" id="discBtn"> 计算</button></div>
+                    <textarea id="discOut" class="bili-code" rows="3" readonly placeholder="结果"></textarea>
+        </div>
+        <div id="tool-zodiac" class="tool-panel">
+            <div class="bili-input-row"><input type="text" id="zodiacIn" placeholder="出生日期 1990-05-20"><button class="btn-cherry" id="zodiacBtn"> 查询</button></div>
+                    <textarea id="zodiacOut" class="bili-code" rows="3" readonly placeholder="结果"></textarea>
+        </div>
+        <div id="tool-rmb" class="tool-panel">
+            <div class="bili-input-row"><input type="number" id="rmbIn" placeholder="输入金额，如 1234.56"><button class="btn-cherry" id="rmbBtn"> 转换</button></div>
+                    <textarea id="rmbOut" class="bili-code" rows="3" readonly placeholder="大写金额"></textarea>
+        </div>
+        <div id="tool-sort" class="tool-panel">
+            <textarea id="sortIn" class="bili-code" rows="4" placeholder="每行一项"></textarea>
+                    <div class="bili-btn-row"><button class="btn-cherry" id="sortAsc"> 升序</button><button class="btn-cherry" id="sortDesc"> 降序</button><button class="btn-cherry" id="sortDedup"> 去重</button></div>
+                    <textarea id="sortOut" class="bili-code" rows="4" readonly placeholder="结果"></textarea>
+        </div>
+        <div id="tool-urlparse" class="tool-panel">
+            <div class="bili-input-row"><input type="text" id="upIn" placeholder="粘贴网址"><button class="btn-cherry" id="upBtn"> 解析</button></div>
+                    <textarea id="upOut" class="bili-code" rows="4" readonly placeholder="结果"></textarea>
+        </div>
+        <div id="tool-namegen" class="tool-panel">
+            <div class="bili-btn-row"><button class="btn-cherry" id="nameGen"> 随机姓名</button><button class="btn-cherry" id="nameGen5"> 连出5个</button></div>
+                    <textarea id="nameOut" class="bili-code" rows="4" readonly placeholder="结果"></textarea>
+        </div>
+        <div id="tool-timecalc" class="tool-panel">
+            <div class="bili-btn-row"><button class="btn-cherry" id="nowBtn"> 当前时间</button></div>
+                    <textarea id="timeOut" class="bili-code" rows="4" readonly placeholder="结果"></textarea>
+        </div>
+        <div id="tool-ascii" class="tool-panel">
+            <div class="bili-input-row"><input type="text" id="asciiIn" placeholder="输入字符或 ASCII 码"><button class="btn-cherry" id="asciiBtn"> 查询</button></div>
+                    <textarea id="asciiOut" class="bili-code" rows="4" readonly placeholder="结果"></textarea>
+        </div>
+        <div id="tool-aes" class="tool-panel">
+            <div class="tool-title"><i class="fas fa-lock"></i> AES 加解密（AES-256-GCM）</div>
+            <textarea id="aesIn" class="bili-code" rows="3" placeholder="输入要加密/解密的文本"></textarea>
+            <div class="bili-input-row"><input type="text" id="aesKey" placeholder="口令（必须填写，解密需一致）"><button class="btn-cherry" id="aesEnc"> 加密</button><button class="btn-cherry" id="aesDec"> 解密</button></div>
+            <textarea id="aesOut" class="bili-code" rows="3" readonly placeholder="结果"></textarea>
+            <p class="bili-tip"> 口令在浏览器本地派生密钥，建议使用强口令；本工具仅供学习交流，不替代正规加密方案。</p>
+        </div>
+        <div id="tool-strength" class="tool-panel">
+            <div class="tool-title"><i class="fas fa-shield-alt"></i> 密码强度检测</div>
+            <div class="bili-input-row"><input type="text" id="pwIn" placeholder="输入密码检测强度"><button class="btn-cherry" id="pwBtn"> 检测</button></div>
+            <textarea id="pwOut" class="bili-code" rows="4" readonly placeholder="结果"></textarea>
+        </div>
+        <div id="tool-hex" class="tool-panel">
+            <div class="tool-title"><i class="fas fa-code"></i> Hex 转换</div>
+            <textarea id="hexIn" class="bili-code" rows="3" placeholder="输入文本 或 Hex（空格/逗号分隔）"></textarea>
+            <div class="bili-btn-row"><button class="btn-cherry" id="hexEnc"> 转Hex</button><button class="btn-cherry" id="hexDec"> Hex转文本</button></div>
+            <textarea id="hexOut" class="bili-code" rows="3" readonly placeholder="结果"></textarea>
+        </div>
+        <div id="tool-unicode" class="tool-panel">
+            <div class="tool-title"><i class="fas fa-font"></i> Unicode 转义</div>
+            <textarea id="uniIn" class="bili-code" rows="3" placeholder="输入文本 或 \uXXXX 转义"></textarea>
+            <div class="bili-btn-row"><button class="btn-cherry" id="uniEnc"> 转转义</button><button class="btn-cherry" id="uniDec"> 还原</button></div>
+            <textarea id="uniOut" class="bili-code" rows="3" readonly placeholder="结果"></textarea>
+        </div>
+        <div id="tool-idcard" class="tool-panel">
+            <div class="tool-title"><i class="fas fa-id-card"></i> 身份证校验</div>
+            <div class="bili-input-row"><input type="text" id="idIn" placeholder="输入18位身份证号"><button class="btn-cherry" id="idBtn"> 校验</button></div>
+            <textarea id="idOut" class="bili-code" rows="4" readonly placeholder="结果"></textarea>
+        </div>
+        <div id="tool-luhn" class="tool-panel">
+            <div class="tool-title"><i class="fas fa-credit-card"></i> Luhn 校验</div>
+            <div class="bili-input-row"><input type="text" id="luhnIn" placeholder="输入卡号/号码"><button class="btn-cherry" id="luhnBtn"> 校验</button></div>
+            <textarea id="luhnOut" class="bili-code" rows="2" readonly placeholder="结果"></textarea>
+        </div>
+
+
+
+        <!-- ==================== 10. 工具箱 ==================== -->
+
+
+
+        <div class="info-box">
+            <h3><i class="fas fa-info-circle"></i> 喵喵小贴士</h3>
+            <ul>
+                <li><strong>转换器</strong>：支持中文二进制、图片二进制（大文件带进度条）</li>
+                <li><strong>随机数</strong>：可生成多个不重复随机数</li>
+                <li><strong>倒计时</strong>：设置目标时间，实时更新剩余天数/小时/分钟</li>
+                <li><strong>密码生成</strong>：自定义长度和字符类型，一键复制</li>
+                <li><strong>抽签</strong>：每行一个选项，随机抽取</li>
+                <li><strong>颜色工具</strong>：取色器 + HEX/RGB 显示</li>
+                <li><strong>字符统计</strong>：实时统计中英文数字行数</li>
+                <li><strong>MIDI 下载</strong>：书签小工具，在 midishow 页面一键下载 MIDI</li>
+            </ul>
+        </div>
+    </div>
+
+    <hr>
+
+    <footer class="blog-footer">
+        <p><i class="fas fa-cherry-blossom sakura-icon"></i> 工具箱 <i class="fas fa-feather-alt"></i></p>
+        <div class="social-links">
+            <a href="https://space.bilibili.com/1113834956?spm_id_from=333.1007.0.0" target="_blank" rel="noopener noreferrer"><i class="fab fa-bilibili"></i></a>
+            <a href="https://www.youtube.com/@kaneKing-l7l" target="_blank" rel="noopener noreferrer"><i class="fab fa-youtube"></i></a>
+            <a href="https://x.com/arry_kane" target="_blank" rel="noopener noreferrer"><i class="fab fa-twitter"></i></a>
+            <a href="https://www.instagram.com/kane_kingasiatic/" target="_blank" rel="noopener noreferrer"><i class="fab fa-instagram"></i></a>
+            <a href="https://github.com/U1s1-king" target="_blank" rel="noopener noreferrer"><i class="fab fa-github"></i></a>
+            <a href="https://mail.google.com/mail/?view=cm&fs=1&to=kaneking114@gmail.com"><i class="fas fa-envelope"></i></a>
+        </div>
+    </footer>
+    <nav class="bot-tab" aria-label="移动端导航">
+        <a href="index.html"><i class="fas fa-cat"></i><span>首页</span></a>
+        <a href="Journal.html"><i class="fas fa-book-open"></i><span>日记</span></a>
+        <a href="Archives.html"><i class="fas fa-images"></i><span>归档</span></a>
+        <a href="Guestbook.html"><i class="fas fa-comments"></i><span>留言</span></a>
+        <a href="music.html"><i class="fas fa-music"></i><span>音乐</span></a>
+        <a href="Tools.html"><i class="fas fa-toolbox"></i><span>工具</span></a>
+    </nav>
+</main>
+
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js" integrity="sha384-GJqSu7vueQ9qN0E9yLPb3Wtpd7OrgK8KmYzC8T1IysG1bcvxvIO4qtYR/D3A991F" crossorigin="anonymous"></script>
+    <script src="js/Tools.js?v=20260902"></script>
+    <script src="js/common.js?v=20260902"></script>
+    <script src="js/sidebar.js?v=20260902"></script>
+    <script src="js/particles-config.js"></script>
+    <script src="https://sakura-live2d.pages.dev/live2d/waifu.js?v=20260904" defer></script>
+</body>
+</html>

@@ -1,0 +1,259 @@
+/* ============================================================
+   侧边栏导航与统一布局 (sidebar.css)
+   桌面端：左侧固定 220px 侧边栏
+   移动端：隐藏侧边栏，保留底部 bot-tab
+   所有页面容器宽度统一引用此处，方便统一修改
+   ============================================================ */
+
+/* ---------- 侧边栏本体 ---------- */
+.site-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 220px;
+  z-index: 95;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  background: rgba(255, 244, 248, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-right: 1px solid #ffd9e4;
+  box-shadow: 2px 0 18px rgba(233, 130, 156, 0.12);
+  padding: 1.5rem 1rem 1.2rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* 站点标识 */
+.sidebar-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding-bottom: 1.2rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px dashed #ffc9dc;
+  text-decoration: none;
+  color: inherit;
+}
+.sidebar-brand i {
+  font-size: 2rem;
+  color: #e982a2;
+}
+.sidebar-brand-name {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  background: linear-gradient(135deg, #e6728f, #b34262);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+.sidebar-brand-sub {
+  font-size: 0.68rem;
+  color: #c7a0ab;
+  letter-spacing: 1px;
+}
+
+/* 导航链接 */
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.sidebar-nav a {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.65rem 0.9rem;
+  border-radius: 14px;
+  color: #b5647c;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: 0.2s;
+}
+.sidebar-nav a i {
+  width: 1.1rem;
+  text-align: center;
+  font-size: 1rem;
+  color: #dc8aa3;
+}
+.sidebar-nav a:hover {
+  background: #ffeaf1;
+  color: #a83c5e;
+  transform: translateX(3px);
+}
+.sidebar-nav a.active {
+  background: linear-gradient(135deg, #ffe2ea, #ffd0dd);
+  color: #a83c5e;
+  font-weight: 600;
+  box-shadow: 0 3px 10px rgba(233, 130, 156, 0.15);
+}
+
+/* 侧边栏底部小装饰图 */
+.sidebar-deco {
+  margin-top: auto;
+  text-align: center;
+  padding-top: 1rem;
+}
+.sidebar-deco img {
+  width: 132px;
+  max-width: 100%;
+  border-radius: 18px;
+  box-shadow: 0 8px 20px rgba(233, 130, 156, 0.22);
+  border: 2px solid #ffffff;
+  display: inline-block;
+}
+.sidebar-deco .deco-caption {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.66rem;
+  color: #c7a0ab;
+  letter-spacing: 1px;
+}
+
+/* ---------- 桌面端：容器统一引用 ---------- */
+@media (min-width: 769px) {
+  body {
+    padding-left: 220px; /* 让出侧边栏宽度 */
+    transition: padding-left 0.3s ease;
+  }
+  body.sidebar-collapsed {
+    padding-left: 0 !important; /* 侧边栏收起时内容全宽居中 */
+  }
+  /* 各页面主容器统一 max-width 与居中 */
+  .about-container,
+  .archive-container,
+  .guestbook-container,
+  .blog-container,
+  .toolbox-container,
+  .music-container,
+  main.container,
+  main.page-container {
+    max-width: 1200px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+}
+
+/* ---------- 侧边栏折叠动效 ---------- */
+.site-sidebar {
+  transition: transform 0.3s ease;
+}
+.site-sidebar.sidebar-hidden {
+  transform: translateX(-100%);
+}
+
+/* 折叠/展开按钮（固定悬浮，始终可见） */
+.sidebar-toggle-btn {
+  position: fixed;
+  top: 12px;
+  left: 228px; /* 默认在侧边栏右缘外侧 */
+  z-index: 96;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 244, 248, 0.9);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: 0 2px 10px rgba(233, 130, 156, 0.25);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: left 0.3s ease, transform 0.2s ease;
+}
+.sidebar-toggle-btn:hover {
+  transform: scale(1.08);
+  opacity: 1;
+}
+.sidebar-toggle-btn.is-collapsed {
+  left: 12px; /* 侧边栏隐藏时按钮移到最左 */
+  opacity: 0.4;
+  transition: left 0.3s ease, transform 0.2s ease, opacity 0.25s ease;
+}
+.sidebar-toggle-btn.is-collapsed:hover {
+  opacity: 1;
+}
+.sidebar-toggle-btn img {
+  width: 36px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+@media (max-width: 768px) {
+  .sidebar-toggle-btn {
+    display: none !important; /* 移动端走 bot-tab，不需要折叠按钮 */
+  }
+}
+
+/* ---------- 移动端：隐藏侧边栏 ---------- */
+@media (max-width: 768px) {
+  .site-sidebar {
+    display: none !important;
+  }
+  body {
+    padding-left: 0 !important;
+  }
+}
+
+/* ---------- 各页面：愛音 CG 背景层（低透明度，不干扰内容） ---------- */
+.anon-bg-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: center / cover no-repeat;
+  opacity: 0.18;
+}
+.anon-bg-layer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(160deg, rgba(255, 249, 247, 0.4), rgba(255, 238, 244, 0.5));
+}
+/* 每页独立图片 */
+.bg-index   { background-image: url('../img/anon-bg.png'); }
+.bg-journal { background-image: url('../img/anon-journal.png'); }
+.bg-archive { background-image: url('../img/anon-archive.png'); }
+.bg-guest   { background-image: url('../img/anon-guest.png'); }
+.bg-music   { background-image: url('../img/anon-music.png'); }
+.bg-tools   { background-image: url('../img/anon-tools.png'); }
+.bg-404     { background-image: url('../img/anon-404.png'); }
+
+/* ---------- 心情打卡 GIF 按钮 ---------- */
+.mood-btn {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  border: 2px solid #ffe0e8;
+  border-radius: 16px;
+  background: #fffefb;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.mood-btn img {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 14px;
+  display: block;
+}
+.mood-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 14px rgba(233, 130, 156, 0.22);
+}
+.mood-btn.active {
+  border-color: #e982a2;
+  background: #ffeaf1;
+  box-shadow: 0 4px 12px rgba(233, 130, 156, 0.28);
+}

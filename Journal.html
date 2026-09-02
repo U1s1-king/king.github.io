@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <script src="js/version.js?v=20260902"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <link rel="stylesheet" href="css/style.css?v=20260902">
+    <link rel="stylesheet" href="css/sidebar.css?v=20260902">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#ffb6c1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+    <link rel="dns-prefetch" href="//v1.hitokoto.cn">
+    <link rel="dns-prefetch" href="//api.open-meteo.com">
+    <link rel="dns-prefetch" href="//api.bilibili.com">
+    <link rel="dns-prefetch" href="//api.github.com">
+    <link rel="preconnect" href="https://api.open-meteo.com" crossorigin>
+    <link rel="preconnect" href="https://api.github.com" crossorigin>
+    <title>🌸日记</title>
+    <link rel="canonical" href="https://zhaokening.ccwu.cc/Journal.html">
+
+    
+
+    <link rel="stylesheet" href="css/all.min.css?v=20260902">
+    <link rel="stylesheet" href="css/Journal.css?v=20260902">
+    <link rel="stylesheet" href="css/mobile.css?v=20260902">
+    <meta name="description" content="日记：每日诗句、慕尼黑天气、心情打卡、农历黄历、番茄钟与生活随笔。">
+    <meta name="keywords" content="日记,诗句,天气,心情打卡,农历,番茄钟,随笔">
+    <meta name="author" content="king">
+    <meta name="robots" content="index, follow">
+    <meta property="og:title" content="🌸日记">
+    <meta property="og:description" content="日记：每日诗句、慕尼黑天气、心情打卡、农历黄历、番茄钟与生活随笔。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://zhaokening.ccwu.cc/Journal.html">
+    <meta property="og:image" content="https://zhaokening.ccwu.cc/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary">
+</head>
+<body>
+<script>document.documentElement.style.background='transparent';document.body.style.background='transparent';</script>
+
+<!-- 随机飘落背景 (JS生成动态花瓣) -->
+<div class="sakura-flurry" id="sakura-flurry"></div>
+<div class="anon-bg-layer bg-journal"></div>
+<aside class="site-sidebar" id="siteSidebar">
+    <a class="sidebar-brand" href="index.html">
+        <i class="fas fa-cherry-blossom"></i>
+        <span class="sidebar-brand-name">Tomo Ebizuka</span>
+        <span class="sidebar-brand-sub">ZhaoKeninG's Blog</span>
+    </a>
+    <nav class="sidebar-nav">
+        <a href="index.html"><i class="fas fa-cat"></i><span>首页</span></a>
+        <a href="Journal.html" class="active"><i class="fas fa-book-open"></i><span>日记</span></a>
+        <a href="Archives.html"><i class="fas fa-images"></i><span>归档</span></a>
+        <a href="Guestbook.html"><i class="fas fa-comments"></i><span>留言</span></a>
+        <a href="music.html"><i class="fas fa-music"></i><span>音乐</span></a>
+        <a href="Tools.html"><i class="fas fa-toolbox"></i><span>工具</span></a>
+    </nav>
+    <div class="sidebar-deco">
+        <img loading="lazy" src="img/anon-sidebar.png" alt="千早愛音">
+        <span class="deco-caption">千早愛音</span>
+    </div>
+</aside>
+
+<main class="blog-container">
+    <header class="blog-header">
+        <div class="blog-title">
+            <i class="fas fa-fan"></i>
+            日记
+            <i class="fas fa-leaf"></i>
+        </div>
+        <div class="subhead">
+            <i class="fas fa-seedling"></i> 花谢
+        </div>
+        <div class="info-note">
+            <i class="fas fa-pen-fancy"></i>  <span class="st-38a8d06e"></span>
+        </div>
+    </header>
+
+    <!-- ===== API：今日诗句 ===== -->
+        <div class="poem-card" id="poemCard">
+            <div class="section-title"><i class="fas fa-feather-alt"></i> 今日诗句 <span>🌸 每日更新</span></div>
+            <blockquote>
+                <p id="poemText">🌸 诗句加载中...</p>
+                <footer id="poemFrom"></footer>
+            </blockquote>
+        </div>
+
+        <!-- ===== API：今日天气（慕尼黑） ===== -->
+        <div class="journal-weather" id="journalWeather">
+            <div class="jw-icon" id="jwIcon">🌸</div>
+            <div class="jw-info">
+                <div class="jw-city">慕尼黑 · 今日</div>
+                <div class="jw-temp" id="jwTemp">加载中...</div>
+                <div class="jw-desc" id="jwDesc">🌸 正在获取天气...</div>
+            </div>
+            <div class="jw-advice" id="jwAdvice">🌸</div>
+        </div>
+
+        <!-- ===== 功能：每日心情打卡 ===== -->
+        <div class="mood-card">
+            <div class="section-title"><i class="fas fa-heart"></i> 今日心情打卡 <span id="moodStreak">🌸 还没有记录</span></div>
+            <div class="mood-btns" id="moodBtns">
+                <button class="mood-btn" data-mood="开心" title="开心"><img loading="lazy" src="img/mood-happy.webp" alt="开心"></button>
+                <button class="mood-btn" data-mood="好心情" title="好心情"><img loading="lazy" src="img/mood-love.webp" alt="好心情"></button>
+                <button class="mood-btn" data-mood="平静" title="平静"><img loading="lazy" src="img/mood-neutral.webp" alt="平静"></button>
+                <button class="mood-btn" data-mood="难过" title="难过"><img loading="lazy" src="img/mood-sad.webp" alt="难过"></button>
+                <button class="mood-btn" data-mood="生气" title="生气"><img loading="lazy" src="img/mood-angry.webp" alt="生气"></button>
+            </div>
+            <div class="mood-log" id="moodLog">🌸 今天的心情是？点一个表情记录吧</div>
+<div class="week-strip" id="weekStrip"></div>
+        </div>
+
+<!-- ===== 开源项目：农历黄历（lunar-javascript） ===== -->
+        <div class="lunar-card" id="lunarCard">
+            <div class="lunar-left">
+                <div class="lunar-date" id="lunarDate">🌸 加载中...</div>
+                <div class="lunar-info" id="lunarInfo"></div>
+            </div>
+            <div class="lunar-right" id="lunarYiJi"></div>
+        </div>
+
+        <!-- ===== 功能：年度倒计时 ===== -->
+        <div class="countdown-card" id="countdownCard">
+            <i class="fas fa-hourglass-half"></i>
+            <div>
+                <div class="cd-title">距离 2027 年新年</div>
+                <div class="cd-num" id="cdNum">🌸 计算中...</div>
+            </div>
+        </div>
+
+<!-- ===== API：每日一词 ===== -->
+        <div class="word-card" id="wordCard">
+            <div class="section-title"><i class="fas fa-spell-check"></i> 每日一词 <span>🌸 学点新单词</span></div>
+            <div class="word-main">
+                <span class="word-en" id="wordEn">🌸 加载中...</span>
+                <span class="word-phonetic" id="wordPhonetic"></span>
+            </div>
+            <div class="word-def" id="wordDef"></div>
+            <div class="word-example" id="wordExample"></div>
+            <button class="btn-secondary btn-sm" id="wordRefreshBtn"><i class="fas fa-sync-alt"></i> 换一个</button>
+        </div>
+
+<!-- ===== API：本周 7 天天气 ===== -->
+        <div class="week-weather" id="weekWeather">
+            <div class="ww-title"><i class="fas fa-calendar-week"></i> 本周天气 <span>🌸 7 天预报</span></div>
+            <div class="ww-strip" id="wwStrip">
+                <div class="status-message">🌸 加载中...</div>
+            </div>
+        </div>
+
+        <!-- ===== 功能：专注番茄钟 ===== -->
+        <div class="pomodoro-card" id="pomodoroCard">
+            <div class="section-title"><i class="fas fa-stopwatch"></i> 专注番茄钟 <span>🌸 写日记也要专注</span></div>
+            <div class="pomo-time" id="pomoTime">25:00</div>
+            <div class="pomo-btns">
+                <button class="btn-cherry" id="pomoStartBtn"><i class="fas fa-play"></i> 开始</button>
+                <button class="btn-secondary" id="pomoResetBtn"><i class="fas fa-redo-alt"></i> 重置</button>
+            </div>
+            <div class="pomo-status" id="pomoStatus">🌸 准备好就开始吧</div>
+        </div>
+
+<article class="post-card">
+        <h2 class="post-title">🌸 夏日絮语</h2>
+        <div class="post-meta">
+            <span><i class="far fa-calendar-alt"></i> 2026年8月5日</span>
+            <span><i class="fas fa-tag"></i> 季节 / 夏</span>
+            <span><i class="far fa-heart"></i> 时光集</span>
+        </div>
+        <div class="post-content">
+
+            <div class="placeholder-marker">
+                <i class="fas fa-paste"></i>  <br>
+                <span class="st-3bd72200">洛阳的雨比伦敦忧郁</span>
+            </div>
+            <p>✦ 瑟瑟残阳溅心涧，千里不同日</p>
+
+            <div class="sakura-image-placeholder st-56f4f7e7">
+                <img loading="lazy" class="js-lightbox" src="img/anon-1.png" width="150" height="auto" alt=派对">
+                <div class="img-caption placeholder-marker"></div>
+            </div>
+
+            <div class="cherry-placeholder st-65c1c01e">
+                <i class="fas fa-regular fa-pen-nib"></i> 我把自己浸泡进阳光里面，企图洗去我的孤僻
+            </div>
+        </div>
+    </article>
+
+    <article class="post-card">
+        <h2 class="post-title">这里是吐槽栏目</h2>
+        <div class="post-meta">
+            <span><i class="far fa-calendar-alt"></i> 2026年8月6日</span>
+            <span><i class="fas fa-camera"></i> 日常/光影</span>
+        </div>
+        <div class="post-content">
+            <div class="placeholder-marker">
+                <i class="fas fa-image"></i> 打算写小说，但是写了一万字就有点懒了 <br>
+                人怎么可以这么懒
+            </div>
+
+            <p class="st-a39dbb5e"> 影娥皎月空悲切</p>
+
+            <div class="sakura-image-placeholder st-56f4f7e7">
+                <img loading="lazy" class="js-lightbox" src="img/anon-2.png" width="150" height="auto" alt="队长推荐">
+                <div class="img-caption placeholder-marker"></div>
+            </div>
+
+            <div class="cherry-placeholder">
+                <i class="fas fa-regular fa-comment"></i> 他年我若为青帝，报与桃花一处开喵
+            </div>
+        </div>
+    </article>
+
+    <article class="post-card">
+        <h2 class="post-title">听歌 · 春日影</h2>
+        <div class="post-meta">
+            <span><i class="far fa-calendar-alt"></i> 2026年8月5日</span>
+            <span><i class="fas fa-headphones"></i> 歌单/书摘</span>
+        </div>
+        <div class="post-content">
+            <div class="placeholder-marker">
+                <i class="fas fa-book-open"></i> 写不出歌词啊，我的青春果然有问题吧 <br>
+                最近在听“好喜欢你”已经循环一千次了吧
+            </div>
+
+            <div class="sakura-image-placeholder st-56f4f7e7">
+                <img loading="lazy" class="js-lightbox" src="img/anon-3.png" width="150" height="auto" alt="秘密黄昏约会">
+                <div class="img-caption placeholder-marker"></div>
+            </div>
+
+            <div class="cherry-placeholder st-65c1c01e">
+                <i class="fas fa-music"></i>  许我放荡三十年，千金难买少年弦喵
+            </div>
+        </div>
+    </article>
+
+    <article class="post-card">
+        <h2 class="post-title">休闲一下喵</h2>
+        <div class="post-meta">
+            <span><i class="far fa-calendar-alt"></i> 2026年8月2日</span>
+            <span><i class="fas fa-mug-hot"></i> 生活 / 慢时光</span>
+        </div>
+        <div class="post-content">
+            <div class="placeholder-marker">
+                <i class="fas fa-cloud-sun"></i> 早上起晚了 <br>
+                勉强赶上今天的zzz，快完结了，没得看了（）
+            </div>
+            <p></p>
+
+            <div class="sakura-image-placeholder st-56f4f7e7">
+                <img loading="lazy" class="js-lightbox" src="img/anon-bg.png" width="150" height="auto" alt="早晨哈欠时间">
+                <div class="img-caption placeholder-marker"></div>
+            </div>
+
+            <div class="cherry-placeholder">
+                怎么大家都有甜甜的恋爱我不活了
+            </div>
+        </div>
+    </article>
+
+    <div class="st-27791aae">
+        <hr class="sakura-divider">
+        <div class="st-2acd7e17">
+            <i class="fas fa-user-astronaut st-84950f7e"></i>
+            <h3 class="st-f7b44442">✎ 关于博主</h3>
+            <div class="placeholder-marker st-a1cc4b21">
+                <i class="fas fa-edit"></i> 博主很抽象喵十分的抽象吗喵，写这个也是写着玩的喵
+            </div>
+            <div class="social-links">
+                <a href="https://space.bilibili.com/1113834956?spm_id_from=333.1007.0.0" target="_blank" rel="noopener noreferrer"><i class="fab fa-bilibili"></i></a>
+                <a href="https://www.youtube.com/@kaneKing-l7l" target="_blank" rel="noopener noreferrer"><i class="fab fa-youtube"></i></a>
+                <a href="https://x.com/arry_kane" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                <a href="https://www.instagram.com/kane_kingasiatic/" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                <a href="https://github.com/U1s1-king" aria-label="GitHub"><i class="fab fa-github"></i></a>
+                <a href="https://mail.google.com/mail/?view=cm&fs=1&to=kaneking114@gmail.com" aria-label="Email"><i class="fas fa-envelope"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <footer class="blog-footer">
+        <p><i class="fas fa-cherry-blossom sakura-icon"></i> 风轻吻 <i class="fas fa-wind"></i></p>
+        <p> 2026 Tomo Ebizuka |日记 </p>
+        <p class="st-753cd1b9"><i class="fas fa-code-branch"></i> 博客</p>
+    </footer>
+    <nav class="bot-tab" aria-label="移动端导航">
+        <a href="index.html"><i class="fas fa-cat"></i><span>首页</span></a>
+        <a href="Journal.html"><i class="fas fa-book-open"></i><span>日记</span></a>
+        <a href="Archives.html"><i class="fas fa-images"></i><span>归档</span></a>
+        <a href="Guestbook.html"><i class="fas fa-comments"></i><span>留言</span></a>
+        <a href="music.html"><i class="fas fa-music"></i><span>音乐</span></a>
+        <a href="Tools.html"><i class="fas fa-toolbox"></i><span>工具</span></a>
+    </nav>
+
+</main>
+
+    <script src="js/vendor/lunar.js?v=20260902"></script>
+    <script src="js/Journal.js?v=20260902"></script>
+    <script src="js/common.js?v=20260902"></script>
+    <script src="js/sidebar.js?v=20260902"></script>
+    <script src="js/particles-config.js"></script>
+    <script src="https://sakura-live2d.pages.dev/live2d/waifu.js?v=20260904" defer></script>
+</body>
+</html>

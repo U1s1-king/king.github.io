@@ -1,0 +1,234 @@
+/* ============================================================
+   移动端适配补充 (mobile.css)
+   策略：不动压缩的 style.css 及各页 css，统一在此追加移动端修补
+   断点：768px(平板/手机) 480px(小屏手机)
+   ============================================================ */
+
+/* A5 刘海屏安全区 */
+@supports (padding: max(0px)) {
+  .site-footer,
+  footer {
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 12px) !important;
+  }
+}
+
+/* 万能横向溢出兜底（不裁垂直内容） */
+@media (max-width: 768px) {
+  html,
+  body {
+    overflow-x: hidden;
+  }
+}
+
+/* A1 修复 Guestbook 390px 内容贴右缘 */
+@media (max-width: 768px) {
+  .guestbook-container {
+    padding-right: 1.2rem !important;
+    padding-left: 1.2rem !important;
+    box-sizing: border-box !important;
+  }
+  .guestbook-main,
+  .message-card,
+  .guest-quote,
+  .gb-form {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+}
+
+/* A2 修复 Archives 390px 右缘深色压边（容器内留白 + 卡片收缩） */
+@media (max-width: 768px) {
+  .archive-container,
+  .archive-sections,
+  .section-block {
+    padding-right: 1rem !important;
+    padding-left: 1rem !important;
+    box-sizing: border-box !important;
+  }
+  .card-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+  .media-card,
+  .video-wrapper {
+    max-width: 100% !important;
+  }
+}
+
+/* A6 长内容横向滚动防护 + 媒体自适应 */
+@media (max-width: 768px) {
+  pre,
+  code,
+  table,
+  .tool-panel,
+  .blog-content,
+  .terminal,
+  .work-card,
+  .ns-item,
+  .stat-card,
+  .st-bd306a33,
+  .unlock-results {
+    max-width: 100% !important;
+    overflow-x: auto !important;
+  }
+  iframe,
+  video,
+  canvas,
+  svg,
+  img {
+    max-width: 100% !important;
+  }
+  .video-wrapper {
+    aspect-ratio: 16 / 9;
+  }
+  .video-wrapper iframe {
+    width: 100% !important;
+    height: 100% !important;
+  }
+  .works-grid,
+  .grid,
+  .filter-tabs,
+  .format-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* A4 触控目标 ≥ 40px（主要交互控件） */
+@media (max-width: 768px) {
+  .nav-links a,
+  .btn,
+  .btn-cherry,
+  .filter-tab,
+  .ns-play,
+  .ns-add,
+  .ns-dl,
+  .tool-btn,
+  .unlock-btn,
+  .search-btn,
+  .wf-side-btn,
+  .gb-submit,
+  .bili-btn {
+    min-height: 40px;
+  }
+}
+
+/* 通用小屏细节：文字断词、密度 */
+@media (max-width: 768px) {
+  .nav-links {
+    gap: 4px !important;
+  }
+  .nav-links a {
+    padding: 8px 12px !important;
+  }
+  .card-title,
+  .post-title,
+  .ns-name,
+  .tool-title,
+  .section-title,
+  .info-label,
+  .info-desc,
+  .card-desc {
+    word-break: break-word;
+  }
+}
+
+@media (max-width: 480px) {
+  .nav-links {
+    justify-content: center !important;
+  }
+  .info-item {
+    padding: 0.7rem 0.5rem !important;
+  }
+}
+/* ===== 底部 Tab 导航（仅移动端显示，桌面隐藏） ===== */
+.bot-tab {
+  display: none;
+}
+@media (max-width: 768px) {
+  .bot-tab {
+    display: flex;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9998;
+    background: rgba(255, 250, 252, 0.96);
+    border-top: 1px solid #ffd6e0;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 4px 2px calc(4px + env(safe-area-inset-bottom, 0px));
+    box-shadow: 0 -2px 12px rgba(255, 130, 160, 0.18);
+  }
+  .bot-tab a {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 46px;
+    color: #b07b88;
+    text-decoration: none;
+    font-size: 11px;
+    gap: 2px;
+  }
+  .bot-tab a i {
+    font-size: 17px;
+  }
+  .bot-tab a.active {
+    color: #e85d86;
+    font-weight: 600;
+  }
+  .bot-tab a.active span {
+    background: linear-gradient(180deg, #ff8fab, #e85d86);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  body {
+    padding-bottom: calc(58px + env(safe-area-inset-bottom, 0px));
+  }
+  .wf-fab {
+    bottom: calc(68px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+}
+
+/* ===== 页脚分享链接 ===== */
+.footer-share {
+  display: inline-block;
+  margin: 0 0 4px 8px;
+  color: inherit;
+  opacity: 0.85;
+  font-size: 0.9em;
+  text-decoration: none;
+  cursor: pointer;
+}
+.footer-share:hover {
+  opacity: 1;
+  color: #e85d86;
+}
+
+/* ===== 大图 Lightbox ===== */
+.js-lb-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: rgba(20, 8, 14, 0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-out;
+  animation: js-lb-fade 0.18s ease;
+}
+.js-lb-img {
+  max-width: 92vw;
+  max-height: 86vh;
+  border-radius: 12px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+}
+@keyframes js-lb-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+img.js-lightbox {
+  cursor: zoom-in;
+}

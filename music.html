@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <script src="js/version.js?v=20260902"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <link rel="stylesheet" href="css/style.css?v=20260902">
+    <link rel="stylesheet" href="css/sidebar.css?v=20260902">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#ffb6c1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+    <link rel="dns-prefetch" href="//v1.hitokoto.cn">
+    <link rel="dns-prefetch" href="//api.open-meteo.com">
+    <link rel="dns-prefetch" href="//api.bilibili.com">
+    <link rel="dns-prefetch" href="//api.github.com">
+    <link rel="preconnect" href="https://api.open-meteo.com" crossorigin>
+    <link rel="preconnect" href="https://api.github.com" crossorigin>
+    <title> 音乐 · 本喵的播放器</title>
+    <link rel="canonical" href="https://zhaokening.ccwu.cc/music.html">
+    
+    <link rel="stylesheet" href="css/all.min.css?v=20260902">
+    <link rel="stylesheet" href="css/music.css?v=20260902">
+    <link rel="stylesheet" href="css/mobile.css?v=20260902">
+    <meta name="description" content="(O_o)??音乐盒：在线搜歌、本地音乐播放、多平台搜索与播放器自由调节。">
+    <meta name="keywords" content="(O_o)??,音乐,音乐盒,在线搜歌,播放器,歌词">
+    <meta name="author" content="king">
+    <meta name="robots" content="index, follow">
+    <meta property="og:title" content="🌸音乐 - (O_o)??">
+    <meta property="og:description" content="(O_o)??音乐盒：在线搜歌、本地音乐播放、多平台搜索与播放器自由调节。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://zhaokening.ccwu.cc/music.html">
+    <meta property="og:image" content="https://zhaokening.ccwu.cc/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary">
+</head>
+<body>
+<script>document.documentElement.style.background='transparent';document.body.style.background='transparent';</script>
+
+<div class="sakura-flurry" id="sakura-flurry"></div>
+<div class="anon-bg-layer bg-music"></div>
+<aside class="site-sidebar" id="siteSidebar">
+    <a class="sidebar-brand" href="index.html">
+        <i class="fas fa-cherry-blossom"></i>
+        <span class="sidebar-brand-name">Tomo Ebizuka</span>
+        <span class="sidebar-brand-sub">ZhaoKeninG's Blog</span>
+    </a>
+    <nav class="sidebar-nav">
+        <a href="index.html"><i class="fas fa-cat"></i><span>首页</span></a>
+        <a href="Journal.html"><i class="fas fa-book-open"></i><span>日记</span></a>
+        <a href="Archives.html"><i class="fas fa-images"></i><span>归档</span></a>
+        <a href="Guestbook.html"><i class="fas fa-comments"></i><span>留言</span></a>
+        <a href="music.html" class="active"><i class="fas fa-music"></i><span>音乐</span></a>
+        <a href="Tools.html"><i class="fas fa-toolbox"></i><span>工具</span></a>
+    </nav>
+    <div class="sidebar-deco">
+        <img loading="lazy" src="img/anon-sidebar.png" alt="千早愛音">
+        <span class="deco-caption">千早愛音</span>
+    </div>
+</aside>
+
+<main class="music-container">
+    <header class="music-header">
+        <div class="blog-title">
+            <i class="fas fa-fan"></i>
+            本喵的音乐盒
+            <i class="fas fa-head-side-headphones"></i>
+        </div>
+        <div class="subhead">
+            <i class="fas fa-cherry-blossom"></i> 喵耳律动 · 春日影
+        </div>
+    </header>
+    <!-- 页面切换 -->
+    <div class="page-tabs">
+        <button class="page-tab active" data-tab="player">音乐盒</button>
+        <button class="page-tab" data-tab="cards">音乐卡片</button>
+        <button class="page-tab" data-tab="netease">第三方音乐</button>
+    </div>
+
+    <div id="tab-player">
+    <div class="po-searchbar">
+        <input id="po-search" type="text" placeholder="在线搜歌，直接加进歌单播放…" autocomplete="off">
+        <button id="po-btn" class="btn-cherry">搜歌</button>
+    </div>
+    <div id="po-results"></div>
+
+    <div class="player-card">
+        <div class="player-dual">
+            <div class="player-left">
+                <div class="disc-zone">
+                    <div class="vinyl">
+                        <div class="cover-inner" id="coverInner">
+                            <img loading="lazy" class="cover-img" id="coverImg" src="img/mortis.webp" alt="">
+                        </div>
+                    </div>
+                </div>
+                <div class="song-details">
+                    <div class="track-title" id="trackName">🌸 空空的喵</div>
+                    <div class="track-artist" id="trackArtist">点击 添加音乐</div>
+                </div>
+                <div class="progress-area">
+                    <div class="progress-bar-bg" id="progressBg"><div class="progress-fill" id="progressFill"></div></div>
+                    <div class="time-row"><span id="currentTime">0:00</span><span id="totalDuration">0:00</span></div>
+                </div>
+                <div class="controls-row">
+                    <button class="ctrl-btn" id="prevBtn"><i class="fas fa-backward-step"></i></button>
+                    <button class="ctrl-btn play-main" id="playPauseBtn"><i class="fas fa-play" id="playPauseIcon"></i></button>
+                    <button class="ctrl-btn" id="nextBtn"><i class="fas fa-forward-step"></i></button>
+                </div>
+                <div class="mode-strip">
+                    <div class="mode-chip" id="repeatModeBtn"><i class="fas fa-redo-alt"></i> 单曲循环</div>
+                    <div class="mode-chip" id="shuffleModeBtn"><i class="fas fa-random"></i> 随机播放</div>
+                    <div class="mode-chip" id="speedBtn"><i class="fas fa-tachometer-alt"></i> 倍速 <span id="speedVal">1.00x</span></div>
+                </div>
+                <div class="mixer">
+                    <i class="fas fa-volume-down st-7dce5011"></i>
+                    <input type="range" id="volumeRange" min="0" max="1" step="0.01" value="0.7" class="volume-slider">
+                    <i class="fas fa-volume-up st-7dce5011"></i>
+                </div>
+            </div>
+
+            <div class="player-right">
+                <div class="lyric-panel" id="lyricBox">
+                     喵 ~ 点击右侧 上传本地音乐
+                </div>
+                <div class="playlist-section">
+                    <div class="playlist-header">
+                        <span><i class="fas fa-list-ul"></i> 喵喵歌单</span>
+                        <span id="songCount">0 首</span>
+                        <div class="glass-icon st-99ff0a8c st-fav-toggle" id="favOnlyBtn" title="只看收藏"><i class="fas fa-heart"></i></div>
+                        <div class="glass-icon st-99ff0a8c" id="uploadTrigger">
+                            <i class="fas fa-plus-circle st-11ddc8e7"></i>
+                        </div>
+                    </div>
+                    <div class="playlist-scroll" id="playlistContainer"></div>
+                </div>
+                <div class="cherry-tip">
+                    <i class="fas fa-music"></i> 想听新歌？点击 上传本地音频喵~ 封面默认喵
+                    <span id="clearUploadCacheBtn" class="st-ead0ed48"> 清空缓存</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 频谱动画区域-->
+    <div class="spectrum-line">
+        <div class="spectrum-bars" id="spectrumBars"></div>
+    </div>
+
+    <div class="st-199ade66">
+        <a href="index.html" class="btn-cherry"><i class="fas fa-chevron-circle-left"></i> 回喵星首页</a>
+    </div>
+    <hr class="sakura-divider">
+    <footer class="blog-footer">
+        <p><i class="fas fa-cherry-blossom sakura-icon"></i> 春日影·本喵的音乐收藏 <i class="fas fa-feather-alt"></i></p>
+        <div class="social-links">
+            <a href="https://space.bilibili.com/1113834956?spm_id_from=333.1007.0.0" target="_blank" rel="noopener noreferrer"><i class="fab fa-bilibili"></i></a>
+            <a href="https://www.youtube.com/@kaneKing-l7l" target="_blank" rel="noopener noreferrer"><i class="fab fa-youtube"></i></a>
+            <a href="https://x.com/arry_kane" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+            <a href="https://www.instagram.com/kane_kingasiatic/" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+            <a href="https://github.com/U1s1-king" aria-label="GitHub"><i class="fab fa-github"></i></a>
+            <a href="https://mail.google.com/mail/?view=cm&fs=1&to=kaneking114@gmail.com" aria-label="Email"><i class="fas fa-envelope"></i></a>
+        </div>
+        <p> 2026 Tomo Ebizuka | 音乐</p>
+    </footer>
+    <nav class="bot-tab" aria-label="移动端导航">
+        <a href="index.html"><i class="fas fa-cat"></i><span>首页</span></a>
+        <a href="Journal.html"><i class="fas fa-book-open"></i><span>日记</span></a>
+        <a href="Archives.html"><i class="fas fa-images"></i><span>归档</span></a>
+        <a href="Guestbook.html"><i class="fas fa-comments"></i><span>留言</span></a>
+        <a href="music.html"><i class="fas fa-music"></i><span>音乐</span></a>
+        <a href="Tools.html"><i class="fas fa-toolbox"></i><span>工具</span></a>
+    </nav>
+
+
+    </div><!-- /tab-player -->
+
+    <div id="tab-cards" class="st-93b8ea5b">
+        <div class="po-searchbar">
+            <input id="pc-search" type="text" placeholder="在线搜歌，生成卡片…" autocomplete="off">
+            <button id="pc-btn" class="btn-cherry">搜歌</button>
+        </div>
+        <div id="pc-results"></div>
+        <!-- 统计栏 -->
+        <div class="stats-bar" id="statsBar">
+            <div class="stat-item"><i class="fas fa-music"></i> 作品总数 <span class="stat-number" id="totalWorks">0</span></div>
+            <div class="stat-item"><i class="fas fa-user-astronaut"></i> 艺术家 <span class="stat-number" id="totalArtists">0</span></div>
+            <div class="stat-item"><i class="fas fa-clock"></i> 总时长 <span class="stat-number" id="statsTotalDuration">0:00</span></div>
+        </div>
+        <!-- 分类过滤 -->
+        <div class="filter-tabs" id="filterTabs">
+            <span class="filter-tab active" data-filter="all">🌸 全部</span>
+        </div>
+        <!-- 作品网格 -->
+        <div class="works-grid" id="worksGrid"></div>
+    </div><!-- /tab-cards -->
+    <div id="tab-netease" class="st-93b8ea5b">
+        <div class="ns-searchbar">
+            <select id="ns-platform" class="ns-platform">
+                <option value="all">全部平台</option>
+                <option value="netease">网易云</option>
+                <option value="tencent">QQ音乐</option>
+                <option value="kugou">酷狗</option>
+                <option value="migu">咪咕</option>
+                <option value="bilibili">B站</option>
+                <option value="itunes">iTunes</option>
+            </select>
+            <input id="ns-search" type="text" placeholder="搜歌名 / 歌手 / 专辑…" autocomplete="off">
+            <button id="ns-btn" class="btn-cherry">搜索</button>
+        </div>
+        <div id="ns-results"></div>
+            <div class="unlock-section">
+                <div class="unlock-title">本地音乐解锁</div>
+                <div class="unlock-hint">把加密音乐（.ncm / .qmc / .mflac / .mgg / .kgm / .kwm / .xm 等）拖进来或点选，纯本地解密成 mp3 / flac～</div>
+                <div class="unlock-drop" id="unlock-drop">
+                    <i class="fas fa-unlock-alt"></i>
+                    <p>拖文件到这里，或</p>
+                    <button class="unlock-btn" id="unlock-btn">选择加密音乐</button>
+                    <input type="file" id="unlock-file" multiple accept=".ncm,.qmc,.qmc0,.qmc3,.qmcflac,.qmcogg,.mflac,.mgg,.mflac0,.mgg1,.kgm,.vpr,.kgma,.kwm,.xm,.mg3d" class="st-cb458930">
+                </div>
+                <div class="unlock-results" id="unlock-results"></div>
+            </div>
+    </div><!-- /tab-netease -->
+</main>
+
+<audio id="nativeAudio" class="st-224b51a7"></audio>
+
+<div class="modal-global" id="uploadModal">
+    <div class="modal-card">
+        <div class="st-c0b9e821">
+            <h3 class="st-445d912d"><i class="fas fa-cloud-upload-alt"></i> 添加本地音乐</h3>
+            <button id="closeUploadModal" class="st-508e6572">&times;</button>
+        </div>
+        <div class="upload-area" id="dropArea"><i class="fas fa-headphones fa-2x"></i><p>点击选择音乐文件 (mp3/flac/等)</p><input type="file" id="fileInput" multiple accept="audio/*" class="st-cb458930"></div>
+        <div id="filePreviewList" class="st-05cec806"></div>
+        <button class="submit-glow" id="confirmUploadBtn">添加到歌单</button>
+    </div>
+</div>
+<div class="toast" id="toastMsg"></div>
+
+        <script src="js/music-bundle.js?v=20260902"></script>
+    <script src="js/common.js?v=20260902"></script>
+    <script src="js/sidebar.js?v=20260902"></script>
+    <script src="js/particles-config.js"></script>
+    <script src="https://sakura-live2d.pages.dev/live2d/waifu.js?v=20260904" defer></script>
+</body>
+</html>

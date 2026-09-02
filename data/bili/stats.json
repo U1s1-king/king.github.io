@@ -1,0 +1,19 @@
+{
+  "relation": {
+    "follower": 264,
+    "following": 72
+  },
+  "card": {
+    "name": "唯爱基米希",
+    "face": "https://i2.hdslb.com/bfs/face/f95d5fe8e3fc6e6d6b62f9e9ca9da8344aa22323.jpg",
+    "level": 5,
+    "sign": "https://zhaokening.ccwu.cc/这个是主播的个人博客",
+    "fans": 264,
+    "attention": 72
+  },
+  "online": {
+    "total": 107779
+  },
+  "videos": [],
+  "updated_at": "2026-09-02T20:22+00:00"
+}

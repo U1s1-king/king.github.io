@@ -1,0 +1,178 @@
+/* ============================================================
+ * giscus 自定义主题：樱花物语 · 浅色粉 (giscus-theme.css)
+ * 通过 CSS 变量覆盖 GitHub Primer 配色，适配站点樱花粉风格。
+ * 由 giscus iframe 跨域加载（GitHub Pages 自带 CORS）。
+ * ============================================================ */
+:root {
+  /* 画布/表面 */
+  --color-canvas-default: #fff8f6;
+  --color-canvas-subtle: #fff0f4;
+  --color-canvas-inset: #fffbf9;
+  --color-canvas-overlay: #ffffff;
+  --color-canvas-mobile: #fff8f6;
+
+  /* 边框 */
+  --color-border-default: #ffccda;
+  --color-border-muted: #ffe2ea;
+  --color-border-subtle: rgba(255, 210, 223, 0.6);
+  --color-neutral-muted: rgba(255, 186, 208, 0.35);
+  --color-neutral-subtle: rgba(255, 186, 208, 0.18);
+
+  /* 文字 */
+  --color-fg-default: #2e2a2b;
+  --color-fg-muted: #8a6a74;
+  --color-fg-subtle: #b88a98;
+  --color-fg-on-emphasis: #ffffff;
+
+  /* 强调色（樱花粉） */
+  --color-accent-fg: #c2557a;
+  --color-accent-emphasis: #e6728f;
+  --color-accent-subtle: #ffeef4;
+  --color-accent-muted: rgba(230, 114, 143, 0.22);
+
+  /* 成功 / 危险 / 提醒 */
+  --color-success-fg: #2c8a5a;
+  --color-success-emphasis: #2f9d66;
+  --color-success-subtle: #e9f8f0;
+  --color-success-muted: rgba(47, 157, 102, 0.18);
+  --color-danger-fg: #c0392b;
+  --color-danger-emphasis: #e0473b;
+  --color-danger-subtle: #fdeeee;
+  --color-danger-muted: rgba(224, 71, 59, 0.15);
+  --color-attention-fg: #9c6b1f;
+  --color-attention-emphasis: #d9a13d;
+  --color-attention-subtle: #fdf3e0;
+  --color-attention-muted: rgba(217, 161, 61, 0.18);
+
+  /* 链接 */
+  --color-link-fg: #c2557a;
+  --color-link-hover-fg: #a84362;
+  --color-link-active-fg: #8e3350;
+  --color-link-visited-fg: #a55a73;
+
+  /* 按钮 */
+  --color-btn-bg: #fff1f4;
+  --color-btn-hover-bg: #ffe4ec;
+  --color-btn-active-bg: #ffdae6;
+  --color-btn-border: #ffd2df;
+  --color-btn-hover-border: #ffc4d6;
+  --color-btn-text: #b34e6b;
+  --color-btn-hover-text: #a84362;
+  --color-btn-primary-bg: #e6728f;
+  --color-btn-primary-hover-bg: #d96380;
+  --color-btn-primary-border: #dc6381;
+  --color-btn-primary-text: #ffffff;
+  --color-btn-primary-hover-text: #ffffff;
+
+  /* 列表悬停 */
+  --color-action-list-item-inline-divider: rgba(255, 210, 223, 0.7);
+  --color-action-list-item-default-hover-bg: rgba(255, 228, 236, 0.8);
+  --color-action-list-item-default-active-bg: rgba(255, 218, 230, 0.9);
+
+  /* 头像、卡片、输入框 */
+  --color-avatar-border: #ffccda;
+  --color-avatar-bg: #fff0f4;
+  --color-input-bg: #ffffff;
+  --color-input-border: #ffccda;
+  --color-input-focus-border: #e6728f;
+  --color-input-focus-ring: rgba(230, 114, 143, 0.28);
+  --color-input-contrast-bg: #fff8f6;
+
+  /* 选中文本、阴影 */
+  --color-selection-highlight-bg: rgba(230, 114, 143, 0.25);
+  --color-shadow-small: 0 1px 2px rgba(230, 114, 143, 0.12);
+  --color-shadow-medium: 0 2px 8px rgba(230, 114, 143, 0.16);
+  --color-shadow-large: 0 8px 24px rgba(230, 114, 143, 0.2);
+
+  /* 边框圆角（更柔） */
+  --border-radius-medium: 14px;
+  --border-radius-small: 10px;
+  --border-radius-large: 18px;
+}
+
+/* 让 iframe 背景与页面渐变无缝衔接 */
+body {
+  background: linear-gradient(145deg, #fff9f7 0%, #ffeef4 100%);
+  color: var(--color-fg-default);
+  font-family: 'Inter', -apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+
+/* 头像圆角：樱花感 */
+.avatar {
+  border-radius: 30%;
+}
+
+/* 评论区卡片微调 */
+.gsc-comment-box,
+.gsc-reply-box,
+.gsc-comment {
+  border-color: var(--color-border-default);
+}
+
+/* 时间戳等弱化文字 */
+.gsc-comment-reactions,
+.gsc-comment-meta,
+.gsc-reactions-count {
+  color: var(--color-fg-subtle);
+}
+
+/* ============ 外围结构线：统一粉色，消除默认灰黑线 ============ */
+/* 评论区整体外框、输入框、回复框、评论卡片、tab 栏 */
+.gsc-main,
+.gsc-comment-box,
+.gsc-comment-box-textarea,
+.gsc-comment,
+.gsc-replies,
+.gsc-reply-box,
+.gsc-tabs,
+.gsc-toolbar,
+.gsc-header {
+  border-color: var(--color-border-default, #ffccda) !important;
+  border-radius: var(--border-radius-medium, 14px);
+}
+
+/* 分隔线：粉/白 */
+.gsc-comment-box-header,
+.gsc-comment-header,
+.gsc-reply-box-header,
+.gsc-comment-box-tabs,
+.gsc-tab,
+.gsc-comment-box-footer,
+.gsc-replies {
+  border-color: var(--color-border-muted, #ffe2ea) !important;
+}
+
+/* tab 选中态下划线 */
+.gsc-tab.active {
+  border-bottom-color: var(--color-accent-emphasis, #e6728f) !important;
+}
+
+/* 输入框聚焦高亮（替代浏览器默认黑圈） */
+.gsc-comment-box-textarea:focus,
+.gsc-input:focus,
+.gsc-reply-box textarea:focus {
+  outline: 2px solid var(--color-accent-muted, rgba(230,114,143,.35)) !important;
+  outline-offset: -1px;
+  border-color: var(--color-accent-fg, #c2557a) !important;
+  box-shadow: none;
+}
+
+/* 按钮/反应边线 */
+.gsc-btn,
+.gsc-reaction-button,
+.gsc-reactions-count,
+.gsc-social-reaction-summary-item {
+  border-color: var(--color-border-default, #ffccda) !important;
+}
+.gsc-btn:hover,
+.gsc-reaction-button:hover {
+  border-color: var(--color-btn-hover-border, #ffc4d6) !important;
+  background: var(--color-btn-hover-bg, #ffe4ec);
+}
+
+/* 登录提示区等弱边框 */
+.gsc-comment-box .gsc-btn-primary {
+  background: var(--color-btn-primary-bg, #e6728f);
+  border-color: var(--color-btn-primary-border, #dc6381);
+  color: #fff;
+}

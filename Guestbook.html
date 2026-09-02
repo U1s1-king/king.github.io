@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <script src="js/version.js?v=20260902"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <link rel="stylesheet" href="css/style.css?v=20260902">
+    <link rel="stylesheet" href="css/sidebar.css?v=20260902">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#ffb6c1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+    <link rel="dns-prefetch" href="//v1.hitokoto.cn">
+    <link rel="dns-prefetch" href="//api.open-meteo.com">
+    <link rel="dns-prefetch" href="//api.bilibili.com">
+    <link rel="dns-prefetch" href="//api.github.com">
+    <link rel="preconnect" href="https://api.open-meteo.com" crossorigin>
+    <link rel="preconnect" href="https://api.github.com" crossorigin>
+    <title>🌸留言板</title>
+    <link rel="canonical" href="https://zhaokening.ccwu.cc/Guestbook.html">
+
+    
+    <link rel="stylesheet" href="css/all.min.css?v=20260902">
+    <link rel="stylesheet" href="css/Guestbook.css?v=20260902">
+    <link rel="stylesheet" href="css/mobile.css?v=20260902">
+    <meta name="description" content="(O_o)??留言板：在这里留下你的足迹、建议或想说的话，支持 GitHub Discussions 论坛讨论。">
+    <meta name="keywords" content="(O_o)??,留言板,留言,论坛,GitHub Discussions">
+    <meta name="author" content="king">
+    <meta name="robots" content="index, follow">
+    <meta property="og:title" content="🌸留言板 - (O_o)??">
+    <meta property="og:description" content="(O_o)??留言板：留下你的足迹、建议或想说的话，支持 GitHub Discussions 论坛讨论。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://zhaokening.ccwu.cc/Guestbook.html">
+    <meta property="og:image" content="https://zhaokening.ccwu.cc/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary">
+</head>
+<body>
+<script>document.documentElement.style.background='transparent';document.body.style.background='transparent';</script>
+
+<!-- 飘落容器 -->
+<div class="sakura-flurry" id="sakura-flurry"></div>
+<div class="anon-bg-layer bg-guest"></div>
+<aside class="site-sidebar" id="siteSidebar">
+    <a class="sidebar-brand" href="index.html">
+        <i class="fas fa-cherry-blossom"></i>
+        <span class="sidebar-brand-name">Tomo Ebizuka</span>
+        <span class="sidebar-brand-sub">ZhaoKeninG's Blog</span>
+    </a>
+    <nav class="sidebar-nav">
+        <a href="index.html"><i class="fas fa-cat"></i><span>首页</span></a>
+        <a href="Journal.html"><i class="fas fa-book-open"></i><span>日记</span></a>
+        <a href="Archives.html"><i class="fas fa-images"></i><span>归档</span></a>
+        <a href="Guestbook.html" class="active"><i class="fas fa-comments"></i><span>留言</span></a>
+        <a href="music.html"><i class="fas fa-music"></i><span>音乐</span></a>
+        <a href="Tools.html"><i class="fas fa-toolbox"></i><span>工具</span></a>
+    </nav>
+    <div class="sidebar-deco">
+        <img loading="lazy" src="img/anon-sidebar.png" alt="千早愛音">
+        <span class="deco-caption">千早愛音</span>
+    </div>
+</aside>
+
+<main class="guestbook-container">
+    <!-- 页眉 -->
+    <header class="guestbook-header">
+        <div class="blog-title">
+            <i class="fas fa-fan"></i>
+            留言
+            <i class="fas fa-comment-dots"></i>
+        </div>
+        <div class="subhead">
+            <i class="fas fa-seedling"></i> 这里是留言板喵
+        </div>
+
+        <div class="visitor-location" id="visitorLocation">
+            <i class="fas fa-map-pin"></i> <span id="visitorLocText">🌸 正在定位你的坐标...</span>
+        </div>
+<!-- ===== API：今日寄语 ===== -->
+        <div class="guest-quote" id="guestQuote">
+            <i class="fas fa-quote-left"></i>
+            <span id="guestQuoteText">🌸 寄语加载中...</span>
+            <i class="fas fa-quote-right"></i>
+            <button class="quote-refresh" id="guestQuoteRefresh" title="换一句"><i class="fas fa-sync-alt"></i></button>
+        </div>
+    </header>
+
+    <!-- 留言表单 -->
+    <div class="form-card">
+        <div class="form-title">
+            <i class="fas fa-pen-fancy"></i>
+            <span>留下你的足迹吧喵 ✨</span>
+        </div>
+        <div class="form-desc">
+            春风同花皆闻汝等之声，请随意留言喵 ~ 可以分享心情、建议或者想说的。
+        </div>
+        <div class="input-group">
+            <label><i class="fas fa-user-circle"></i> 昵称</label>
+            <input type="text" id="nameInput" placeholder="来者何人" maxlength="30">
+        </div>
+        <div class="input-group">
+            <label><i class="fas fa-comment"></i> 留言内容</label>
+            <textarea id="msgInput" rows="3" placeholder="写点什么喵" maxlength="300"></textarea>
+            <div class="char-count">🌸 <span id="charCount">0</span>/300</div>
+<div class="emoji-row" id="emojiRow">
+                <span class="emoji-item" data-emoji="🌸">🌸</span>
+                <span class="emoji-item" data-emoji="😊">😊</span>
+                <span class="emoji-item" data-emoji="😢">😢</span>
+                <span class="emoji-item" data-emoji="😂">😂</span>
+                <span class="emoji-item" data-emoji="🥰">🥰</span>
+                <span class="emoji-item" data-emoji="😭">😭</span>
+                <span class="emoji-item" data-emoji="👍">👍</span>
+                <span class="emoji-item" data-emoji="✨">✨</span>
+            </div>
+        </div>
+        <div class="st-7851dbc0">
+            <button class="btn-primary submit-btn" id="submitBtn">
+                <i class="fas fa-feather-alt"></i> 留言
+            </button>
+        </div>
+        <div class="turnstile-wrap" id="turnstileWrap" style="margin: 12px 0;">
+            <div id="turnstile-widget"></div>
+        </div>
+        <div class="placeholder-marker st-83f2d077">
+            <i class="fas fa-info-circle"></i> 留言通过 Cloudflare Worker 安全存储，不会丢失喵~
+        </div>
+    </div>
+
+    <!-- 留言列表展示区 -->
+    <div class="messages-section">
+        <div class="section-header">
+            <h3><i class="fas fa-comments st-622f21ba"></i> 留言板</h3>
+                    <div class="sort-bar">
+            <button class="sort-btn" id="sortToggle" data-mode="new">🌸 最新在前</button>
+        </div>
+            <span class="message-count" id="messageCount">0 则留言</span>
+        </div>
+        <div id="messagesList">
+            <div class="empty-message">
+                <i class="fas fa-cherry-blossom st-230340d1"></i>
+                <p class="st-68a09f73">✨ 加载中喵~ ✨</p>
+            </div>
+        </div>
+    </div>
+
+    <hr class="sakura-divider">
+<!-- ==================== 论坛：giscus ==================== -->
+        <div class="forum-section" id="forumSection">
+            <div class="forum-header">
+                <i class="fab fa-github"></i> 论坛讨论区
+                <span class="forum-badge">🌸 GitHub Discussions 驱动</span>
+            </div>
+            <div class="giscus-wrapper">
+                <div class="status-message" id="giscusPending">🌸 论坛加载中...</div>
+                <script src="https://giscus.app/client.js"
+                    data-repo="U1s1-king/king.github.io"
+                    data-repo-id="R_kgDOSZJBKA"
+                    data-category="Announcements"
+                    data-category-id="DIC_kwDOSZJBKM4DDNN6"
+                    data-mapping="pathname"
+                    data-strict="0"
+                    data-reactions-enabled="1"
+                    data-emit-metadata="0"
+                    data-input-position="bottom"
+                    data-theme="https://zhaokening.ccwu.cc/css/giscus-theme.css"
+                    data-lang="zh-CN"
+                    crossorigin="anonymous"
+                    async>
+                </script>
+                <script>
+                (function () {
+                    const wrapper = document.querySelector('.giscus-wrapper');
+                    const pending = document.getElementById('giscusPending');
+                    if (!wrapper || !pending) return;
+                    const mo = new MutationObserver(() => {
+                        if (wrapper.querySelector('iframe.iframe-1, iframe[src*="giscus"]')) {
+                            pending.style.display = 'none';
+                            mo.disconnect();
+                        }
+                    });
+                    mo.observe(wrapper, { childList: true, subtree: true });
+                })();
+                </script>
+            </div>
+        </div>
+    <footer class="blog-footer">
+        <p><i class="fas fa-cherry-blossom sakura-icon" id="sakuraAdminTrigger" title="连点 5 次有惊喜喵"></i> 留言板 <i class="fas fa-wind"></i></p>
+        <p> 2026 Tomo Ebizuka | 留言板</p>
+        <p class="st-4d13264c">🌸 所有留言都会安全地存到云端喵 🌸</p>
+        <div class="social-links">
+            <a href="https://space.bilibili.com/1113834956?spm_id_from=333.1007.0.0" target="_blank" rel="noopener noreferrer"><i class="fab fa-bilibili"></i></a>
+            <a href="https://www.youtube.com/@kaneKing-l7l" target="_blank" rel="noopener noreferrer"><i class="fab fa-youtube"></i></a>
+            <a href="https://x.com/arry_kane" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+            <a href="https://www.instagram.com/kane_kingasiatic/" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+            <a href="https://github.com/U1s1-king" aria-label="GitHub"><i class="fab fa-github"></i></a>
+            <a href="https://mail.google.com/mail/?view=cm&fs=1&to=kaneking114@gmail.com" aria-label="Email"><i class="fas fa-envelope"></i></a>
+        </div>
+    </footer>
+    <nav class="bot-tab" aria-label="移动端导航">
+        <a href="index.html"><i class="fas fa-cat"></i><span>首页</span></a>
+        <a href="Journal.html"><i class="fas fa-book-open"></i><span>日记</span></a>
+        <a href="Archives.html"><i class="fas fa-images"></i><span>归档</span></a>
+        <a href="Guestbook.html"><i class="fas fa-comments"></i><span>留言</span></a>
+        <a href="music.html"><i class="fas fa-music"></i><span>音乐</span></a>
+        <a href="Tools.html"><i class="fas fa-toolbox"></i><span>工具</span></a>
+    </nav>
+</main>
+
+<!-- ========================= 留言板脚本 ========================= -->
+
+    <script src="js/vendor/canvas-confetti.browser.min.js?v=20260902"></script>
+<script>
+/* Turnstile 回调预注册：放在 api.js 之前，避免 async 加载竞态导致组件不渲染 */
+window.onloadTurnstileCallback = function () {
+  var n = 0;
+  (function loop() {
+    var el = document.getElementById('turnstile-widget');
+    if (el && el.childElementCount > 0) return; /* 已渲染 */
+    if (window.turnstile && el) {
+      window.turnstile.render(el, {
+        sitekey: '0x4AAAAAAElKq8iUGSgVV9mS',
+        callback: function (token) { window.__turnstileToken = token; },
+        'error-callback': function () { window.__turnstileToken = null; },
+        'expired-callback': function () { window.__turnstileToken = null; }
+      });
+      return;
+    }
+    if (++n < 50) setTimeout(loop, 200);
+  })();
+};
+</script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback" async defer></script>
+<script src="js/Guestbook.js?v=20260902"></script>
+    <script src="js/common.js?v=20260902"></script>
+    <script src="js/sidebar.js?v=20260902"></script>
+    <script src="js/particles-config.js"></script>
+    <script src="https://sakura-live2d.pages.dev/live2d/waifu.js?v=20260904" defer></script>
+</body>
+</html>

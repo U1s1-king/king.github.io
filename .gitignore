@@ -1,0 +1,22 @@
+# === IDE ===
+.idea/
+*.iml
+.vscode/
+
+# === OS ===
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# === 日志/临时 ===
+*.log
+npm-debug.log*
+*.tmp
+~$*
+
+# === 构建产物（如未来引入构建流程）===
+node_modules/
+dist/
+
+# === 音乐已迁移 Cloudflare Pages (sakura-music.pages.dev), 本地不再入库 ===
+music/
