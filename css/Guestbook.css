@@ -7,3 +7,6 @@
 .forum-badge{background:#fff0f3;color:#c2557a;border:1px solid #ffd2df;border-radius:40px;padding:0.15rem 0.65rem;font-size:0.75rem;font-weight:500}
 .giscus-wrapper{background:rgba(255,252,250,0.92);border:1px solid #ffd2df;border-radius:16px;padding:1rem 1.25rem 0.6rem;box-shadow:0 6px 24px rgba(230,114,143,0.12);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 #giscusPending{color:#b88a98;font-size:0.85rem;text-align:center;padding:1rem 0}
+
+/* ===== 留言头像尺寸修复：约束 SVG 头像大小 ===== */
+.message-avatar{width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0;display:inline-block;vertical-align:middle}
