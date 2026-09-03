@@ -1,6 +1,6 @@
 {
   "relation": {
-    "follower": 264,
+    "follower": 265,
     "following": 72
   },
   "card": {
@@ -8,12 +8,12 @@
     "face": "https://i2.hdslb.com/bfs/face/f95d5fe8e3fc6e6d6b62f9e9ca9da8344aa22323.jpg",
     "level": 5,
     "sign": "https://zhaokening.ccwu.cc/这个是主播的个人博客",
-    "fans": 264,
+    "fans": 265,
     "attention": 72
   },
   "online": {
-    "total": 856257
+    "total": 98162
   },
   "videos": [],
-  "updated_at": "2026-09-03T15:36+00:00"
+  "updated_at": "2026-09-03T20:22+00:00"
 }
