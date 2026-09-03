@@ -6980,8 +6980,39 @@ function handleFiles(files) {
 Array.prototype.forEach.call(files, function (file) {
 var item = document.createElement('div');
 item.className = 'ul-item';
-item.innerHTML = '<div class="ul-info"><div class="ul-name">' + esc3(file.name) + '</div><div class="ul-status">解密中…</div></div>';
 list.appendChild(item);
+var isKgm = /\.kgm[a]?$/i.test(file.name);
+function bindItem(url, displayName, base, blobOrFile, isKgm) {
+item.querySelector('[data-url]').addEventListener('click', function () {
+if (typeof audio !== 'undefined' && audio) {
+audio.src = this.dataset.url;
+audio.play().catch(function () {});
+if (typeof isPlaying !== 'undefined') isPlaying = true;
+if (typeof playIcon !== 'undefined') playIcon.className = 'fas fa-pause';
+if (typeof trackNameSpan !== 'undefined') trackNameSpan.textContent = displayName;
+}
+});
+item.querySelector('[data-add]').addEventListener('click', function () {
+try {
+if (typeof addUploadedFile === 'function') {
+addUploadedFile(blobOrFile, base, isKgm ? '解锁音乐' : '上传音乐').then(function () {
+if (typeof playlist !== 'undefined' && typeof updateList === 'function') {
+playlist.push({ name: base, artist: isKgm ? '解锁音乐' : '上传音乐', path: URL.createObjectURL(blobOrFile), uploaded: true });
+updateList();
+}
+if (typeof showMsg === 'function') showMsg('已加入歌单喵～');
+});
+} else if (typeof showMsg === 'function') {
+showMsg('加入失败喵～');
+}
+} catch (e) {
+if (typeof showMsg === 'function') showMsg('加入失败喵～');
+}
+});
+}
+if (isKgm) {
+/* ===== KGM 加密文件：解密后播放 ===== */
+item.innerHTML = '<div class="ul-info"><div class="ul-name">' + esc3(file.name) + '</div><div class="ul-status">解密中…</div></div>';
 var reader = new FileReader();
 reader.onload = function (e) {
 UnlockCore.decryptFile(e.target.result, file.name).then(function (res) {
@@ -6996,33 +7027,7 @@ item.innerHTML = '<div class="ul-info"><div class="ul-name"> ' + esc3(outName) +
 '<button class="ul-btn" data-add="1" data-name="' + esc3(base) + '" title="加入歌单"><i class="fas fa-heart"></i></button>' +
 '<a class="ul-btn" href="' + url + '" download="' + esc3(outName) + '" title="下载"><i class="fas fa-download"></i></a>' +
 '</div>';
-item.querySelector('[data-url]').addEventListener('click', function () {
-if (typeof audio !== 'undefined' && audio) {
-audio.src = this.dataset.url;
-audio.play().catch(function () {});
-if (typeof isPlaying !== 'undefined') isPlaying = true;
-if (typeof playIcon !== 'undefined') playIcon.className = 'fas fa-pause';
-if (typeof trackNameSpan !== 'undefined') trackNameSpan.textContent = outName;
-}
-});
-item.querySelector('[data-add]').addEventListener('click', function () {
-try {
-var f = new File([res.data], outName, { type: 'audio/' + res.ext });
-if (typeof addUploadedFile === 'function') {
-addUploadedFile(f, base, '解锁音乐').then(function () {
-if (typeof playlist !== 'undefined' && typeof updateList === 'function') {
-playlist.push({ name: base, artist: '解锁音乐', path: URL.createObjectURL(f), uploaded: true });
-updateList();
-}
-if (typeof showMsg === 'function') showMsg('已加入歌单喵～');
-});
-} else if (typeof showMsg === 'function') {
-showMsg('加入失败喵～');
-}
-} catch (e) {
-if (typeof showMsg === 'function') showMsg('加入失败喵～');
-}
-});
+bindItem(url, outName, base, new File([res.data], outName, { type: 'audio/' + res.ext }), true);
 }).catch(function (err) {
 item.className = 'ul-item err';
 item.innerHTML = '<div class="ul-info"><div class="ul-name"> ' + esc3(file.name) + '</div><div class="ul-status">' + esc3(err.message || '解密失败') + '</div></div>';
@@ -7033,6 +7038,19 @@ item.className = 'ul-item err';
 item.querySelector('.ul-status').textContent = '读取失败';
 };
 reader.readAsArrayBuffer(file);
+} else {
+/* ===== 普通音频文件（mp3/flac/wav/ogg/m4a…）直接播放 ===== */
+var base = file.name.replace(/\.[^.]+$/, '');
+var url = URL.createObjectURL(file);
+item.className = 'ul-item done';
+item.innerHTML = '<div class="ul-info"><div class="ul-name"> ' + esc3(file.name) + '</div><div class="ul-status">' + (file.size / 1024 / 1024).toFixed(1) + ' MB</div></div>' +
+'<div class="ul-actions">' +
+'<button class="ul-btn" data-url="' + url + '" title="播放"><i class="fas fa-play"></i></button>' +
+'<button class="ul-btn" data-add="1" data-name="' + esc3(base) + '" title="加入歌单"><i class="fas fa-heart"></i></button>' +
+'<a class="ul-btn" href="' + url + '" download="' + esc3(file.name) + '" title="下载"><i class="fas fa-download"></i></a>' +
+'</div>';
+bindItem(url, file.name, base, file, false);
+}
 });
 }
 if (btn) btn.addEventListener('click', function () { input.click(); });
