@@ -348,7 +348,6 @@ MAINTAINABLE    ──→  留给未来的自己继续折腾
 PERSONAL        ──→  最重要的是：它属于自己
 ```
 
-### 「代码可以很理性，网站可以有一点浪漫。」
 
 # 🌸 THIS IS KING'S WORLD 🌸
 
