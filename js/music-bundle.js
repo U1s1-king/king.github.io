@@ -329,15 +329,58 @@ function removeFromPlaylist(idx) {
 }
 var favOnlyBtn = document.getElementById('favOnlyBtn');
 if (favOnlyBtn) favOnlyBtn.addEventListener('click', function () {
-favOnly = !favOnly;
-favOnlyBtn.classList.toggle('active', favOnly);
-updateList();
-showMsg(favOnly ? '只看收藏 ♥' : '显示全部歌单');
+  setView(viewMode === 'fav' ? 'official' : 'fav');
 });
+/* ===== 多歌单视图：官方推荐 / 我的歌单 / 收藏 =====
+ * 播放引擎仍然只看一个扁平的 playlist（currentIndex 是它的下标），
+ * 视图只是过滤条件，这样切视图不会打断正在播放的歌。 */
+const PL_VIEW_KEY = "sakuraPlView";
+let viewMode = "official";
+try {
+  var _pv = localStorage.getItem(PL_VIEW_KEY);
+  if (_pv === "official" || _pv === "mine" || _pv === "fav") viewMode = _pv;
+} catch (e) {}
+function matchView(s) {
+  if (viewMode === "official") return !!s.official;
+  if (viewMode === "mine") return isUserSong(s);
+  if (viewMode === "fav") return isFav(s);
+  return true;
+}
+function setView(v) {
+  viewMode = v;
+  favOnly = (v === "fav");
+  try { localStorage.setItem(PL_VIEW_KEY, v); } catch (e) {}
+  var chips = document.querySelectorAll(".pl-view");
+  for (var i = 0; i < chips.length; i++) chips[i].classList.toggle("active", chips[i].dataset.view === v);
+  if (playlistContainer) delete playlistContainer.dataset.scrolled;
+  updateList();
+}
+function bindViews() {
+  var wrap = document.getElementById("plViews");
+  if (!wrap || wrap.dataset.bound) return;
+  wrap.dataset.bound = "1";
+  wrap.addEventListener("click", function (e) {
+    var btn = e.target && e.target.closest ? e.target.closest(".pl-view") : null;
+    if (btn && btn.dataset.view) setView(btn.dataset.view);
+  });
+}
+function updateViewCounts() {
+  var o = 0, m = 0, f = 0;
+  for (var i = 0; i < playlist.length; i++) {
+    if (playlist[i].official) o++;
+    if (isUserSong(playlist[i])) m++;
+    if (isFav(playlist[i])) f++;
+  }
+  var e1 = document.getElementById("cntOfficial"); if (e1) e1.innerText = o;
+  var e2 = document.getElementById("cntMine"); if (e2) e2.innerText = m;
+  var e3 = document.getElementById("cntFav"); if (e3) e3.innerText = f;
+}
 function updateList() {
+  bindViews();
+  updateViewCounts();
   var pairs = [];
   for (var i = 0; i < playlist.length; i++) {
-    if (favOnly && !isFav(playlist[i])) continue;
+    if (!matchView(playlist[i])) continue;
     pairs.push({ s: playlist[i], idx: i });
   }
   var html = "";
@@ -354,13 +397,15 @@ function updateList() {
       '</div>';
   }
   if (pairs.length === 0) {
-    playlistContainer.innerHTML = favOnly
-      ? '<div style="text-align:center;color:#b98297;padding:20px;">还没有收藏的歌曲喵～点歌单里的 ♥ 试试</div>'
-      : '<div style="text-align:center;color:#b98297;padding:20px;">🌸 暂无歌曲，点击右上角上传喵~</div>';
+    var emptyTip = viewMode === "fav"
+      ? "还没有收藏的歌曲喵～点右侧 ♥ 试试"
+      : (viewMode === "mine" ? "「我的歌单」还是空的，点右上角 + 上传，或去「在线搜歌」加歌"
+        : "官方推荐曲库加载中…");
+    playlistContainer.innerHTML = '<div style="text-align:center;color:#b98297;padding:20px;">' + emptyTip + "</div>";
   } else {
     playlistContainer.innerHTML = html;
   }
-  songCountSpan.innerText = playlist.length + " 首";
+  songCountSpan.innerText = pairs.length + " / " + playlist.length + " 首";
   if (!playlistContainer.dataset.bound) {
     playlistContainer.dataset.bound = "1";
     playlistContainer.addEventListener("click", function (e) {
@@ -467,6 +512,9 @@ else if (e.key === 'ArrowRight') { if (typeof next === 'function') next(); }
 else if (e.key === 'ArrowLeft') { if (typeof prev === 'function') prev(); }
 else if (e.key === 'ArrowUp') { adjustVolume(0.05); }
 else if (e.key === 'ArrowDown') { adjustVolume(-0.05); }
+else if (e.key === 'm' || e.key === 'M') { audio.muted = !audio.muted; showMsg(audio.muted ? '已静音 🔇' : '已恢复声音 🔊'); }
+else if (e.key === 'f' || e.key === 'F') { var _cur = playlist[currentIndex]; if (_cur && typeof toggleFav === 'function') toggleFav(_cur); }
+else if (e.key === 'Home') { audio.currentTime = 0; }
 });
 function playPause() {
 if(playlist.length === 0){ showMsg('请先添加一些歌曲，点击右侧'); return; }
@@ -500,12 +548,20 @@ navigator.mediaSession.metadata = new MediaMetadata({
 title: song.name || '未知歌曲',
 artist: song.artist || '未知歌手',
 album: '音乐',
-artwork: [{ src: new URL(DEFAULT_COVER, location.href).href, sizes: '512x512', type: 'image/png' }]
+artwork: (function () {
+  var list = [];
+  if (song.cover) list.push({ src: song.cover, sizes: '512x512', type: 'image/jpeg' });
+  list.push({ src: new URL(DEFAULT_COVER, location.href).href, sizes: '512x512', type: 'image/png' });
+  return list;
+})()
 });
 navigator.mediaSession.setActionHandler('play', function () { if (typeof playPause === 'function') playPause(); });
 navigator.mediaSession.setActionHandler('pause', function () { if (typeof playPause === 'function') playPause(); });
 navigator.mediaSession.setActionHandler('previoustrack', function () { if (typeof prev === 'function') prev(); });
 navigator.mediaSession.setActionHandler('nexttrack', function () { if (typeof next === 'function') next(); });
+navigator.mediaSession.setActionHandler('seekbackward', function () { audio.currentTime = Math.max(0, audio.currentTime - 10); });
+navigator.mediaSession.setActionHandler('seekforward', function () { audio.currentTime = Math.min(audio.duration || 0, audio.currentTime + 10); });
+navigator.mediaSession.setActionHandler('seekto', function (d) { if (d && typeof d.seekTime === 'number') audio.currentTime = d.seekTime; });
 } catch (err) {}
 }
 function setMediaPlaybackState(state) {
@@ -600,7 +656,32 @@ playBtn.addEventListener('click', playPause);
 prevBtn.addEventListener('click', prev);
 nextBtn.addEventListener('click', next);
 volumeRange.addEventListener('input', (e) => { audio.volume = e.target.value; try { localStorage.setItem('sakuraVol', String(e.target.value)); } catch (err) {} });
-progressBg.addEventListener('click', (e) => { if(audio.duration && !isNaN(audio.duration)){ let rect = progressBg.getBoundingClientRect(); let p = (e.clientX - rect.left) / rect.width; audio.currentTime = p * audio.duration; } });
+(function () {
+  var dragging = false;
+  function seekTo(clientX) {
+    if (!audio.duration || isNaN(audio.duration)) return;
+    var rect = progressBg.getBoundingClientRect();
+    if (!rect.width) return;
+    var p = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    audio.currentTime = p * audio.duration;
+  }
+  progressBg.addEventListener('pointerdown', function (e) {
+    dragging = true;
+    try { progressBg.setPointerCapture(e.pointerId); } catch (err) {}
+    progressBg.classList.add('seeking');
+    seekTo(e.clientX);
+    e.preventDefault();
+  });
+  progressBg.addEventListener('pointermove', function (e) { if (dragging) seekTo(e.clientX); });
+  function endDrag(e) {
+    if (!dragging) return;
+    dragging = false;
+    progressBg.classList.remove('seeking');
+    try { if (e && e.pointerId != null) progressBg.releasePointerCapture(e.pointerId); } catch (err) {}
+  }
+  progressBg.addEventListener('pointerup', endDrag);
+  progressBg.addEventListener('pointercancel', endDrag);
+})();
 audio.addEventListener('timeupdate', updateProgress);
 var audioErrLastSrc = '';
 audio.addEventListener('error', function () {
@@ -822,18 +903,38 @@ tab.addEventListener('click', function () {
 Array.prototype.forEach.call(document.querySelectorAll('.page-tab'), function (t) { t.classList.remove('active'); });
 this.classList.add('active');
 var target = this.dataset.tab;
+function initPlViews() {
+  var subs = document.querySelectorAll('.ns-subtab');
+  Array.prototype.forEach.call(subs, function (btn) {
+    btn.addEventListener('click', function () {
+      var v = this.dataset.nsview;
+      Array.prototype.forEach.call(subs, function (x) { x.classList.toggle('active', x === btn); });
+      var s1 = document.getElementById('ns-view-search');
+      var s2 = document.getElementById('ns-view-cards');
+      if (s1) s1.style.display = v === 'search' ? 'block' : 'none';
+      if (s2) s2.style.display = v === 'cards' ? 'block' : 'none';
+      if (v === 'cards' && !window._worksInit) { window._worksInit = true; initWorks(); }
+      try { localStorage.setItem('sakuraNsView', v); } catch (e) {}
+    });
+  });
+  /* 恢复上次的子视图 */
+  try {
+    var last = localStorage.getItem('sakuraNsView');
+    if (last === 'cards') {
+      var s1 = document.getElementById('ns-view-search');
+      var s2 = document.getElementById('ns-view-cards');
+      if (s1) s1.style.display = 'none';
+      if (s2) s2.style.display = 'block';
+      Array.prototype.forEach.call(subs, function (x) { x.classList.toggle('active', x.dataset.nsview === 'cards'); });
+      if (!window._worksInit) { window._worksInit = true; initWorks(); }
+    }
+  } catch (e) {}
+}
 var player = document.getElementById('tab-player');
-var cards = document.getElementById('tab-cards');
 var netease = document.getElementById('tab-netease');
 if (player) player.style.display = target === 'player' ? 'block' : 'none';
-if (cards) {
-cards.style.display = target === 'cards' ? 'block' : 'none';
-if (target === 'cards' && !window._worksInit) {
-window._worksInit = true;
-initWorks();
-}
-}
 if (netease) netease.style.display = target === 'netease' ? 'block' : 'none';
+if (target === 'netease' && !window._plViewsInit) { window._plViewsInit = true; initPlViews(); }
 });
 });
 })();

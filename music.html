@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <script src="js/version.js?v=20260912"></script>
+    <script src="js/version.js?v=20260913"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <link rel="stylesheet" href="css/style.css?v=20260912">
-    <link rel="stylesheet" href="css/sidebar.css?v=20260912">
+    <link rel="stylesheet" href="css/style.css?v=20260913">
+    <link rel="stylesheet" href="css/sidebar.css?v=20260913">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#ffb6c1">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -20,9 +20,9 @@
     <title> 音乐 · 本喵的播放器</title>
     <link rel="canonical" href="https://zhaokening.ccwu.cc/music.html">
     
-    <link rel="stylesheet" href="css/all.min.css?v=20260912">
-    <link rel="stylesheet" href="css/music.css?v=20260912">
-    <link rel="stylesheet" href="css/mobile.css?v=20260912">
+    <link rel="stylesheet" href="css/all.min.css?v=20260913">
+    <link rel="stylesheet" href="css/music.css?v=20260913">
+    <link rel="stylesheet" href="css/mobile.css?v=20260913">
     <meta name="description" content="(O_o)??音乐盒：在线搜歌、本地音乐播放、多平台搜索与播放器自由调节。">
     <meta name="keywords" content="(O_o)??,音乐,音乐盒,在线搜歌,播放器,歌词">
     <meta name="author" content="king">
@@ -75,8 +75,7 @@
     <!-- 页面切换 -->
     <div class="page-tabs">
         <button class="page-tab active" data-tab="player">音乐盒</button>
-        <button class="page-tab" data-tab="cards">音乐卡片</button>
-        <button class="page-tab" data-tab="netease">第三方音乐</button>
+                <button class="page-tab" data-tab="netease">第三方音乐</button>
     </div>
 
     <div id="tab-player">
@@ -134,7 +133,12 @@
                             <i class="fas fa-plus-circle st-11ddc8e7"></i>
                         </div>
                     </div>
-                    <div class="playlist-scroll" id="playlistContainer"></div>
+                    <div class="pl-views" id="plViews">
+<button class="pl-view active" data-view="official"><i class="fas fa-star"></i> 官方推荐 <b id="cntOfficial">0</b></button>
+<button class="pl-view" data-view="mine"><i class="fas fa-list"></i> 我的歌单 <b id="cntMine">0</b></button>
+<button class="pl-view" data-view="fav"><i class="fas fa-heart"></i> 收藏 <b id="cntFav">0</b></button>
+</div>
+<div class="playlist-scroll" id="playlistContainer"></div>
                 </div>
                 <div class="cherry-tip">
                     <i class="fas fa-music"></i> 想听新歌？点击 上传本地音频喵~ 封面默认喵
@@ -178,26 +182,13 @@
         <a href="Tools.html"><i class="fas fa-toolbox"></i><span>工具</span></a>
     </nav>
 
-    <div id="tab-cards" class="st-93b8ea5b">
-        <div class="po-searchbar">
-            <input id="pc-search" type="text" placeholder="在线搜歌，生成卡片…" autocomplete="off">
-            <button id="pc-btn" class="btn-cherry">搜歌</button>
-        </div>
-        <div id="pc-results"></div>
-        <!-- 统计栏 -->
-        <div class="stats-bar" id="statsBar">
-            <div class="stat-item"><i class="fas fa-music"></i> 作品总数 <span class="stat-number" id="totalWorks">0</span></div>
-            <div class="stat-item"><i class="fas fa-user-astronaut"></i> 艺术家 <span class="stat-number" id="totalArtists">0</span></div>
-            <div class="stat-item"><i class="fas fa-clock"></i> 总时长 <span class="stat-number" id="statsTotalDuration">0:00</span></div>
-        </div>
-        <!-- 分类过滤 -->
-        <div class="filter-tabs" id="filterTabs">
-            <span class="filter-tab active" data-filter="all">🌸 全部</span>
-        </div>
-        <!-- 作品网格 -->
-        <div class="works-grid" id="worksGrid"></div>
-    </div><!-- /tab-cards -->
+    <!-- 音乐卡片已并入第三方音乐页签，见 #ns-view-cards -->
     <div id="tab-netease" class="st-93b8ea5b">
+<div class="ns-subtabs">
+<button class="ns-subtab active" data-nsview="search"><i class="fas fa-music"></i> 在线搜歌</button>
+<button class="ns-subtab" data-nsview="cards"><i class="fas fa-images"></i> 作品卡片</button>
+</div>
+<div id="ns-view-search">
         <div class="ns-searchbar">
             <select id="ns-platform" class="ns-platform">
                 <option value="all">全部平台</option>
@@ -223,7 +214,27 @@
                 </div>
                 <div class="unlock-results" id="unlock-results"></div>
             </div>
-    </div><!-- /tab-netease -->
+</div>
+<div id="ns-view-cards" style="display:none">
+        <div class="po-searchbar">
+            <input id="pc-search" type="text" placeholder="在线搜歌，生成卡片…" autocomplete="off">
+            <button id="pc-btn" class="btn-cherry">搜歌</button>
+        </div>
+        <div id="pc-results"></div>
+        <!-- 统计栏 -->
+        <div class="stats-bar" id="statsBar">
+            <div class="stat-item"><i class="fas fa-music"></i> 作品总数 <span class="stat-number" id="totalWorks">0</span></div>
+            <div class="stat-item"><i class="fas fa-user-astronaut"></i> 艺术家 <span class="stat-number" id="totalArtists">0</span></div>
+            <div class="stat-item"><i class="fas fa-clock"></i> 总时长 <span class="stat-number" id="statsTotalDuration">0:00</span></div>
+        </div>
+        <!-- 分类过滤 -->
+        <div class="filter-tabs" id="filterTabs">
+            <span class="filter-tab active" data-filter="all">🌸 全部</span>
+        </div>
+        <!-- 作品网格 -->
+        <div class="works-grid" id="worksGrid"></div>
+</div>
+</div><!-- /tab-netease -->
 </main>
 
 <audio id="nativeAudio" class="st-224b51a7"></audio>
@@ -241,11 +252,12 @@
 </div>
 <div class="toast" id="toastMsg"></div>
 
-    <script src="js/common.js?v=20260912"></script>
-    <script src="js/music-api.js?v=20260912"></script>
-        <script src="js/music-bundle.js?v=20260912"></script>
-    <script src="js/sidebar.js?v=20260912"></script>
+    <script src="js/common.js?v=20260913"></script>
+    <script src="js/music-api.js?v=20260913"></script>
+        <script src="js/music-bundle.js?v=20260913"></script>
+    <script src="js/sidebar.js?v=20260913"></script>
     <script src="js/particles-config.js"></script>
     <script src="https://sakura-live2d.pages.dev/live2d/waifu.js?v=20260904" defer></script>
+    <script src="js/live2d-icon-fix.js?v=20260913" defer></script>
 </body>
 </html>
