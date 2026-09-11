@@ -220,13 +220,13 @@
   background: linear-gradient(160deg, rgba(255, 249, 247, 0.4), rgba(255, 238, 244, 0.5));
 }
 /* 每页独立图片 */
-.bg-index   { background-image: url('../img/anon-bg.png'); }
-.bg-journal { background-image: url('../img/anon-journal.png'); }
-.bg-archive { background-image: url('../img/anon-archive.png'); }
-.bg-guest   { background-image: url('../img/anon-guest.png'); }
-.bg-music   { background-image: url('../img/anon-music.png'); }
-.bg-tools   { background-image: url('../img/anon-tools.png'); }
-.bg-404     { background-image: url('../img/anon-404.png'); }
+.bg-index   { background-image: url('../img/anon-bg.webp'); }
+.bg-journal { background-image: url('../img/anon-journal.webp'); }
+.bg-archive { background-image: url('../img/anon-archive.webp'); }
+.bg-guest   { background-image: url('../img/anon-guest.webp'); }
+.bg-music   { background-image: url('../img/anon-music.webp'); }
+.bg-tools   { background-image: url('../img/anon-tools.webp'); }
+.bg-404     { background-image: url('../img/anon-404.webp'); }
 
 /* ---------- 心情打卡 GIF 按钮 ---------- */
 .mood-btn {

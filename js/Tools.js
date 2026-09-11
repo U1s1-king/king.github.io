@@ -89,7 +89,7 @@ document.getElementById('converterOutput').innerText = new TextDecoder().decode(
 },
 async handleImageUpload(file) {
 if (!file || !file.type.startsWith('image/')) return;
-document.getElementById('imageFileInfo').innerHTML = `<i class="fas fa-camera"></i> ${file.name} (${(file.size/1024).toFixed(1)} KB)`;
+document.getElementById('imageFileInfo').innerHTML = '<i class="fas fa-camera"></i> ' + escapeHtml(file.name) + ' (' + (file.size/1024).toFixed(1) + ' KB)';
 document.getElementById('imageFileInfo').style.display = 'block';
 const preview = document.getElementById('imagePreview');
 preview.style.display = 'block';
@@ -175,8 +175,22 @@ countdownInterval = setInterval(updateCountdown, 1000);
 };
 document.getElementById('stopCountdownBtn').onclick = () => { if(countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; } };
 document.getElementById('podLength').oninput = () => { document.getElementById('podLengthVal').innerText = document.getElementById('podLength').value; };
+/* 密码生成共用实现：只用 crypto.getRandomValues，
+ * 并用拒绝采样消除取模偏差（原实现 arr[i] % chars.length 存在轻微偏差） */
+function randomPassword(charset, len) {
+const out = [];
+const max = Math.floor(4294967296 / charset.length) * charset.length;
+while (out.length < len) {
+const buf = new Uint32Array(Math.max(8, len));
+crypto.getRandomValues(buf);
+for (let i = 0; i < buf.length && out.length < len; i++) {
+if (buf[i] < max) out.push(charset[buf[i] % charset.length]);
+}
+}
+return out.join('');
+}
 document.getElementById('generatePwdBtn').onclick = () => {
-const len = parseInt(document.getElementById('podLength').value);
+const len = Math.max(4, Math.min(64, parseInt(document.getElementById('podLength').value, 10) || 16));
 const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
 const lower = 'abcdefghijkmnpqrstuvwxyz';
 const numbers = '23456789';
@@ -187,12 +201,7 @@ if (document.getElementById('podLowercase').checked) chars += lower;
 if (document.getElementById('podNumbers').checked) chars += numbers;
 if (document.getElementById('podSymbols').checked) chars += symbols;
 if (chars === '') { showToast('至少选择一种字符类型'); return; }
-let pwd = '';
-/* 加密安全的随机数（crypto.getRandomValues），避免弱随机的密码生成 */
-const randArr = new Uint32Array(len);
-crypto.getRandomValues(randArr);
-for (let i = 0; i < len; i++) pwd += chars[Math.floor((randArr[i] / 4294967296) * chars.length)];
-document.getElementById('podOutput').innerText = pwd;
+document.getElementById('podOutput').innerText = randomPassword(chars, len);
 };
 document.getElementById('copyPodBtn').onclick = () => copyText(document.getElementById('podOutput').innerText);
 document.getElementById('drawBtn').onclick = () => {
@@ -200,7 +209,7 @@ const text = document.getElementById('lotteryItems').value;
 const items = text.split(/\n/).filter(s => s.trim().length > 0);
 if (items.length === 0) { showToast('请填写抽签选项'); return; }
 const result = items[Math.floor(Math.random() * items.length)];
-document.getElementById('lotteryOutput').innerHTML = ` ${result} `;
+document.getElementById('lotteryOutput').innerHTML = ' ' + escapeHtml(result) + ' ';
 };
 document.getElementById('clearLotteryBtn').onclick = () => { document.getElementById('lotteryItems').value = ''; document.getElementById('lotteryOutput').innerHTML = '——'; };
 function updateColorInfo(hex) {
@@ -335,11 +344,7 @@ out.value = 'HEX: ' + hex + String.fromCharCode(10) + 'RGB: rgb(' + r + ',' + g 
 document.getElementById('passGenBtn').onclick = () => {
 const len = Math.min(64, Math.max(4, parseInt(document.getElementById('passLen').value) || 16));
 const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%^&*';
-const arr = new Uint32Array(len);
-crypto.getRandomValues(arr);
-let p = '';
-for (let i = 0; i < len; i++) p += chars[arr[i] % chars.length];
-document.getElementById('passOut').value = p;
+document.getElementById('passOut').value = randomPassword(chars, len);
 };
 document.getElementById('regexTest').onclick = () => {
 try {
@@ -572,20 +577,23 @@ out.value = '"' + v + '" = ASCII ' + v.charCodeAt(0);
 out.value = v.split('').map(c => c + '=' + c.charCodeAt(0)).join(' ');
 }
 };
-const aesKeyFromPass = async (pass) => {
+const PBKDF2_ITER = 210000;
+const aesKeyFromPass = async (pass, salt) => {
 if (!pass) throw new Error('请输入口令');
 const enc = new TextEncoder().encode(pass);
 const key = await crypto.subtle.importKey('raw', enc, 'PBKDF2', false, ['deriveKey']);
-return crypto.subtle.deriveKey({ name: 'PBKDF2', salt: enc, iterations: 10000, hash: 'SHA-256' }, key, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+return crypto.subtle.deriveKey({ name: 'PBKDF2', salt: salt, iterations: PBKDF2_ITER, hash: 'SHA-256' }, key, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
 };
 document.getElementById('aesEnc').onclick = async () => {
 try {
-const key = await aesKeyFromPass(document.getElementById('aesKey').value);
+const salt = crypto.getRandomValues(new Uint8Array(16));
 const iv = crypto.getRandomValues(new Uint8Array(12));
+const key = await aesKeyFromPass(document.getElementById('aesKey').value, salt);
 const data = new TextEncoder().encode(document.getElementById('aesIn').value);
 const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, data);
-const all = new Uint8Array(iv.length + ct.byteLength);
-all.set(iv); all.set(new Uint8Array(ct), iv.length);
+/* 输出格式：base64( salt(16) + iv(12) + 密文 ) */
+const all = new Uint8Array(salt.length + iv.length + ct.byteLength);
+all.set(salt, 0); all.set(iv, salt.length); all.set(new Uint8Array(ct), salt.length + iv.length);
 let bin = '';
 for (let i = 0; i < all.length; i++) bin += String.fromCharCode(all[i]);
 document.getElementById('aesOut').value = btoa(bin);
@@ -593,11 +601,12 @@ document.getElementById('aesOut').value = btoa(bin);
 };
 document.getElementById('aesDec').onclick = async () => {
 try {
-const key = await aesKeyFromPass(document.getElementById('aesKey').value);
 const raw = atob(document.getElementById('aesIn').value.trim());
 const all = new Uint8Array(raw.length);
 for (let i = 0; i < raw.length; i++) all[i] = raw.charCodeAt(i);
-const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: all.slice(0, 12) }, key, all.slice(12));
+if (all.length < 29) throw new Error('密文格式不正确（需要包含 salt 与 iv）');
+const key = await aesKeyFromPass(document.getElementById('aesKey').value, all.slice(0, 16));
+const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: all.slice(16, 28) }, key, all.slice(28));
 document.getElementById('aesOut').value = new TextDecoder().decode(pt);
 } catch (e) { document.getElementById('aesOut').value = ' ' + (e.message || '解密失败（密码错误或数据损坏）'); }
 };
@@ -867,7 +876,7 @@ try {
 /* 一言 API（CORS 友好，替代已失效的 jinrishici 今日诗词）；c=d 取文学向句子 */
 const res = await fetch('https://v1.hitokoto.cn/?c=d&c=i');
 const d = await res.json();
-outEl.innerHTML = '「' + d.hitokoto + '」<br><span style="color:#b5768c; font-size:0.82rem;">—— ' + (d.from_who || '佚名') + ' · ' + (d.from || '一言') + '</span>';
+outEl.innerHTML = '「' + escapeHtml(d.hitokoto) + '」<br><span style="color:#b5768c; font-size:0.82rem;">—— ' + escapeHtml(d.from_who || '佚名') + ' · ' + escapeHtml(d.from || '一言') + '</span>';
 statusEl.textContent = '🌸 诗成！';
 } catch (e) {
 statusEl.textContent = '🌸 寻诗失败，稍后再试喵';

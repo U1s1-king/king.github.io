@@ -4,8 +4,11 @@
  * 如更换后端，请同步更新此处与 Worker 配置。 */
 const WORKER_URL = "https://orange-limit-3254.kaneking114.workers.dev/";
 let turnstileToken = null; // 启用 Turnstile 后由 widget 回调写入，提交时随请求发送
-/* Turnstile 人机验证：共享渲染函数，兼容 api.js 先/后加载两种顺序 */
-function renderTurnstileWidget() {
+
+/* Turnstile 渲染的唯一实现：
+ * HTML 里的 onloadTurnstileCallback 与本文件都调用它，
+ * 兼容 api.js 先加载 / 后加载两种顺序，避免两处重复实现。 */
+window.__renderTurnstile = function () {
   if (!window.turnstile) return false;
   const el = document.getElementById('turnstile-widget');
   if (!el) return false;
@@ -17,19 +20,18 @@ function renderTurnstileWidget() {
     'expired-callback': function () { window.__turnstileToken = null; turnstileToken = null; }
   });
   return true;
-}
+};
+
 if (typeof window.onloadTurnstileCallback !== 'function') {
   /* HTML 未预注册（例如被其他脚本覆盖）时，本文件兜底注册 */
   window.onloadTurnstileCallback = function () {
     (function loop(n) {
-      if (renderTurnstileWidget()) return;
+      if (window.__renderTurnstile()) return;
       if (n < 50) setTimeout(function () { loop(n + 1); }, 200);
     })(0);
   };
-} else if (window.turnstile) {
-  /* api.js 已先加载完成：立即补渲染 */
-  renderTurnstileWidget();
 }
+if (window.turnstile) window.__renderTurnstile();
 function resetTurnstile() {
   if (window.turnstile) {
     const el = document.getElementById('turnstile-widget');
@@ -153,10 +155,10 @@ const sorted = (window.__sortMode && window.__sortMode() === 'old') ? [...messag
 let html = '';
 for (let msg of sorted) {
 html += `
-<div class="message-card" data-id="${msg.id}">
+<div class="message-card" data-id="${escapeHtml(msg.id)}">
 <div class="message-header">
 <div class="message-name">
-<img class="message-avatar" src="img/aono头像.png" width="44" height="44" alt="avatar">
+<img class="message-avatar" src="img/aono-avatar.webp" width="44" height="44" alt="avatar">
 <span class="reply-name">${escapeHtml(msg.name)}</span>
 </div>
 <div class="message-date">
@@ -168,7 +170,7 @@ html += `
 ${escapeHtml(msg.content).replace(/\n/g, '<br>')}
 </div>
 <div class="message-footer">
-<button class="delete-btn" data-id="${msg.id}" title="删除留言" style="display:none">
+<button class="delete-btn" data-id="${escapeHtml(msg.id)}" title="删除留言" style="display:none">
 <i class="fas fa-trash-alt"></i> 删除
 </button>
 </div>

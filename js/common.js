@@ -190,8 +190,7 @@ setTimeout(function () { if (p.parentNode) p.parentNode.removeChild(p); }, 1150)
 (function () {
   var placeholders = document.querySelectorAll('.placeholder-marker, .cherry-placeholder');
   placeholders.forEach(function (elem) {
-    elem.setAttribute('data-placeholder-hint', '占位符区域，请替换为个人内容');
-    elem.style.transition = 'all 0.2s';
+      elem.style.transition = 'all 0.2s';
     elem.addEventListener('mouseenter', function () {
       elem.style.opacity = '0.95';
       elem.style.boxShadow = '0 0 0 2px #ffb7c980';
@@ -202,6 +201,27 @@ setTimeout(function () { if (p.parentNode) p.parentNode.removeChild(p); }, 1150)
     });
   });
 })();
+
+
+/* ===== 公共：带会话缓存的 JSON 请求 =====
+ * GitHub API 未鉴权时限制 60 次/小时/IP，同一标签页 15 分钟内复用结果，
+ * 既省配额，也避免被限流后页面显示失败。
+ */
+window.fetchCachedJSON = function (url, ttlMs) {
+  var ttl = ttlMs || 15 * 60 * 1000;
+  var key = 'json:' + url;
+  try {
+    var hit = JSON.parse(sessionStorage.getItem(key) || 'null');
+    if (hit && Date.now() - hit.t < ttl) return Promise.resolve(hit.d);
+  } catch (e) {}
+  return fetch(url).then(function (r) {
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  }).then(function (d) {
+    try { sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), d: d })); } catch (e) {}
+    return d;
+  });
+};
 
 /* ===== 公共：WMO 天气代码表（原 index.js / Journal.js / Tools.js 各一份，已收敛） ===== */
 window.__WMO_WEATHER = {

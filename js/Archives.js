@@ -40,8 +40,7 @@ copyToClipboard(text, '网盘链接已复制');
 (function () {
 const box = document.getElementById('github-repos');
 if (!box) return;
-fetch('https://api.github.com/users/U1s1-king/repos?sort=updated&per_page=8')
-.then(r => r.json())
+fetchCachedJSON('https://api.github.com/users/U1s1-king/repos?sort=updated&per_page=8')
 .then(repos => {
 if (!Array.isArray(repos)) throw new Error('bad');
 box.innerHTML = '';
@@ -128,8 +127,7 @@ el.textContent = days + ' 天';
 (function () {
 const box = document.getElementById('ghStarred');
 if (!box) return;
-fetch('https://api.github.com/users/U1s1-king/starred?sort=updated&per_page=6')
-.then(r => r.json())
+fetchCachedJSON('https://api.github.com/users/U1s1-king/starred?sort=updated&per_page=6')
 .then(repos => {
 if (!Array.isArray(repos)) throw new Error('bad');
 box.innerHTML = '';
@@ -152,8 +150,7 @@ PullRequestEvent: '提交了 PR',
 ReleaseEvent: '发布了版本',
 DeleteEvent: '删除了分支'
 };
-fetch('https://api.github.com/users/U1s1-king/events/public?per_page=8')
-.then(r => r.json())
+fetchCachedJSON('https://api.github.com/users/U1s1-king/events/public?per_page=8')
 .then(events => {
 if (!Array.isArray(events)) throw new Error('bad');
 box.innerHTML = '';

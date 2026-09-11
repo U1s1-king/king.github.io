@@ -71,8 +71,7 @@ img.src = url;
 (function () {
 const el = document.getElementById('gitHubInfo');
 if (!el) return;
-fetch('https://api.github.com/users/U1s1-king')
-.then(r => r.json())
+fetchCachedJSON('https://api.github.com/users/U1s1-king')
 .then(d => {
 if (d.public_repos === undefined) throw new Error('bad');
 el.textContent = d.public_repos + ' 个仓库 · ' + d.followers + ' 粉丝';
