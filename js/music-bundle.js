@@ -126,6 +126,7 @@ let spectrumRaf = null;
 let spectrumPeaks = [];
 let spectrumSilent = 0;
 let spectrumPhase = 0;
+let spectrumMax = 44;
 function prefersReducedMotion() {
   try { return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches); } catch (e) { return false; }
 }
@@ -141,6 +142,7 @@ function initSpectrum() {
     container.appendChild(bar);
     spectrumBars.push(bar);
   }
+  spectrumMax = Math.max(16, (container.clientHeight || 48) - 4);
   spectrumPeaks = [];
   for (var j = 0; j < barCount; j++) spectrumPeaks.push(0);
 }
@@ -170,8 +172,8 @@ function paintBars(levels) {
     var v = levels[i] || 0;
     if (v > spectrumPeaks[i]) spectrumPeaks[i] = v;
     else spectrumPeaks[i] = Math.max(0, spectrumPeaks[i] - 1.6);
-    spectrumBars[i].style.height = Math.max(4, Math.min(62, v)) + "px";
-    spectrumBars[i].style.setProperty("--peak", Math.max(4, Math.min(62, spectrumPeaks[i])) + "px");
+    spectrumBars[i].style.height = Math.max(3, Math.min(spectrumMax, v)) + "px";
+    spectrumBars[i].style.setProperty("--peak", Math.max(3, Math.min(spectrumMax, spectrumPeaks[i])) + "px");
   }
 }
 function renderRealSpectrum() {
@@ -188,7 +190,7 @@ function renderRealSpectrum() {
     var to = Math.max(from + 1, Math.floor(Math.pow((b + 1) / n, 1.35) * usable));
     var peak = 0;
     for (var k = from; k < to && k < usable; k++) if (freqData[k] > peak) peak = freqData[k];
-    levels.push(4 + (peak / 255) * 58);
+    levels.push(3 + (peak / 255) * (spectrumMax - 4));
   }
   paintBars(levels);
   return true;
@@ -198,7 +200,7 @@ function renderFakeSpectrum() {
   spectrumPhase += 1;
   var levels = [];
   for (var i = 0; i < spectrumBars.length; i++) {
-    levels.push(6 + Math.random() * 40 * vol + Math.sin(spectrumPhase * 0.09 + i * 0.32) * 10);
+    levels.push(Math.max(3, Math.min(spectrumMax, 6 + Math.random() * (spectrumMax - 12) * vol + Math.sin(spectrumPhase * 0.09 + i * 0.32) * 8)));
   }
   paintBars(levels);
 }

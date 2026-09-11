@@ -27,13 +27,13 @@
     var s =
       '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">' +
       '<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">' +
-      '<stop offset="0" stop-color="#ffd9e6"/><stop offset="1" stop-color="#e06a8f"/>' +
+      '<stop offset="0" stop-color="#ffb6c1"/><stop offset="1" stop-color="#e06a8f"/>' +
       '</linearGradient></defs>' +
       '<circle cx="32" cy="32" r="32" fill="url(#g)"/>' +
       '<circle cx="32" cy="24" r="9" fill="#fff" fill-opacity=".95"/>' +
       '<path d="M14 59c2.6-10.5 9.4-16 18-16s15.4 5.5 18 16z" fill="#fff" fill-opacity=".95"/>' +
       '<text x="32" y="52" text-anchor="middle" font-family="system-ui,sans-serif" ' +
-      'font-size="12" font-weight="700" fill="#c2497a">' + num + '</text>' +
+      'font-size="12" font-weight="700" fill="#a14563">' + num + '</text>' +
       '</svg>';
     return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(s);
   }
