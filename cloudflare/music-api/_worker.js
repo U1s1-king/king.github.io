@@ -169,6 +169,33 @@ async function readJson(res) {
   }
 }
 
+/**
+ * 上游结果校验。
+ * 网易云会对可疑请求返回 code 50000005 之类的风控响应（没有 result），
+ * 早期版本会把这种「假空结果」写进缓存，导致某首歌搜不到且 5 分钟内一直搜不到。
+ * 这里直接抛错 -> withCache 不写缓存 -> 客户端收到明确错误而不是假的空列表。
+ */
+function assertUpstream(body, label) {
+  if (!body) throw new Error('上游无响应：' + label)
+  if (body.code !== undefined && body.code !== 200) {
+    throw new Error('上游风控/异常（code ' + body.code + '）：' + label)
+  }
+  return body
+}
+
+/** 失败重试（风控是概率性的，重试一次往往就过了） */
+async function withRetry(fn, times) {
+  let lastErr = null
+  for (let i = 0; i < (times || 2); i++) {
+    try {
+      return await fn()
+    } catch (e) {
+      lastErr = e
+    }
+  }
+  throw lastErr
+}
+
 // ============================================================ 缓存
 
 const memCache = new Map()
@@ -288,8 +315,11 @@ const api = {
     const type = parseInt(q.get('type') || '1', 10) || 1
     const key = 'search:' + type + ':' + limit + ':' + offset + ':' + keywords
     const body = await withCache(key, CACHE_TTL.search, async function () {
-      const res = await weapiPost('/search/get', { s: keywords, type, limit, offset, csrf_token: '' })
-      return readJson(res)
+      /* 风控是概率性的，重试 3 次基本都能过；仍失败则抛错，绝不把假空结果写进缓存 */
+      return await withRetry(async function () {
+        const res = await weapiPost('/search/get', { s: keywords, type, limit, offset, csrf_token: '' })
+        return assertUpstream(await readJson(res), '搜索')
+      }, 3)
     })
     const result = (body && body.result) || {}
     let songs = (result.songs || []).map(normSong).filter(Boolean)
@@ -349,7 +379,7 @@ const api = {
         ids: JSON.stringify(ids.map(Number)),
         csrf_token: '',
       })
-      return readJson(res)
+      return assertUpstream(await readJson(res), "netease")
     })
     return ok((body && body.songs || []).map(normSong).filter(Boolean), origin)
   },
@@ -361,7 +391,7 @@ const api = {
     const key = 'lyric:' + id
     const body = await withCache(key, CACHE_TTL.lyric, async function () {
       const res = await weapiPost('/song/lyric', { id: Number(id), lv: -1, kv: -1, tv: -1, csrf_token: '' })
-      return readJson(res)
+      return assertUpstream(await readJson(res), "netease")
     })
     return ok(
       {
@@ -382,7 +412,7 @@ const api = {
     const key = 'playlist:' + id
     const body = await withCache(key, CACHE_TTL.playlist, async function () {
       const res = await weapiPost('/v6/playlist/detail', { id: Number(id), n: 1000, s: 8, csrf_token: '' })
-      return readJson(res)
+      return assertUpstream(await readJson(res), "netease")
     })
     if (!body || body.code !== 200 || !body.playlist) {
       return fail('歌单不存在或不可访问' + (body ? '（code ' + body.code + '）' : ''), 404, origin)
@@ -423,7 +453,7 @@ const api = {
   async toplist(q, origin) {
     const body = await withCache('toplist', CACHE_TTL.toplist, async function () {
       const res = await weapiPost('/toplist', { csrf_token: '' })
-      return readJson(res)
+      return assertUpstream(await readJson(res), "netease")
     })
     return ok(
       (body && body.list || []).map(function (t) {
@@ -439,7 +469,7 @@ const api = {
     const key = 'recPlaylist:' + limit
     const body = await withCache(key, CACHE_TTL.recommend, async function () {
       const res = await weapiPost('/personalized/playlist', { limit, total: true, n: 1000, csrf_token: '' })
-      return readJson(res)
+      return assertUpstream(await readJson(res), "netease")
     })
     return ok(
       (body && body.result || []).map(function (p) {
@@ -455,7 +485,7 @@ const api = {
     const key = 'recNewSong:' + limit
     const body = await withCache(key, CACHE_TTL.recommend, async function () {
       const res = await weapiPost('/personalized/newsong', { limit, areaId: 0, csrf_token: '' })
-      return readJson(res)
+      return assertUpstream(await readJson(res), "netease")
     })
     return ok((body && body.result || []).map(function (x) { return normSong(x.song || x) }).filter(Boolean), origin)
   },
@@ -464,7 +494,7 @@ const api = {
   async catalogue(q, origin) {
     const body = await withCache('catalogue', 86400, async function () {
       const res = await weapiPost('/playlist/catalogue', { csrf_token: '' })
-      return readJson(res)
+      return assertUpstream(await readJson(res), "netease")
     })
     let categories = (body && body.categories) || []
     if (categories && !Array.isArray(categories)) {
@@ -486,7 +516,7 @@ const api = {
     const key = 'artist:' + id
     const body = await withCache(key, CACHE_TTL.artist, async function () {
       const res = await weapiPost('/v1/artist/' + id, { csrf_token: '' })
-      return readJson(res)
+      return assertUpstream(await readJson(res), "netease")
     })
     const a = body && body.artist
     if (!a) return fail('歌手不存在', 404, origin)
@@ -513,7 +543,7 @@ const api = {
     const key = 'artistSongs:' + id + ':' + limit
     const body = await withCache(key, CACHE_TTL.artist, async function () {
       const res = await weapiPost('/artist/top/song', { id: Number(id), csrf_token: '' })
-      return readJson(res)
+      return assertUpstream(await readJson(res), "netease")
     })
     return ok((body && body.songs || []).slice(0, limit).map(normSong).filter(Boolean), origin)
   },
