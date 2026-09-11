@@ -53,7 +53,33 @@ tx.onerror = reject;
 });
 }
 let playlist = [];
-/* 官方推荐曲库外置到 data/playlist.json，方便单独维护，不再写死在 JS 里 */
+/* 把一份官方曲库（对象数组，或内置的紧凑数组）合并进 playlist。
+   同名 official 条目会被整体替换，用户自己加的歌不受影响。 */
+function applyOfficial(list) {
+  var songs = [], k, it, name, artist, file;
+  for (k = 0; k < list.length; k++) {
+    it = list[k];
+    if (!it) continue;
+    name   = it.name   !== undefined ? it.name   : it[0];
+    artist = it.artist !== undefined ? it.artist : it[1];
+    file   = it.file   !== undefined ? it.file   : it[2];
+    if (!name || !file) continue;
+    songs.push({ name: name, artist: artist || "", path: MUSIC_BASE + file, official: true });
+  }
+  if (!songs.length) return 0;
+  playlist = songs.concat(playlist.filter(function (x) { return !x.official; }));
+  officialLoaded = true;
+  if (typeof updateList === "function") updateList();
+  return songs.length;
+}
+
+/* 内置兜底曲库。曲库不再依赖 fetch 才能显示：
+   页面打开就同步列出全部官方推荐，网络请求只用来「更新」这份列表。
+   这样缓存、Service Worker、拦截插件、网络异常都不会让歌单变空。
+   曲库增删时更新 data/playlist.json 即可；这份副本即使过期也无妨，
+   因为线上文件加载成功后会整体覆盖它。 */
+var OFFICIAL_FALLBACK = [["Don't say \"lazy\"","放課後ティータイム","放課後ティータイム - Dont saylazy.mp3"],["ふわふわ時間 (轻飘飘时间)(映画「けいおん!」Mix)","放課後ティータイム","放課後ティータイム - ふわふわ時間 (轻飘飘时间)(映画「けいおん!」Mix).mp3"],["天使にふれたよ!","放課後ティータイム","放課後ティータイム - 天使にふれたよ!.mp3"],["あのバンド","結束バンド","結束バンド - あのバンド.mp3"],["ギターと孤独と蒼い惑星 (吉他与孤独与蓝色星球)","結束バンド","結束バンド - ギターと孤独と蒼い惑星 (吉他与孤独与蓝色星球).mp3"],["ひとりぼっち東京","結束バンド","結束バンド - ひとりぼっち東京.mp3"],["ひみつ基地 (秘密基地)","結束バンド","結束バンド - ひみつ基地 (秘密基地).mp3"],["忘れてやらない (绝不会忘记)","結束バンド","結束バンド - 忘れてやらない (绝不会忘记).mp3"],["星座になれたら","結束バンド","結束バンド - 星座になれたら.mp3"],["Lemon","米津玄師","米津玄師 - Lemon.mp3"],["LOSER","米津玄師","米津玄師 - LOSER.mp3"],["M八七","米津玄師","米津玄師 - M八七.mp3"],["Pale Blue","米津玄師","米津玄師 - Pale Blue.mp3"],["感電","米津玄師","米津玄師 - 感電.mp3"],["海の幽霊","米津玄師","米津玄師 - 海の幽霊.mp3"],["死神","米津玄師","米津玄師 - 死神.mp3"],["打上花火","米津玄師、Daoko","米津玄師、Daoko - 打上花火.mp3"],["Promise","Da-iCE","Da-iCE_-_Promise.mp3"],["KiLLKiSS","Ave Mujica","Ave Mujica - KiLLKiSS.mp3"],["白日","King Gnu","King Gnu - 白日.mp3"],["世末歌者","","世末歌者.mp3"],["Re_Re_","結束バンド","結束バンド - Re_Re_.mp3"],["Starlight","超特急","超特急_-_Starlight.mp3"],["恋ひ恋う縁 (以恋结缘)","KOTOKO","KOTOKO - 恋ひ恋う縁 (以恋结缘).mp3"],["Tori No Uta","Lia","Lia - Tori No Uta.mp3"],["ウルトラマンギンガの歌","voyager/千紗/マリア春菜/竹内浩明/根岸拓哉/宮武美桜/大野瑞生/雲母/草川拓弥","voyager_千紗_マリア春菜_竹内浩明_根岸拓哉_宮武美桜_大野瑞生_雲母_草川拓弥 - ウルトラマンギンガの歌.mp3"],["顔","Ave Mujica","Ave Mujica - 顔.mp3"],["キボウノカケラ","ボイジャー","ボイジャー - キボウノカケラ.mp3"],["反乌托邦","","反乌托邦.mp3"],["恋愛サーキュレーション","花澤香菜","花澤香菜 - 恋愛サーキュレーション.mp3"],["九重现实","洛天依/言和/乐正绫","洛天依、言和、乐正绫 - 九重现实.mp3"],["secret base ~君がくれたもの~","茅野愛衣/戸松遥/早見沙織","茅野愛衣_戸松遥_早見沙織 - secret base ~君がくれたもの~.mp3"],["One Last Kiss","宇多田ヒカル","宇多田ヒカル - One Last Kiss.mp3"],["僕が死のうと思ったのは","中岛美嘉","中岛美嘉_-_僕が死のうと思ったのは.mp3"],["AIscream","","AIscream.mp3"],["TWO_AS_ONE","Da-iCE","Da-iCE_-_TWO_AS_ONE.mp3"],["サヨナラサヨナラサヨナラ","トゲナシトゲアリ","トゲナシトゲアリ - サヨナラサヨナラサヨナラ (再见再见再见).mp3"],["ダレモ","トゲナシトゲアリ","トゲナシトゲアリ - ダレモ.mp3"],["闇に溶けてく","トゲナシトゲアリ","トゲナシトゲアリ - 闇に溶けてく.mp3"],["爆ぜて咲く","トゲナシトゲアリ","トゲナシトゲアリ - 爆ぜて咲く (爆裂绽放).mp3"],["蝶に結いた赤い糸","トゲナシトゲアリ","トゲナシトゲアリ - 蝶に結いた赤い糸.mp3"],["飛べない蝶は夢を見る","トゲナシトゲアリ","トゲナシトゲアリ - 飛べない蝶は夢を見る.mp3"],["極私的極彩色アンサー","トゲナシトゲアリ","トゲナシトゲアリ - 極私的極彩色アンサー.mp3"],["空の箱","トゲナシトゲアリ","トゲナシトゲアリ - 空の箱.mp3"],["空白とカタルシス","トゲナシトゲアリ","トゲナシトゲアリ - 空白とカタルシス.mp3"],["黎明を穿つ","トゲナシトゲアリ","トゲナシトゲアリ - 黎明を穿つ.mp3"],["理想的パラドクスとは","トゲナシトゲアリ","トゲナシトゲアリ - 理想的パラドクスとは.mp3"],["名もなき何もかも","トゲナシトゲアリ","トゲナシトゲアリ - 名もなき何もかも.mp3"],["気鬱、白濁す","トゲナシトゲアリ","トゲナシトゲアリ - 気鬱、白濁す (white drizzle in gloom).mp3"],["傷つき傷つけ痛くて辛い","トゲナシトゲアリ","トゲナシトゲアリ - 傷つき傷つけ痛くて辛い.mp3"],["視界の隅 朽ちる音","トゲナシトゲアリ","トゲナシトゲアリ - 視界の隅 朽ちる音.mp3"],["声なき魚","トゲナシトゲアリ","トゲナシトゲアリ - 声なき魚.mp3"],["誰にもなれない私だから","トゲナシトゲアリ","トゲナシトゲアリ - 誰にもなれない私だから.mp3"],["偽りの理","トゲナシトゲアリ","トゲナシトゲアリ - 偽りの理.mp3"],["心象的フラクタル","トゲナシトゲアリ","トゲナシトゲアリ - 心象的フラクタル.mp3"],["運命に賭けたい論理","トゲナシトゲアリ","トゲナシトゲアリ - 運命に賭けたい論理.mp3"],["運命の華","トゲナシトゲアリ","トゲナシトゲアリ - 運命の華.mp3"],["雑踏、僕らの街","トゲナシトゲアリ","トゲナシトゲアリ - 雑踏、僕らの街.mp3"],["碧いif","トゲナシトゲアリ","碧いif.mp3"],["吹き消した灯火","トゲナシトゲアリ","吹き消した灯火.mp3"],["無知のち私","トゲナシトゲアリ","無知のち私.mp3"],["臆病な白夜","トゲナシトゲアリ","臆病な白夜.mp3"],["最期の禱り","トゲナシトゲアリ","最期の禱り.mp3"],["猛独が襲う (Deathly Loneliness Attacks)","MyGO!!!!!","MyGO!!!!! - 猛独が襲う (Deathly Loneliness Attacks).mp3"],["迷星叫","MyGO!!!!!","MyGO!!!!! - 迷星叫.mp3"],["壱雫空","MyGO!!!!!","MyGO!!!!! - 壱雫空.mp3"],["影色舞","MyGO!!!!!","MyGO!!!!! - 影色舞.mp3"],["春日影 (MyGO!!!!! ver.)","MyGO!!!!!","MyGO!!!!! - 春日影 (MyGO!!!!! ver.).mp3"],["スパークル","RADWIMPS","RADWIMPS - スパークル.mp3"],["なんでもないや","RADWIMPS","RADWIMPS - なんでもないや.mp3"],["夢灯籠","RADWIMPS","RADWIMPS - 夢灯籠.mp3"],["前前前世","RADWIMPS","RADWIMPS - 前前前世.mp3"],["Watch me!","YOASOBI","YOASOBI - Watch me!.mp3"],["あの夢をなぞって","YOASOBI","YOASOBI - あの夢をなぞって.mp3"],["アンコール (安可)","YOASOBI","YOASOBI - アンコール (安可).mp3"],["ラブレター","YOASOBI","YOASOBI - ラブレター.mp3"],["大正浪漫","YOASOBI","YOASOBI - 大正浪漫.mp3"],["怪物","YOASOBI","YOASOBI - 怪物.mp3"],["群青","YOASOBI","YOASOBI - 群青.mp3"],["夜に駆ける","YOASOBI","YOASOBI - 夜に駆ける.mp3"],["ずっとずっとずっと","緑黄色社会","緑黄色社会 - ずっとずっとずっと.mp3"],["妄想感傷代償連盟","初音未来","DECO×27、初音ミク_-_妄想感傷代償連盟.mp3"],["可愛くてごめん","HoneyWorks、早見沙織","HoneyWorks、早見沙織 - 可愛くてごめん.mp3"],["Sinos De Natal","MGD、MXZHPHXNK","MGD、MXZHPHXNK - Sinos De Natal.mp3"],["NIGHT DANCER","imase","NIGHT DANCER - imase.mp3"],["テト - うそつきマカロン","重音","暴飲暴食P、重音テト - うそつきマカロン.mp3"],["鏡音リン、ピノキオピー_-_ねぇねぇねぇ。","初音未来","初音ミク、鏡音リン、ピノキオピー_-_ねぇねぇねぇ。.mp3"],["青春コンプレックス","結束バンド","結束バンド - 青春コンプレックス.mp3"],["優しい彗星","YOASOBI","YOASOBI - 優しい彗星.mp3"],["unravel","TK from 凛冽时雨","TK_from_凛冽时雨_-_unravel.mp3"],["真夜中のドア/Stay With Me (深夜门扉/留在我身边)","松原みき","真夜中のドアStay With Me (深夜门扉留在我身边).mp3"],["Barricades","澤野弘之","澤野弘之 - Barricades.mp3"],["Call of Silence","澤野弘之","澤野弘之 - Call of Silence.mp3"],["theDOGS","澤野弘之","澤野弘之 - theDOGS.mp3"],["Daydream_SQ","AxR","AxR_-_Daydream_SQ.mp3"],["desolate","ByErik ヵ","ByErik ヵ - desolate.mp3"],["Instruments of Retribution","Daniel Deluxe","Daniel_Deluxe_-_Instruments_of_Retribution.mp3"],["天气之子幻(钢琴版)","dylanf","dylanf_-_天气之子幻(钢琴版).mp3"],["HEAVENLY JUMPSTYLE(西蒙海耶小曲)","INFINITY ICE","INFINITY ICE - HEAVENLY JUMPSTYLE.mp3"],["Money So Big","Muppet DJ、SECA Records","Muppet DJ、SECA Records - Money So Big.mp3"],["Melodic Minor(感觉至上）","Park Choi","Park Choi - Melodic Minor.mp3"],["Heroes 2.0","RJ Pasin","RJ_Pasin_-_Heroes_2.0.mp3"],["「ねえ！○○ちゃんまだぁ〜？？？？」","さんうさぎ","さんうさぎ_-_「ねえ！○○ちゃんまだぁ〜？？？？」.mp3"],["3：30PM","しゃろう","しゃろう_-_3：30PM.mp3"],["おはなばたけ (花田)","近藤浩治","近藤浩治_-_おはなばたけ_(花田).mp3"],["怪物之歌","酸电池","酸电池_-_怪物之歌.mp3"],["愛♡スクリ～ム！","AIscream","AIscream_-_愛♡スクリ～ム！.mp3"],["Where Did Your Love Go?","Dawid Podsiadlo","Dawid_Podsiadlo_-_Where_Did_Your_Love_Go_.mp3"],["Cry For Me (feat. Ami)","Michita","Michita - Cry For Me (feat. Ami).mp3"],["あーあーあーあーあー","agehasprings","agehasprings - あーあーあーあーあー.mp3"],["渇く、憂う","トゲナシトゲアリ","渇く、憂う.mp3"],["生きて生きていく","トゲナシトゲアリ","生きて生きていく.mp3"],["おしんこ_SQ","田中ユウスケ","田中ユウスケ - おしんこ_SQ.mp3"],["ココロのウーロン茶_SQ","田中ユウスケ","田中ユウスケ - ココロのウーロン茶_SQ.mp3"],["袋小路","田中ユウスケ","田中ユウスケ - 袋小路.mp3"],["雑踏、僕らの街 (Wrong World)(彷徨う)_SQ","田中ユウスケ","田中ユウスケ - 雑踏、僕らの街 (Wrong World)(彷徨う)_SQ.mp3"],["SHAZAI（謝）","田中ユウスケ/agehasprings","田中ユウスケ_agehasprings - SHAZAI（謝）.mp3"],["ありがとう。ベニショーガ魂","田中ユウスケ/agehasprings","田中ユウスケ_agehasprings - ありがとう。ベニショーガ魂.mp3"],["たぶん気分（ねぎぬき）","田中ユウスケ/agehasprings","田中ユウスケ_agehasprings - たぶん気分（ねぎぬき）.mp3"],["むかしからの老舗〜持ち時間20分","田中ユウスケ/agehasprings","田中ユウスケ_agehasprings - むかしからの老舗〜持ち時間20分.mp3"],["フェスで人気でそうなバンドの曲","田中ユウスケ/agehasprings","田中ユウスケ_agehasprings - フェスで人気でそうなバンドの曲.mp3"],["十七歳三月","田中ユウスケ/agehasprings","田中ユウスケ_agehasprings - 十七歳三月.mp3"],["嘘とconfuse","田中ユウスケ/agehasprings","田中ユウスケ_agehasprings - 嘘とconfuse.mp3"],["孤孤孤孤独（腰痛）","田中ユウスケ/agehasprings","田中ユウスケ_agehasprings - 孤孤孤孤独（腰痛）.mp3"],["恍惚の定理","田中ユウスケ/agehasprings","田中ユウスケ_agehasprings - 恍惚の定理.mp3"],["誤解と高卒","田中ユウスケ/agehasprings","田中ユウスケ_agehasprings - 誤解と高卒.mp3"],["雨と疾走とマニフェスト","田中ユウスケ/agehasprings","田中ユウスケ_agehasprings - 雨と疾走とマニフェスト.mp3"],["BOW AND ARROW","米津玄師","米津玄師 - BOW AND ARROW.mp3"]];
+
 let officialLoaded = false;
 /* 曲库加载失败时在列表区给出可见提示与重试入口。
    以前这里只 console.warn，用户侧看到的就是一个空歌单，完全不知道发生了什么。 */
@@ -100,14 +126,11 @@ function loadOfficialPlaylist() {
         }
       }
       if (!songs.length) throw new Error("官方曲库为空");
-      playlist = songs.concat(playlist.filter(function (s) { return !s.official; }));
-      officialLoaded = true;
-      if (typeof updateList === "function") updateList();
-      return songs.length;
+      return applyOfficial(songs);
     })
     .catch(function (e) {
-      console.error("官方推荐曲库加载失败：", e);
-        showLibError(e);
+        console.warn("线上官方曲库加载失败，继续使用内置副本：", e);
+        if (!officialLoaded) showLibError(e);
       return 0;
     });
 }
@@ -809,6 +832,8 @@ showMsg('清空失败喵');
 });
 coverImg.src = DEFAULT_COVER;
 initSpectrum();
+/* 同步渲染内置曲库，不等任何网络请求 */
+applyOfficial(OFFICIAL_FALLBACK);
 updateList();
 loadOfficialPlaylist()
   .then(function () {
@@ -975,7 +1000,6 @@ var resultBox = document.getElementById('ns-results');
 var platformSel = document.getElementById('ns-platform');
 if (!searchBox || !resultBox) return;
 /* 音源统一交给 js/music-api.js（自建网易云网关 + Meting 多镜像 + iTunes） */
-var API = "https://api.qijieya.cn/meting/";
 var ALL_PLATFORMS = [
   ["netease", "网易云"],
   ["tencent", "QQ音乐"],
@@ -1004,7 +1028,7 @@ duration: s.duration || 0,
 lrc: s.lrc || s.lyric || ''
 };
 }
-function apiSearch(api, platform, kw, cb) {
+function apiSearch(platform, kw, cb) {
   /* 统一走 js/music-api.js：网易云走自建网关（带 id/封面/专辑），其余平台走 Meting 多镜像 */
   if (!window.MusicAPI) { cb(null, true); return; }
   MusicAPI.searchOne(platform, kw, { limit: 20 })
@@ -1019,9 +1043,14 @@ function apiSearch(api, platform, kw, cb) {
     })
     .catch(function () { cb(null, true); });
 }
-function trySearch(apis, i, platform, kw, done) {
+/* 音源完全由 js/music-api.js 决定（自建网易云网关 + Meting 多镜像 + iTunes）。
+   这里原来传的是 [API, API_BACKUP] 两个镜像地址；后来 API_BACKUP
+   （musicapi.qijieya.cn，已返回 521）被删除，两处调用却没跟着改，
+   于是点「搜索」直接抛 ReferenceError: API_BACKUP is not defined，
+   结果区永远停在「正在搜索喵…」。形参已无意义，一并去掉。 */
+function trySearch(platform, kw, done) {
   /* MusicAPI 内部已经做了多镜像轮询，这里只需要调一次 */
-  apiSearch(apis[0], platform, kw, function (songs, fail) {
+  apiSearch(platform, kw, function (songs, fail) {
     done(songs, !!fail);
   });
 }function resolveUrl(u, cb) {
@@ -1187,7 +1216,7 @@ var groups = [];
 var done = 0;
 var anyNetFail = false;
 ALL_PLATFORMS.forEach(function (pf) {
-trySearch([API, API_BACKUP], 0, pf[0], kw, function (songs, fail) {
+trySearch(pf[0], kw, function (songs, fail) {
 if (fail) anyNetFail = true;
 groups.push({ name: pf[1], songs: songs });
 done++;
@@ -1196,7 +1225,7 @@ if (done === ALL_PLATFORMS.length) renderGrouped(groups, anyNetFail);
 });
 } else {
 resultBox.innerHTML = '<div class="ns-loading">正在搜索喵…</div>';
-trySearch([API, API_BACKUP], 0, platform, kw, function (songs) {
+trySearch(platform, kw, function (songs) {
 if (songs) render(songs);
 else resultBox.innerHTML = '<div class="ns-empty">搜索失败喵～网络或接口问题，稍后再试</div>';
 });
@@ -7400,7 +7429,7 @@ downloadSong4(d.url, d.name, d.artist);
 var html = '';
 songs.forEach(function (s) {
 html += '<div class="po-item" data-i="' + esc4(JSON.stringify({ name: s.name, artist: s.artist, url: s.url, lrc: s.lrc })) + '">' +
-'<div class="po-cover">' + (s.pic ? '<img src="' + esc4(s.pic) + '" loading="lazy" onerror="this.remove()"><i class="fas fa-music"></i>' : '<i class="fas fa-music"></i>') + '</div>' +
+'<div class="po-cover">' + (s.pic ? '<img src="' + esc4(s.pic) + '" onerror="this.remove()"><i class="fas fa-music"></i>' : '<i class="fas fa-music"></i>') + '</div>' +
 '<div class="po-info"><div class="po-name">' + esc4(s.name) + '</div><div class="po-artist">' + esc4(s.artist) + '</div></div>' +
 '<div class="po-dur">' + fmt4(s.duration) + '</div>' +
 '<div class="po-actions">' +
