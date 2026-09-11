@@ -55,9 +55,35 @@ tx.onerror = reject;
 let playlist = [];
 /* 官方推荐曲库外置到 data/playlist.json，方便单独维护，不再写死在 JS 里 */
 let officialLoaded = false;
+/* 曲库加载失败时在列表区给出可见提示与重试入口。
+   以前这里只 console.warn，用户侧看到的就是一个空歌单，完全不知道发生了什么。 */
+function showLibError(err) {
+  var box = document.getElementById("playlistContainer");
+  if (!box) return;
+  box.innerHTML = '<div style="padding:20px 10px;text-align:center;color:#b1627d;font-size:0.85rem;line-height:1.9">' +
+    '官方曲库没加载出来<br><span style="opacity:.7;font-size:0.78rem">' + (err && err.message ? escapeHtml(err.message) : "网络异常") + '</span><br>' +
+    '<button id="libRetryBtn" class="btn-cherry" style="margin-top:8px">重新加载</button></div>';
+  var btn = document.getElementById("libRetryBtn");
+  if (btn) btn.addEventListener("click", function () {
+    box.innerHTML = '<div style="padding:20px 10px;text-align:center;color:#b1627d;font-size:0.85rem">正在重新加载…</div>';
+    loadOfficialPlaylist().then(function (n) { if (n) updateList(); });
+  });
+}
 function loadOfficialPlaylist() {
-  return fetch("data/playlist.json", { cache: "force-cache" })
-    .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+  function grab(cacheMode, bust) {
+    var url = "data/playlist.json" + (bust ? "?t=" + Date.now() : "");
+    return fetch(url, { cache: cacheMode })
+      .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); });
+  }
+  /* 注意：这里绝对不能用 force-cache。
+     它会把缓存里的任意响应直接拿来用，包括部署窗口期（GitHub Pages 构建中）
+     产生的 404。一旦 404 被钉进缓存，官方推荐就会永久空列表。
+     所以先 no-cache 正常取，失败再带时间戳强刷一次绕过缓存。 */
+  return grab("no-cache", false)
+    .catch(function (e1) {
+      console.warn("官方推荐曲库首次加载失败，尝试绕过缓存重取：", e1);
+      return grab("reload", true);
+    })
     .then(function (j) {
       var songs = [];
       var lists = (j && j.lists) || [];
@@ -80,7 +106,8 @@ function loadOfficialPlaylist() {
       return songs.length;
     })
     .catch(function (e) {
-      console.warn("官方推荐曲库加载失败，回退到内置兜底：", e);
+      console.error("官方推荐曲库加载失败：", e);
+        showLibError(e);
       return 0;
     });
 }
