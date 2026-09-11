@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>樱花音乐 API</title>
+<meta name="robots" content="noindex">
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:linear-gradient(160deg,#fff5f8,#ffeef4 60%,#ffe6ef);color:#5c3a46;
+font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC",system-ui,sans-serif;padding:2rem 1rem 4rem}
+.wrap{max-width:820px;margin:0 auto}
+h1{font-size:1.7rem;margin:0 0 .4rem;background:linear-gradient(135deg,#b84c6c,#e27e9b);background-clip:text;-webkit-background-clip:text;color:transparent}
+.sub{color:#a8798a;font-size:.9rem;margin-bottom:1.6rem}
+.card{background:rgba(255,255,255,.78);border:1px solid #ffdbe7;border-radius:1.4rem;padding:1.3rem 1.5rem;
+box-shadow:0 14px 30px -18px rgba(216,112,140,.45);margin-bottom:1.2rem;backdrop-filter:blur(6px)}
+h2{font-size:1rem;margin:0 0 .9rem;color:#b84c6c}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+td{padding:.42rem .3rem;border-bottom:1px dashed #ffe0ea;vertical-align:top}
+tr:last-child td{border-bottom:none}
+code{background:#fff0f5;border:1px solid #ffd9e5;border-radius:.45rem;padding:.12rem .42rem;
+font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.8rem;color:#a8435f;white-space:nowrap}
+.desc{color:#8f6a78}
+a{color:#c4507a}
+.foot{text-align:center;color:#bb95a3;font-size:.78rem;margin-top:1.6rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🌸 樱花音乐 API</h1>
+  <div class="sub">网易云音乐元数据网关 · Cloudflare Pages Functions · 无登录、无 Cookie、不收集数据</div>
+
+  <div class="card">
+    <h2>接口一览</h2>
+    <table>
+      <tr><td><code>GET /api/health</code></td><td class="desc">健康检查</td></tr>
+      <tr><td><code>GET /api/search</code></td><td class="desc">搜索 · <code>keywords</code> <code>limit</code> <code>offset</code> <code>type</code>(1歌曲/10专辑/100歌手/1000歌单)</td></tr>
+      <tr><td><code>GET /api/song/detail</code></td><td class="desc">歌曲详情 · <code>ids=1,2,3</code>（最多 100 个）</td></tr>
+      <tr><td><code>GET /api/lyric</code></td><td class="desc">歌词（含翻译/罗马音） · <code>id</code></td></tr>
+      <tr><td><code>GET /api/playlist</code></td><td class="desc">歌单详情 · <code>id</code></td></tr>
+      <tr><td><code>GET /api/playlist/tracks</code></td><td class="desc">歌单全部歌曲 · <code>id</code> <code>limit</code> <code>offset</code></td></tr>
+      <tr><td><code>GET /api/toplist</code></td><td class="desc">排行榜列表（63 个）</td></tr>
+      <tr><td><code>GET /api/recommend/playlist</code></td><td class="desc">推荐歌单 · <code>limit</code></td></tr>
+      <tr><td><code>GET /api/recommend/newsong</code></td><td class="desc">推荐新歌 · <code>limit</code></td></tr>
+      <tr><td><code>GET /api/catalogue</code></td><td class="desc">歌单分类</td></tr>
+      <tr><td><code>GET /api/artist</code></td><td class="desc">歌手详情 · <code>id</code></td></tr>
+      <tr><td><code>GET /api/artist/songs</code></td><td class="desc">歌手热门歌曲 · <code>id</code> <code>limit</code></td></tr>
+      <tr><td><code>GET /api/url</code></td><td class="desc">可播放地址（多镜像聚合） · <code>id</code> <code>server</code></td></tr>
+      <tr><td><code>GET /api/url/lyric</code></td><td class="desc">歌词兜底（多镜像） · <code>id</code></td></tr>
+      <tr><td><code>GET /api/meting</code></td><td class="desc">Meting 通用代理 · <code>type</code> <code>server</code> …</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>试一下</h2>
+    <div class="desc" style="margin-bottom:.7rem">直接在浏览器打开这些地址即可看到 JSON：</div>
+    <div><a href="/api/health">/api/health</a> ·
+      <a href="/api/search?keywords=%E7%B1%B3%E6%B4%A5%E7%8E%84%E5%B8%AB&amp;limit=3">/api/search?keywords=米津玄師</a> ·
+      <a href="/api/toplist">/api/toplist</a> ·
+      <a href="/api/recommend/playlist?limit=5">/api/recommend/playlist</a></div>
+  </div>
+
+  <div class="foot">仅供个人学习与自用 · 音乐版权归各平台与版权方所有</div>
+</div>
+</body>
+</html>

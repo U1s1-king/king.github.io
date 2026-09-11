@@ -52,136 +52,38 @@ tx.oncomplete = resolve;
 tx.onerror = reject;
 });
 }
-let playlist = [
-{ name: "Don't say \"lazy\"", artist: "放課後ティータイム", path: MUSIC_BASE + "放課後ティータイム - Dont saylazy.mp3" },
-{ name: "ふわふわ時間 (轻飘飘时间)(映画「けいおん!」Mix)", artist: "放課後ティータイム", path: MUSIC_BASE + "放課後ティータイム - ふわふわ時間 (轻飘飘时间)(映画「けいおん!」Mix).mp3" },
-{ name: "天使にふれたよ!", artist: "放課後ティータイム", path: MUSIC_BASE + "放課後ティータイム - 天使にふれたよ!.mp3" },
-{ name: "あのバンド", artist: "結束バンド", path: MUSIC_BASE + "結束バンド - あのバンド.mp3" },
-{ name: "ギターと孤独と蒼い惑星 (吉他与孤独与蓝色星球)", artist: "結束バンド", path: MUSIC_BASE + "結束バンド - ギターと孤独と蒼い惑星 (吉他与孤独与蓝色星球).mp3" },
-{ name: "ひとりぼっち東京", artist: "結束バンド", path: MUSIC_BASE + "結束バンド - ひとりぼっち東京.mp3" },
-{ name: "ひみつ基地 (秘密基地)", artist: "結束バンド", path: MUSIC_BASE + "結束バンド - ひみつ基地 (秘密基地).mp3" },
-{ name: "忘れてやらない (绝不会忘记)", artist: "結束バンド", path: MUSIC_BASE + "結束バンド - 忘れてやらない (绝不会忘记).mp3" },
-{ name: "星座になれたら", artist: "結束バンド", path: MUSIC_BASE + "結束バンド - 星座になれたら.mp3" },
-{ name: "Lemon", artist: "米津玄師", path: MUSIC_BASE + "米津玄師 - Lemon.mp3" },
-{ name: "LOSER", artist: "米津玄師", path: MUSIC_BASE + "米津玄師 - LOSER.mp3" },
-{ name: "M八七", artist: "米津玄師", path: MUSIC_BASE + "米津玄師 - M八七.mp3" },
-{ name: "Pale Blue", artist: "米津玄師", path: MUSIC_BASE + "米津玄師 - Pale Blue.mp3" },
-{ name: "感電", artist: "米津玄師", path: MUSIC_BASE + "米津玄師 - 感電.mp3" },
-{ name: "海の幽霊", artist: "米津玄師", path: MUSIC_BASE + "米津玄師 - 海の幽霊.mp3" },
-{ name: "死神", artist: "米津玄師", path: MUSIC_BASE + "米津玄師 - 死神.mp3" },
-{ name: "打上花火", artist: "米津玄師、Daoko", path: MUSIC_BASE + "米津玄師、Daoko - 打上花火.mp3" },
-{ name: "Promise", artist: "Da-iCE", path: MUSIC_BASE + "Da-iCE_-_Promise.mp3" },
-{ name: "KiLLKiSS", artist: "Ave Mujica", path: MUSIC_BASE + "Ave Mujica - KiLLKiSS.mp3" },
-{ name: "白日", artist: "King Gnu", path: MUSIC_BASE + "King Gnu - 白日.mp3" },
-{ name: "世末歌者", artist: "", path: MUSIC_BASE + "世末歌者.mp3" },
-{ name: "Re_Re_", artist: "結束バンド", path: MUSIC_BASE + "結束バンド - Re_Re_.mp3" },
-{ name: "Starlight", artist: "超特急", path: MUSIC_BASE + "超特急_-_Starlight.mp3" },
-{ name: "恋ひ恋う縁 (以恋结缘)", artist: "KOTOKO", path: MUSIC_BASE + "KOTOKO - 恋ひ恋う縁 (以恋结缘).mp3" },
-{ name: "Tori No Uta", artist: "Lia", path: MUSIC_BASE + "Lia - Tori No Uta.mp3" },
-{ name: "ウルトラマンギンガの歌", artist: "voyager/千紗/マリア春菜/竹内浩明/根岸拓哉/宮武美桜/大野瑞生/雲母/草川拓弥", path: MUSIC_BASE + "voyager_千紗_マリア春菜_竹内浩明_根岸拓哉_宮武美桜_大野瑞生_雲母_草川拓弥 - ウルトラマンギンガの歌.mp3" },
-{ name: "顔", artist: "Ave Mujica", path: MUSIC_BASE + "Ave Mujica - 顔.mp3" },
-{ name: "キボウノカケラ", artist: "ボイジャー", path: MUSIC_BASE + "ボイジャー - キボウノカケラ.mp3" },
-{ name: "反乌托邦", artist: "", path: MUSIC_BASE + "反乌托邦.mp3" },
-{ name: "恋愛サーキュレーション", artist: "花澤香菜", path: MUSIC_BASE + "花澤香菜 - 恋愛サーキュレーション.mp3" },
-{ name: "九重现实", artist: "洛天依/言和/乐正绫", path: MUSIC_BASE + "洛天依、言和、乐正绫 - 九重现实.mp3" },
-{ name: "secret base ~君がくれたもの~", artist: "茅野愛衣/戸松遥/早見沙織", path: MUSIC_BASE + "茅野愛衣_戸松遥_早見沙織 - secret base ~君がくれたもの~.mp3" },
-{ name: "One Last Kiss", artist: "宇多田ヒカル", path: MUSIC_BASE + "宇多田ヒカル - One Last Kiss.mp3" },
-{ name: "僕が死のうと思ったのは", artist: "中岛美嘉", path: MUSIC_BASE + "中岛美嘉_-_僕が死のうと思ったのは.mp3" },
-{ name: "AIscream", artist: "", path: MUSIC_BASE + "AIscream.mp3" },
-{ name: "TWO_AS_ONE", artist: "Da-iCE", path: MUSIC_BASE + "Da-iCE_-_TWO_AS_ONE.mp3" },
-{ name: "サヨナラサヨナラサヨナラ", artist: "トゲナシトゲアリ", path: MUSIC_BASE + "トゲナシトゲアリ - サヨナラサヨナラサヨナラ (再见再见再见).mp3" },
-{ name: "ダレモ", artist: "トゲナシトゲアリ", path: MUSIC_BASE + "トゲナシトゲアリ - ダレモ.mp3" },
-{ name: "闇に溶けてく", artist: "トゲナシトゲアリ", path: MUSIC_BASE + "トゲナシトゲアリ - 闇に溶けてく.mp3" },
-{ name: "爆ぜて咲く", artist: "トゲナシトゲアリ", path: MUSIC_BASE + "トゲナシトゲアリ - 爆ぜて咲く (爆裂绽放).mp3" },
-{ name: "蝶に結いた赤い糸", artist: "トゲナシトゲアリ", path: MUSIC_BASE + "トゲナシトゲアリ - 蝶に結いた赤い糸.mp3" },
-{ name: "飛べない蝶は夢を見る", artist: "トゲナシトゲアリ", path: MUSIC_BASE + "トゲナシトゲアリ - 飛べない蝶は夢を見る.mp3" },
-{ name: "極私的極彩色アンサー", artist: "トゲナシトゲアリ", path: MUSIC_BASE + "トゲナシトゲアリ - 極私的極彩色アンサー.mp3" },
-{ name: "空の箱", artist: "トゲナシトゲアリ", path: MUSIC_BASE + "トゲナシトゲアリ - 空の箱.mp3" },
-{ name: "空白とカタルシス", artist: "トゲナシトゲアリ", path: MUSIC_BASE + "トゲナシトゲアリ - 空白とカタルシス.mp3" },
-{ name: "黎明を穿つ", artist: "トゲナシトゲアリ", path: MUSIC_BASE + "トゲナシトゲアリ - 黎明を穿つ.mp3" },
-{ name: "理想的パラドクスとは", artist: "トゲナシトゲアリ", path: MUSIC_BASE + "トゲナシトゲアリ - 理想的パラドクスとは.mp3" },
-{ name: "名もなき何もかも", artist: "トゲナシトゲアリ", path: MUSIC_BASE + "トゲナシトゲアリ - 名もなき何もかも.mp3" },
-{ name: "気鬱、白濁す", artist: "トゲナシトゲアリ", path: MUSIC_BASE + "トゲナシトゲアリ - 気鬱、白濁す (white drizzle in gloom).mp3" },
-{ name: "傷つき傷つけ痛くて辛い", artist: "トゲナシトゲアリ", path: MUSIC_BASE + "トゲナシトゲアリ - 傷つき傷つけ痛くて辛い.mp3" },
-{ name: "視界の隅 朽ちる音", artist: "トゲナシトゲアリ", path: MUSIC_BASE + "トゲナシトゲアリ - 視界の隅 朽ちる音.mp3" },
-{ name: "声なき魚", artist: "トゲナシトゲアリ", path: MUSIC_BASE + "トゲナシトゲアリ - 声なき魚.mp3" },
-{ name: "誰にもなれない私だから", artist: "トゲナシトゲアリ", path: MUSIC_BASE + "トゲナシトゲアリ - 誰にもなれない私だから.mp3" },
-{ name: "偽りの理", artist: "トゲナシトゲアリ", path: MUSIC_BASE + "トゲナシトゲアリ - 偽りの理.mp3" },
-{ name: "心象的フラクタル", artist: "トゲナシトゲアリ", path: MUSIC_BASE + "トゲナシトゲアリ - 心象的フラクタル.mp3" },
-{ name: "運命に賭けたい論理", artist: "トゲナシトゲアリ", path: MUSIC_BASE + "トゲナシトゲアリ - 運命に賭けたい論理.mp3" },
-{ name: "運命の華", artist: "トゲナシトゲアリ", path: MUSIC_BASE + "トゲナシトゲアリ - 運命の華.mp3" },
-{ name: "雑踏、僕らの街", artist: "トゲナシトゲアリ", path: MUSIC_BASE + "トゲナシトゲアリ - 雑踏、僕らの街.mp3" },
-{ name: "碧いif", artist: "トゲナシトゲアリ", path: MUSIC_BASE + "碧いif.mp3" },
-{ name: "吹き消した灯火", artist: "トゲナシトゲアリ", path: MUSIC_BASE + "吹き消した灯火.mp3" },
-{ name: "無知のち私", artist: "トゲナシトゲアリ", path: MUSIC_BASE + "無知のち私.mp3" },
-{ name: "臆病な白夜", artist: "トゲナシトゲアリ", path: MUSIC_BASE + "臆病な白夜.mp3" },
-{ name: "最期の禱り", artist: "トゲナシトゲアリ", path: MUSIC_BASE + "最期の禱り.mp3" },
-{ name: "猛独が襲う (Deathly Loneliness Attacks)", artist: "MyGO!!!!!", path: MUSIC_BASE + "MyGO!!!!! - 猛独が襲う (Deathly Loneliness Attacks).mp3" },
-{ name: "迷星叫", artist: "MyGO!!!!!", path: MUSIC_BASE + "MyGO!!!!! - 迷星叫.mp3" },
-{ name: "壱雫空", artist: "MyGO!!!!!", path: MUSIC_BASE + "MyGO!!!!! - 壱雫空.mp3" },
-{ name: "影色舞", artist: "MyGO!!!!!", path: MUSIC_BASE + "MyGO!!!!! - 影色舞.mp3" },
-{ name: "春日影 (MyGO!!!!! ver.)", artist: "MyGO!!!!!", path: MUSIC_BASE + "MyGO!!!!! - 春日影 (MyGO!!!!! ver.).mp3" },
-{ name: "スパークル", artist: "RADWIMPS", path: MUSIC_BASE + "RADWIMPS - スパークル.mp3" },
-{ name: "なんでもないや", artist: "RADWIMPS", path: MUSIC_BASE + "RADWIMPS - なんでもないや.mp3" },
-{ name: "夢灯籠", artist: "RADWIMPS", path: MUSIC_BASE + "RADWIMPS - 夢灯籠.mp3" },
-{ name: "前前前世", artist: "RADWIMPS", path: MUSIC_BASE + "RADWIMPS - 前前前世.mp3" },
-{ name: "Watch me!", artist: "YOASOBI", path: MUSIC_BASE + "YOASOBI - Watch me!.mp3" },
-{ name: "あの夢をなぞって", artist: "YOASOBI", path: MUSIC_BASE + "YOASOBI - あの夢をなぞって.mp3" },
-{ name: "アンコール (安可)", artist: "YOASOBI", path: MUSIC_BASE + "YOASOBI - アンコール (安可).mp3" },
-{ name: "ラブレター", artist: "YOASOBI", path: MUSIC_BASE + "YOASOBI - ラブレター.mp3" },
-{ name: "大正浪漫", artist: "YOASOBI", path: MUSIC_BASE + "YOASOBI - 大正浪漫.mp3" },
-{ name: "怪物", artist: "YOASOBI", path: MUSIC_BASE + "YOASOBI - 怪物.mp3" },
-{ name: "群青", artist: "YOASOBI", path: MUSIC_BASE + "YOASOBI - 群青.mp3" },
-{ name: "夜に駆ける", artist: "YOASOBI", path: MUSIC_BASE + "YOASOBI - 夜に駆ける.mp3" },
-{ name: "ずっとずっとずっと", artist: "緑黄色社会", path: MUSIC_BASE + "緑黄色社会 - ずっとずっとずっと.mp3" },
-{ name: "妄想感傷代償連盟", artist: "初音未来", path: MUSIC_BASE + "DECO×27、初音ミク_-_妄想感傷代償連盟.mp3" },
-{ name: "可愛くてごめん", artist: "HoneyWorks、早見沙織", path: MUSIC_BASE + "HoneyWorks、早見沙織 - 可愛くてごめん.mp3" },
-{ name: "Sinos De Natal", artist: "MGD、MXZHPHXNK", path: MUSIC_BASE + "MGD、MXZHPHXNK - Sinos De Natal.mp3" },
-{ name: "NIGHT DANCER", artist: "imase", path: MUSIC_BASE + "NIGHT DANCER - imase.mp3" },
-{ name: "テト - うそつきマカロン", artist: "重音", path: MUSIC_BASE + "暴飲暴食P、重音テト - うそつきマカロン.mp3" },
-{ name: "鏡音リン、ピノキオピー_-_ねぇねぇねぇ。", artist: "初音未来", path: MUSIC_BASE + "初音ミク、鏡音リン、ピノキオピー_-_ねぇねぇねぇ。.mp3" },
-{ name: "青春コンプレックス", artist: "結束バンド", path: MUSIC_BASE + "結束バンド - 青春コンプレックス.mp3" },
-{ name: "優しい彗星", artist: "YOASOBI", path: MUSIC_BASE + "YOASOBI - 優しい彗星.mp3" },
-{ name: "unravel", artist: "TK from 凛冽时雨", path: MUSIC_BASE + "TK_from_凛冽时雨_-_unravel.mp3" },
-{ name: "真夜中のドア/Stay With Me (深夜门扉/留在我身边)", artist: "松原みき", path: MUSIC_BASE + "真夜中のドアStay With Me (深夜门扉留在我身边).mp3" },
-{ name: "Barricades", artist: "澤野弘之", path: MUSIC_BASE + "澤野弘之 - Barricades.mp3" },
-{ name: "Call of Silence", artist: "澤野弘之", path: MUSIC_BASE + "澤野弘之 - Call of Silence.mp3" },
-{ name: "theDOGS", artist: "澤野弘之", path: MUSIC_BASE + "澤野弘之 - theDOGS.mp3" },
-{ name: "Daydream_SQ", artist: "AxR", path: MUSIC_BASE + "AxR_-_Daydream_SQ.mp3" },
-{ name: "desolate", artist: "ByErik ヵ", path: MUSIC_BASE + "ByErik ヵ - desolate.mp3" },
-{ name: "Instruments of Retribution", artist: "Daniel Deluxe", path: MUSIC_BASE + "Daniel_Deluxe_-_Instruments_of_Retribution.mp3" },
-{ name: "天气之子幻(钢琴版)", artist: "dylanf", path: MUSIC_BASE + "dylanf_-_天气之子幻(钢琴版).mp3" },
-{ name: "HEAVENLY JUMPSTYLE(西蒙海耶小曲)", artist: "INFINITY ICE", path: MUSIC_BASE + "INFINITY ICE - HEAVENLY JUMPSTYLE.mp3" },
-{ name: "Money So Big", artist: "Muppet DJ、SECA Records", path: MUSIC_BASE + "Muppet DJ、SECA Records - Money So Big.mp3" },
-{ name: "Melodic Minor(感觉至上）", artist: "Park Choi", path: MUSIC_BASE + "Park Choi - Melodic Minor.mp3" },
-{ name: "Heroes 2.0", artist: "RJ Pasin", path: MUSIC_BASE + "RJ_Pasin_-_Heroes_2.0.mp3" },
-{ name: "「ねえ！○○ちゃんまだぁ〜？？？？」", artist: "さんうさぎ", path: MUSIC_BASE + "さんうさぎ_-_「ねえ！○○ちゃんまだぁ〜？？？？」.mp3" },
-{ name: "3：30PM", artist: "しゃろう", path: MUSIC_BASE + "しゃろう_-_3：30PM.mp3" },
-{ name: "おはなばたけ (花田)", artist: "近藤浩治", path: MUSIC_BASE + "近藤浩治_-_おはなばたけ_(花田).mp3" },
-{ name: "怪物之歌", artist: "酸电池", path: MUSIC_BASE + "酸电池_-_怪物之歌.mp3" },
-{ name: "愛♡スクリ～ム！", artist: "AIscream", path: MUSIC_BASE + "AIscream_-_愛♡スクリ～ム！.mp3" },
-{ name: "Where Did Your Love Go?", artist: "Dawid Podsiadlo", path: MUSIC_BASE + "Dawid_Podsiadlo_-_Where_Did_Your_Love_Go_.mp3" },
-{ name: "Cry For Me (feat. Ami)", artist: "Michita", path: MUSIC_BASE + "Michita - Cry For Me (feat. Ami).mp3" },
-{ name: "あーあーあーあーあー", artist: "agehasprings", path: MUSIC_BASE + "agehasprings - あーあーあーあーあー.mp3" },
-{ name: "渇く、憂う", artist: "トゲナシトゲアリ", path: MUSIC_BASE + "渇く、憂う.mp3" },
-{ name: "生きて生きていく", artist: "トゲナシトゲアリ", path: MUSIC_BASE + "生きて生きていく.mp3" },
-{ name: "おしんこ_SQ", artist: "田中ユウスケ", path: MUSIC_BASE + "田中ユウスケ - おしんこ_SQ.mp3" },
-{ name: "ココロのウーロン茶_SQ", artist: "田中ユウスケ", path: MUSIC_BASE + "田中ユウスケ - ココロのウーロン茶_SQ.mp3" },
-{ name: "袋小路", artist: "田中ユウスケ", path: MUSIC_BASE + "田中ユウスケ - 袋小路.mp3" },
-{ name: "雑踏、僕らの街 (Wrong World)(彷徨う)_SQ", artist: "田中ユウスケ", path: MUSIC_BASE + "田中ユウスケ - 雑踏、僕らの街 (Wrong World)(彷徨う)_SQ.mp3" },
-{ name: "SHAZAI（謝）", artist: "田中ユウスケ/agehasprings", path: MUSIC_BASE + "田中ユウスケ_agehasprings - SHAZAI（謝）.mp3" },
-{ name: "ありがとう。ベニショーガ魂", artist: "田中ユウスケ/agehasprings", path: MUSIC_BASE + "田中ユウスケ_agehasprings - ありがとう。ベニショーガ魂.mp3" },
-{ name: "たぶん気分（ねぎぬき）", artist: "田中ユウスケ/agehasprings", path: MUSIC_BASE + "田中ユウスケ_agehasprings - たぶん気分（ねぎぬき）.mp3" },
-{ name: "むかしからの老舗〜持ち時間20分", artist: "田中ユウスケ/agehasprings", path: MUSIC_BASE + "田中ユウスケ_agehasprings - むかしからの老舗〜持ち時間20分.mp3" },
-{ name: "フェスで人気でそうなバンドの曲", artist: "田中ユウスケ/agehasprings", path: MUSIC_BASE + "田中ユウスケ_agehasprings - フェスで人気でそうなバンドの曲.mp3" },
-{ name: "十七歳三月", artist: "田中ユウスケ/agehasprings", path: MUSIC_BASE + "田中ユウスケ_agehasprings - 十七歳三月.mp3" },
-{ name: "嘘とconfuse", artist: "田中ユウスケ/agehasprings", path: MUSIC_BASE + "田中ユウスケ_agehasprings - 嘘とconfuse.mp3" },
-{ name: "孤孤孤孤独（腰痛）", artist: "田中ユウスケ/agehasprings", path: MUSIC_BASE + "田中ユウスケ_agehasprings - 孤孤孤孤独（腰痛）.mp3" },
-{ name: "恍惚の定理", artist: "田中ユウスケ/agehasprings", path: MUSIC_BASE + "田中ユウスケ_agehasprings - 恍惚の定理.mp3" },
-{ name: "誤解と高卒", artist: "田中ユウスケ/agehasprings", path: MUSIC_BASE + "田中ユウスケ_agehasprings - 誤解と高卒.mp3" },
-{ name: "雨と疾走とマニフェスト", artist: "田中ユウスケ/agehasprings", path: MUSIC_BASE + "田中ユウスケ_agehasprings - 雨と疾走とマニフェスト.mp3" },
-{ name: "BOW AND ARROW", artist: "米津玄師", path: MUSIC_BASE + "米津玄師 - BOW AND ARROW.mp3" },
-];
+let playlist = [];
+/* 官方推荐曲库外置到 data/playlist.json，方便单独维护，不再写死在 JS 里 */
+let officialLoaded = false;
+function loadOfficialPlaylist() {
+  return fetch("data/playlist.json", { cache: "force-cache" })
+    .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+    .then(function (j) {
+      var songs = [];
+      var lists = (j && j.lists) || [];
+      for (var i = 0; i < lists.length; i++) {
+        if (lists[i].id !== "official") continue;
+        var arr = lists[i].songs || [];
+        for (var k = 0; k < arr.length; k++) {
+          songs.push({
+            name: arr[k].name,
+            artist: arr[k].artist,
+            path: MUSIC_BASE + arr[k].file,
+            official: true
+          });
+        }
+      }
+      if (!songs.length) throw new Error("官方曲库为空");
+      playlist = songs.concat(playlist.filter(function (s) { return !s.official; }));
+      officialLoaded = true;
+      if (typeof updateList === "function") updateList();
+      return songs.length;
+    })
+    .catch(function (e) {
+      console.warn("官方推荐曲库加载失败，回退到内置兜底：", e);
+      return 0;
+    });
+}
 let currentIndex = 0;
 let isPlaying = false;
 let playMode = "normal";
@@ -213,47 +115,126 @@ let spectrumBars = [];
 let spectrumInterval = null;
 function formatTime(sec) { if(isNaN(sec)) return '0:00'; let m = Math.floor(sec/60), s = Math.floor(sec%60); return `${m}:${s<10?'0'+s:s}`; }
 function showMsg(msg) { let t = document.getElementById('toastMsg'); t.textContent = msg; t.style.display='block'; setTimeout(()=>t.style.display='none',2000); }
-function escapeHtml(str) { return str.replace(/[&<>]/g, function(m){return m==='&'?'&amp;':m==='<'?'&lt;':'&gt;';}); }
-function initSpectrum() {
-const container = document.getElementById('spectrumBars');
-if (!container) return;
-container.innerHTML = '';
-const barCount = window.innerWidth < 700 ? 20 : 28;
-for(let i = 0; i < barCount; i++) {
-let bar = document.createElement('div');
-bar.className = 'spectrum-bar';
-container.appendChild(bar);
-spectrumBars.push(bar);
+function escapeHtml(str) { if (str == null) return ""; return String(str).replace(/[&<>"]/g, function (m) { return m === "&" ? "&amp;" : m === "<" ? "&lt;" : m === ">" ? "&gt;" : "&quot;"; }); }
+/* ===== 真·频谱可视化 =====
+ * 用 Web Audio 的 AnalyserNode 取真实频谱。audio.captureStream() 是「旁路取样」，
+ * 不改动音频输出链路，所以跨域歌曲顶多是分析不到（自动降级为装饰动画），绝不会变静音。 */
+let audioCtx = null;
+let analyserNode = null;
+let freqData = null;
+let spectrumRaf = null;
+let spectrumPeaks = [];
+let spectrumSilent = 0;
+let spectrumPhase = 0;
+function prefersReducedMotion() {
+  try { return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches); } catch (e) { return false; }
 }
+function initSpectrum() {
+  var container = document.getElementById("spectrumBars");
+  if (!container) return;
+  container.innerHTML = "";
+  spectrumBars = [];
+  var barCount = window.innerWidth < 700 ? 20 : 28;
+  for (var i = 0; i < barCount; i++) {
+    var bar = document.createElement("div");
+    bar.className = "spectrum-bar";
+    container.appendChild(bar);
+    spectrumBars.push(bar);
+  }
+  spectrumPeaks = [];
+  for (var j = 0; j < barCount; j++) spectrumPeaks.push(0);
+}
+function ensureAnalyser() {
+  if (analyserNode) return analyserNode;
+  var Ctx = window.AudioContext || window.webkitAudioContext;
+  if (!Ctx || !audio) return null;
+  var stream = null;
+  try {
+    if (typeof audio.captureStream === "function") stream = audio.captureStream();
+    else if (typeof audio.mozCaptureStream === "function") stream = audio.mozCaptureStream();
+  } catch (e) { stream = null; }
+  if (!stream) return null;
+  try {
+    audioCtx = new Ctx();
+    var source = audioCtx.createMediaStreamSource(stream);
+    analyserNode = audioCtx.createAnalyser();
+    analyserNode.fftSize = 128;
+    analyserNode.smoothingTimeConstant = 0.78;
+    source.connect(analyserNode);
+    freqData = new Uint8Array(analyserNode.frequencyBinCount);
+  } catch (e) { analyserNode = null; audioCtx = null; freqData = null; }
+  return analyserNode;
+}
+function paintBars(levels) {
+  for (var i = 0; i < spectrumBars.length; i++) {
+    var v = levels[i] || 0;
+    if (v > spectrumPeaks[i]) spectrumPeaks[i] = v;
+    else spectrumPeaks[i] = Math.max(0, spectrumPeaks[i] - 1.6);
+    spectrumBars[i].style.height = Math.max(4, Math.min(62, v)) + "px";
+    spectrumBars[i].style.setProperty("--peak", Math.max(4, Math.min(62, spectrumPeaks[i])) + "px");
+  }
+}
+function renderRealSpectrum() {
+  analyserNode.getByteFrequencyData(freqData);
+  var sum = 0;
+  for (var i = 0; i < freqData.length; i++) sum += freqData[i];
+  if (sum === 0) { spectrumSilent++; return spectrumSilent <= 40; }
+  spectrumSilent = 0;
+  var n = spectrumBars.length;
+  var usable = Math.floor(freqData.length * 0.72);
+  var levels = [];
+  for (var b = 0; b < n; b++) {
+    var from = Math.floor(Math.pow(b / n, 1.35) * usable);
+    var to = Math.max(from + 1, Math.floor(Math.pow((b + 1) / n, 1.35) * usable));
+    var peak = 0;
+    for (var k = from; k < to && k < usable; k++) if (freqData[k] > peak) peak = freqData[k];
+    levels.push(4 + (peak / 255) * 58);
+  }
+  paintBars(levels);
+  return true;
+}
+function renderFakeSpectrum() {
+  var vol = (audio && audio.volume) || 0.7;
+  spectrumPhase += 1;
+  var levels = [];
+  for (var i = 0; i < spectrumBars.length; i++) {
+    levels.push(6 + Math.random() * 40 * vol + Math.sin(spectrumPhase * 0.09 + i * 0.32) * 10);
+  }
+  paintBars(levels);
+}
+function spectrumLoop() {
+  spectrumRaf = requestAnimationFrame(spectrumLoop);
+  if (!isPlaying) return;
+  if (prefersReducedMotion()) return;
+  if (!analyserNode) ensureAnalyser();
+  if (analyserNode && renderRealSpectrum()) return;
+  renderFakeSpectrum();
 }
 function startSpectrum() {
-if (spectrumInterval) clearInterval(spectrumInterval);
-spectrumInterval = setInterval(() => {
-if (!isPlaying) return;
-const vol = audio.volume || 0.7;
-for (let i = 0; i < spectrumBars.length; i++) {
-const randomPeak = Math.random() * 45 * vol;
-const sineFactor = Math.sin(Date.now() / 180 + i * 0.25) * 12;
-let height = 6 + randomPeak + sineFactor;
-height = Math.min(62, Math.max(6, height));
-spectrumBars[i].style.height = height + 'px';
-}
-}, 85);
+  if (audioCtx && audioCtx.state === "suspended") { try { audioCtx.resume(); } catch (e) {} }
+  if (spectrumRaf) return;
+  spectrumSilent = 0;
+  spectrumRaf = requestAnimationFrame(spectrumLoop);
 }
 function stopSpectrum() {
-if (spectrumInterval) {
-clearInterval(spectrumInterval);
-spectrumInterval = null;
-}
-for (let bar of spectrumBars) {
-bar.style.height = '6px';
-}
+  if (spectrumRaf) { cancelAnimationFrame(spectrumRaf); spectrumRaf = null; }
+  for (var i = 0; i < spectrumBars.length; i++) {
+    spectrumBars[i].style.height = "4px";
+    spectrumBars[i].style.setProperty("--peak", "4px");
+  }
+  spectrumPeaks = spectrumBars.map(function () { return 0; });
 }
 /* ===== 收藏 / 歌单删除（UX 增强；删除为本次访问生效，刷新后歌单还原）===== */
 let favOnly = false;
 let favList = [];
 try { favList = JSON.parse(localStorage.getItem('sakuraFavs') || '[]') || []; } catch (e) { favList = []; }
-function favKey(s) { return (s.name || '') + '\u0001' + (s.artist || ''); }
+function favKey(s) {
+  if (!s) return "";
+  if (s.official && s.path) return "o:" + s.path;
+  if (s.id && s.platform) return "p:" + s.platform + ":" + s.id;
+  if (s.idbKey) return "u:" + s.idbKey;
+  return "n:" + (s.name || "") + "\u0001" + (s.artist || "");
+}
 function isFav(s) { return favList.indexOf(favKey(s)) >= 0; }
 function toggleFav(s) {
 if (!s) return;
@@ -264,33 +245,87 @@ try { localStorage.setItem('sakuraFavs', JSON.stringify(favList)); } catch (err)
 updateList();
 }
 function canDeleteTrack(s) { return !!(s && (s.isUserUploaded || s.online || s.uploaded)); }
+/* ===== 歌单持久化 =====
+ * 修复三个老问题：删除刷新后还原、删掉的本地音乐复活、在线歌曲刷新即丢。 */
+const USER_PLAYLIST_KEY = "sakuraUserPlaylist";
+function isUserSong(s) { return !!(s && (s.online || s.uploaded || s.isUserUploaded)); }
+function serializeSong(s) {
+  return {
+    name: s.name || "", artist: s.artist || "", path: s.path || "", dur: s.dur || "",
+    online: !!s.online, uploaded: !!s.uploaded, isUserUploaded: !!s.isUserUploaded,
+    idbKey: s.idbKey || "", cover: s.cover || "", lrc: s.lrc || "",
+    platform: s.platform || "", id: s.id || ""
+  };
+}
+function saveUserPlaylist() {
+  try {
+    var out = [];
+    for (var i = 0; i < playlist.length; i++) if (isUserSong(playlist[i])) out.push(serializeSong(playlist[i]));
+    localStorage.setItem(USER_PLAYLIST_KEY, JSON.stringify(out));
+  } catch (e) {}
+}
+function restoreUserPlaylist() {
+  var arr = [];
+  try { arr = JSON.parse(localStorage.getItem(USER_PLAYLIST_KEY) || "[]") || []; } catch (e) { arr = []; }
+  var added = 0;
+  for (var i = 0; i < arr.length; i++) {
+    var s = arr[i];
+    if (!s || !s.name) continue;
+    if (s.isUserUploaded || s.uploaded) {
+      var dup = false;
+      for (var k = 0; k < playlist.length; k++) {
+        if (playlist[k].idbKey && playlist[k].idbKey === s.idbKey) { dup = true; break; }
+      }
+      if (dup) continue;
+    }
+    playlist.push(serializeSong(s));
+    added++;
+  }
+  return added;
+}
+function removeUploadedRecord(idbKey) {
+  if (!idbKey) return Promise.resolve();
+  return openDB().then(function (db) {
+    return new Promise(function (resolve) {
+      try {
+        var tx = db.transaction(STORE_NAME, "readwrite");
+        tx.objectStore(STORE_NAME)["delete"](idbKey);
+        tx.oncomplete = function () { resolve(); };
+        tx.onerror = function () { resolve(); };
+      } catch (e) { resolve(); }
+    });
+  }).catch(function () {});
+}
 function removeFromPlaylist(idx) {
-if (idx < 0 || idx >= playlist.length) return;
-var wasCurrent = idx === currentIndex;
-var name = playlist[idx] ? playlist[idx].name : '';
-playlist.splice(idx, 1);
-if (currentIndex > idx) currentIndex--;
-if (wasCurrent) {
-if (playlist.length === 0) {
-audio.pause();
-audio.removeAttribute('src');
-audio.load();
-trackNameSpan.innerText = '🌸 空空的喵';
-trackArtistSpan.innerText = '点击 添加音乐';
-totalDurSpan.innerText = '0:00';
-curTimeSpan.innerText = '0:00';
-playIcon.className = 'fas fa-play';
-coverInner.classList.remove('playing');
-stopSpectrum();
-setMediaPlaybackState('paused');
-} else {
-if (currentIndex >= playlist.length) currentIndex = playlist.length - 1;
-play(currentIndex);
-}
-} else {
-updateList();
-}
-showMsg('已从歌单删除：' + name);
+  if (idx < 0 || idx >= playlist.length) return;
+  var wasCurrent = idx === currentIndex;
+  var removed = playlist[idx];
+  var name = removed ? removed.name : "";
+  if (removed && removed.idbKey) removeUploadedRecord(removed.idbKey);
+  playlist.splice(idx, 1);
+  if (currentIndex > idx) currentIndex--;
+  saveUserPlaylist();
+  if (wasCurrent) {
+    if (playlist.length === 0) {
+      audio.pause();
+      audio.removeAttribute("src");
+      audio.load();
+      trackNameSpan.innerText = "🌸 空空的喵";
+      trackArtistSpan.innerText = "点击 添加音乐";
+      totalDurSpan.innerText = "0:00";
+      curTimeSpan.innerText = "0:00";
+      playIcon.className = "fas fa-play";
+      coverInner.classList.remove("playing");
+      stopSpectrum();
+      setMediaPlaybackState("paused");
+    } else {
+      if (currentIndex >= playlist.length) currentIndex = playlist.length - 1;
+      play(currentIndex);
+    }
+  } else {
+    updateList();
+  }
+  showMsg("已从歌单删除：" + name);
 }
 var favOnlyBtn = document.getElementById('favOnlyBtn');
 if (favOnlyBtn) favOnlyBtn.addEventListener('click', function () {
@@ -300,40 +335,50 @@ updateList();
 showMsg(favOnly ? '只看收藏 ♥' : '显示全部歌单');
 });
 function updateList() {
-var showing = favOnly ? playlist.filter(isFav) : playlist;
-let html = '';
-showing.forEach((s) => {
-var realIdx = playlist.indexOf(s);
-let active = realIdx === currentIndex ? 'active' : '';
-var favCls = isFav(s) ? 'on' : '';
-var delBtn = canDeleteTrack(s) ? '<button class="track-del" data-del="' + realIdx + '" title="从歌单删除"><i class="fas fa-times"></i></button>' : '';
-html += `<div class="track-item ${active}" data-idx="${realIdx}">
-<div class="track-info"><i class="fas fa-music" style="color:#db8faa;"></i> ${escapeHtml(s.name)}</div>
-<div class="track-duration">${s.dur || '0:00'}</div>
-<button class="track-fav ${favCls}" data-fav="${realIdx}" title="收藏"><i class="fas fa-heart"></i></button>
-${delBtn}
-</div>`;
-});
-if(showing.length === 0) {
-playlistContainer.innerHTML = favOnly ? '<div style="text-align:center;color:#b98297;padding:20px;">还没有收藏的歌曲喵～点歌单里的 ♥ 试试</div>' : '<div style="text-align:center;color:#b98297;padding:20px;">🌸 暂无歌曲，点击右上角上传喵~</div>';
-} else {
-playlistContainer.innerHTML = html;
-}
-songCountSpan.innerText = `${playlist.length} 首`;
-document.querySelectorAll('.track-item').forEach(el => {
-el.addEventListener('click', (e) => {
-if (e.target.closest && (e.target.closest('.track-del') || e.target.closest('.track-fav'))) return;
-let idx = parseInt(el.dataset.idx); if(!isNaN(idx)) play(idx);
-});
-});
-document.querySelectorAll('.track-del').forEach(el => {
-el.addEventListener('click', (e) => { e.stopPropagation(); removeFromPlaylist(parseInt(el.dataset.del)); });
-});
-document.querySelectorAll('.track-fav').forEach(el => {
-el.addEventListener('click', (e) => { e.stopPropagation(); toggleFav(playlist[parseInt(el.dataset.fav)]); });
-});
-var act = playlistContainer.querySelector('.track-item.active');
-if (act) { try { act.scrollIntoView({ block: 'nearest' }); } catch (err) { act.scrollIntoView(); } }
+  var pairs = [];
+  for (var i = 0; i < playlist.length; i++) {
+    if (favOnly && !isFav(playlist[i])) continue;
+    pairs.push({ s: playlist[i], idx: i });
+  }
+  var html = "";
+  for (var k = 0; k < pairs.length; k++) {
+    var s = pairs[k].s, realIdx = pairs[k].idx;
+    var active = realIdx === currentIndex ? "active" : "";
+    var favCls = isFav(s) ? "on" : "";
+    var delBtn = canDeleteTrack(s) ? '<button class="track-del" data-del="' + realIdx + '" title="从歌单删除"><i class="fas fa-times"></i></button>' : "";
+    html += '<div class="track-item ' + active + '" data-idx="' + realIdx + '">' +
+      '<div class="track-info"><i class="fas fa-music" style="color:#db8faa;"></i> ' + escapeHtml(s.name) + '</div>' +
+      '<div class="track-duration">' + escapeHtml(s.dur || "0:00") + '</div>' +
+      '<button class="track-fav ' + favCls + '" data-fav="' + realIdx + '" title="收藏"><i class="fas fa-heart"></i></button>' +
+      delBtn +
+      '</div>';
+  }
+  if (pairs.length === 0) {
+    playlistContainer.innerHTML = favOnly
+      ? '<div style="text-align:center;color:#b98297;padding:20px;">还没有收藏的歌曲喵～点歌单里的 ♥ 试试</div>'
+      : '<div style="text-align:center;color:#b98297;padding:20px;">🌸 暂无歌曲，点击右上角上传喵~</div>';
+  } else {
+    playlistContainer.innerHTML = html;
+  }
+  songCountSpan.innerText = playlist.length + " 首";
+  if (!playlistContainer.dataset.bound) {
+    playlistContainer.dataset.bound = "1";
+    playlistContainer.addEventListener("click", function (e) {
+      var el = e.target;
+      if (!el || !el.closest) return;
+      var del = el.closest(".track-del");
+      if (del) { e.stopPropagation(); removeFromPlaylist(parseInt(del.dataset.del, 10)); return; }
+      var fav = el.closest(".track-fav");
+      if (fav) { e.stopPropagation(); toggleFav(playlist[parseInt(fav.dataset.fav, 10)]); return; }
+      var item = el.closest(".track-item");
+      if (item) { var idx = parseInt(item.dataset.idx, 10); if (!isNaN(idx)) play(idx); }
+    });
+  }
+  var act = playlistContainer.querySelector(".track-item.active");
+  if (act && playlistContainer.dataset.scrolled !== String(currentIndex)) {
+    playlistContainer.dataset.scrolled = String(currentIndex);
+    try { act.scrollIntoView({ block: "nearest" }); } catch (err) {}
+  }
 }
 function play(idx) {
 if(playlist.length === 0) {
@@ -652,10 +697,16 @@ showMsg('已清空本地音乐缓存');
 showMsg('清空失败喵');
 }
 });
-updateList();
 coverImg.src = DEFAULT_COVER;
 initSpectrum();
-loadLocalSongs().then(restorePlayback);
+updateList();
+loadOfficialPlaylist()
+  .then(function () {
+    var restored = restoreUserPlaylist();
+    if (restored > 0) showMsg("已恢复「我的歌单」" + restored + " 首");
+    return loadLocalSongs();
+  })
+  .then(function () { saveUserPlaylist(); return restorePlayback(); });
 /*花瓣动画与 Service Worker 注册已统一移至 common.js */
 (function () {
 var grid = document.getElementById('worksGrid');
@@ -793,16 +844,16 @@ var searchBtn = document.getElementById('ns-btn');
 var resultBox = document.getElementById('ns-results');
 var platformSel = document.getElementById('ns-platform');
 if (!searchBox || !resultBox) return;
-var API = 'https://api.qijieya.cn/meting/';
+/* 音源统一交给 js/music-api.js（自建网易云网关 + Meting 多镜像 + iTunes） */
+var API = "https://api.qijieya.cn/meting/";
 var ALL_PLATFORMS = [
-['netease', '网易云'],
-['tencent', 'QQ音乐'],
-['kugou', '酷狗'],
-['migu', '咪咕'],
-['bilibili', 'B站'],
-['itunes', 'iTunes']
+  ["netease", "网易云"],
+  ["tencent", "QQ音乐"],
+  ["kugou", "酷狗"],
+  ["migu", "咪咕"],
+  ["bilibili", "B站"],
+  ["itunes", "iTunes"]
 ];
-var API_BACKUP = 'https://musicapi.qijieya.cn/meting/';
 function fmt(t) {
 if (!t) return '0:00';
 var m = Math.floor(t / 60), s = Math.round(t % 60);
@@ -824,47 +875,26 @@ lrc: s.lrc || s.lyric || ''
 };
 }
 function apiSearch(api, platform, kw, cb) {
-if (platform === 'itunes') {
-/* iTunes Search API：免费、无 key、支持 CORS；结果带 30 秒官方试听 */
-fetch('https://itunes.apple.com/search?term=' + encodeURIComponent(kw) + '&entity=song&limit=20')
-.then(function (r) { return r.json(); })
-.then(function (j) {
-var arr = j && j.results;
-if (!arr || !arr.length) return cb(null);
-cb(arr.map(function (s) {
-return {
-name: s.trackName || '未知歌曲',
-artist: s.artistName || '',
-url: s.previewUrl || '',
-pic: (s.artworkUrl100 || '').replace('100x100', '300x300'),
-duration: Math.round((s.trackTimeMillis || 0) / 1000),
-lrc: ''
-};
-}));
-})
-.catch(function () { cb(null, true); });
-return;
-}
-fetch(api + '?server=' + platform + '&type=search&id=' + encodeURIComponent(kw) + '&limit=20')
-.then(function (r) { return r.json(); })
-.then(function (j) {
-var arr = Array.isArray(j) ? j : (j && j.data ? j.data : null);
-cb(arr ? arr.map(function (s) { return norm(s, platform); }) : null);
-})
-.catch(function () { cb(null, true); });
+  /* 统一走 js/music-api.js：网易云走自建网关（带 id/封面/专辑），其余平台走 Meting 多镜像 */
+  if (!window.MusicAPI) { cb(null, true); return; }
+  MusicAPI.searchOne(platform, kw, { limit: 20 })
+    .then(function (songs) {
+      if (!songs || !songs.length) { cb(null); return; }
+      cb(songs.map(function (s) {
+        return {
+          platform: s.platform, id: s.id || "", name: s.name, artist: s.artist,
+          url: s.url || "", pic: s.cover || "", duration: s.duration || 0, lrc: s.lrc || ""
+        };
+      }));
+    })
+    .catch(function () { cb(null, true); });
 }
 function trySearch(apis, i, platform, kw, done) {
-var netFail = false;
-(function step(n) {
-if (n >= apis.length) return done(null, netFail);
-apiSearch(apis[n], platform, kw, function (songs, fail) {
-if (fail) netFail = true;
-if (songs && songs.length) return done(songs);
-step(n + 1);
-});
-})(i);
-}
-function resolveUrl(u, cb) {
+  /* MusicAPI 内部已经做了多镜像轮询，这里只需要调一次 */
+  apiSearch(apis[0], platform, kw, function (songs, fail) {
+    done(songs, !!fail);
+  });
+}function resolveUrl(u, cb) {
 cb(u && u.indexOf('http') === 0 ? u : '');
 }
 function probeExt(buf) {
@@ -7087,13 +7117,19 @@ duration: s.duration || 0
 };
 }
 function apiSearch(api, platform, kw, cb) {
-fetch(api + '?server=' + platform + '&type=search&id=' + encodeURIComponent(kw) + '&limit=10')
-.then(function (r) { return r.json(); })
-.then(function (j) {
-var arr = Array.isArray(j) ? j : (j && j.data ? j.data : null);
-cb(arr ? arr.map(norm4) : null);
-})
-.catch(function () { cb(null, true); });
+  /* 统一走 js/music-api.js：网易云走自建网关（带 id/封面/专辑），其余平台走 Meting 多镜像 */
+  if (!window.MusicAPI) { cb(null, true); return; }
+  MusicAPI.searchOne(platform, kw, { limit: 20 })
+    .then(function (songs) {
+      if (!songs || !songs.length) { cb(null); return; }
+      cb(songs.map(function (s) {
+        return {
+          platform: s.platform, id: s.id || "", name: s.name, artist: s.artist,
+          url: s.url || "", pic: s.cover || "", duration: s.duration || 0, lrc: s.lrc || ""
+        };
+      }));
+    })
+    .catch(function () { cb(null, true); });
 }
 function trySearch(apis, i, platform, kw, done) {
 var netFail = false;
@@ -7112,7 +7148,8 @@ return ps[Math.floor(Math.random() * ps.length)];
 }
 function addToPlaylist(song) {
 if (typeof playlist === 'undefined' || typeof play !== 'function') return false;
-playlist.push({ name: song.name, artist: song.artist, path: song.url, online: true });
+playlist.push({ name: song.name, artist: song.artist, path: song.url, online: true, platform: song.platform || "", id: song.id || "", cover: song.cover || "", lrc: song.lrc || "" });
+if (typeof saveUserPlaylist === "function") saveUserPlaylist();
 play(playlist.length - 1);
 if (typeof updateList === 'function') updateList();
 return true;

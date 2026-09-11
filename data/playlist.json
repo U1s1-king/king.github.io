@@ -1,0 +1,655 @@
+{
+ "version": 1,
+ "updated": "2026-09-11",
+ "note": "官方推荐曲库。音频文件托管在 https://sakura-music.pages.dev/music/ ，file 为文件名。",
+ "lists": [
+  {
+   "id": "official",
+   "name": "官方推荐",
+   "description": "站点内置曲库，只读。想改动请另建「我的歌单」。",
+   "readonly": true,
+   "songs": [
+    {
+     "name": "Don't say \"lazy\"",
+     "artist": "放課後ティータイム",
+     "file": "放課後ティータイム - Dont saylazy.mp3"
+    },
+    {
+     "name": "ふわふわ時間 (轻飘飘时间)(映画「けいおん!」Mix)",
+     "artist": "放課後ティータイム",
+     "file": "放課後ティータイム - ふわふわ時間 (轻飘飘时间)(映画「けいおん!」Mix).mp3"
+    },
+    {
+     "name": "天使にふれたよ!",
+     "artist": "放課後ティータイム",
+     "file": "放課後ティータイム - 天使にふれたよ!.mp3"
+    },
+    {
+     "name": "あのバンド",
+     "artist": "結束バンド",
+     "file": "結束バンド - あのバンド.mp3"
+    },
+    {
+     "name": "ギターと孤独と蒼い惑星 (吉他与孤独与蓝色星球)",
+     "artist": "結束バンド",
+     "file": "結束バンド - ギターと孤独と蒼い惑星 (吉他与孤独与蓝色星球).mp3"
+    },
+    {
+     "name": "ひとりぼっち東京",
+     "artist": "結束バンド",
+     "file": "結束バンド - ひとりぼっち東京.mp3"
+    },
+    {
+     "name": "ひみつ基地 (秘密基地)",
+     "artist": "結束バンド",
+     "file": "結束バンド - ひみつ基地 (秘密基地).mp3"
+    },
+    {
+     "name": "忘れてやらない (绝不会忘记)",
+     "artist": "結束バンド",
+     "file": "結束バンド - 忘れてやらない (绝不会忘记).mp3"
+    },
+    {
+     "name": "星座になれたら",
+     "artist": "結束バンド",
+     "file": "結束バンド - 星座になれたら.mp3"
+    },
+    {
+     "name": "Lemon",
+     "artist": "米津玄師",
+     "file": "米津玄師 - Lemon.mp3"
+    },
+    {
+     "name": "LOSER",
+     "artist": "米津玄師",
+     "file": "米津玄師 - LOSER.mp3"
+    },
+    {
+     "name": "M八七",
+     "artist": "米津玄師",
+     "file": "米津玄師 - M八七.mp3"
+    },
+    {
+     "name": "Pale Blue",
+     "artist": "米津玄師",
+     "file": "米津玄師 - Pale Blue.mp3"
+    },
+    {
+     "name": "感電",
+     "artist": "米津玄師",
+     "file": "米津玄師 - 感電.mp3"
+    },
+    {
+     "name": "海の幽霊",
+     "artist": "米津玄師",
+     "file": "米津玄師 - 海の幽霊.mp3"
+    },
+    {
+     "name": "死神",
+     "artist": "米津玄師",
+     "file": "米津玄師 - 死神.mp3"
+    },
+    {
+     "name": "打上花火",
+     "artist": "米津玄師、Daoko",
+     "file": "米津玄師、Daoko - 打上花火.mp3"
+    },
+    {
+     "name": "Promise",
+     "artist": "Da-iCE",
+     "file": "Da-iCE_-_Promise.mp3"
+    },
+    {
+     "name": "KiLLKiSS",
+     "artist": "Ave Mujica",
+     "file": "Ave Mujica - KiLLKiSS.mp3"
+    },
+    {
+     "name": "白日",
+     "artist": "King Gnu",
+     "file": "King Gnu - 白日.mp3"
+    },
+    {
+     "name": "世末歌者",
+     "artist": "",
+     "file": "世末歌者.mp3"
+    },
+    {
+     "name": "Re_Re_",
+     "artist": "結束バンド",
+     "file": "結束バンド - Re_Re_.mp3"
+    },
+    {
+     "name": "Starlight",
+     "artist": "超特急",
+     "file": "超特急_-_Starlight.mp3"
+    },
+    {
+     "name": "恋ひ恋う縁 (以恋结缘)",
+     "artist": "KOTOKO",
+     "file": "KOTOKO - 恋ひ恋う縁 (以恋结缘).mp3"
+    },
+    {
+     "name": "Tori No Uta",
+     "artist": "Lia",
+     "file": "Lia - Tori No Uta.mp3"
+    },
+    {
+     "name": "ウルトラマンギンガの歌",
+     "artist": "voyager/千紗/マリア春菜/竹内浩明/根岸拓哉/宮武美桜/大野瑞生/雲母/草川拓弥",
+     "file": "voyager_千紗_マリア春菜_竹内浩明_根岸拓哉_宮武美桜_大野瑞生_雲母_草川拓弥 - ウルトラマンギンガの歌.mp3"
+    },
+    {
+     "name": "顔",
+     "artist": "Ave Mujica",
+     "file": "Ave Mujica - 顔.mp3"
+    },
+    {
+     "name": "キボウノカケラ",
+     "artist": "ボイジャー",
+     "file": "ボイジャー - キボウノカケラ.mp3"
+    },
+    {
+     "name": "反乌托邦",
+     "artist": "",
+     "file": "反乌托邦.mp3"
+    },
+    {
+     "name": "恋愛サーキュレーション",
+     "artist": "花澤香菜",
+     "file": "花澤香菜 - 恋愛サーキュレーション.mp3"
+    },
+    {
+     "name": "九重现实",
+     "artist": "洛天依/言和/乐正绫",
+     "file": "洛天依、言和、乐正绫 - 九重现实.mp3"
+    },
+    {
+     "name": "secret base ~君がくれたもの~",
+     "artist": "茅野愛衣/戸松遥/早見沙織",
+     "file": "茅野愛衣_戸松遥_早見沙織 - secret base ~君がくれたもの~.mp3"
+    },
+    {
+     "name": "One Last Kiss",
+     "artist": "宇多田ヒカル",
+     "file": "宇多田ヒカル - One Last Kiss.mp3"
+    },
+    {
+     "name": "僕が死のうと思ったのは",
+     "artist": "中岛美嘉",
+     "file": "中岛美嘉_-_僕が死のうと思ったのは.mp3"
+    },
+    {
+     "name": "AIscream",
+     "artist": "",
+     "file": "AIscream.mp3"
+    },
+    {
+     "name": "TWO_AS_ONE",
+     "artist": "Da-iCE",
+     "file": "Da-iCE_-_TWO_AS_ONE.mp3"
+    },
+    {
+     "name": "サヨナラサヨナラサヨナラ",
+     "artist": "トゲナシトゲアリ",
+     "file": "トゲナシトゲアリ - サヨナラサヨナラサヨナラ (再见再见再见).mp3"
+    },
+    {
+     "name": "ダレモ",
+     "artist": "トゲナシトゲアリ",
+     "file": "トゲナシトゲアリ - ダレモ.mp3"
+    },
+    {
+     "name": "闇に溶けてく",
+     "artist": "トゲナシトゲアリ",
+     "file": "トゲナシトゲアリ - 闇に溶けてく.mp3"
+    },
+    {
+     "name": "爆ぜて咲く",
+     "artist": "トゲナシトゲアリ",
+     "file": "トゲナシトゲアリ - 爆ぜて咲く (爆裂绽放).mp3"
+    },
+    {
+     "name": "蝶に結いた赤い糸",
+     "artist": "トゲナシトゲアリ",
+     "file": "トゲナシトゲアリ - 蝶に結いた赤い糸.mp3"
+    },
+    {
+     "name": "飛べない蝶は夢を見る",
+     "artist": "トゲナシトゲアリ",
+     "file": "トゲナシトゲアリ - 飛べない蝶は夢を見る.mp3"
+    },
+    {
+     "name": "極私的極彩色アンサー",
+     "artist": "トゲナシトゲアリ",
+     "file": "トゲナシトゲアリ - 極私的極彩色アンサー.mp3"
+    },
+    {
+     "name": "空の箱",
+     "artist": "トゲナシトゲアリ",
+     "file": "トゲナシトゲアリ - 空の箱.mp3"
+    },
+    {
+     "name": "空白とカタルシス",
+     "artist": "トゲナシトゲアリ",
+     "file": "トゲナシトゲアリ - 空白とカタルシス.mp3"
+    },
+    {
+     "name": "黎明を穿つ",
+     "artist": "トゲナシトゲアリ",
+     "file": "トゲナシトゲアリ - 黎明を穿つ.mp3"
+    },
+    {
+     "name": "理想的パラドクスとは",
+     "artist": "トゲナシトゲアリ",
+     "file": "トゲナシトゲアリ - 理想的パラドクスとは.mp3"
+    },
+    {
+     "name": "名もなき何もかも",
+     "artist": "トゲナシトゲアリ",
+     "file": "トゲナシトゲアリ - 名もなき何もかも.mp3"
+    },
+    {
+     "name": "気鬱、白濁す",
+     "artist": "トゲナシトゲアリ",
+     "file": "トゲナシトゲアリ - 気鬱、白濁す (white drizzle in gloom).mp3"
+    },
+    {
+     "name": "傷つき傷つけ痛くて辛い",
+     "artist": "トゲナシトゲアリ",
+     "file": "トゲナシトゲアリ - 傷つき傷つけ痛くて辛い.mp3"
+    },
+    {
+     "name": "視界の隅 朽ちる音",
+     "artist": "トゲナシトゲアリ",
+     "file": "トゲナシトゲアリ - 視界の隅 朽ちる音.mp3"
+    },
+    {
+     "name": "声なき魚",
+     "artist": "トゲナシトゲアリ",
+     "file": "トゲナシトゲアリ - 声なき魚.mp3"
+    },
+    {
+     "name": "誰にもなれない私だから",
+     "artist": "トゲナシトゲアリ",
+     "file": "トゲナシトゲアリ - 誰にもなれない私だから.mp3"
+    },
+    {
+     "name": "偽りの理",
+     "artist": "トゲナシトゲアリ",
+     "file": "トゲナシトゲアリ - 偽りの理.mp3"
+    },
+    {
+     "name": "心象的フラクタル",
+     "artist": "トゲナシトゲアリ",
+     "file": "トゲナシトゲアリ - 心象的フラクタル.mp3"
+    },
+    {
+     "name": "運命に賭けたい論理",
+     "artist": "トゲナシトゲアリ",
+     "file": "トゲナシトゲアリ - 運命に賭けたい論理.mp3"
+    },
+    {
+     "name": "運命の華",
+     "artist": "トゲナシトゲアリ",
+     "file": "トゲナシトゲアリ - 運命の華.mp3"
+    },
+    {
+     "name": "雑踏、僕らの街",
+     "artist": "トゲナシトゲアリ",
+     "file": "トゲナシトゲアリ - 雑踏、僕らの街.mp3"
+    },
+    {
+     "name": "碧いif",
+     "artist": "トゲナシトゲアリ",
+     "file": "碧いif.mp3"
+    },
+    {
+     "name": "吹き消した灯火",
+     "artist": "トゲナシトゲアリ",
+     "file": "吹き消した灯火.mp3"
+    },
+    {
+     "name": "無知のち私",
+     "artist": "トゲナシトゲアリ",
+     "file": "無知のち私.mp3"
+    },
+    {
+     "name": "臆病な白夜",
+     "artist": "トゲナシトゲアリ",
+     "file": "臆病な白夜.mp3"
+    },
+    {
+     "name": "最期の禱り",
+     "artist": "トゲナシトゲアリ",
+     "file": "最期の禱り.mp3"
+    },
+    {
+     "name": "猛独が襲う (Deathly Loneliness Attacks)",
+     "artist": "MyGO!!!!!",
+     "file": "MyGO!!!!! - 猛独が襲う (Deathly Loneliness Attacks).mp3"
+    },
+    {
+     "name": "迷星叫",
+     "artist": "MyGO!!!!!",
+     "file": "MyGO!!!!! - 迷星叫.mp3"
+    },
+    {
+     "name": "壱雫空",
+     "artist": "MyGO!!!!!",
+     "file": "MyGO!!!!! - 壱雫空.mp3"
+    },
+    {
+     "name": "影色舞",
+     "artist": "MyGO!!!!!",
+     "file": "MyGO!!!!! - 影色舞.mp3"
+    },
+    {
+     "name": "春日影 (MyGO!!!!! ver.)",
+     "artist": "MyGO!!!!!",
+     "file": "MyGO!!!!! - 春日影 (MyGO!!!!! ver.).mp3"
+    },
+    {
+     "name": "スパークル",
+     "artist": "RADWIMPS",
+     "file": "RADWIMPS - スパークル.mp3"
+    },
+    {
+     "name": "なんでもないや",
+     "artist": "RADWIMPS",
+     "file": "RADWIMPS - なんでもないや.mp3"
+    },
+    {
+     "name": "夢灯籠",
+     "artist": "RADWIMPS",
+     "file": "RADWIMPS - 夢灯籠.mp3"
+    },
+    {
+     "name": "前前前世",
+     "artist": "RADWIMPS",
+     "file": "RADWIMPS - 前前前世.mp3"
+    },
+    {
+     "name": "Watch me!",
+     "artist": "YOASOBI",
+     "file": "YOASOBI - Watch me!.mp3"
+    },
+    {
+     "name": "あの夢をなぞって",
+     "artist": "YOASOBI",
+     "file": "YOASOBI - あの夢をなぞって.mp3"
+    },
+    {
+     "name": "アンコール (安可)",
+     "artist": "YOASOBI",
+     "file": "YOASOBI - アンコール (安可).mp3"
+    },
+    {
+     "name": "ラブレター",
+     "artist": "YOASOBI",
+     "file": "YOASOBI - ラブレター.mp3"
+    },
+    {
+     "name": "大正浪漫",
+     "artist": "YOASOBI",
+     "file": "YOASOBI - 大正浪漫.mp3"
+    },
+    {
+     "name": "怪物",
+     "artist": "YOASOBI",
+     "file": "YOASOBI - 怪物.mp3"
+    },
+    {
+     "name": "群青",
+     "artist": "YOASOBI",
+     "file": "YOASOBI - 群青.mp3"
+    },
+    {
+     "name": "夜に駆ける",
+     "artist": "YOASOBI",
+     "file": "YOASOBI - 夜に駆ける.mp3"
+    },
+    {
+     "name": "ずっとずっとずっと",
+     "artist": "緑黄色社会",
+     "file": "緑黄色社会 - ずっとずっとずっと.mp3"
+    },
+    {
+     "name": "妄想感傷代償連盟",
+     "artist": "初音未来",
+     "file": "DECO×27、初音ミク_-_妄想感傷代償連盟.mp3"
+    },
+    {
+     "name": "可愛くてごめん",
+     "artist": "HoneyWorks、早見沙織",
+     "file": "HoneyWorks、早見沙織 - 可愛くてごめん.mp3"
+    },
+    {
+     "name": "Sinos De Natal",
+     "artist": "MGD、MXZHPHXNK",
+     "file": "MGD、MXZHPHXNK - Sinos De Natal.mp3"
+    },
+    {
+     "name": "NIGHT DANCER",
+     "artist": "imase",
+     "file": "NIGHT DANCER - imase.mp3"
+    },
+    {
+     "name": "テト - うそつきマカロン",
+     "artist": "重音",
+     "file": "暴飲暴食P、重音テト - うそつきマカロン.mp3"
+    },
+    {
+     "name": "鏡音リン、ピノキオピー_-_ねぇねぇねぇ。",
+     "artist": "初音未来",
+     "file": "初音ミク、鏡音リン、ピノキオピー_-_ねぇねぇねぇ。.mp3"
+    },
+    {
+     "name": "青春コンプレックス",
+     "artist": "結束バンド",
+     "file": "結束バンド - 青春コンプレックス.mp3"
+    },
+    {
+     "name": "優しい彗星",
+     "artist": "YOASOBI",
+     "file": "YOASOBI - 優しい彗星.mp3"
+    },
+    {
+     "name": "unravel",
+     "artist": "TK from 凛冽时雨",
+     "file": "TK_from_凛冽时雨_-_unravel.mp3"
+    },
+    {
+     "name": "真夜中のドア/Stay With Me (深夜门扉/留在我身边)",
+     "artist": "松原みき",
+     "file": "真夜中のドアStay With Me (深夜门扉留在我身边).mp3"
+    },
+    {
+     "name": "Barricades",
+     "artist": "澤野弘之",
+     "file": "澤野弘之 - Barricades.mp3"
+    },
+    {
+     "name": "Call of Silence",
+     "artist": "澤野弘之",
+     "file": "澤野弘之 - Call of Silence.mp3"
+    },
+    {
+     "name": "theDOGS",
+     "artist": "澤野弘之",
+     "file": "澤野弘之 - theDOGS.mp3"
+    },
+    {
+     "name": "Daydream_SQ",
+     "artist": "AxR",
+     "file": "AxR_-_Daydream_SQ.mp3"
+    },
+    {
+     "name": "desolate",
+     "artist": "ByErik ヵ",
+     "file": "ByErik ヵ - desolate.mp3"
+    },
+    {
+     "name": "Instruments of Retribution",
+     "artist": "Daniel Deluxe",
+     "file": "Daniel_Deluxe_-_Instruments_of_Retribution.mp3"
+    },
+    {
+     "name": "天气之子幻(钢琴版)",
+     "artist": "dylanf",
+     "file": "dylanf_-_天气之子幻(钢琴版).mp3"
+    },
+    {
+     "name": "HEAVENLY JUMPSTYLE(西蒙海耶小曲)",
+     "artist": "INFINITY ICE",
+     "file": "INFINITY ICE - HEAVENLY JUMPSTYLE.mp3"
+    },
+    {
+     "name": "Money So Big",
+     "artist": "Muppet DJ、SECA Records",
+     "file": "Muppet DJ、SECA Records - Money So Big.mp3"
+    },
+    {
+     "name": "Melodic Minor(感觉至上）",
+     "artist": "Park Choi",
+     "file": "Park Choi - Melodic Minor.mp3"
+    },
+    {
+     "name": "Heroes 2.0",
+     "artist": "RJ Pasin",
+     "file": "RJ_Pasin_-_Heroes_2.0.mp3"
+    },
+    {
+     "name": "「ねえ！○○ちゃんまだぁ〜？？？？」",
+     "artist": "さんうさぎ",
+     "file": "さんうさぎ_-_「ねえ！○○ちゃんまだぁ〜？？？？」.mp3"
+    },
+    {
+     "name": "3：30PM",
+     "artist": "しゃろう",
+     "file": "しゃろう_-_3：30PM.mp3"
+    },
+    {
+     "name": "おはなばたけ (花田)",
+     "artist": "近藤浩治",
+     "file": "近藤浩治_-_おはなばたけ_(花田).mp3"
+    },
+    {
+     "name": "怪物之歌",
+     "artist": "酸电池",
+     "file": "酸电池_-_怪物之歌.mp3"
+    },
+    {
+     "name": "愛♡スクリ～ム！",
+     "artist": "AIscream",
+     "file": "AIscream_-_愛♡スクリ～ム！.mp3"
+    },
+    {
+     "name": "Where Did Your Love Go?",
+     "artist": "Dawid Podsiadlo",
+     "file": "Dawid_Podsiadlo_-_Where_Did_Your_Love_Go_.mp3"
+    },
+    {
+     "name": "Cry For Me (feat. Ami)",
+     "artist": "Michita",
+     "file": "Michita - Cry For Me (feat. Ami).mp3"
+    },
+    {
+     "name": "あーあーあーあーあー",
+     "artist": "agehasprings",
+     "file": "agehasprings - あーあーあーあーあー.mp3"
+    },
+    {
+     "name": "渇く、憂う",
+     "artist": "トゲナシトゲアリ",
+     "file": "渇く、憂う.mp3"
+    },
+    {
+     "name": "生きて生きていく",
+     "artist": "トゲナシトゲアリ",
+     "file": "生きて生きていく.mp3"
+    },
+    {
+     "name": "おしんこ_SQ",
+     "artist": "田中ユウスケ",
+     "file": "田中ユウスケ - おしんこ_SQ.mp3"
+    },
+    {
+     "name": "ココロのウーロン茶_SQ",
+     "artist": "田中ユウスケ",
+     "file": "田中ユウスケ - ココロのウーロン茶_SQ.mp3"
+    },
+    {
+     "name": "袋小路",
+     "artist": "田中ユウスケ",
+     "file": "田中ユウスケ - 袋小路.mp3"
+    },
+    {
+     "name": "雑踏、僕らの街 (Wrong World)(彷徨う)_SQ",
+     "artist": "田中ユウスケ",
+     "file": "田中ユウスケ - 雑踏、僕らの街 (Wrong World)(彷徨う)_SQ.mp3"
+    },
+    {
+     "name": "SHAZAI（謝）",
+     "artist": "田中ユウスケ/agehasprings",
+     "file": "田中ユウスケ_agehasprings - SHAZAI（謝）.mp3"
+    },
+    {
+     "name": "ありがとう。ベニショーガ魂",
+     "artist": "田中ユウスケ/agehasprings",
+     "file": "田中ユウスケ_agehasprings - ありがとう。ベニショーガ魂.mp3"
+    },
+    {
+     "name": "たぶん気分（ねぎぬき）",
+     "artist": "田中ユウスケ/agehasprings",
+     "file": "田中ユウスケ_agehasprings - たぶん気分（ねぎぬき）.mp3"
+    },
+    {
+     "name": "むかしからの老舗〜持ち時間20分",
+     "artist": "田中ユウスケ/agehasprings",
+     "file": "田中ユウスケ_agehasprings - むかしからの老舗〜持ち時間20分.mp3"
+    },
+    {
+     "name": "フェスで人気でそうなバンドの曲",
+     "artist": "田中ユウスケ/agehasprings",
+     "file": "田中ユウスケ_agehasprings - フェスで人気でそうなバンドの曲.mp3"
+    },
+    {
+     "name": "十七歳三月",
+     "artist": "田中ユウスケ/agehasprings",
+     "file": "田中ユウスケ_agehasprings - 十七歳三月.mp3"
+    },
+    {
+     "name": "嘘とconfuse",
+     "artist": "田中ユウスケ/agehasprings",
+     "file": "田中ユウスケ_agehasprings - 嘘とconfuse.mp3"
+    },
+    {
+     "name": "孤孤孤孤独（腰痛）",
+     "artist": "田中ユウスケ/agehasprings",
+     "file": "田中ユウスケ_agehasprings - 孤孤孤孤独（腰痛）.mp3"
+    },
+    {
+     "name": "恍惚の定理",
+     "artist": "田中ユウスケ/agehasprings",
+     "file": "田中ユウスケ_agehasprings - 恍惚の定理.mp3"
+    },
+    {
+     "name": "誤解と高卒",
+     "artist": "田中ユウスケ/agehasprings",
+     "file": "田中ユウスケ_agehasprings - 誤解と高卒.mp3"
+    },
+    {
+     "name": "雨と疾走とマニフェスト",
+     "artist": "田中ユウスケ/agehasprings",
+     "file": "田中ユウスケ_agehasprings - 雨と疾走とマニフェスト.mp3"
+    },
+    {
+     "name": "BOW AND ARROW",
+     "artist": "米津玄師",
+     "file": "米津玄師 - BOW AND ARROW.mp3"
+    }
+   ]
+  }
+ ]
+}

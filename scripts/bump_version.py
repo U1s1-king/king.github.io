@@ -15,7 +15,7 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LIVE2D_HOST = 'sakura-live2d.pages.dev'
-URL_RE = re.compile(r'(https?://[^"'\s>]+)')
+URL_RE = re.compile(r'''(https?://[^"'\s>]+)''')
 V_RE = re.compile(r'\?v=\d{6,}')
 
 
