@@ -173,7 +173,6 @@ let audioCtx = null;
 let analyserNode = null;
 let freqData = null;
 let spectrumRaf = null;
-let spectrumPeaks = [];
 let spectrumSilent = 0;
 let spectrumPhase = 0;
 let spectrumMax = 44;
@@ -193,37 +192,48 @@ function initSpectrum() {
     spectrumBars.push(bar);
   }
   spectrumMax = Math.max(16, (container.clientHeight || 48) - 4);
-  spectrumPeaks = [];
-  for (var j = 0; j < barCount; j++) spectrumPeaks.push(0);
 }
+let mediaSourceNode = null;
+let analyserRetryAt = 0;
 function ensureAnalyser() {
   if (analyserNode) return analyserNode;
+  /* 不要用 captureStream()：实测它在 Chrome 上虽然能拿到 tracks=1/live 的轨道，
+     但 getByteFrequencyData 读出来永远是全 0（连续 10 秒采样都是 0），
+     所以频谱只会一直是随机假数据。取媒体元素频谱的标准做法是
+     createMediaElementSource()。
+     两个必须注意的点：
+       1. 它必须再接回 audioCtx.destination，否则声音会被抽进图里后不再输出；
+       2. 同一个 media 元素只能调用一次，所以 source 要缓存起来复用。 */
   var Ctx = window.AudioContext || window.webkitAudioContext;
   if (!Ctx || !audio) return null;
-  var stream = null;
+  /* 不要拿 audio.readyState 做前置判断：createMediaElementSource 在 readyState=0 时
+     同样能建好；而官方曲目是 11MB 的大文件，免费 CDN 偶发停滞时 readyState 会长时间停在 0，
+     那样分析器就永远建不起来（表现就是频谱不跳）。建好之后真正的 FFT 数据会在出声时自然到来。 */
+  var now = Date.now();
+  if (now < analyserRetryAt) return null;           /* 失败后每秒重试，不永久放弃 */
+  analyserRetryAt = now + 1000;
   try {
-    if (typeof audio.captureStream === "function") stream = audio.captureStream();
-    else if (typeof audio.mozCaptureStream === "function") stream = audio.mozCaptureStream();
-  } catch (e) { stream = null; }
-  if (!stream) return null;
-  try {
-    audioCtx = new Ctx();
-    var source = audioCtx.createMediaStreamSource(stream);
+    if (!audioCtx) audioCtx = new Ctx();
+    if (audioCtx.state === "suspended") { try { audioCtx.resume(); } catch (e) {} }
+    if (!mediaSourceNode) {
+      mediaSourceNode = audioCtx.createMediaElementSource(audio);
+      mediaSourceNode.connect(audioCtx.destination);   /* 不接回去就没声音 */
+    }
     analyserNode = audioCtx.createAnalyser();
     analyserNode.fftSize = 128;
     analyserNode.smoothingTimeConstant = 0.78;
-    source.connect(analyserNode);
+    mediaSourceNode.connect(analyserNode);
     freqData = new Uint8Array(analyserNode.frequencyBinCount);
-  } catch (e) { analyserNode = null; audioCtx = null; freqData = null; }
+  } catch (e) {
+    try { console.warn("频谱分析器初始化失败，退回随机动画：", e && e.message); } catch (_) {}
+    analyserNode = null; freqData = null;
+  }
   return analyserNode;
 }
 function paintBars(levels) {
   for (var i = 0; i < spectrumBars.length; i++) {
     var v = levels[i] || 0;
-    if (v > spectrumPeaks[i]) spectrumPeaks[i] = v;
-    else spectrumPeaks[i] = Math.max(0, spectrumPeaks[i] - 1.6);
     spectrumBars[i].style.height = Math.max(3, Math.min(spectrumMax, v)) + "px";
-    spectrumBars[i].style.setProperty("--peak", Math.max(3, Math.min(spectrumMax, spectrumPeaks[i])) + "px");
   }
 }
 function renderRealSpectrum() {
@@ -264,17 +274,42 @@ function spectrumLoop() {
 }
 function startSpectrum() {
   if (audioCtx && audioCtx.state === "suspended") { try { audioCtx.resume(); } catch (e) {} }
+  analyserRetryAt = 0;
+  stallRetry = 0;
+  armStallWatch();
   if (spectrumRaf) return;
   spectrumSilent = 0;
   spectrumRaf = requestAnimationFrame(spectrumLoop);
 }
 function stopSpectrum() {
   if (spectrumRaf) { cancelAnimationFrame(spectrumRaf); spectrumRaf = null; }
-  for (var i = 0; i < spectrumBars.length; i++) {
-    spectrumBars[i].style.height = "4px";
-    spectrumBars[i].style.setProperty("--peak", "4px");
-  }
-  spectrumPeaks = spectrumBars.map(function () { return 0; });
+  for (var i = 0; i < spectrumBars.length; i++) spectrumBars[i].style.height = "4px";
+  clearStallWatch();
+}
+/* ===== 加载看门狗 =====
+   免费的 Pages CDN 偶发把媒体请求挂住：请求发出去了却一直不返回，<audio> 就卡在
+   readyState=0 / networkState=2 再也不动。官方曲目都是 10MB 上下的大文件，命中概率
+   不低，表现就是「点了歌、按钮显示在播，但一点声音都没有、进度条也不走」。
+   这里在开播后盯一会儿，卡住就重新拉一次源，最多两次。 */
+let stallTimer = null;
+let stallRetry = 0;
+function clearStallWatch() {
+  if (stallTimer) { clearTimeout(stallTimer); stallTimer = null; }
+}
+function armStallWatch() {
+  clearStallWatch();
+  stallTimer = setTimeout(function () {
+    stallTimer = null;
+    try {
+      if (!audio || audio.paused) return;
+      if (audio.readyState >= 2 && audio.currentTime > 0) return;   /* 正常出声，收工 */
+      if (stallRetry >= 2) return;
+      stallRetry++;
+      audio.load();                                                /* 重走一遍加载算法 */
+      var p = audio.play(); if (p && p.catch) p.catch(function () {});
+      armStallWatch();                                             /* 再盯一轮 */
+    } catch (e) {}
+  }, 6000);
 }
 /* ===== 收藏 / 歌单删除（UX 增强；删除为本次访问生效，刷新后歌单还原）===== */
 let favOnly = false;
@@ -508,7 +543,8 @@ if (err && err.name === 'NotAllowedError') { showMsg('自动播放被浏览器�
 progressFill.style.width = '0%';
 curTimeSpan.innerText = '0:00';
 updateList();
-lyricBox.innerHTML = ` 正在播放: ${s.name} · ${s.artist} 🌸 wink喵~`;
+if (window.loadLyrics) window.loadLyrics(s);
+else lyricBox.innerHTML = ` 正在播放: ${s.name} · ${s.artist} 🌸 wink喵~`;
 updateMediaSession(s);
 }
 /* ===== 断点续播 / 键盘快捷键（UX 增强） ===== */
@@ -758,6 +794,21 @@ setTimeout(function () { if (typeof next === 'function') next(); }, 300);
 showMsg(msg);
 }
 });
+/* 任何途径开始播放都要启动频谱：点歌单、点搜索结果、作品卡片、播放按钮、自动下一首。
+   之前 startSpectrum() 只在「播放按钮」和「作品卡片」两处被显式调用，
+   从歌单或搜索结果点歌播放时频谱是冻住的（柱子不动/高度为 0）。
+   挂到 audio 的 play 事件上就覆盖了所有入口。 */
+audio.addEventListener('play', function () {
+  isPlaying = true;
+  if (typeof playIcon !== 'undefined') playIcon.className = 'fas fa-pause';
+  if (typeof coverInner !== 'undefined') coverInner.classList.add('playing');
+  if (typeof setMediaPlaybackState === 'function') setMediaPlaybackState('playing');
+  if (typeof startSpectrum === 'function') startSpectrum();
+});
+audio.addEventListener('pause', function () {
+  if (typeof stopSpectrum === 'function') stopSpectrum();
+  if (typeof setMediaPlaybackState === 'function') setMediaPlaybackState('paused');
+});
 audio.addEventListener('pause', function () { savePlayState(); });
 audio.addEventListener('ended', () => {
 if(playMode === 'repeat'){
@@ -835,6 +886,12 @@ initSpectrum();
 /* 同步渲染内置曲库，不等任何网络请求 */
 applyOfficial(OFFICIAL_FALLBACK);
 updateList();
+/* 子页签是从 localStorage 恢复的，但 HTML 里默认高亮「官方推荐」，
+   不同步的话会出现「高亮落在官方推荐、列表却按收藏渲染」的空白歌单。 */
+try {
+  var _pvChips = document.querySelectorAll(".pl-view");
+  for (var _pi = 0; _pi < _pvChips.length; _pi++) _pvChips[_pi].classList.toggle("active", _pvChips[_pi].dataset.view === viewMode);
+} catch (e) {}
 loadOfficialPlaylist()
   .then(function () {
     var restored = restoreUserPlaylist();
@@ -1107,12 +1164,14 @@ playSong(el);
 var add = el.querySelector('.ns-add');
 if (add) add.addEventListener('click', function (e) {
 e.stopPropagation();
-addNsSong({ name: el.dataset.name, artist: el.dataset.artist, url: el.dataset.url, lrc: el.dataset.lrc });
+resolveNsUrl(el, function (u) {
+  addNsSong({ name: el.dataset.name, artist: el.dataset.artist, url: u, lrc: el.dataset.lrc });
+  });
 });
 var dl = el.querySelector('.ns-dl');
 if (dl) dl.addEventListener('click', function (e) {
 e.stopPropagation();
-downloadSong(el.dataset.url, el.dataset.name, el.dataset.artist);
+resolveNsUrl(el, function (u) { downloadSong(u, el.dataset.name, el.dataset.artist); });
 });
 }
 function playSong(el) {
@@ -1121,7 +1180,7 @@ var name = el.dataset.name, artist = el.dataset.artist;
 Array.prototype.forEach.call(resultBox.querySelectorAll('.ns-item'), function (c) { c.classList.remove('playing'); });
 el.classList.add('playing');
 el.querySelector('.ns-play i').className = 'fas fa-spinner fa-spin';
-resolveUrl(el.dataset.url, function (u) {
+resolveNsUrl(el, function (u) {
 self.querySelector('.ns-play i').className = 'fas fa-play';
 if (!u) {
 if (typeof showMsg === 'function') showMsg('这首暂时听不了（版权限制）喵～');
@@ -1139,26 +1198,27 @@ if (typeof playIcon !== 'undefined') playIcon.className = 'fas fa-pause';
 if (typeof coverInner !== 'undefined') coverInner.classList.add('playing');
 if (typeof trackNameSpan !== 'undefined') trackNameSpan.textContent = name;
 if (typeof trackArtistSpan !== 'undefined') trackArtistSpan.textContent = artist;
-if (window.LyricHelper && typeof lyricBox !== 'undefined' && lyricBox) {
-if (el.dataset.lrc) {
-LyricHelper.show(el.dataset.lrc, audio, lyricBox);
-} else if (name && artist) {
-/* Lyrics.ovh 自动补歌词：免费、无 key、支持 CORS（纯文本静态显示） */
-fetch('https://api.lyrics.ovh/v1/' + encodeURIComponent(artist) + '/' + encodeURIComponent(name))
-.then(function (r) { return r.json(); })
-.then(function (j) {
-if (j && j.lyrics && window.LyricHelper && typeof lyricBox !== 'undefined' && lyricBox) {
-var lines = j.lyrics.split('\n').filter(function (t) { return t.trim(); });
-lyricBox.innerHTML = lines.map(function (t) { return '<div class="lyr-line">' + esc2(t) + '</div>'; }).join('');
-} else if (typeof showMsg === 'function') {
-showMsg('暂无歌词喵～');
-}
-})
-.catch(function () {});
-}
-}
+/* 歌词统一走 loadLyrics：优先现成 lrc，其次自建网关 /api/lyric（带时间轴） */
+if (window.loadLyrics) window.loadLyrics({ name: name, artist: artist, id: el.dataset.id, platform: el.dataset.platform, lrc: el.dataset.lrc });
 }
 });
+}
+/* 搜索结果里网易云走的是自建网关 /api/search，只返回元数据、没有可播地址，
+   所以 data-url 经常是空的。旧版本是让 Meting 在搜索时就把 url 解析好一并返回，
+   因此能直接点播；改走统一网关后就断了。
+   这里改成点播时按需解析：把 id + platform 交给 MusicAPI.songUrl，
+   网易云会去 /api/url 取，其余平台走 Meting type=url。 */
+function resolveNsUrl(el, cb) {
+  var u = el.dataset.url;
+  if (u && u.indexOf("http") === 0) { cb(u); return; }
+  if (!window.MusicAPI || !MusicAPI.songUrl) { cb(""); return; }
+  MusicAPI.songUrl({
+    id: el.dataset.id || "",
+    platform: el.dataset.platform || "netease",
+    name: el.dataset.name || "",
+    artist: el.dataset.artist || ""
+  }).then(function (url) { cb(url || ""); })
+    .catch(function () { cb(""); });
 }
 function addNsSong(song) {
 if (!song || !song.url) { if (typeof showMsg === 'function') showMsg('这首暂时没有可播链接，加不了喵～'); return; }
@@ -1168,7 +1228,7 @@ if (typeof showMsg === 'function') showMsg('已加入歌单喵～');
 if (typeof updateList === 'function') updateList();
 }
 function itemHtml(s) {
-return '<div class="ns-item" data-name="' + esc2(s.name) + '" data-artist="' + esc2(s.artist) + '" data-url="' + esc2(s.url) + '" data-pic="' + esc2(s.pic) + '" data-lrc="' + esc2(s.lrc) + '">' +
+return '<div class="ns-item" data-name="' + esc2(s.name) + '" data-artist="' + esc2(s.artist) + '" data-url="' + esc2(s.url) + '" data-id="' + esc2(s.id) + '" data-platform="' + esc2(s.platform) + '" data-pic="' + esc2(s.pic) + '" data-lrc="' + esc2(s.lrc) + '">' +
 '<div class="ns-info">' +
 '<div class="ns-name">' + esc2(s.name) + '</div>' +
 '<div class="ns-artist">' + esc2(s.artist) + '</div>' +
@@ -1235,8 +1295,32 @@ if (searchBtn) searchBtn.addEventListener('click', doSearch);
 searchBox.addEventListener('keydown', function (e) { if (e.key === 'Enter') doSearch(); });
 })();
 ;
+/* ===== 统一歌词加载 =====
+   自建网关本来就有 /api/lyric（网易云返回带时间轴的 LRC + 翻译），
+   但这里从来没调用过 MusicAPI.lyric：
+     · 歌单播放只在歌词框写一行「正在播放: 歌名 · 歌手」，没有任何歌词
+     · 搜索结果只挂 Lyrics.ovh（纯文本、无时间轴，滚动和高亮都不生效）
+   现在统一成一条路径：有现成 lrc 就用，否则按 id/platform 走网关。 */
+window.loadLyrics = function (song) {
+  var box = document.getElementById('lyricBox');
+  if (!box || !song) return;
+  var esc = function (t) { return String(t == null ? '' : t).replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; }); };
+  var name = song.name || '', artist = song.artist || '';
+  var audioEl = document.getElementById('nativeAudio');
+  if (!window.LyricHelper) return;
+  /* 现成的 lrc 可能是「歌词地址」，也可能是「歌词正文」 */
+  if (song.lrc && /^https?:/i.test(song.lrc)) { window.LyricHelper.show(song.lrc, audioEl, box); return; }
+  if (song.lrc && /\[\d{1,2}:\d{1,2}/.test(song.lrc)) { window.LyricHelper.showText(song.lrc, audioEl, box); return; }
+  box.innerHTML = '<div class="lyr-line active">正在播放: ' + esc(name) + (artist ? ' · ' + esc(artist) : '') + ' 🌸</div>';
+  if (!window.MusicAPI || !window.MusicAPI.lyric) return;
+  window.MusicAPI.lyric({ id: song.id, platform: song.platform, name: name, artist: artist }).then(function (txt) {
+    if (!txt) { if (typeof showMsg === 'function') showMsg('暂无歌词喵～'); return; }
+    window.LyricHelper.showText(txt, audioEl, box);
+  }).catch(function () {});
+};
 window.LyricHelper = {
 timer: null,
+lines: [],
 parse: function (txt) {
 if (!txt) return [];
 var lines = [];
@@ -1249,34 +1333,40 @@ if (t) lines.push({ time: sec, text: t });
 }
 return lines;
 },
-show: function (url, audio, box) {
+/* 直接渲染已经到手的歌词文本（网关给的就是带时间轴的 LRC） */
+render: function (lines, audio, box) {
 this.stop();
-if (!url || !box) return;
-box.innerHTML = '歌词加载中…';
+if (!box) return;
+this.lines = lines || [];
+if (!this.lines.length) { box.innerHTML = '<div class="lyr-line">暂无歌词喵～</div>'; return; }
 var self = this;
-fetch(url)
-.then(function (r) { return r.text(); })
-.then(function (txt) {
-self.lines = self.parse(txt);
-if (!self.lines.length) { box.innerHTML = '暂无歌词喵～'; return; }
-box.innerHTML = self.lines.map(function (l, i) {
-return '<div class="lyr-line" data-i="' + i + '">' + l.text + '</div>';
+var esc = function (t) { return String(t == null ? '' : t).replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; }); };
+box.innerHTML = this.lines.map(function (l, i) {
+return '<div class="lyr-line" data-i="' + i + '">' + esc(l.text) + '</div>';
 }).join('');
-self.timer = setInterval(function () {
-var t = audio.currentTime || 0;
+var tick = function () {
+var t = (audio && audio.currentTime) || 0;
 var idx = -1;
 for (var i = 0; i < self.lines.length; i++) {
 if (self.lines[i].time <= t) idx = i; else break;
 }
 var ls = box.querySelectorAll('.lyr-line');
-for (var j = 0; j < ls.length; j++) ls[j].classList.toggle('active', j === idx);
-if (idx >= 0 && ls[idx]) {
-var top = ls[idx].offsetTop - box.clientHeight / 2;
-box.scrollTop = top;
-}
-}, 300);
-})
-.catch(function () { box.innerHTML = '歌词加载失败喵～'; });
+for (var jj = 0; jj < ls.length; jj++) ls[jj].classList.toggle('active', jj === idx);
+if (idx >= 0 && ls[idx]) box.scrollTop = ls[idx].offsetTop - box.clientHeight / 2;
+};
+tick();
+self.timer = setInterval(tick, 300);
+},
+showText: function (txt, audio, box) { this.render(this.parse(txt), audio, box); },
+show: function (url, audio, box) {
+this.stop();
+if (!url || !box) return;
+box.innerHTML = '<div class="lyr-line">歌词加载中…</div>';
+var self = this;
+fetch(url)
+.then(function (r) { return r.text(); })
+.then(function (txt) { self.showText(txt, audio, box); })
+.catch(function () { box.innerHTML = '<div class="lyr-line">歌词加载失败喵～</div>'; });
 },
 stop: function () {
 if (this.timer) { clearInterval(this.timer); this.timer = null; }
@@ -7418,7 +7508,7 @@ Array.prototype.forEach.call(results.querySelectorAll('.po-card'), function (el)
 el.querySelector('.po-card-play').addEventListener('click', function () {
 var d = JSON.parse(el.dataset.i);
 addToPlaylist({ name: d.name, artist: d.artist, url: d.url });
-if (window.LyricHelper && typeof lyricBox !== 'undefined' && lyricBox) LyricHelper.show(d.lrc, audio, lyricBox);
+if (window.LyricHelper && typeof lyricBox !== 'undefined' && lyricBox) if (window.loadLyrics) window.loadLyrics(d); else LyricHelper.show(d.lrc, audio, lyricBox);
 });
 el.querySelector('.po-card-dl').addEventListener('click', function () {
 var d = JSON.parse(el.dataset.i);
@@ -7442,7 +7532,7 @@ Array.prototype.forEach.call(results.querySelectorAll('.po-item'), function (el)
 el.querySelector('.po-play').addEventListener('click', function () {
 var d = JSON.parse(el.dataset.i);
 addToPlaylist({ name: d.name, artist: d.artist, url: d.url });
-if (window.LyricHelper && typeof lyricBox !== 'undefined' && lyricBox) LyricHelper.show(d.lrc, audio, lyricBox);
+if (window.LyricHelper && typeof lyricBox !== 'undefined' && lyricBox) if (window.loadLyrics) window.loadLyrics(d); else LyricHelper.show(d.lrc, audio, lyricBox);
 });
 el.querySelector('.po-dl').addEventListener('click', function () {
 var d = JSON.parse(el.dataset.i);

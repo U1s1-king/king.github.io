@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <script src="js/version.js?v=20260915"></script>
+    <script src="js/version.js?v=20260917"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <link rel="stylesheet" href="css/style.css?v=20260915">
-    <link rel="stylesheet" href="css/sidebar.css?v=20260915">
+    <link rel="stylesheet" href="css/style.css?v=20260917">
+    <link rel="stylesheet" href="css/sidebar.css?v=20260917">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#ffb6c1">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -20,9 +20,9 @@
     <title> 音乐 · 本喵的播放器</title>
     <link rel="canonical" href="https://zhaokening.ccwu.cc/music.html">
     
-    <link rel="stylesheet" href="css/all.min.css?v=20260915">
-    <link rel="stylesheet" href="css/music.css?v=20260915">
-    <link rel="stylesheet" href="css/mobile.css?v=20260915">
+    <link rel="stylesheet" href="css/all.min.css?v=20260917">
+    <link rel="stylesheet" href="css/music.css?v=20260917">
+    <link rel="stylesheet" href="css/mobile.css?v=20260917">
     <meta name="description" content="(O_o)??音乐盒：在线搜歌、本地音乐播放、多平台搜索与播放器自由调节。">
     <meta name="keywords" content="(O_o)??,音乐,音乐盒,在线搜歌,播放器,歌词">
     <meta name="author" content="king">
@@ -90,70 +90,61 @@
             <div class="player-left">
                 <div class="disc-zone">
                     <div class="vinyl">
+                        <div class="tonearm"><i class="fas fa-level-up-alt"></i></div>
                         <div class="cover-inner" id="coverInner">
                             <img class="cover-img" id="coverImg" src="img/mortis.webp" alt="">
                         </div>
                     </div>
                 </div>
+                <div class="spectrum-line">
+                    <div class="spectrum-bars" id="spectrumBars"></div>
+                </div>
+            </div>
+
+            <div class="player-right">
                 <div class="song-details">
                     <div class="track-title" id="trackName">🌸 空空的喵</div>
-                    <div class="track-artist" id="trackArtist">点击 添加音乐</div>
+                    <div class="track-artist" id="trackArtist"><i class="fas fa-microphone-alt"></i> 点击 添加音乐</div>
                 </div>
+
+                <div class="lyric-panel" id="lyricBox">
+                    喵 ~ 点击右侧 上传本地音乐
+                </div>
+
                 <div class="progress-area">
+                    <span class="time" id="currentTime">0:00</span>
                     <div class="progress-bar-bg" id="progressBg"><div class="progress-fill" id="progressFill"></div></div>
-                    <div class="time-row"><span id="currentTime">0:00</span><span id="totalDuration">0:00</span></div>
+                    <span class="time" id="totalDuration">0:00</span>
                 </div>
+
                 <div class="controls-row">
                     <button class="ctrl-btn" id="prevBtn"><i class="fas fa-backward-step"></i></button>
                     <button class="ctrl-btn play-main" id="playPauseBtn"><i class="fas fa-play" id="playPauseIcon"></i></button>
                     <button class="ctrl-btn" id="nextBtn"><i class="fas fa-forward-step"></i></button>
                 </div>
-                <div class="mode-strip">
-                    <div class="mode-chip" id="repeatModeBtn"><i class="fas fa-redo-alt"></i> 单曲循环</div>
-                    <div class="mode-chip" id="shuffleModeBtn"><i class="fas fa-random"></i> 随机播放</div>
-                    <div class="mode-chip" id="speedBtn"><i class="fas fa-tachometer-alt"></i> 倍速 <span id="speedVal">1.00x</span></div>
-                </div>
-                <div class="mixer">
-                    <i class="fas fa-volume-down st-7dce5011"></i>
-                    <input type="range" id="volumeRange" min="0" max="1" step="0.01" value="0.7" class="volume-slider">
-                    <i class="fas fa-volume-up st-7dce5011"></i>
-                </div>
-            </div>
 
-            <div class="player-right">
-                <div class="lyric-panel" id="lyricBox">
-                     喵 ~ 点击右侧 上传本地音乐
-                </div>
-                <div class="playlist-section">
-                    <div class="playlist-header">
-                        <span><i class="fas fa-list-ul"></i> 喵喵歌单</span>
-                        <span id="songCount">0 首</span>
-                        <div class="glass-icon st-99ff0a8c st-fav-toggle" id="favOnlyBtn" title="只看收藏"><i class="fas fa-heart"></i></div>
-                        <div class="glass-icon st-99ff0a8c" id="uploadTrigger">
-                            <i class="fas fa-plus-circle st-11ddc8e7"></i>
-                        </div>
+                <div class="extra-actions">
+                    <div class="mode-strip">
+                        <div class="mode-chip" id="repeatModeBtn"><i class="fas fa-redo-alt"></i> 单曲循环</div>
+                        <div class="mode-chip" id="shuffleModeBtn"><i class="fas fa-random"></i> 随机播放</div>
+                        <div class="mode-chip" id="speedBtn"><i class="fas fa-tachometer-alt"></i> 倍速 <span id="speedVal">1.00x</span></div>
                     </div>
-                    <div class="pl-views" id="plViews">
-<button class="pl-view active" data-view="official"><i class="fas fa-star"></i> 官方推荐 <b id="cntOfficial">0</b></button>
-<button class="pl-view" data-view="mine"><i class="fas fa-list"></i> 我的歌单 <b id="cntMine">0</b></button>
-<button class="pl-view" data-view="fav"><i class="fas fa-heart"></i> 收藏 <b id="cntFav">0</b></button>
-</div>
-<div class="playlist-scroll" id="playlistContainer"></div>
+                    <div class="mixer">
+                        <i class="fas fa-volume-down st-7dce5011"></i>
+                        <input type="range" id="volumeRange" min="0" max="1" step="0.01" value="0.7" class="volume-slider">
+                        <i class="fas fa-volume-up st-7dce5011"></i>
+                    </div>
+                    <div class="mode-strip">
+                        <div class="mode-chip pl-drawer-trigger" id="plDrawerOpen" title="展开歌单"><i class="fas fa-list-ul"></i> 歌单 <b id="songCount">0 首</b></div>
+                    </div>
                 </div>
-                <div class="cherry-tip">
-                    <i class="fas fa-music"></i> 想听新歌？点击 上传本地音频喵~ 封面默认喵
-                    <span id="clearUploadCacheBtn" class="st-ead0ed48"> 清空缓存</span>
-                </div>
+
             </div>
         </div>
     </div>
 
-    <!-- 频谱动画区域-->
-    <div class="spectrum-line">
-        <div class="spectrum-bars" id="spectrumBars"></div>
-    </div>
-
-    <div class="st-199ade66">
+    
+<div class="st-199ade66">
         <a href="index.html" class="btn-cherry"><i class="fas fa-chevron-circle-left"></i> 回喵星首页</a>
     </div>
     <hr class="sakura-divider">
@@ -237,7 +228,29 @@
 </div><!-- /tab-netease -->
 </main>
 
-<audio id="nativeAudio" class="st-224b51a7"></audio>
+<!-- ===== 歌单抽屉：可唤醒的小侧边栏，从右侧滑出，避开页面左侧导航 ===== -->
+<div class="pl-drawer-mask" id="plDrawerMask"></div>
+<aside class="pl-drawer" id="plDrawer" aria-hidden="true" aria-label="喵喵歌单">
+    <div class="pl-drawer-head">
+        <span><i class="fas fa-list-ul"></i> 喵喵歌单</span>
+        <div class="pl-drawer-tools">
+            <div class="glass-icon st-99ff0a8c st-fav-toggle" id="favOnlyBtn" title="只看收藏"><i class="fas fa-heart"></i></div>
+            <div class="glass-icon st-99ff0a8c" id="uploadTrigger" title="上传本地音乐"><i class="fas fa-plus-circle st-11ddc8e7"></i></div>
+            <div class="glass-icon st-99ff0a8c" id="plDrawerClose" title="收起歌单"><i class="fas fa-times"></i></div>
+        </div>
+    </div>
+    <div class="pl-views" id="plViews">
+        <button class="pl-view active" data-view="official"><i class="fas fa-star"></i> 官方推荐 <b id="cntOfficial">0</b></button>
+        <button class="pl-view" data-view="mine"><i class="fas fa-list"></i> 我的歌单 <b id="cntMine">0</b></button>
+        <button class="pl-view" data-view="fav"><i class="fas fa-heart"></i> 收藏 <b id="cntFav">0</b></button>
+    </div>
+    <div class="playlist-scroll" id="playlistContainer"></div>
+    <div class="cherry-tip">
+        <i class="fas fa-music"></i> 想听新歌？点击 上传本地音频喵~ 封面默认喵
+        <span id="clearUploadCacheBtn" class="st-ead0ed48"> 清空缓存</span>
+    </div>
+</aside>
+<audio id="nativeAudio" class="st-224b51a7" crossorigin="anonymous" preload="metadata"></audio>
 
 <div class="modal-global" id="uploadModal">
     <div class="modal-card">
@@ -252,12 +265,29 @@
 </div>
 <div class="toast" id="toastMsg"></div>
 
-    <script src="js/common.js?v=20260915"></script>
-    <script src="js/music-api.js?v=20260915"></script>
-        <script src="js/music-bundle.js?v=20260915"></script>
-    <script src="js/sidebar.js?v=20260915"></script>
+    <script src="js/common.js?v=20260917"></script>
+    <script src="js/music-api.js?v=20260917"></script>
+        <script src="js/music-bundle.js?v=20260917"></script>
+    <script src="js/sidebar.js?v=20260917"></script>
     <script src="js/particles-config.js"></script>
     <script src="https://sakura-live2d.pages.dev/live2d/waifu.js?v=20260904" defer></script>
-    <script src="js/live2d-icon-fix.js?v=20260915" defer></script>
+    <script src="js/live2d-icon-fix.js?v=20260917" defer></script>
+    <script>
+    /* 歌单抽屉的开关：纯 UI，不动打包脚本 */
+    (function () {
+        var drawer = document.getElementById("plDrawer");
+        var mask = document.getElementById("plDrawerMask");
+        var openBtn = document.getElementById("plDrawerOpen");
+        var closeBtn = document.getElementById("plDrawerClose");
+        if (!drawer || !openBtn) return;
+        function open() { drawer.classList.add("show"); if (mask) mask.classList.add("show"); drawer.setAttribute("aria-hidden", "false"); document.body.classList.add("pl-drawer-open"); }
+        function close() { drawer.classList.remove("show"); if (mask) mask.classList.remove("show"); drawer.setAttribute("aria-hidden", "true"); document.body.classList.remove("pl-drawer-open"); }
+        openBtn.addEventListener("click", function (e) { e.stopPropagation(); if (drawer.classList.contains("show")) { close(); } else { open(); } });
+        if (closeBtn) closeBtn.addEventListener("click", close);
+        if (mask) mask.addEventListener("click", close);
+        document.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
+        window.sakuraPlDrawer = { open: open, close: close };
+    })();
+    </script>
 </body>
 </html>

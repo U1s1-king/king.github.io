@@ -383,24 +383,64 @@
 
   // ---------------------------------------------------------- 歌词
 
+  /** Meting / 网关代理的响应可能是一层 {ok, data:{raw}} 信封，这里统一拆出来 */
+  function unwrapLrcText(text) {
+    var t = (text || '').trim();
+    if (!t || t.charAt(0) !== '{') return t;
+    try {
+      var j = JSON.parse(t);
+      if (j && j.data) {
+        if (typeof j.data === 'string') return j.data;
+        if (j.data.raw) return String(j.data.raw);
+        if (j.data.lyric) return String(j.data.lyric);
+      }
+      if (j && j.lyric) return String(j.lyric);
+    } catch (e) {}
+    return t;
+  }
+
+  /**
+   * 取歌词（带时间轴的 LRC 文本）。
+   * 注意：Meting 的 type=lrc 用 name/artist 查会返回一个 HTML 页面，必须用 id；
+   * 官方/本地曲目没有 id，所以先搜一个 id 出来再取。
+   */
   function lyric(song) {
     if (!song) return Promise.resolve('');
     if (song.lrc) return Promise.resolve(song.lrc);
-    if (song.platform === 'netease' && song.id) {
-      var gkey = cacheKey(['lyric', song.id]);
-      return cached(gkey, 86400, function () {
-        return gateway('/api/lyric', { id: song.id }).then(function (d) {
-          return d.lyric || '';
-        });
-      }).catch(function () { return ''; });
-    }
-    var key = cacheKey(['lyric', song.platform, song.id || song.name, song.artist]);
+    var platform = song.platform || 'netease';
+    var key = cacheKey(['lyric2', platform, song.id || song.name, song.artist]);
     return cached(key, 86400, function () {
-      var params = { server: song.platform, type: 'lrc' };
-      if (song.id) params.id = song.id;
-      else { params.name = song.name; params.artist = song.artist; }
-      return meting(params).then(function (r) { return (r.text || '').trim(); }).catch(function () { return ''; });
-    });
+      var idP = song.id
+        ? Promise.resolve(String(song.id))
+        : (song.name
+            ? searchIt.one(platform, (song.name + ' ' + (song.artist || '')).trim(), { limit: 1 })
+                .then(function (arr) { return (arr && arr[0] && arr[0].id) || ''; })
+                .catch(function () { return ''; })
+            : Promise.resolve(''));
+
+      return idP.then(function (id) {
+        var tries = [];
+        if (id && platform === 'netease') {
+          tries.push(function () {
+            return gateway('/api/lyric', { id: id }).then(function (d) {
+              return d && d.lyric ? d.lyric : null;
+            }).catch(function () { return null; });
+          });
+        }
+        if (id) {
+          tries.push(function () {
+            return meting({ server: platform, type: 'lrc', id: id }).then(function (r) {
+              var t = unwrapLrcText(r.text);
+              return t || null;
+            }).catch(function () { return null; });
+          });
+        }
+        /* 依次尝试，取第一个拿到内容的 */
+        return tries.reduce(function (p, fn) {
+          return p.then(function (got) { return got || fn(); });
+        }, Promise.resolve(null)).then(function (got) { return got || ''; });
+      });
+    }).catch(function () { return ''; });
   }
 
   // ---------------------------------------------------------- 其余接口

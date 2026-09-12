@@ -19,7 +19,7 @@
   btn.className = 'sidebar-toggle-btn';
   btn.setAttribute('aria-label', collapsed ? '展开侧边栏' : '收起侧边栏');
   btn.title = collapsed ? '展开侧边栏' : '收起侧边栏';
-  btn.innerHTML = '<img src="/img/btn-collapse.webp" alt="toggle">';
+  btn.innerHTML = '<img src="img/btn-collapse.webp" alt="toggle">';
   document.body.appendChild(btn);
 
   function apply() {
