@@ -268,15 +268,20 @@ http://127.0.0.1:8888
 # 🛡️ SECURITY LAYER
 
 ```text
-本地开发服务器 (server.js)：
-[ X-Content-Type-Options ] [ X-Frame-Options: DENY ] [ Referrer-Policy ]
+线上 —— GitHub Pages 本身无法设置响应头，全部由 Cloudflare 边缘下发
+（Transform Rules › Modify Response Header，规则名 security headers v4，作用于全部请求）：
+[ CSP ] [ HSTS ] [ X-Content-Type-Options ] [ X-Frame-Options: DENY ]
+[ Referrer-Policy ] [ Permissions-Policy ]
 
-线上 (GitHub Pages，无法自定义响应头)：
-[ HTTPS ] [ Rate Limit ] [ Input Sanitization ] [ Secret Isolation ]
+本地开发（server.js，只覆盖其中一部分）：
+[ X-Content-Type-Options ] [ X-Frame-Options ] [ Referrer-Policy ]
 
-尚未启用：
-[ CSP ] [ HSTS ] [ Permissions-Policy ] —— GitHub Pages 不能下发响应头，
-如需启用请在 Cloudflare 侧配置 Response Header Rules。
+其他：
+[ CORS ] 留言板 Worker 按来源白名单回显，而非 *
+[ Input Sanitization ] [ Secret Isolation ]
+
+要改线上响应头：Cloudflare 控制台 → 该域名 → Rules → Transform Rules →
+Modify Response Header（走 API 则是 rulesets/phases/http_response_headers_transform）。
 ```
 
 > **RULE 01:** API Key、Token、密码和 Secret 永远不进入 Git。
