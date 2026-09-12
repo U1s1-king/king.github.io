@@ -1,5 +1,7 @@
 const MUSIC_API_BASE = '';
-const MUSIC_BASE = "https://sakura-music.pages.dev/music/";
+/* 音频走自家 Worker 代理：曲库源站 sakura-music.pages.dev 不实现 HTTP Range，
+   直接引用会让 <audio> 变成不可 seek（audio.seekable 恒为 [0,0]），进度条拖不动。 */
+const MUSIC_BASE = "https://sakura-music-api.pages.dev/music/";
 const DB_NAME = 'SakuraMusicDB';
 const DB_VERSION = 1;
 const STORE_NAME = 'uploads';
@@ -303,8 +305,17 @@ function armStallWatch() {
     try {
       if (!audio || audio.paused) return;
       if (audio.readyState >= 2 && audio.currentTime > 0) return;   /* 正常出声，收工 */
-      if (stallRetry >= 2) return;
+      if (stallRetry >= 3) return;
       stallRetry++;
+      /* 第二次起加一个一次性查询串：CDN 边缘偶尔会把某个 range 请求挂死，
+         换个 URL 就能重新命中一个健康的边缘节点。 */
+      if (stallRetry > 1) {
+        var s0 = audio.currentSrc || audio.src;
+        if (s0) {
+          var base = s0.replace(/[?&]__r=\d+$/, '');
+          audio.src = base + (base.indexOf('?') >= 0 ? '&' : '?') + '__r=' + Date.now();
+        }
+      }
       audio.load();                                                /* 重走一遍加载算法 */
       var p = audio.play(); if (p && p.catch) p.catch(function () {});
       armStallWatch();                                             /* 再盯一轮 */
@@ -492,7 +503,7 @@ function updateList() {
   } else {
     playlistContainer.innerHTML = html;
   }
-  songCountSpan.innerText = pairs.length + " / " + playlist.length + " 首";
+  songCountSpan.innerText = pairs.length + " 首";
   if (!playlistContainer.dataset.bound) {
     playlistContainer.dataset.bound = "1";
     playlistContainer.addEventListener("click", function (e) {
@@ -573,6 +584,8 @@ trackArtistSpan.innerText = s.artist;
 coverImg.src = DEFAULT_COVER;
 audio.src = s.path;
 audio.load();
+/* 续播也要把歌词拉回来：否则打开页面直接按播放，歌词框会一直停在初始占位文案 */
+if (typeof window.loadLyrics === 'function') window.loadLyrics(s);
 audio.addEventListener('loadedmetadata', function onMeta() {
 var t = Math.min(saved.t || 0, Math.max(0, (audio.duration || 1) - 1));
 audio.currentTime = t;
@@ -1301,6 +1314,8 @@ searchBox.addEventListener('keydown', function (e) { if (e.key === 'Enter') doSe
      · 歌单播放只在歌词框写一行「正在播放: 歌名 · 歌手」，没有任何歌词
      · 搜索结果只挂 Lyrics.ovh（纯文本、无时间轴，滚动和高亮都不生效）
    现在统一成一条路径：有现成 lrc 就用，否则按 id/platform 走网关。 */
+/* 每次切歌自增，用来丢弃上一首迟到的歌词响应 */
+var lyricToken = 0;
 window.loadLyrics = function (song) {
   var box = document.getElementById('lyricBox');
   if (!box || !song) return;
@@ -1311,12 +1326,29 @@ window.loadLyrics = function (song) {
   /* 现成的 lrc 可能是「歌词地址」，也可能是「歌词正文」 */
   if (song.lrc && /^https?:/i.test(song.lrc)) { window.LyricHelper.show(song.lrc, audioEl, box); return; }
   if (song.lrc && /\[\d{1,2}:\d{1,2}/.test(song.lrc)) { window.LyricHelper.showText(song.lrc, audioEl, box); return; }
-  box.innerHTML = '<div class="lyr-line active">正在播放: ' + esc(name) + (artist ? ' · ' + esc(artist) : '') + ' 🌸</div>';
+  var token = ++lyricToken;
+  var placeholder = '正在播放: ' + esc(name) + (artist ? ' · ' + esc(artist) : '') + ' 🌸';
+  var paint = function (extra) { box.innerHTML = '<div class="lyr-line active">' + placeholder + (extra || '') + '</div>'; };
+  paint();
   if (!window.MusicAPI || !window.MusicAPI.lyric) return;
-  window.MusicAPI.lyric({ id: song.id, platform: song.platform, name: name, artist: artist }).then(function (txt) {
-    if (!txt) { if (typeof showMsg === 'function') showMsg('暂无歌词喵～'); return; }
-    window.LyricHelper.showText(txt, audioEl, box);
-  }).catch(function () {});
+  /* 网关偶尔超时（前端 12s 就 abort）或撞风控，一次失败不该让整首歌都没有歌词：
+     失败或空结果就退避重试，最多 3 次。token 保证切歌之后旧响应不会覆盖新歌。 */
+  var left = 3;
+  var attempt = function () {
+    if (token !== lyricToken) return;
+    window.MusicAPI.lyric({ id: song.id, platform: song.platform, name: name, artist: artist }).then(function (txt) {
+      if (token !== lyricToken) return;
+      if (txt) { window.LyricHelper.showText(txt, audioEl, box); return; }
+      if (--left > 0) { paint(); setTimeout(attempt, 1500); return; }
+      paint('<br>暂无歌词喵～');
+      if (typeof showMsg === 'function') showMsg('暂无歌词喵～');
+    }).catch(function () {
+      if (token !== lyricToken) return;
+      if (--left > 0) { paint(); setTimeout(attempt, 1500); return; }
+      paint('<br>歌词获取失败，稍后再试喵～');
+    });
+  };
+  attempt();
 };
 window.LyricHelper = {
 timer: null,
@@ -1326,10 +1358,17 @@ if (!txt) return [];
 var lines = [];
 var re = /\[(\d{1,2}):(\d{1,2})(?:[.:](\d{1,3}))?\]\s*(.*)/g;
 var m;
+/* 开头几秒的「作词/作曲/编曲」是元信息不是歌词，显示出来会让人以为歌词没对上；
+   只在前 20 秒内过滤，避免误伤真正的歌词行。 */
+var credit = /^(作词|作曲|编曲|制作人|制作|混音|母带|录音|监制|出品|发行|统筹|企划|策划|吉他|贝斯|鼓|键盘|和声|弦乐|OP|SP|词|曲)\s*[:：]/;
 while ((m = re.exec(txt)) !== null) {
-var sec = parseInt(m[1], 10) * 60 + parseInt(m[2], 10) + (m[3] ? parseInt(m[3], 10) / 1000 : 0);
+var frac = m[3] || '';
+/* [00:26.17] 是 170 毫秒、不是 17 毫秒。原来固定除以 1000，两位小数的 LRC
+   每一行都会提前最多 0.9 秒，所以要按小数实际位数换算。 */
+var ms = frac ? parseInt(frac, 10) / Math.pow(10, frac.length) : 0;
+var sec = parseInt(m[1], 10) * 60 + parseInt(m[2], 10) + ms;
 var t = (m[4] || '').trim();
-if (t) lines.push({ time: sec, text: t });
+if (t && !(sec < 20 && credit.test(t))) lines.push({ time: sec, text: t });
 }
 return lines;
 },
@@ -1344,15 +1383,37 @@ var esc = function (t) { return String(t == null ? '' : t).replace(/[&<>]/g, fun
 box.innerHTML = this.lines.map(function (l, i) {
 return '<div class="lyr-line" data-i="' + i + '">' + esc(l.text) + '</div>';
 }).join('');
+/* lastIdx 从 -2 起手，保证第一拍一定刷新一遍高亮 */
+var lastIdx = -2;
+var needScroll = true;
 var tick = function () {
 var t = (audio && audio.currentTime) || 0;
 var idx = -1;
 for (var i = 0; i < self.lines.length; i++) {
 if (self.lines[i].time <= t) idx = i; else break;
 }
+if (idx !== lastIdx) {
+lastIdx = idx;
 var ls = box.querySelectorAll('.lyr-line');
 for (var jj = 0; jj < ls.length; jj++) ls[jj].classList.toggle('active', jj === idx);
-if (idx >= 0 && ls[idx]) box.scrollTop = ls[idx].offsetTop - box.clientHeight / 2;
+needScroll = true;
+}
+/* 滚动不能只在换行那一拍做一次：box.innerHTML 刚写完时浏览器还没算出
+   可滚动高度，这一拍 scrollTop 会被钳成 0，之后再也没机会补上，
+   表现就是「高亮行一直待在原地、越拖越远」。所以这里一直重试到落位为止。 */
+if (needScroll) {
+var ls2 = box.querySelectorAll('.lyr-line');
+if (idx >= 0 && ls2[idx]) {
+/* 面板是 position:relative，offsetTop 已相对面板；再减掉自身一半高度才是垂直居中 */
+var target = ls2[idx].offsetTop - (box.clientHeight - ls2[idx].offsetHeight) / 2;
+var maxTop = box.scrollHeight - box.clientHeight;
+var want = Math.max(0, Math.min(maxTop, target));
+box.scrollTop = want;
+if (Math.abs(box.scrollTop - want) < 2) needScroll = false;   /* 落位了就收手 */
+} else {
+needScroll = false;
+}
+}
 };
 tick();
 self.timer = setInterval(tick, 300);
@@ -7269,6 +7330,8 @@ audio.play().catch(function () {});
 if (typeof isPlaying !== 'undefined') isPlaying = true;
 if (typeof playIcon !== 'undefined') playIcon.className = 'fas fa-pause';
 if (typeof trackNameSpan !== 'undefined') trackNameSpan.textContent = displayName;
+/* 上传试听同样要换歌词，否则歌词框还停在上一次播放的曲子上 */
+if (typeof window.loadLyrics === 'function') window.loadLyrics({ name: displayName, artist: isKgm ? '解锁音乐' : '上传音乐' });
 }
 });
 item.querySelector('[data-add]').addEventListener('click', function () {

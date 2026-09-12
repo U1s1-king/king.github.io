@@ -266,10 +266,30 @@
     var hit = cacheGet(key);
     if (hit !== null && hit !== undefined) return Promise.resolve(hit);
     return Promise.resolve(producer()).then(function (v) {
-      if (v !== null && v !== undefined) cacheSet(key, v, ttl);
+      /* 空结果绝不入缓存。原来只判断 null/undefined，空字符串会被当成有效结果
+         存 24 小时——歌词一旦取失败（比如网关风控），这一整天里每次播放都「没有歌词」。 */
+      var empty = v === null || v === undefined || v === '' || (Array.isArray(v) && v.length === 0);
+      if (!empty) cacheSet(key, v, ttl);
       return v;
     });
   }
+
+  /* 历史上被写进缓存的空歌词要清掉，否则修了写入逻辑它们还会继续生效一天。 */
+  (function purgeEmptyLyricCache() {
+    try {
+      var dead = [];
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (!k || k.indexOf(CACHE_PREFIX + 'lyric') !== 0) continue;
+        var raw = localStorage.getItem(k);
+        if (!raw) continue;
+        var obj = null;
+        try { obj = JSON.parse(raw); } catch (e) { dead.push(k); continue; }
+        if (!obj || obj.value === '' || obj.value === null || obj.value === undefined) dead.push(k);
+      }
+      for (var n = 0; n < dead.length; n++) { try { localStorage.removeItem(dead[n]); } catch (e) {} }
+    } catch (e) {}
+  })();
 
   // ---------------------------------------------------------- 搜索
 

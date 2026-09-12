@@ -141,11 +141,11 @@ function neteaseHeaders(extra) {
 }
 
 /** POST /weapi/<path> */
-async function weapiPost(path, payload) {
+async function weapiPost(path, payload, extraHeaders) {
   const body = await weapiBody(payload)
   const res = await fetch('https://music.163.com/weapi' + path + '?csrf_token=', {
     method: 'POST',
-    headers: neteaseHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' }),
+    headers: neteaseHeaders(Object.assign({ 'Content-Type': 'application/x-www-form-urlencoded' }, extraHeaders || {})),
     body,
   })
   return res
@@ -303,11 +303,74 @@ function ok(data, origin, headers) {
   return jsonResponse({ ok: true, source: 'netease', data }, 200, origin, headers)
 }
 
+/* 网易云对机房 IP 的风控很凶（code -462）。带上一个国内 IP 提示能明显降低触发率。 */
+const SEARCH_REAL_IP = '116.25.146.177'
+
+/**
+ * Meting 镜像搜索兜底。
+ * 网易云的搜索接口在 Cloudflare 这类机房 IP 上经常整段返回 -462，
+ * 以前这里直接把错误抛给前端，结果是：搜索页报「网络或接口问题」，
+ * 而且官方推荐 / 本地曲目拿不到 id，歌词永远取不到。
+ * Meting 返回的对象里没有 id 字段，但 url / lrc 带着 `...&id=XXXX`，从这里抠出来。
+ */
+async function metingSearchSongs(keywords, limit, offset) {
+  try {
+    const r = await resolveMeting({ server: 'netease', type: 'search', id: keywords, limit })
+    if (!r || !r.ok) return []
+    let list = null
+    try { list = JSON.parse(r.data) } catch (e) { list = null }
+    if (!Array.isArray(list)) list = list && list.data ? list.data : []
+    const idOf = function (u) {
+      const m = /[?&]id=([0-9A-Za-z_-]+)/.exec(String(u || ''))
+      return m ? m[1] : ''
+    }
+    return list.map(function (x) {
+      if (!x) return null
+      const id = String(x.id || x.songid || x.song_id || idOf(x.url) || idOf(x.lrc) || '')
+      if (!id) return null
+      return {
+        platform: 'netease',
+        id: id,
+        name: x.name || x.title || '',
+        artist: x.artist || x.author || '',
+        artistIds: [],
+        album: x.album || '',
+        albumId: '',
+        cover: x.pic || x.cover || '',
+        duration: Number(x.duration || x.length || 0),
+        fee: 0,
+        mv: 0,
+        url: '',
+        lyric: '',
+      }
+    }).filter(Boolean)
+  } catch (e) {
+    return []
+  }
+}
 // ============================================================ 各接口
 
 const api = {
   /** 搜索 */
   async search(q, origin) {
+    const keywords = (q.get('keywords') || q.get('s') || '').trim()
+    const limit = Math.min(parseInt(q.get('limit') || '30', 10) || 30, 100)
+    const offset = Math.max(parseInt(q.get('offset') || '0', 10) || 0, 0)
+    /* 网易云在机房 IP 上会整段返回 -462（风控）。这里兜一层 Meting 镜像，
+       否则搜索页直接报错，而且官方推荐 / 本地曲目拿不到 id，歌词永远拉不到。 */
+    try {
+      const res = await api.searchNetease(q, origin)
+      if (res && res.status < 400) return res
+    } catch (e) { /* 落到下面的兜底 */ }
+    const fb = await metingSearchSongs(keywords, limit, offset)
+    if (fb.length) {
+      return ok({ keywords, count: fb.length, songs: fb, albums: [], artists: [], playlists: [], fallback: 'meting' }, origin)
+    }
+    return fail('搜索失败：网易云风控且镜像也不可用', 502, origin)
+  },
+
+  /** 原来的网易云搜索（由上面的 search 包装调用） */
+  async searchNetease(q, origin) {
     const keywords = (q.get('keywords') || q.get('s') || '').trim()
     if (!keywords) return fail('缺少 keywords', 400, origin)
     const limit = Math.min(parseInt(q.get('limit') || '30', 10) || 30, 100)
@@ -317,7 +380,7 @@ const api = {
     const body = await withCache(key, CACHE_TTL.search, async function () {
       /* 风控是概率性的，重试 3 次基本都能过；仍失败则抛错，绝不把假空结果写进缓存 */
       return await withRetry(async function () {
-        const res = await weapiPost('/search/get', { s: keywords, type, limit, offset, csrf_token: '' })
+        const res = await weapiPost('/search/get', { s: keywords, type, limit, offset, csrf_token: '', realIP: SEARCH_REAL_IP }, { 'X-Real-IP': SEARCH_REAL_IP })
         return assertUpstream(await readJson(res), '搜索')
       }, 3)
     })
@@ -652,6 +715,92 @@ const metingApi = {
   },
 }
 
+// ============================================================ 音频代理（补 Range 支持）
+
+/** 曲库托管在 sakura-music.pages.dev，但那边不实现 HTTP Range：
+    无论带不带 Range 头都回 200 + 整个文件。浏览器于是把 <audio> 判定为不可 seek
+    （实测 audio.seekable 恒为 [[0,0]]，设 currentTime 会被打回 0），进度条完全拖不动。
+    这里做一层代理：整首读进内存 → 写进边缘缓存 → 自己实现 206 分片。*/
+const MUSIC_ORIGIN = 'https://sakura-music.pages.dev/music/'
+
+const MUSIC_MEM = new Map() // 单个 isolate 内的小缓存，最多留 4 首
+const MUSIC_MEM_MAX = 4
+
+function parseRange(header, total) {
+  if (!header) return null
+  const m = /bytes=(\d*)-(\d*)/.exec(String(header))
+  if (!m) return null
+  let start, end
+  if (m[1] === '') {
+    const n = Number(m[2])
+    if (!n) return null
+    start = Math.max(0, total - n)
+    end = total - 1
+  } else {
+    start = Number(m[1])
+    end = m[2] === '' ? total - 1 : Number(m[2])
+  }
+  if (isNaN(start) || isNaN(end) || start > end || start >= total) return { invalid: true }
+  return { start: start, end: Math.min(end, total - 1) }
+}
+
+async function serveMusic(request, ctx) {
+  const url = new URL(request.url)
+  let name = ''
+  try { name = decodeURIComponent(url.pathname.slice('/music/'.length)) } catch (e) { name = '' }
+  if (!name || name.indexOf('/') >= 0 || name.indexOf('..') >= 0) {
+    return new Response('文件名不合法', { status: 400 })
+  }
+  const headers = {
+    'Content-Type': 'audio/mpeg',
+    'Accept-Ranges': 'bytes',
+    'Access-Control-Allow-Origin': '*',
+    'Cache-Control': 'public, max-age=31536000, immutable',
+  }
+  let buf = MUSIC_MEM.get(name) || null
+  if (!buf) {
+    const cache = typeof caches !== 'undefined' && caches.default ? caches.default : null
+    const cacheKey = new Request('https://sakura-music-cache.internal/' + encodeURIComponent(name))
+    let hit = null
+    if (cache) { try { hit = await cache.match(cacheKey) } catch (e) { hit = null } }
+    if (hit) {
+      buf = await hit.arrayBuffer()
+    } else {
+      const up = await fetch(MUSIC_ORIGIN + encodeURIComponent(name))
+      if (!up.ok) {
+        return new Response('音频不存在：' + name, { status: up.status, headers: { 'Access-Control-Allow-Origin': '*' } })
+      }
+      buf = await up.arrayBuffer()
+      if (cache) {
+        const put = cache.put(cacheKey, new Response(buf, { headers: { 'Content-Type': 'audio/mpeg', 'Content-Length': String(buf.byteLength) } }))
+        if (ctx && ctx.waitUntil) ctx.waitUntil(put.catch(function () {}))
+        else { try { await put } catch (e) {} }
+      }
+    }
+    if (MUSIC_MEM.size >= MUSIC_MEM_MAX) { MUSIC_MEM.delete(MUSIC_MEM.keys().next().value) }
+    MUSIC_MEM.set(name, buf)
+  }
+  const total = buf.byteLength
+  const range = parseRange(request.headers.get('Range'), total)
+  if (range && range.invalid) {
+    return new Response(null, { status: 416, headers: Object.assign({}, headers, { 'Content-Range': 'bytes */' + total }) })
+  }
+  if (range) {
+    const slice = buf.slice(range.start, range.end + 1)
+    return new Response(request.method === 'HEAD' ? null : slice, {
+      status: 206,
+      headers: Object.assign({}, headers, {
+        'Content-Range': 'bytes ' + range.start + '-' + range.end + '/' + total,
+        'Content-Length': String(slice.byteLength),
+      }),
+    })
+  }
+  return new Response(request.method === 'HEAD' ? null : buf, {
+    status: 200,
+    headers: Object.assign({}, headers, { 'Content-Length': String(total) }),
+  })
+}
+
 // ============================================================ 路由
 
 const ROUTES = {
@@ -683,7 +832,12 @@ export default {
       return new Response(null, { status: 204, headers: corsHeaders(origin) })
     }
 
-    const handler = ROUTES[url.pathname] || ROUTES[url.pathname.replace(/\/$/, '')]
+    // 音频走 Range 代理（曲库源站不支持 Range）
+  if (url.pathname.indexOf('/music/') === 0) {
+    return serveMusic(request, ctx)
+  }
+
+  const handler = ROUTES[url.pathname] || ROUTES[url.pathname.replace(/\/$/, '')]
     if (!handler) {
       // 非 API 路径交给静态资源（index.html 落地页）
       if (env && env.ASSETS) {

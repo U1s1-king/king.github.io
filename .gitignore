@@ -20,3 +20,6 @@ dist/
 
 # === 音乐已迁移 Cloudflare Pages (sakura-music.pages.dev), 本地不再入库 ===
 music/
+
+# Cloudflare wrangler 本地缓存
+.wrangler/

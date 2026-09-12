@@ -40,7 +40,7 @@
 .player-right .track-artist i{font-size:0.72rem;color:#e982a2}
 
 /* 歌词：三行预览、左侧强调边、当前行高亮（滚动由 LyricHelper 负责） */
-.player-right .lyric-panel{height:84px;max-height:84px;min-height:0!important;margin:0 0 0.9rem;padding:0.6rem 1rem;background:#fff2f6;border:1px solid #ffe0ea;border-left:4px solid #e982a2;border-radius:18px;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;-ms-overflow-style:none;-webkit-mask-image:linear-gradient(180deg,transparent,#000 24%,#000 76%,transparent);mask-image:linear-gradient(180deg,transparent,#000 24%,#000 76%,transparent);text-align:left;font-size:0.82rem;color:#b98297}
+.player-right .lyric-panel{position:relative;height:152px;max-height:152px;min-height:0!important;margin:0 0 0.9rem;padding:0.6rem 1rem;background:#fff2f6;border:1px solid #ffe0ea;border-left:4px solid #e982a2;border-radius:18px;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;-ms-overflow-style:none;-webkit-mask-image:linear-gradient(180deg,transparent,#000 24%,#000 76%,transparent);mask-image:linear-gradient(180deg,transparent,#000 24%,#000 76%,transparent);text-align:left;font-size:0.82rem;color:#b98297}
 .player-right .lyric-panel::-webkit-scrollbar{display:none}
 .player-right .lyric-panel .lyr-line{line-height:1.62;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.72;transition:color .25s,opacity .25s}
 .player-right .lyric-panel .lyr-line.active{color:#a14563;font-weight:600;opacity:1;text-shadow:0 0 10px rgba(233,130,162,.4)}
@@ -59,9 +59,14 @@
 .player-right .ctrl-btn.play-main:hover{transform:scale(1.05);background:linear-gradient(145deg,#f4aec5,#e5789a)}
 
 /* 底部一行：模式左 / 音量右 */
-.player-right .extra-actions{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin:0 0 0.9rem}
-.player-right .extra-actions .mode-strip{margin:0;justify-content:flex-start;gap:0.5rem}
-.player-right .extra-actions .mixer{margin-left:auto;padding:0}
+/* 底部：所有按钮必须排成「一行」，之前 space-between + wrap 会把歌单胶囊挤到第二行 */
+.player-right .extra-actions{display:flex;align-items:center;justify-content:space-between;gap:0.55rem;flex-wrap:nowrap;margin:0 0 0.9rem}
+.player-right .extra-actions .mode-strip{margin:0;justify-content:flex-start;gap:0.4rem;flex-wrap:nowrap}
+.player-right .extra-actions .mode-chip{padding:0.3rem 0.6rem!important;font-size:0.72rem!important;gap:5px}
+.player-right .extra-actions .mode-chip i{font-size:0.72rem}
+.player-right .extra-actions .mixer{margin-left:auto;padding:0;gap:0.4rem!important}
+.player-right .extra-actions .mixer .volume-slider{width:72px!important}
+.player-right .extra-actions .pl-drawer-trigger b{font-size:0.7rem}
 
 @media (max-width:768px){
   .player-right .track-title{font-size:1.35rem}
@@ -69,11 +74,20 @@
   .player-right .ctrl-btn.play-main{width:56px;height:56px;font-size:1.3rem}
   .player-left .tonearm{display:none}
   .player-left .spectrum-line{max-width:100%}
-  .player-right .extra-actions{justify-content:center}
-  .player-right .extra-actions .mixer{margin-left:0}
+  .player-right .lyric-panel{height:126px;max-height:126px}
+  .player-right .extra-actions{gap:0.45rem}
+  .player-right .extra-actions .mode-chip{padding:0.26rem 0.5rem!important;font-size:0.68rem!important;gap:4px}
+  .player-right .extra-actions .mixer .volume-slider{width:58px!important}
 }
 @media (max-width:420px){
-  .player-right .lyric-panel{height:70px;max-height:70px;padding:0.5rem 0.8rem;font-size:0.76rem}
+  .player-right .lyric-panel{height:106px;max-height:106px;padding:0.5rem 0.8rem;font-size:0.76rem}
+  /* 小屏横向只有 ~313px，三组控件放不下：文字标签收起来，只留图标 + 数值，
+     这样仍然保持「一行」而不是折成两行。 */
+  .player-right .extra-actions{gap:0.35rem}
+  .player-right .extra-actions .mc-txt{display:none}
+  .player-right .extra-actions .mode-chip{padding:0.26rem 0.52rem!important;font-size:0.68rem!important;gap:4px}
+  .player-right .extra-actions .mixer{margin-left:auto;gap:0.3rem!important}
+  .player-right .extra-actions .mixer .volume-slider{width:64px!important}
   .player-right .progress-area .time{min-width:34px;font-size:0.68rem}
 }
 

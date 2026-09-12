@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <script src="js/version.js?v=20260917"></script>
+    <script src="js/version.js?v=20260925"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <link rel="stylesheet" href="css/style.css?v=20260917">
-    <link rel="stylesheet" href="css/sidebar.css?v=20260917">
+    <link rel="stylesheet" href="css/style.css?v=20260925">
+    <link rel="stylesheet" href="css/sidebar.css?v=20260925">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#ffb6c1">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -20,9 +20,9 @@
     <title> 音乐 · 本喵的播放器</title>
     <link rel="canonical" href="https://zhaokening.ccwu.cc/music.html">
     
-    <link rel="stylesheet" href="css/all.min.css?v=20260917">
-    <link rel="stylesheet" href="css/music.css?v=20260917">
-    <link rel="stylesheet" href="css/mobile.css?v=20260917">
+    <link rel="stylesheet" href="css/all.min.css?v=20260925">
+    <link rel="stylesheet" href="css/music.css?v=20260925">
+    <link rel="stylesheet" href="css/mobile.css?v=20260925">
     <meta name="description" content="(O_o)??音乐盒：在线搜歌、本地音乐播放、多平台搜索与播放器自由调节。">
     <meta name="keywords" content="(O_o)??,音乐,音乐盒,在线搜歌,播放器,歌词">
     <meta name="author" content="king">
@@ -125,9 +125,9 @@
 
                 <div class="extra-actions">
                     <div class="mode-strip">
-                        <div class="mode-chip" id="repeatModeBtn"><i class="fas fa-redo-alt"></i> 单曲循环</div>
-                        <div class="mode-chip" id="shuffleModeBtn"><i class="fas fa-random"></i> 随机播放</div>
-                        <div class="mode-chip" id="speedBtn"><i class="fas fa-tachometer-alt"></i> 倍速 <span id="speedVal">1.00x</span></div>
+                        <div class="mode-chip" id="repeatModeBtn" title="单曲循环"><i class="fas fa-redo-alt"></i> <span class="mc-txt">单曲循环</span></div>
+                        <div class="mode-chip" id="shuffleModeBtn" title="随机播放"><i class="fas fa-random"></i> <span class="mc-txt">随机播放</span></div>
+                        <div class="mode-chip" id="speedBtn" title="播放倍速"><i class="fas fa-tachometer-alt"></i> <span class="mc-txt">倍速</span> <span id="speedVal">1.00x</span></div>
                     </div>
                     <div class="mixer">
                         <i class="fas fa-volume-down st-7dce5011"></i>
@@ -135,7 +135,7 @@
                         <i class="fas fa-volume-up st-7dce5011"></i>
                     </div>
                     <div class="mode-strip">
-                        <div class="mode-chip pl-drawer-trigger" id="plDrawerOpen" title="展开歌单"><i class="fas fa-list-ul"></i> 歌单 <b id="songCount">0 首</b></div>
+                        <div class="mode-chip pl-drawer-trigger" id="plDrawerOpen" title="展开歌单"><i class="fas fa-list-ul"></i> <span class="mc-txt">歌单</span> <b id="songCount">0 首</b></div>
                     </div>
                 </div>
 
@@ -265,13 +265,13 @@
 </div>
 <div class="toast" id="toastMsg"></div>
 
-    <script src="js/common.js?v=20260917"></script>
-    <script src="js/music-api.js?v=20260917"></script>
-        <script src="js/music-bundle.js?v=20260917"></script>
-    <script src="js/sidebar.js?v=20260917"></script>
+    <script src="js/common.js?v=20260925"></script>
+    <script src="js/music-api.js?v=20260925"></script>
+        <script src="js/music-bundle.js?v=20260925"></script>
+    <script src="js/sidebar.js?v=20260925"></script>
     <script src="js/particles-config.js"></script>
     <script src="https://sakura-live2d.pages.dev/live2d/waifu.js?v=20260904" defer></script>
-    <script src="js/live2d-icon-fix.js?v=20260917" defer></script>
+    <script src="js/live2d-icon-fix.js?v=20260925" defer></script>
     <script>
     /* 歌单抽屉的开关：纯 UI，不动打包脚本 */
     (function () {

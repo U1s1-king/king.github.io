@@ -1,7 +1,7 @@
 {
  "version": 1,
  "updated": "2026-09-11",
- "note": "官方推荐曲库。音频文件托管在 https://sakura-music.pages.dev/music/ ，file 为文件名。",
+ "note": "官方推荐曲库。音频文件托管在 https://sakura-music-api.pages.dev/music/ ，file 为文件名。",
  "lists": [
   {
    "id": "official",
