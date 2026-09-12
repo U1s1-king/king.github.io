@@ -74,7 +74,7 @@
   text-decoration: none;
   font-weight: 500;
   font-size: 0.95rem;
-  transition: 0.2s;
+  transition: var(--d-2);
 }
 .sidebar-nav a i {
   width: 1.1rem;
@@ -85,7 +85,7 @@
 .sidebar-nav a:hover {
   background: #ffeaf1;
   color: #a83c5e;
-  transform: translateX(3px);
+  translate:3px 0;
 }
 .sidebar-nav a.active {
   background: linear-gradient(135deg, #ffe2ea, #ffd0dd);
@@ -120,7 +120,7 @@
 @media (min-width: 769px) {
   body {
     padding-left: 220px; /* 让出侧边栏宽度 */
-    transition: padding-left 0.3s ease;
+    transition: padding-left var(--d-3) var(--e-out);
   }
   body.sidebar-collapsed {
     padding-left: 0 !important; /* 侧边栏收起时内容全宽居中 */
@@ -142,7 +142,7 @@
 
 /* ---------- 侧边栏折叠动效 ---------- */
 .site-sidebar {
-  transition: transform 0.3s ease;
+  transition: transform var(--d-3) var(--e-out);
 }
 .site-sidebar.sidebar-hidden {
   transform: translateX(-100%);
@@ -167,16 +167,16 @@
   align-items: center;
   justify-content: center;
   padding: 0;
-  transition: left 0.3s ease, transform 0.2s ease;
+  transition: left var(--d-3) var(--e-out), transform var(--d-2) var(--e-out);
 }
 .sidebar-toggle-btn:hover {
-  transform: scale(1.08);
+  scale:1.08;
   opacity: 1;
 }
 .sidebar-toggle-btn.is-collapsed {
   left: 12px; /* 侧边栏隐藏时按钮移到最左 */
   opacity: 0.4;
-  transition: left 0.3s ease, transform 0.2s ease, opacity 0.25s ease;
+  transition: left var(--d-3) var(--e-out), transform var(--d-2) var(--e-out), opacity var(--d-2) var(--e-out);
 }
 .sidebar-toggle-btn.is-collapsed:hover {
   opacity: 1;
@@ -239,7 +239,7 @@
   border-radius: 16px;
   background: #fffefb;
   cursor: pointer;
-  transition: 0.2s;
+  transition: var(--d-2);
 }
 .mood-btn img {
   width: 64px;
@@ -249,7 +249,7 @@
   display: block;
 }
 .mood-btn:hover {
-  transform: translateY(-3px);
+  translate:0 -3px;
   box-shadow: 0 6px 14px rgba(233, 130, 156, 0.22);
 }
 .mood-btn.active {

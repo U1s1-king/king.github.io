@@ -17,8 +17,17 @@ bar.style.opacity = '0';
 setTimeout(function () { if (bar.parentNode) bar.parentNode.removeChild(bar); }, 600);
 }, 250);
 }
-if (document.readyState === 'complete') { done(); }
-else { window.addEventListener('load', done); }
+/* 进度条原先只挂 load。但 Archives 内嵌 4 个 B 站播放器 iframe 加一个远程 mp3，
+   它们永不 load，实测该页 load 要 16.8 秒才触发 —— 于是进度条会卡在 92% 十几秒。
+   DOMContentLoaded 之后内容其实已经可用了，再加一道兜底把它收掉。 */
+var finished = false;
+function once() { if (finished) return; finished = true; done(); }
+if (document.readyState === 'complete') { once(); }
+else {
+  window.addEventListener('load', once);
+  document.addEventListener('DOMContentLoaded', function () { setTimeout(once, 1200); });
+  setTimeout(once, 8000);
+}
 var els = document.querySelectorAll(
 '.profile-card,.card,.post-card,.page-card,.info-grid,.intro-name,' +
 '.about-container > * , main > * , .link-grid'
@@ -40,6 +49,14 @@ el.classList.add('reveal-init');
 io.observe(el);
 });
 })();
+/* ===== 自定义光标 + 花瓣拖尾（A2/A3 性能重写）=====
+ * 旧写法两个问题：
+ *  1) rAF 里写 cur.style.left/top —— 那是会触发布局的属性，而且被赋成整 px
+ *     丢掉亚像素，既掉帧又发涩。改用 translate 属性：它与元素自身那条
+ *     transform:translate(-50%,-50%) 是叠加的，居中效果不变，且走合成层。
+ *  2) 每次 mousemove 都 createElement 一个花瓣，约 36 个/秒的创建 + 销毁。
+ *     改成固定对象池复用节点，并让池成员不占 will-change 合成层。
+ */
 (function () {
 var isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
 if (isMobile || !window.matchMedia('(pointer: fine)').matches) return;
@@ -47,34 +64,57 @@ document.body.classList.add('custom-cursor');
 var cur = document.createElement('div');
 cur.id = 'sakura-cursor';
 cur.innerHTML = '🌸';
+cur.style.translate = '-100px -100px';
 document.body.appendChild(cur);
-var cx = -100, cy = -100, tx = -100, ty = -100;
-(function loop() {
-cx += (tx - cx) * 0.32;
-cy += (ty - cy) * 0.32;
-cur.style.left = cx + 'px';
-cur.style.top = cy + 'px';
-requestAnimationFrame(loop);
-})();
+
+/* 帧率无关的跟随：写死 0.32/帧 的话，144Hz 上会比 60Hz 快一倍 */
+var cx = -100, cy = -100, tx = -100, ty = -100, raf = 0, prev = 0;
+function loop(now) {
+  var dt = prev ? Math.min(now - prev, 50) : 16.7;
+  prev = now;
+  var k = 1 - Math.pow(1 - 0.32, dt / 16.7);
+  cx += (tx - cx) * k;
+  cy += (ty - cy) * k;
+  cur.style.translate = cx + 'px ' + cy + 'px';
+  /* 已经收敛就停掉循环：鼠标静止时不再产生任何样式写入 */
+  if (Math.abs(tx - cx) < 0.1 && Math.abs(ty - cy) < 0.1) { raf = 0; prev = 0; return; }
+  raf = requestAnimationFrame(loop);
+}
+function kick() { if (!raf) { prev = 0; raf = requestAnimationFrame(loop); } }
+
+/* 花瓣对象池：18 个节点循环复用 */
+var POOL = 18, tails = [], pi = 0;
+for (var i = 0; i < POOL; i++) {
+  var el = document.createElement('div');
+  el.className = 'sakura-tail';
+  el.innerHTML = '🌸';
+  el.style.willChange = 'auto';
+  document.body.appendChild(el);
+  tails.push(el);
+}
+function emit(x, y) {
+  var p = tails[pi]; pi = (pi + 1) % POOL;
+  /* 用 translate 定位而不是 left/top：fixed 元素上写 left/top 会触发布局，
+     translate 只走合成，且与 tailFall 动画里的 transform 叠加不冲突 */
+  p.style.translate = (x + (Math.random() - 0.5) * 14).toFixed(1) + 'px ' + (y + (Math.random() - 0.5) * 14).toFixed(1) + 'px';
+  p.style.fontSize = (9 + Math.random() * 11).toFixed(1) + 'px';
+  p.style.setProperty('--dx', ((Math.random() - 0.5) * 90).toFixed(0) + 'px');
+  p.style.setProperty('--dy', (35 + Math.random() * 70).toFixed(0) + 'px');
+  p.style.setProperty('--dr', ((Math.random() - 0.5) * 240).toFixed(0) + 'deg');
+  /* 用 WAAPI 归零重启，避开 "改 style 再读 offsetWidth" 的强制同步布局 */
+  var a = p.getAnimations ? p.getAnimations()[0] : null;
+  if (a) { a.currentTime = 0; a.play(); }
+  else { p.style.animation = 'none'; void p.offsetWidth; p.style.animation = ''; }
+}
 var last = 0;
 document.addEventListener('mousemove', function (e) {
-tx = e.clientX; ty = e.clientY;
-var now = Date.now();
-if (now - last < 28) return;
-last = now;
-var p = document.createElement('div');
-p.className = 'sakura-tail';
-p.innerHTML = '🌸';
-p.style.left = (e.clientX + (Math.random() - 0.5) * 14) + 'px';
-p.style.top = (e.clientY + (Math.random() - 0.5) * 14) + 'px';
-var size = 9 + Math.random() * 11;
-p.style.fontSize = size.toFixed(1) + 'px';
-p.style.setProperty('--dx', ((Math.random() - 0.5) * 90).toFixed(0) + 'px');
-p.style.setProperty('--dy', (35 + Math.random() * 70).toFixed(0) + 'px');
-p.style.setProperty('--dr', ((Math.random() - 0.5) * 240).toFixed(0) + 'deg');
-document.body.appendChild(p);
-setTimeout(function () { if (p.parentNode) p.parentNode.removeChild(p); }, 1150);
-});
+  tx = e.clientX; ty = e.clientY;
+  kick();
+  var now = Date.now();
+  if (now - last < 28) return;
+  last = now;
+  emit(e.clientX, e.clientY);
+}, { passive: true });
 })();
 
 /* ===== 骨架屏/加载层 ===== */

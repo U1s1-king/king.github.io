@@ -12,8 +12,27 @@
  * 2) 所有效果都在 prefers-reduced-motion: reduce 下关闭。
  * ============================================================ */
 
+/* ---------- 0. 全站时序 / 缓动标尺（A1）----------
+ * 站内只允许用这 5 档时长和 4 条曲线。新增动效一律引 token，
+ * 不要再写裸的数字时长或裸 ease —— 那正是之前 16 种时长、56 处
+ * 浏览器默认 ease 混在一起的来源。
+ * 注意：这些 token 只定义在这里，而 anim.css 在 7 个页面都被引用，
+ * 所以其他样式表里可以直接用 var()，不必自带 fallback。
+ */
 :root{
-  --an-ease: cubic-bezier(.22,.61,.36,1);
+  /* 时长：微反馈 / 快速 / 基准 / 较慢 / 入场 */
+  --d-1: .12s;
+  --d-2: .2s;
+  --d-3: .32s;
+  --d-4: .5s;
+  --d-5: .85s;
+  /* 曲线：平滑减速（UI 主力） / Material 标准 / 加速离场 / 回弹 */
+  --e-out:    cubic-bezier(.22,.61,.36,1);
+  --e-inout:  cubic-bezier(.4,0,.2,1);
+  --e-in:     cubic-bezier(.4,0,1,1);
+  --e-spring: cubic-bezier(.34,1.56,.64,1);
+
+  --an-ease: var(--e-out);
   --an-pink: #e982a2;
   --an-deep: #b1627d;
   --an-soft: rgba(224,106,143,.20);
@@ -36,25 +55,25 @@
   to  { opacity:1; translate:0 0; }
 }
 /* 侧栏项 hover 时向右轻推 */
-.sidebar-nav a{ transition: translate .26s var(--an-ease), background-color .26s var(--an-ease), color .26s var(--an-ease); }
+.sidebar-nav a{ transition: translate var(--d-3) var(--an-ease), background-color var(--d-3) var(--an-ease), color var(--d-3) var(--an-ease); }
 .sidebar-nav a:hover{ translate:6px 0; }
 
 /* ---------- 2. 卡片抬升 + 柔光 ---------- */
 .an-lift{
-  transition: translate .34s var(--an-ease),
-              box-shadow .34s var(--an-ease),
-              border-color .34s var(--an-ease);
+  transition: translate var(--d-3) var(--an-ease),
+              box-shadow var(--d-3) var(--an-ease),
+              border-color var(--d-3) var(--an-ease);
 }
 /* 被 common.js 标了 .reveal-in 的卡片，它的 transition 是 !important 的，
    会把上面那条整个盖掉，于是 hover 位移没有过渡。
    这里用更高优先级 + !important 把两者合并：入场照旧带交错延迟，
    位移和阴影则走 hover 自己的时长。 */
 .an-lift.reveal-in{
-  transition: opacity .7s var(--an-ease) var(--an-delay,0ms),
-              transform .7s var(--an-ease) var(--an-delay,0ms),
-              translate .34s var(--an-ease),
-              box-shadow .34s var(--an-ease),
-              border-color .34s var(--an-ease) !important;
+  transition: opacity var(--d-5) var(--an-ease) var(--an-delay,0ms),
+              transform var(--d-5) var(--an-ease) var(--an-delay,0ms),
+              translate var(--d-3) var(--an-ease),
+              box-shadow var(--d-3) var(--an-ease),
+              border-color var(--d-3) var(--an-ease) !important;
 }
 .an-lift:hover{
   translate:0 -6px;
@@ -64,7 +83,7 @@
 .an-lift:active{ translate:0 -2px; }
 
 /* ---------- 3. 图片载入淡入 ---------- */
-.an-fade{ opacity:0; transition: opacity .55s var(--an-ease), scale .55s var(--an-ease); }
+.an-fade{ opacity:0; transition: opacity var(--d-4) var(--an-ease), scale var(--d-4) var(--an-ease); }
 .an-fade.an-in{ opacity:1; }
 .an-fade:not(.an-in){ scale:.97; }
 
@@ -74,7 +93,7 @@
   content:''; position:absolute; left:0; bottom:-3px; height:2px; width:100%;
   background:linear-gradient(90deg,var(--an-pink),var(--an-deep));
   border-radius:2px; scale:0 1; transform-origin:left center;
-  transition: scale .34s var(--an-ease);
+  transition: scale var(--d-3) var(--an-ease);
 }
 .an-underline:hover::after{ scale:1 1; }
 
@@ -83,28 +102,36 @@
   position:fixed; inset:0; z-index:0; pointer-events:none;
   overflow:hidden; opacity:.5;
 }
+/* A5：原来三个层各带一条无限位移，是全站唯一被 will-change 提升的合成层，
+ * 又叠了 blur(58px) —— 每帧都要移动并重新合成一大片模糊区域，是最贵的一对。
+ * 现在位移全部去掉，只保留极慢的透明度呼吸：
+ *   - blur 变成静态，只栅格化一次，不再逐帧重算；
+ *   - opacity 是合成器属性，动画期间不触发重绘；
+ *   - 层不再移动，于是也不需要 will-change:translate 那个永久合成层。
+ * 之所以不做真正的 hue-rotate：在 blur(58px) 的层上做 filter 动画，浏览器每帧
+ * 都得重跑一次模糊，比重绘更贵，等于拿更差的东西换掉原来的问题。
+ */
 #an-aurora i{
   position:absolute; display:block; border-radius:50%;
-  filter:blur(58px); will-change:translate;
+  filter:blur(58px); will-change:opacity;
 }
 #an-aurora i:nth-child(1){
   width:36vmax; height:36vmax; left:-10vmax; top:-8vmax;
   background:radial-gradient(circle,rgba(255,182,193,.55),transparent 68%);
-  animation: an-drift-a 26s ease-in-out infinite alternate;
+  animation: an-breathe 22s ease-in-out infinite alternate;
 }
 #an-aurora i:nth-child(2){
   width:30vmax; height:30vmax; right:-8vmax; top:22vh;
   background:radial-gradient(circle,rgba(255,213,226,.5),transparent 68%);
-  animation: an-drift-b 31s ease-in-out infinite alternate;
+  animation: an-breathe 29s ease-in-out infinite alternate-reverse;
 }
 #an-aurora i:nth-child(3){
   width:26vmax; height:26vmax; left:32vw; bottom:-10vmax;
   background:radial-gradient(circle,rgba(233,130,162,.34),transparent 70%);
-  animation: an-drift-c 24s ease-in-out infinite alternate;
+  animation: an-breathe 25s ease-in-out infinite alternate;
 }
-@keyframes an-drift-a{ from{ translate:0 0 } to{ translate:7vw 5vh } }
-@keyframes an-drift-b{ from{ translate:0 0 } to{ translate:-6vw 7vh } }
-@keyframes an-drift-c{ from{ translate:0 0 } to{ translate:5vw -6vh } }
+/* 三层时长 22/29/25s 且一条 reverse，相位互不相同，整体仍有缓慢流动感 */
+@keyframes an-breathe{ from{ opacity:.7 } to{ opacity:1 } }
 
 /* ---------- 6. 滚动条 ---------- */
 body::-webkit-scrollbar{ width:9px; }
@@ -114,6 +141,14 @@ body::-webkit-scrollbar-thumb{
   border-radius:9px;
 }
 body::-webkit-scrollbar-thumb:hover{ background:linear-gradient(180deg,#ff8fab,#d1577f); }
+
+/* ---------- 6.5 无限动画离屏暂停（A4）----------
+ * cardFloat 挂在 .card/.post-card/.page-card/.profile-card/.player-card/.work-card 上，
+ * btnGlow 挂在 .btn/.page-tab/.ctrl-btn/.mode-chip 上 —— 归档和日记页可能同时有
+ * 几十个元素在永久飘动 / 发光。js/anim.js 用 IntersectionObserver 给滚出视口的
+ * 元素加 .an-idle，动画就地定格，合成层彻底静止；滚回来自动续上。
+ * 用 animation-play-state 而不是 display/visibility，避免破坏布局。 */
+.an-idle, .an-idle::before, .an-idle::after{ animation-play-state: paused !important; }
 
 /* ---------- 7. 无障碍：关掉动效 ---------- */
 @media (prefers-reduced-motion: reduce){
@@ -135,7 +170,7 @@ svg[data-draw] .an-draw-path{
 }
 svg[data-draw].an-draw-pending .an-draw-path{ opacity:0; }
 svg[data-draw]:not(.an-draw-pending) .an-draw-path{
-  opacity:1; transition:opacity .35s var(--an-ease);
+  opacity:1; transition:opacity var(--d-3) var(--an-ease);
 }
 
 /* 标题下方的自绘花饰 */
@@ -156,3 +191,91 @@ svg[data-draw]:not(.an-draw-pending) .an-draw-path{
   svg[data-draw] .an-draw-path{ opacity:1 !important; transition:none !important; }
   .an-wave .an-wave-dash{ animation:none !important; }
 }
+
+/* ---------- 9. 键盘可达性（B1）----------
+ * 之前 10 个样式表里 :focus-visible 一共 0 处，键盘用户按 Tab 完全没有任何
+ * 视觉反馈。这里统一补一套，并让焦点环从外向内收一点，给出"落位"感。
+ */
+a:focus-visible, button:focus-visible, [tabindex]:focus-visible,
+input:focus-visible, textarea:focus-visible, select:focus-visible,
+summary:focus-visible, .link-card:focus-visible{
+  outline:2px solid var(--an-pink);
+  outline-offset:2px;
+  border-radius:8px;
+  animation: an-focus-in var(--d-3) var(--e-out);
+}
+@keyframes an-focus-in{
+  from{ outline-offset:9px; outline-color:rgba(233,130,162,.2); }
+  to  { outline-offset:2px; outline-color:var(--an-pink); }
+}
+
+/* ---------- 10. 按压反馈（B2）----------
+ * 之前 Journal / Archives / Tools / index 的 :active 都是 0 处，点下去毫无反馈。
+ * 这里只动 scale 属性：它与 style.css 里 cardFloat/btnGlow 等无限动画用的
+ * translate/transform 是叠加关系，不会互相覆盖。
+ */
+.card:active, .post-card:active, .media-card:active, .page-card:active,
+.player-card:active, .work-card:active, .link-card:active,
+.page-tab:active, .mode-chip:active, .ctrl-btn:active, button:active{
+  scale:.972;
+  transition-duration:var(--d-1);
+}
+
+/* ---------- 11. 点击涟漪（B5）---------- */
+/* 用 position:fixed 画在点击点，完全不动宿主元素的 position/overflow */
+.an-ripple{
+  position:fixed; border-radius:50%; pointer-events:none; z-index:99996;
+  background:radial-gradient(circle,rgba(233,130,162,.42),rgba(233,130,162,0) 70%);
+  translate:-50% -50%; scale:0;
+  animation: an-ripple-out var(--d-4) var(--e-out) forwards;
+}
+@keyframes an-ripple-out{ to{ scale:1; opacity:0; } }
+
+/* ---------- 12. 指针跟随：卡片倾斜 + 磁吸（B3/B4）----------
+ * 位移一律走 translate/rotate 属性；透视放在父级 perspective 上。
+ * 力度刻意收小：倾斜上限 5deg、磁吸上限 5px。
+ */
+/* 指针倾斜：JS 写 transform，所以指针进入时要先把 cardFloat 占用的 transform 让开 */
+.an-tilt{ perspective:760px; }
+.an-tilt .media-card, .an-tilt .post-card, .an-tilt .work-card{
+  transition: transform var(--d-3) var(--e-out);
+}
+.an-tilt .an-floating-off{ animation-name:none !important; }
+.an-magnet{
+  display:inline-block;
+  transition: translate var(--d-2) var(--e-out), scale var(--d-2) var(--e-out);
+}
+
+/* ---------- 13. 滚动驱动（B6）---------- */
+#an-scrollbar{
+  position:fixed; top:0; left:0; height:3px; width:100%; z-index:99997;
+  pointer-events:none; transform-origin:0 50%;
+  scale:0 1;
+  background:linear-gradient(90deg,#ffb6c1,#e06a8f);
+  transition: opacity var(--d-4) var(--e-out);
+}
+#an-scrollbar.an-hide{ opacity:0; }
+
+/* ---------- 14. 侧边栏当前项指示条（B7）---------- */
+.an-indicator{
+  position:absolute; left:0; width:3px; border-radius:3px;
+  background:linear-gradient(180deg,#ffb6c1,#e06a8f);
+  translate:0 0; height:0; opacity:0;
+  transition: translate var(--d-3) var(--e-spring), height var(--d-3) var(--e-out), opacity var(--d-2) var(--e-out);
+}
+
+/* ---------- 15. 无障碍：B1~B7 的降级 ---------- */
+@media (prefers-reduced-motion: reduce){
+  a:focus-visible, button:focus-visible, [tabindex]:focus-visible,
+  input:focus-visible, textarea:focus-visible, select:focus-visible{ animation:none !important; }
+  .an-ripple{ display:none !important; }
+  .an-tilt .media-card, .an-tilt .post-card, .an-tilt .work-card,
+  .an-magnet{ transition:none !important; transform:none !important; translate:none !important; }
+  #an-scrollbar{ display:none !important; }
+  .an-indicator{ transition:none !important; }
+}
+@media (hover: none){
+  .an-tilt .media-card, .an-tilt .post-card, .an-tilt .work-card{ transform:none !important; }
+  .an-magnet{ translate:none !important; }
+}
+

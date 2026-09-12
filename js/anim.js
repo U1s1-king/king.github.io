@@ -72,14 +72,26 @@
 
     /* ---------- 3. 标题与导航入场 ---------- */
     Array.prototype.forEach.call(document.querySelectorAll('.blog-title'), function (el) {
-      if (!reduce) el.classList.add('an-title-in');
+      if (reduce) return;
+      el.classList.add('an-title-in');
+      release(el, 'an-title-in', 1050);
     });
+    /* 入场动画用的是 animation-fill-mode:both，动画结束后那组填充值会一直压着
+       translate / filter，于是 hover 的位移永远不生效 —— 实测侧栏导航 hover
+       前后 translate 都是 0px，就是这个原因（动画填充值优先级高于普通声明）。
+       动画跑完就摘掉 class，填充值随之消失；结束状态与元素的常态一致
+       （opacity 1 / translate 0 / blur 0），所以摘掉不会产生回跳。 */
+    function release(el, cls, ms) {
+      setTimeout(function () { el.classList.remove(cls); }, ms);
+    }
     var navA = document.querySelectorAll('.sidebar-nav a');
     if (!navA.length) navA = document.querySelectorAll('.sidebar-nav > *');
     Array.prototype.forEach.call(navA, function (el, i) {
       if (reduce) return;
-      el.style.setProperty('--an-i', String(Math.min(i, 10)));
+      var step = Math.min(i, 10);
+      el.style.setProperty('--an-i', String(step));
       el.classList.add('an-nav-in');
+      release(el, 'an-nav-in', 700 + step * 55);
     });
 
     /* ---------- 4. 小标题下划线 ---------- */
@@ -127,19 +139,25 @@
       s.onerror = function () {};
       document.head.appendChild(s);
     }
-    function whenIdle() {
-      if ('requestIdleCallback' in window) window.requestIdleCallback(scheduleLib, { timeout: 2500 });
-      else setTimeout(scheduleLib, 400);
-    }
-    /* 正常在 load 之后的空闲时段拉起；但 load 迟迟不来（慢 CDN、长轮询）时
-       必须有兜底，否则整个动画层会静默失效 —— 实测 Archives.html 就会这样。
-       动态插入的 script 自带 async，不会阻塞渲染，这个兜底是安全的。 */
+    /* 调度方式：load 之后 300ms 再拉起。
+       原来用的是 requestIdleCallback(timeout:2500) 再套一层 setTimeout(2500)。
+       实测 index 上 Live2D 一直占着主线程，rIC 永远等不到空闲，只能吃满超时 ——
+       两者相加最坏 5 秒动画层才生效，涟漪/倾斜/滚动条全都迟到。
+       换成固定延时：确定、可预测，而且因为排在 load 之后，依然不跟首屏抢带宽。
+       （动态插入的 script 自带 async，无论如何都不阻塞渲染。） */
     var pulled = false;
-    function pullOnce() { if (pulled) return; pulled = true; whenIdle(); }
+    function pullOnce() {
+      if (pulled) return;
+      pulled = true;
+      setTimeout(scheduleLib, 300);
+    }
     if (document.readyState === 'complete') pullOnce();
     else {
       window.addEventListener('load', pullOnce, { once: true });
-      setTimeout(pullOnce, 2500);
+      /* load 迟迟不来时的兜底 —— 实测 Archives.html 的 load 要 16.8 秒，
+         只挂 load 会让整个动画层静默失效。 */
+      setTimeout(pullOnce, 1800);
     }
+
   });
 })();
