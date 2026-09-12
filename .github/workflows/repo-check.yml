@@ -1,0 +1,29 @@
+name: repo-check
+
+# 守卫：_partials/ 是导航结构（侧边栏 + 底部导航）的唯一来源，各页面里那两块
+# 是 scripts/sync_nav.py 生成的。谁改了 _partials/ 或页面里的生成块却忘了跑
+# 脚本，这里就让流水线失败，避免重复结构再次漂移
+# （music.html 的 loading="lazy" 就是这样漏掉的）。
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: repo-check
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: 导航结构与 _partials/ 是否同步
+        run: python scripts/sync_nav.py --check

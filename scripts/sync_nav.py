@@ -51,36 +51,44 @@ PAGES = [
 
 SIDEBAR_FALLBACK = re.compile(r'[ \t]*<aside class="site-sidebar".*?</aside>', re.S)
 BOTTAB_FALLBACK = re.compile(r'[ \t]*<nav class="bot-tab".*?</nav>', re.S)
-LINE = '\r\n'
-
-
 def read(path):
     with open(path, 'r', encoding='utf-8', newline='') as f:
         return f.read()
 
 
-def links(prefix, active, indent):
+def eol_of(text):
+    """按文件自身的行尾生成。本地工作区是 CRLF，而 CI（Linux）checkout 出来是 LF
+    （git 里存的就是 LF），写死任何一种都会让 --check 在另一种环境下误报失败。"""
+    return '\r\n' if '\r\n' in text else '\n'
+
+
+def norm(text, eol):
+    """把模板的行尾统一成目标行尾，避免模板与页面行尾不一致。"""
+    return text.replace('\r\n', '\n').replace('\n', eol)
+
+
+def links(prefix, active, indent, eol):
     out = []
     for href, label, icon in NAV:
         act = ' class="active"' if href == active else ''
         out.append('%s<a href="%s%s"%s><i class="fas %s"></i><span>%s</span></a>'
                    % (indent, prefix, href, act, icon, label))
-    return LINE.join(out)
+    return eol.join(out)
 
 
-def sidebar_block(prefix, active):
-    tpl = read(os.path.join(PARTIALS, 'sidebar.html'))
-    body = tpl.replace('{{PREFIX}}', prefix).replace('{{NAV}}', links(prefix, active, '        '))
-    return ('<!-- nav:sidebar:start - 由 scripts/sync_nav.py 生成，勿手改 -->' + LINE
-            + body.rstrip(LINE) + LINE + '<!-- nav:sidebar:end -->')
+def sidebar_block(prefix, active, eol):
+    body = norm(read(os.path.join(PARTIALS, 'sidebar.html')), eol)
+    body = body.replace('{{PREFIX}}', prefix).replace('{{NAV}}', links(prefix, active, '        ', eol))
+    return ('<!-- nav:sidebar:start - 由 scripts/sync_nav.py 生成，勿手改 -->' + eol
+            + body.rstrip(eol) + eol + '<!-- nav:sidebar:end -->')
 
 
-def bottab_block(prefix):
-    tpl = read(os.path.join(PARTIALS, 'bot-tab.html'))
-    body = tpl.replace('{{PREFIX}}', prefix).replace('{{NAV}}', links(prefix, None, '    '))
-    body = LINE.join('    ' + l for l in body.rstrip(LINE).split(LINE))
-    return ('    <!-- nav:bot-tab:start - 由 scripts/sync_nav.py 生成，勿手改 -->' + LINE
-            + body + LINE + '    <!-- nav:bot-tab:end -->')
+def bottab_block(prefix, eol):
+    body = norm(read(os.path.join(PARTIALS, 'bot-tab.html')), eol)
+    body = body.replace('{{PREFIX}}', prefix).replace('{{NAV}}', links(prefix, None, '    ', eol))
+    body = eol.join('    ' + l for l in body.rstrip(eol).split(eol))
+    return ('    <!-- nav:bot-tab:start - 由 scripts/sync_nav.py 生成，勿手改 -->' + eol
+            + body + eol + '    <!-- nav:bot-tab:end -->')
 
 
 def apply_block(text, kind, new, fallback):
@@ -107,9 +115,10 @@ def main():
     for fname, prefix, active in PAGES:
         path = os.path.join(ROOT, fname)
         text = read(path)
+        eol = eol_of(text)
         before = text
-        text = apply_block(text, 'nav:sidebar', sidebar_block(prefix, active), SIDEBAR_FALLBACK)
-        text = apply_block(text, 'nav:bot-tab', bottab_block(prefix), BOTTAB_FALLBACK)
+        text = apply_block(text, 'nav:sidebar', sidebar_block(prefix, active, eol), SIDEBAR_FALLBACK)
+        text = apply_block(text, 'nav:bot-tab', bottab_block(prefix, eol), BOTTAB_FALLBACK)
         if text != before:
             changed.append(fname)
             if not args.check:
