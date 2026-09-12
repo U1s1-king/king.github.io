@@ -1,0 +1,124 @@
+/* ============================================================
+ * 全站动画补充层（css/anim.css）
+ * ------------------------------------------------------------
+ * 这里只放"锦上添花"的动效，不改任何布局与配色。
+ * 两个关键约定：
+ *
+ * 1) 位移一律用独立的 translate / scale / rotate 属性，不用 transform。
+ *    因为 style.css 里的 .reveal-in 是 transform:translateY(0)!important，
+ *    入场动画结束后它会一直压着 transform，用 transform 做 hover 抬升
+ *    会被它吃掉、完全没反应。用 translate 属性则与 transform 叠加。
+ *
+ * 2) 所有效果都在 prefers-reduced-motion: reduce 下关闭。
+ * ============================================================ */
+
+:root{
+  --an-ease: cubic-bezier(.22,.61,.36,1);
+  --an-pink: #e982a2;
+  --an-deep: #b1627d;
+  --an-soft: rgba(224,106,143,.20);
+}
+
+/* ---------- 1. 入场交错：js/anim.js 写 --an-delay ---------- */
+.reveal-in{ transition-delay: var(--an-delay, 0ms) !important; }
+
+/* 标题浮现（毛玻璃 + 上移） */
+.an-title-in{ animation: an-title-in .85s var(--an-ease) both; }
+@keyframes an-title-in{
+  from{ opacity:0; translate:0 -16px; filter:blur(7px); }
+  to  { opacity:1; translate:0 0;     filter:blur(0); }
+}
+
+/* 侧栏导航逐条滑入 */
+.an-nav-in{ animation: an-nav-in .55s var(--an-ease) both; animation-delay: calc(var(--an-i,0) * 55ms); }
+@keyframes an-nav-in{
+  from{ opacity:0; translate:-18px 0; }
+  to  { opacity:1; translate:0 0; }
+}
+/* 侧栏项 hover 时向右轻推 */
+.sidebar-nav a{ transition: translate .26s var(--an-ease), background-color .26s var(--an-ease), color .26s var(--an-ease); }
+.sidebar-nav a:hover{ translate:6px 0; }
+
+/* ---------- 2. 卡片抬升 + 柔光 ---------- */
+.an-lift{
+  transition: translate .34s var(--an-ease),
+              box-shadow .34s var(--an-ease),
+              border-color .34s var(--an-ease);
+}
+/* 被 common.js 标了 .reveal-in 的卡片，它的 transition 是 !important 的，
+   会把上面那条整个盖掉，于是 hover 位移没有过渡。
+   这里用更高优先级 + !important 把两者合并：入场照旧带交错延迟，
+   位移和阴影则走 hover 自己的时长。 */
+.an-lift.reveal-in{
+  transition: opacity .7s var(--an-ease) var(--an-delay,0ms),
+              transform .7s var(--an-ease) var(--an-delay,0ms),
+              translate .34s var(--an-ease),
+              box-shadow .34s var(--an-ease),
+              border-color .34s var(--an-ease) !important;
+}
+.an-lift:hover{
+  translate:0 -6px;
+  box-shadow:0 16px 34px var(--an-soft);
+  border-color: rgba(233,130,162,.55);
+}
+.an-lift:active{ translate:0 -2px; }
+
+/* ---------- 3. 图片载入淡入 ---------- */
+.an-fade{ opacity:0; transition: opacity .55s var(--an-ease), scale .55s var(--an-ease); }
+.an-fade.an-in{ opacity:1; }
+.an-fade:not(.an-in){ scale:.97; }
+
+/* ---------- 4. 小标题 hover 时下划线生长 ---------- */
+.an-underline{ position:relative; }
+.an-underline::after{
+  content:''; position:absolute; left:0; bottom:-3px; height:2px; width:100%;
+  background:linear-gradient(90deg,var(--an-pink),var(--an-deep));
+  border-radius:2px; scale:0 1; transform-origin:left center;
+  transition: scale .34s var(--an-ease);
+}
+.an-underline:hover::after{ scale:1 1; }
+
+/* ---------- 5. 背景光斑：柔和漂移 ---------- */
+#an-aurora{
+  position:fixed; inset:0; z-index:0; pointer-events:none;
+  overflow:hidden; opacity:.5;
+}
+#an-aurora i{
+  position:absolute; display:block; border-radius:50%;
+  filter:blur(58px); will-change:translate;
+}
+#an-aurora i:nth-child(1){
+  width:36vmax; height:36vmax; left:-10vmax; top:-8vmax;
+  background:radial-gradient(circle,rgba(255,182,193,.55),transparent 68%);
+  animation: an-drift-a 26s ease-in-out infinite alternate;
+}
+#an-aurora i:nth-child(2){
+  width:30vmax; height:30vmax; right:-8vmax; top:22vh;
+  background:radial-gradient(circle,rgba(255,213,226,.5),transparent 68%);
+  animation: an-drift-b 31s ease-in-out infinite alternate;
+}
+#an-aurora i:nth-child(3){
+  width:26vmax; height:26vmax; left:32vw; bottom:-10vmax;
+  background:radial-gradient(circle,rgba(233,130,162,.34),transparent 70%);
+  animation: an-drift-c 24s ease-in-out infinite alternate;
+}
+@keyframes an-drift-a{ from{ translate:0 0 } to{ translate:7vw 5vh } }
+@keyframes an-drift-b{ from{ translate:0 0 } to{ translate:-6vw 7vh } }
+@keyframes an-drift-c{ from{ translate:0 0 } to{ translate:5vw -6vh } }
+
+/* ---------- 6. 滚动条 ---------- */
+body::-webkit-scrollbar{ width:9px; }
+body::-webkit-scrollbar-track{ background:rgba(255,213,226,.28); }
+body::-webkit-scrollbar-thumb{
+  background:linear-gradient(180deg,#ffb6c1,#e06a8f);
+  border-radius:9px;
+}
+body::-webkit-scrollbar-thumb:hover{ background:linear-gradient(180deg,#ff8fab,#d1577f); }
+
+/* ---------- 7. 无障碍：关掉动效 ---------- */
+@media (prefers-reduced-motion: reduce){
+  .reveal-in{ transition-delay:0ms !important; }
+  .an-title-in,.an-nav-in,#an-aurora i{ animation:none !important; }
+  .an-lift,.an-lift:hover,.sidebar-nav a,.sidebar-nav a:hover{ translate:none !important; }
+  .an-fade{ opacity:1 !important; scale:none !important; }
+}

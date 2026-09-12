@@ -1399,6 +1399,11 @@ lastIdx = idx;
 var ls = box.querySelectorAll('.lyr-line');
 for (var jj = 0; jj < ls.length; jj++) ls[jj].classList.toggle('active', jj === idx);
 needScroll = true;
+/* 换了新的一句：交给看板娘，偶尔让它跟着唱一句（见 js/live2d-sing.js）。
+   冷却、概率、句子合不合适都由那边判断，这里只管把当前这句递过去。 */
+if (idx >= 0 && window.waifuSing) {
+try { window.waifuSing(self.lines[idx].text, audio); } catch (e) {}
+}
 }
 /* 滚动不能只在换行那一拍做一次：box.innerHTML 刚写完时浏览器还没算出
    可滚动高度，这一拍 scrollTop 会被钳成 0，之后再也没机会补上，

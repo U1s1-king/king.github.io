@@ -106,3 +106,155 @@
 .pl-drawer .cherry-tip{margin-top:auto}
 body.pl-drawer-open{overflow:hidden}
 @media (max-width:480px){.pl-drawer{width:92vw;border-radius:18px 0 0 18px}}
+
+/* ============================================================
+ * 动效补充层（追加在文件末尾，不改动上面任何一条规则）
+ * 说明：位移一律用独立的 translate / scale / rotate 属性，
+ *       不动 transform，避免和已有的 transform 动画互相覆盖。
+ * ============================================================ */
+
+/* ---------- 1. 歌词高亮行换行时轻轻推进 ---------- */
+.player-right .lyric-panel .lyr-line.active{
+  animation: mc-lyr-in .42s cubic-bezier(.22,.61,.36,1) both;
+}
+@keyframes mc-lyr-in{
+  from{ opacity:.30; translate:9px 0;  filter:blur(2.5px); }
+  to  { opacity:1;   translate:0 0;    filter:blur(0); }
+}
+
+/* ---------- 2. 播放中：播放按钮外扩光环 + 进度条流光 ---------- */
+#playPauseBtn{ position:relative; }
+#playPauseBtn::after{
+  content:''; position:absolute; inset:-4px; border-radius:50%;
+  border:2px solid rgba(233,130,162,.6);
+  opacity:0; pointer-events:none;
+}
+body.mc-playing #playPauseBtn::after{ animation: mc-ring 1.9s ease-out infinite; }
+@keyframes mc-ring{
+  0%  { opacity:.75; scale:.85; }
+  100%{ opacity:0;   scale:1.35; }
+}
+#progressFill{ position:relative; overflow:hidden; }
+body.mc-playing #progressFill::after{
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(100deg,transparent 20%,rgba(255,255,255,.65) 50%,transparent 80%);
+  background-size:220% 100%;
+  animation: mc-shimmer 1.9s linear infinite;
+  pointer-events:none;
+}
+@keyframes mc-shimmer{
+  from{ background-position:180% 0; }
+  to  { background-position:-80% 0; }
+}
+
+/* ---------- 3. 曲名 / 封面切换动画 ---------- */
+#trackName.mc-title-in{ animation: mc-title-in .42s cubic-bezier(.22,.61,.36,1) both; }
+@keyframes mc-title-in{
+  from{ opacity:0; translate:0 10px; filter:blur(3px); }
+  to  { opacity:1; translate:0 0;    filter:blur(0); }
+}
+#coverImg.mc-cover-in{ animation: mc-cover-in .5s cubic-bezier(.22,.61,.36,1) both; }
+@keyframes mc-cover-in{
+  from{ opacity:.15; scale:.9; }
+  to  { opacity:1;   scale:1; }
+}
+
+/* ---------- 4. 按钮按下反馈 ---------- */
+.mc-ripple{ animation: mc-pop .5s cubic-bezier(.22,.61,.36,1); }
+@keyframes mc-pop{
+  0%  { scale:1; }
+  35% { scale:.93; }
+  100%{ scale:1; }
+}
+
+/* ---------- 5. 曲目行：hover 轻推，播放中高亮呼吸 ---------- */
+.track-item{
+  transition: translate .22s cubic-bezier(.22,.61,.36,1),
+              box-shadow .22s cubic-bezier(.22,.61,.36,1),
+              background-color .22s, border-color .22s;
+}
+.track-item:hover{
+  translate:5px 0;
+  border-color:#ffc2d4;
+  box-shadow:0 6px 16px rgba(224,106,143,.18);
+}
+.track-item.playing{
+  border-color:#e982a2;
+  background:linear-gradient(135deg,#fff0f6,#ffe4ee);
+  box-shadow:0 0 0 2px rgba(246,165,192,.4), 0 8px 18px -6px rgba(233,130,162,.35);
+}
+.track-item.playing .track-name{ color:#c2506f; }
+
+/* ---------- 6. 视图切换淡入 ---------- */
+#tab-player.active, #tab-netease.active{ animation: mc-view-in .32s ease both; }
+@keyframes mc-view-in{
+  from{ opacity:0; translate:0 8px; }
+  to  { opacity:1; translate:0 0; }
+}
+
+/* ---------- 7. 模式芯片切换时的轻微弹跳 ---------- */
+.mode-chip.active{ animation: mc-chip .45s cubic-bezier(.22,.61,.36,1); }
+@keyframes mc-chip{
+  0%  { scale:1; }
+  40% { scale:1.12; }
+  100%{ scale:1; }
+}
+
+/* ---------- 8. 音量滑块 ---------- */
+.volume-slider::-webkit-slider-thumb{ transition: scale .2s, box-shadow .2s; }
+.volume-slider:hover::-webkit-slider-thumb{ scale:1.18; box-shadow:0 0 0 5px rgba(233,130,162,.16); }
+
+/* ---------- 9. 抽屉展开时曲目行逐条滑入 ---------- */
+.pl-drawer.show .track-item{ animation: mc-row-in .34s cubic-bezier(.22,.61,.36,1) both; }
+@keyframes mc-row-in{
+  from{ opacity:0; translate:-14px 0; }
+  to  { opacity:1; translate:0 0; }
+}
+.pl-drawer.show .track-item:nth-child(1){ animation-delay:.01s }
+.pl-drawer.show .track-item:nth-child(2){ animation-delay:.03s }
+.pl-drawer.show .track-item:nth-child(3){ animation-delay:.05s }
+.pl-drawer.show .track-item:nth-child(4){ animation-delay:.07s }
+.pl-drawer.show .track-item:nth-child(5){ animation-delay:.09s }
+.pl-drawer.show .track-item:nth-child(6){ animation-delay:.11s }
+.pl-drawer.show .track-item:nth-child(7){ animation-delay:.13s }
+.pl-drawer.show .track-item:nth-child(8){ animation-delay:.15s }
+
+/* ---------- 10. 看板娘跟着唱 ---------- */
+/* 摆动加在 .wf-main 上，不动 #waifu-fab 本身 —— 拖拽用的是 left/top，不冲突 */
+#waifu-fab.wf-singing .wf-main{ animation: mc-sing-sway 1.05s ease-in-out 3; }
+@keyframes mc-sing-sway{
+  0%  { translate:0 0;    rotate:0deg; }
+  20% { translate:0 -7px; rotate:-1.5deg; }
+  50% { translate:0 0;    rotate:0deg; }
+  80% { translate:0 -5px; rotate:1.5deg; }
+  100%{ translate:0 0;    rotate:0deg; }
+}
+#waifu-fab .wf-bubble.wf-sing{
+  background:linear-gradient(135deg,#fff0f6,#ffe0ec) !important;
+  border-color:#ffb6c1 !important;
+  box-shadow:0 8px 22px rgba(233,130,162,.32) !important;
+  animation: mc-bubble-in .34s cubic-bezier(.22,.61,.36,1) both;
+}
+@keyframes mc-bubble-in{ from{ scale:.86; } to{ scale:1; } }
+#waifu-fab .wf-bubble.wf-sing::before{
+  content:'♪';
+  position:absolute; left:-6px; top:-10px;
+  font-size:.9rem; color:#e982a2;
+  animation: mc-note 1.6s ease-in-out infinite;
+}
+@keyframes mc-note{
+  0%,100%{ translate:0 0;     opacity:.55; }
+  50%    { translate:2px -6px; opacity:1; }
+}
+
+/* ---------- 11. 关掉动效 ---------- */
+@media (prefers-reduced-motion: reduce){
+  .player-right .lyric-panel .lyr-line.active,
+  #trackName.mc-title-in, #coverImg.mc-cover-in,
+  .mc-ripple, .pl-drawer.show .track-item,
+  #tab-player.active, #tab-netease.active,
+  .mode-chip.active,
+  body.mc-playing #playPauseBtn::after, body.mc-playing #progressFill::after,
+  #waifu-fab.wf-singing .wf-main, #waifu-fab .wf-bubble.wf-sing,
+  #waifu-fab .wf-bubble.wf-sing::before{ animation:none !important; }
+}
