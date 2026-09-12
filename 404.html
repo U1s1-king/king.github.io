@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <script src="/js/version.js?v=20260936"></script>
+    <script src="/js/version.js?v=20260937"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>🌸 404 · 页面走丢了喵</title>
@@ -23,11 +23,11 @@
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/icons/icon-192.png">
     <link rel="icon" href="/favicon.ico" sizes="any">
-    <link rel="stylesheet" href="/css/style.css?v=20260936">
-    <link rel="stylesheet" href="/css/sidebar.css?v=20260936">
-    <link rel="stylesheet" href="/css/all.min.css?v=20260936">
-    <link rel="stylesheet" href="/css/anim.css?v=20260936">
-    <link rel="stylesheet" href="/css/mobile.css?v=20260936">
+    <link rel="stylesheet" href="/css/style.css?v=20260937">
+    <link rel="stylesheet" href="/css/sidebar.css?v=20260937">
+    <link rel="stylesheet" href="/css/all.min.css?v=20260937">
+    <link rel="stylesheet" href="/css/anim.css?v=20260937">
+    <link rel="stylesheet" href="/css/mobile.css?v=20260937">
     <style>
         .notfound-wrap{min-height:82vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2rem;position:relative;z-index:1}
         .notfound-code{margin:0;font-size:7.5rem;font-weight:800;line-height:1;font-family:'Noto Serif SC',serif;background:linear-gradient(135deg,#f48fb1,#e91e63);-webkit-background-clip:text;background-clip:text;color:transparent}
@@ -74,6 +74,15 @@
         <h1 class="notfound-code"><i class="fas fa-feather-alt"></i>404</h1>
         <div class="notfound-text">🌸 哎呀，这一页被风吹走啦喵～</div>
         <div class="notfound-sub">你访问的页面不存在，可能已被删除或链接有误，回首页逛逛吧</div>
+
+        <!-- 自绘装饰：被风吹走的一页。由 js/anim-lib.js 的 Vivus 描边绘制，
+             库未到或失败时静态可见（js/anim.js 有 3.5 秒兜底）。 -->
+        <svg class="an-deco an-404-art" data-draw="80" viewBox="0 0 220 90" role="presentation" aria-hidden="true" focusable="false">
+            <path class="an-draw-path" stroke="#e982a2" stroke-width="2.2" d="M12 68c24 6 48 5 71-3"/>
+            <path class="an-draw-path" stroke="#b1627d" stroke-width="2" d="M97 30c14-9 31-13 48-11"/>
+            <path class="an-draw-path" stroke="#e982a2" stroke-width="2" d="M159 20c9-4 19-4 28 0"/>
+            <path class="an-draw-path" stroke="#e982a2" stroke-width="1.8" d="M139 47c11-6 23-8 35-6"/>
+        </svg>
         <div class="notfound-btns">
             <a href="/index.html" class="btn-cherry404"><i class="fas fa-home"></i> 回首页</a>
             <a href="/Journal.html" class="btn-ghost404"><i class="fas fa-book-open"></i> 去日记</a>
@@ -106,10 +115,10 @@
             }
         })();
     </script>
-    <script src="/js/common.js?v=20260936"></script>
-    <script src="/js/anim.js?v=20260936"></script>
-    <script src="/js/sidebar.js?v=20260936"></script>
-    <script src="/js/live2d-fix.js?v=20260936" defer></script>
+    <script src="/js/common.js?v=20260937"></script>
+    <script src="/js/anim.js?v=20260937"></script>
+    <script src="/js/sidebar.js?v=20260937"></script>
+    <script src="/js/live2d-fix.js?v=20260937" defer></script>
     <script src="https://sakura-live2d.pages.dev/live2d/waifu.js?v=20260904" defer></script>
 </body>
 </html>

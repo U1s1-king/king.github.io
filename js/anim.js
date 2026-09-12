@@ -11,6 +11,21 @@
   if (window.__ANIM__) return;
   window.__ANIM__ = true;
 
+  /* 站点根：必须在这里同步取 document.currentScript —— 一旦进入 ready()
+     回调它就已经是 null 了。file:// 与任意深度的 404 路径都要正确。 */
+  var BASE = '/';
+  var SELF = document.currentScript;
+  if (!SELF) {
+    var SL = document.getElementsByTagName('script');
+    for (var i = SL.length - 1; i >= 0; i--) {
+      if (SL[i].src && /\/anim\.js(\?|$)/.test(SL[i].src)) { SELF = SL[i]; break; }
+    }
+  }
+  if (SELF && SELF.src) {
+    var SM = SELF.src.match(/^(.*\/)js\/anim\.js(\?.*)?$/);
+    if (SM) BASE = SM[1];
+  }
+
   function ready(fn) {
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
     else fn();
@@ -92,6 +107,39 @@
       au.setAttribute('aria-hidden', 'true');
       au.innerHTML = '<i></i><i></i><i></i>';
       document.body.insertBefore(au, document.body.firstChild);
+    }
+
+    /* ---------- 7. SVG 描边待绘 + 延后拉起动画库 ---------- */
+    /* 先给待绘的 SVG 盖上"暂不可见"，避免"先全画好、再清空重画"的闪跳。
+       3.5 秒兜底：库没来也一定恢复可见，绝不能留下空白。 */
+    Array.prototype.forEach.call(document.querySelectorAll('svg[data-draw]'), function (svg) {
+      svg.classList.add('an-draw-pending');
+      setTimeout(function () { svg.classList.remove('an-draw-pending'); }, 3500);
+    });
+    /* anime.js(17KB) 与 Vivus(12.5KB) 只在 load 之后的空闲时段按需加载，
+       绝不占用首屏关键路径 —— "首屏 JS 净增为 0" 靠的就是这一条。 */
+    function scheduleLib() {
+      if (window.__ANIM_LIB__ || window.__ANIM_LIB_SRC) return;
+      window.__ANIM_LIB_SRC = 1;
+      var s = document.createElement('script');
+      s.src = BASE + 'js/anim-lib.js';
+      s.async = true;
+      s.onerror = function () {};
+      document.head.appendChild(s);
+    }
+    function whenIdle() {
+      if ('requestIdleCallback' in window) window.requestIdleCallback(scheduleLib, { timeout: 2500 });
+      else setTimeout(scheduleLib, 400);
+    }
+    /* 正常在 load 之后的空闲时段拉起；但 load 迟迟不来（慢 CDN、长轮询）时
+       必须有兜底，否则整个动画层会静默失效 —— 实测 Archives.html 就会这样。
+       动态插入的 script 自带 async，不会阻塞渲染，这个兜底是安全的。 */
+    var pulled = false;
+    function pullOnce() { if (pulled) return; pulled = true; whenIdle(); }
+    if (document.readyState === 'complete') pullOnce();
+    else {
+      window.addEventListener('load', pullOnce, { once: true });
+      setTimeout(pullOnce, 2500);
     }
   });
 })();

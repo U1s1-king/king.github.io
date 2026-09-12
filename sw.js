@@ -11,7 +11,7 @@
  * __DSH_VERSION 以及各 HTML 里的 ?v= 保持一致。
  * 统一更新请执行： python scripts/bump_version.py <新版本号>
  * ============================================================ */
-const VERSION = '20260936';
+const VERSION = '20260937';
 const CACHE = 'king-blog-' + VERSION;
 
 const CORE = [
@@ -46,9 +46,16 @@ const CORE = [
   '/js/live2d-fix.js?v=' + VERSION,
   '/js/music-api.js?v=' + VERSION,
   '/js/vendor/canvas-confetti.browser.min.js?v=' + VERSION,
+  '/js/anim-lib.js?v=' + VERSION,
   '/css/giscus-theme.css?v=' + VERSION,
-  /* 注意：js/music-bundle.js (547KB) 与 js/vendor/lunar.js (434KB) 体积过大，
-     故意不预缓存，改由 stale-while-revalidate 在首次访问对应页面时按需缓存 */
+  /* 注意：以下文件体积过大、或本来就只在空闲时段按需加载，故意不预缓存，
+     改由 stale-while-revalidate 在首次访问对应页面时按需缓存：
+       js/music-bundle.js (547KB)
+       js/vendor/lunar.js (434KB)
+       js/vendor/anime.min.js (17KB)
+       js/vendor/vivus.min.js (12.5KB)
+     后两个由 js/anim.js 在 load 之后的空闲时段才拉起，本就不在首屏关键路径上，
+     预缓存只会把 30KB 塞进 Service Worker 的安装阶段，得不偿失。 */
   '/icons/icon-192.png',
   '/icons/icon-512.png'
 ];

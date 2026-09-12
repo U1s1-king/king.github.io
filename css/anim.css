@@ -122,3 +122,37 @@ body::-webkit-scrollbar-thumb:hover{ background:linear-gradient(180deg,#ff8fab,#
   .an-lift,.an-lift:hover,.sidebar-nav a,.sidebar-nav a:hover{ translate:none !important; }
   .an-fade{ opacity:1 !important; scale:none !important; }
 }
+
+/* ---------- 8. SVG 动画 ---------- */
+/* 装饰性 SVG 不参与交互（HTML 里另写了 aria-hidden） */
+svg.an-deco{ pointer-events:none; }
+
+/* 描边自绘：Vivus 操作 stroke-dasharray / stroke-dashoffset。
+   未加载前先藏起笔画，避免"先全画好、再清空重画"的闪跳；
+   js/anim.js 有 3.5 秒兜底，库没来也一定恢复可见。 */
+svg[data-draw] .an-draw-path{
+  fill:none; stroke-linecap:round; stroke-linejoin:round;
+}
+svg[data-draw].an-draw-pending .an-draw-path{ opacity:0; }
+svg[data-draw]:not(.an-draw-pending) .an-draw-path{
+  opacity:1; transition:opacity .35s var(--an-ease);
+}
+
+/* 标题下方的自绘花饰 */
+.an-flourish{ display:block; width:min(300px,68%); height:auto; margin:.35rem auto .1rem; }
+.an-404-art{ display:block; width:min(220px,60%); height:auto; margin:.2rem auto .6rem; }
+
+/* 纯 CSS 的 SVG 波浪分隔线（零 JS） */
+.an-wave{ display:block; width:100%; height:34px; margin:.4rem 0; }
+.an-wave path{ fill:none; stroke:var(--an-soft); stroke-width:2; }
+.an-wave .an-wave-dash{
+  stroke:var(--an-pink); stroke-width:2.5;
+  stroke-dasharray:14 10;
+  animation:an-wave-flow 14s linear infinite;
+}
+@keyframes an-wave-flow{ to{ stroke-dashoffset:-240; } }
+
+@media (prefers-reduced-motion: reduce){
+  svg[data-draw] .an-draw-path{ opacity:1 !important; transition:none !important; }
+  .an-wave .an-wave-dash{ animation:none !important; }
+}
