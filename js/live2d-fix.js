@@ -33,9 +33,14 @@
   window.__L2D_FIX__ = true;
 
   var HAS_REAL_ICONS = true;    /* 本站 img/char_icons/ 里有没有真图标 */
-  var LOCAL_BASE = 'img/char_icons/';
+  /* 必须绝对路径：GitHub Pages 会在任意深度的未知路径下返回 404.html，
+     相对路径届时解析成 /some/deep/img/... 而 404，还会连锁触发下面那个
+     error 兜底反复回写同一个坏地址，变成请求死循环（实测约 800 次）。 */
+  var LOCAL_BASE = '/img/char_icons/';
   /* 只匹配这两个目录，避免误伤站点自己的 /assets/ */
   var ICON_PATH = /(?:char_icons\/|live2d\/assets\/)/;
+  /* 已经指向本站真图就不再替换，防止 error 兜底自我吞噬 */
+  var LOCAL_PATH = /(?:^|\/)img\/char_icons\//;
   var PNG_ICON = /[^\s"'()<>]*?(?:char_icons\/|live2d\/assets\/)[^\s"'()<>]*?\.png/g;
 
   function numOf(url) {
@@ -66,6 +71,7 @@
   function substitute(url) {
     if (typeof url !== 'string' || !url) return null;
     if (url.indexOf('data:') === 0) return null;
+    if (LOCAL_PATH.test(url)) return null;   /* 已是本站真图，别再换 */
     if (!ICON_PATH.test(url)) return null;
     var num = numOf(url);
     if (HAS_REAL_ICONS && num) return LOCAL_BASE + num + '.png';
@@ -129,9 +135,10 @@
   /* --- 最后一道：万一还有漏网的 --- */
   window.addEventListener('error', function (e) {
     var t = e.target;
-    if (t && t.tagName === 'IMG' && ICON_PATH.test(t.src || '')) {
+    /* __l2dFixed 保证每张图只兜底一次，失败也不重试，避免死循环 */
+    if (t && t.tagName === 'IMG' && !t.__l2dFixed && ICON_PATH.test(t.src || '')) {
       var s = substitute(t.src);
-      if (s) t.src = s;
+      if (s) { t.__l2dFixed = true; t.src = s; }
     }
   }, true);
 
