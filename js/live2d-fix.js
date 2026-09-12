@@ -36,7 +36,22 @@
   /* 必须绝对路径：GitHub Pages 会在任意深度的未知路径下返回 404.html，
      相对路径届时解析成 /some/deep/img/... 而 404，还会连锁触发下面那个
      error 兜底反复回写同一个坏地址，变成请求死循环（实测约 800 次）。 */
-  var LOCAL_BASE = '/img/char_icons/';
+  /* 写死 /img/... 虽然解决了深路径问题，但在用 file:// 直接打开 HTML 时会
+     解析到磁盘根目录（file:///D:/img/...）而失效。改为从本脚本自身的 URL
+     推导站点根，http(s)、file://、任意深度三种情况都能正确工作。 */
+  var BASE = '/';
+  var SCRIPT = document.currentScript;
+  if (!SCRIPT) {
+    var LIST = document.getElementsByTagName('script');
+    for (var i = LIST.length - 1; i >= 0; i--) {
+      if (LIST[i].src && /\/live2d-fix\.js(\?|$)/.test(LIST[i].src)) { SCRIPT = LIST[i]; break; }
+    }
+  }
+  if (SCRIPT && SCRIPT.src) {
+    var MB = SCRIPT.src.match(/^(.*\/)js\/live2d-fix\.js(\?.*)?$/);
+    if (MB) BASE = MB[1];
+  }
+  var LOCAL_BASE = BASE + 'img/char_icons/';
   /* 只匹配这两个目录，避免误伤站点自己的 /assets/ */
   var ICON_PATH = /(?:char_icons\/|live2d\/assets\/)/;
   /* 已经指向本站真图就不再替换，防止 error 兜底自我吞噬 */
