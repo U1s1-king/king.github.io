@@ -25,14 +25,14 @@
  *          代价是头发/衣服的物理摆动没有（本来也没有）。
  *          如果哪天 sakura-live2d 补上了 physics，删掉本段的 fetch 补丁即可。
  * ------------------------------------------------------------
- * 以后真放了图标，把 HAS_REAL_ICONS 改成 true，就会改用本站
- * img/char_icons/<角色号>.png（放真图进去即可，不用改别的）。
+ * img/char_icons/ 已放入 5 张真图（041/002/029/037/039），
+ * HAS_REAL_ICONS 置 true，改用本站 img/char_icons/<角色号>.png。
  * ============================================================ */
 (function () {
   if (window.__L2D_FIX__) return;
   window.__L2D_FIX__ = true;
 
-  var HAS_REAL_ICONS = false;   /* 本站 img/char_icons/ 里有没有真图标 */
+  var HAS_REAL_ICONS = true;    /* 本站 img/char_icons/ 里有没有真图标 */
   var LOCAL_BASE = 'img/char_icons/';
   /* 只匹配这两个目录，避免误伤站点自己的 /assets/ */
   var ICON_PATH = /(?:char_icons\/|live2d\/assets\/)/;

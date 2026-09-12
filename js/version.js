@@ -15,7 +15,7 @@
  * 防止某个页面漏改。HTML 里已是正确版本时不会触发额外请求。
  * ============================================================ */
 (function () {
-  var __DSH_VERSION = '20260933';
+  var __DSH_VERSION = '20260934';
   window.__DSH_VERSION = __DSH_VERSION;
 
   function bump(root) {
