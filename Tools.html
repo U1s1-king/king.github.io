@@ -11,6 +11,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <link rel="icon" href="/favicon.ico" sizes="any">
     <link rel="dns-prefetch" href="//v1.hitokoto.cn">
     <link rel="dns-prefetch" href="//api.open-meteo.com">
     <link rel="dns-prefetch" href="//api.bilibili.com">
@@ -44,7 +45,7 @@
 <div class="anon-bg-layer bg-tools"></div>
 <aside class="site-sidebar" id="siteSidebar">
     <a class="sidebar-brand" href="index.html">
-        <i class="fas fa-cherry-blossom"></i>
+        <i class="fas fa-spa"></i>
         <span class="sidebar-brand-name">Tomo Ebizuka</span>
         <span class="sidebar-brand-sub">ZhaoKeninG's Blog</span>
     </a>
@@ -64,11 +65,11 @@
 
 <main class="toolbox-container">
     <header class="toolbox-header">
-        <div class="blog-title">
+        <h1 class="blog-title">
             <i class="fas fa-fan"></i>
             工具箱
             <i class="fas fa-toolbox"></i>
-        </div>
+        </h1>
         <div class="subhead">
             <i class="fas fa-magic"></i> 喵喵小助手 · 常用工具一网打尽
         </div>
@@ -158,7 +159,7 @@
             <img loading="lazy" id="imagePreview" class="image-preview" alt="预览">
             <div class="status-message" id="converterStatus"></div>
             <div class="result-area" id="converterResult">
-                <h4><i class="fas fa-cherry-blossom"></i> 转换结果</h4>
+                <h4><i class="fas fa-spa"></i> 转换结果</h4>
                 <div id="converterOutput">🌸 等待转换 ...</div>
                 <button class="cherry-btn btn-sm st-d79ce2bc" id="copyConverterBtn"><i class="fas fa-copy"></i> 复制结果</button>
             </div>
@@ -180,7 +181,7 @@
                 <button class="btn-primary" id="generateRandomBtn"><i class="fas fa-dice"></i> 生成随机数</button>
             </div>
             <div class="result-area" id="randomResult">
-                <h4><i class="fas fa-chart-simple"></i> 随机结果</h4>
+                <h4><i class="fas fa-chart-line"></i> 随机结果</h4>
                 <div id="randomOutput">——</div>
                 <button class="cherry-btn st-d79ce2bc" id="copyRandomBtn"><i class="fas fa-copy"></i> 复制</button>
             </div>
@@ -262,7 +263,7 @@
         <div id="tool-counter" class="tool-panel">
             <label for="counterInput"></label><textarea id="counterInput" rows="5" placeholder="输入文字，实时统计喵~"></textarea>
             <div class="result-area" id="counterResult">
-                <h4><i class="fas fa-chart-simple"></i> 统计结果</h4>
+                <h4><i class="fas fa-chart-line"></i> 统计结果</h4>
                 <div id="counterOutput">
                     字符数: <span id="charCount">0</span><br>
                     汉字数: <span id="chineseCount">0</span><br>
@@ -305,7 +306,7 @@
             </div>
             <div class="status-message" id="transStatus"></div>
             <div class="result-area">
-                <h4><i class="fas fa-cherry-blossom"></i> 翻译结果</h4>
+                <h4><i class="fas fa-spa"></i> 翻译结果</h4>
                 <div id="transOut">? 等待翻译 ...</div>
             </div>
         </div>
@@ -375,7 +376,7 @@
             <div class="bili-input-row"><input type="file" id="ocrFile" accept="image/*"><button class="btn-cherry" id="ocrBtn">识别</button></div>
             <div class="status-message" id="ocrStatus"></div>
             <div class="result-area">
-                <h4><i class="fas fa-cherry-blossom"></i> 识别结果</h4>
+                <h4><i class="fas fa-spa"></i> 识别结果</h4>
                 <textarea id="ocrOut" class="bili-code" rows="6" readonly placeholder="识别文字会出现在这里"></textarea>
             </div>
         </div>
@@ -386,7 +387,7 @@
             <div class="tool-title"><i class="fas fa-cloud-sun"></i> 全球天气查询</div>
             <div class="bili-input-row"><input type="text" id="weatherCity" placeholder="🌸 输入城市名，如：北京 / Tokyo"><button class="btn-cherry" id="weatherBtn">查询</button></div>
             <div class="result-area">
-                <h4><i class="fas fa-cherry-blossom"></i> 天气信息</h4>
+                <h4><i class="fas fa-spa"></i> 天气信息</h4>
                 <div id="weatherOut">🌸 输入城市开始查询 ...</div>
             </div>
             <div class="status-message" id="weatherStatus"></div>
@@ -397,7 +398,7 @@
             <div class="tool-title"><i class="fas fa-wind"></i> 空气质量查询</div>
             <div class="bili-input-row"><input type="text" id="airCity" placeholder="🌸 输入城市名，如：北京 / Shanghai"><button class="btn-cherry" id="airBtn">查询</button></div>
             <div class="result-area">
-                <h4><i class="fas fa-cherry-blossom"></i> 空气质量</h4>
+                <h4><i class="fas fa-spa"></i> 空气质量</h4>
                 <div id="airOut">🌸 输入城市开始查询 ...</div>
             </div>
             <div class="status-message" id="airStatus"></div>
@@ -421,7 +422,7 @@
             <div class="tool-title"><i class="fas fa-book-open"></i> 在线词典</div>
             <div class="bili-input-row"><input type="text" id="dictWord" placeholder="🌸 输入英文单词"><button class="btn-cherry" id="dictBtn">查询</button></div>
             <div class="result-area">
-                <h4><i class="fas fa-cherry-blossom"></i> 释义</h4>
+                <h4><i class="fas fa-spa"></i> 释义</h4>
                 <div id="dictOut">🌸 输入单词开始查询 ...</div>
             </div>
             <div class="status-message" id="dictStatus"></div>
@@ -435,7 +436,7 @@
                 <button class="btn-secondary" id="poemCopyBtn"><i class="fas fa-copy"></i> 复制</button>
             </div>
             <div class="result-area">
-                <h4><i class="fas fa-cherry-blossom"></i> 今日份诗意</h4>
+                <h4><i class="fas fa-spa"></i> 今日份诗意</h4>
                 <div id="poemOut">🌸 点击「来一句」获取诗词 ...</div>
             </div>
             <div class="status-message" id="poemStatus"></div>
@@ -666,7 +667,7 @@
     <hr>
 
     <footer class="blog-footer">
-        <p><i class="fas fa-cherry-blossom sakura-icon"></i> 工具箱 <i class="fas fa-feather-alt"></i></p>
+        <p><i class="fas fa-spa sakura-icon"></i> 工具箱 <i class="fas fa-feather-alt"></i></p>
         <div class="social-links">
             <a href="https://space.bilibili.com/1113834956?spm_id_from=333.1007.0.0" target="_blank" rel="noopener noreferrer" aria-label="Bilibili"><i class="fab fa-bilibili"></i></a>
             <a href="https://www.youtube.com/@kaneKing-l7l" target="_blank" rel="noopener noreferrer" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
@@ -691,7 +692,7 @@
     <script src="js/anim.js?v=20260932"></script>
     <script src="js/Tools.js?v=20260932"></script>
     <script src="js/sidebar.js?v=20260932"></script>
-    <script src="js/particles-config.js"></script>
+    <script src="js/particles-config.js?v=20260932"></script>
     <script src="js/live2d-fix.js?v=20260932" defer></script>
     <script src="https://sakura-live2d.pages.dev/live2d/waifu.js?v=20260904" defer></script>
 </body>

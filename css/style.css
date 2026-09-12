@@ -5,3 +5,6 @@ body{background:linear-gradient(145deg,#fff9f7 0%,#ffeef4 100%);font-family:'Int
 #sakura-loading-layer .loading-text{color:#c2557a;font-size:.85rem;letter-spacing:2px}
 html.app-loading #page-progress{opacity:0}
 html.app-ready #sakura-loading-layer{display:none}
+
+/* 标题语义化：.blog-title 由 h1 承载，去掉浏览器默认外边距 */
+h1.blog-title{margin:0;padding:0}

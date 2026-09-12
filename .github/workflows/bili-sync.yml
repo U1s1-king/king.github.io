@@ -7,6 +7,11 @@ on:
 permissions:
   contents: write
 
+# 同一时间只允许一个同步任务运行，避免并发 push 互相覆盖
+concurrency:
+  group: bili-sync
+  cancel-in-progress: false
+
 jobs:
   sync:
     runs-on: ubuntu-latest
@@ -15,16 +20,25 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: 抓取 B站数据
+      - name: 抓取 B 站数据
         run: python scripts/bili_sync.py
       - name: 提交并推送
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/bili/stats.json
-          if ! git diff --cached --quiet; then
-            git commit -m "chore: 同步 B站数据 $(date -u +%Y%m%d%H)"
-            git push
-          else
+          if git diff --cached --quiet; then
             echo "数据无变化，跳过提交"
+            exit 0
           fi
+          git commit -m "chore: 同步 B站数据 $(date -u +%Y%m%d%H)"
+          # 提交期间可能有别的提交落到 main，先 rebase 再推；失败重试 3 次
+          for i in 1 2 3; do
+            if git pull --rebase --autostash origin main && git push; then
+              exit 0
+            fi
+            echo "第 $i 次推送失败，5 秒后重试…"
+            sleep 5
+          done
+          echo "推送重试仍失败" >&2
+          exit 1

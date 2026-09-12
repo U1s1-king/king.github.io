@@ -7,7 +7,8 @@
 会同步更新：
   1. js/version.js 的 __DSH_VERSION
   2. sw.js 的 VERSION（CACHE 与 CORE 的 ?v= 都由它生成）
-  3. 所有 HTML 中静态资源的 ?v= 查询串（外部 Live2D CDN 不受影响）
+  3. 所有 HTML 中静态资源的 ?v= 查询串（外部 Live2D CDN 不受影响），
+     并给从未带过版本的本地 .js/.css 引用补上 ?v=
 """
 import os
 import re
@@ -17,16 +18,43 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LIVE2D_HOST = 'sakura-live2d.pages.dev'
 URL_RE = re.compile(r'''(https?://[^"'\s>]+)''')
 V_RE = re.compile(r'\?v=\d{6,}')
+TAG_RE = re.compile(r'(<(?:script|link)\b[^>]*?\b(?:src|href)=")([^"]+)(")', re.IGNORECASE)
+LOCAL_ASSET_RE = re.compile(r'\.(?:js|css)$', re.IGNORECASE)
 
 
 def read(p):
-    with open(p, 'r', encoding='utf-8') as f:
+    # newline='' 保留原始行尾，避免读进来时把 CRLF 折叠成 LF 后写回，
+    # 平白制造一个「整个文件都改了」的假 diff。
+    with open(p, 'r', encoding='utf-8', newline='') as f:
         return f.read()
 
 
 def write(p, text):
     with open(p, 'w', encoding='utf-8', newline='') as f:
         f.write(text)
+
+
+def add_missing_version(text, new):
+    """给尚未带 ?v= 的本地 .js/.css 引用补上版本号。
+
+    V_RE 只能替换「已存在」的 ?v=，对 js/particles-config.js 这种
+    从未带过查询串的引用无能为力，于是它永远拿不到缓存失效保护。
+    """
+    added = 0
+
+    def repl(m):
+        nonlocal added
+        url = m.group(2)
+        if url.startswith(('http://', 'https://', '//', 'data:')):
+            return m.group(0)
+        if '?' in url or '#' in url:
+            return m.group(0)
+        if not LOCAL_ASSET_RE.search(url):
+            return m.group(0)
+        added += 1
+        return m.group(1) + url + '?v=' + new + m.group(3)
+
+    return TAG_RE.sub(repl, text), added
 
 
 def bump_js_version(path, new):
@@ -56,8 +84,9 @@ def bump_html(path, new):
             continue
         parts[i], k = V_RE.subn('?v=' + new, part)
         changed += k
-    write(path, ''.join(parts))
-    print('[ok] %s (%d 处)' % (os.path.relpath(path, ROOT), changed))
+    out, added = add_missing_version(''.join(parts), new)
+    write(path, out)
+    print('[ok] %s (%d 处替换, %d 处补全)' % (os.path.relpath(path, ROOT), changed, added))
 
 
 def main():

@@ -943,7 +943,7 @@ return m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;';
 function renderWorks(filter) {
 var data = filter === 'all' ? works : works.filter(function (w) { return w.artist === filter; });
 if (data.length === 0) {
-grid.innerHTML = '<div class="empty-works"><i class="fas fa-cherry-blossom" style="font-size:2rem;opacity:0.5;"></i><p style="margin-top:10px;">🌸 没有找到作品喵～</p></div>';
+grid.innerHTML = '<div class="empty-works"><i class="fas fa-spa" style="font-size:2rem;opacity:0.5;"></i><p style="margin-top:10px;">🌸 没有找到作品喵～</p></div>';
 return;
 }
 var html = '';

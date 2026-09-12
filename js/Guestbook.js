@@ -144,7 +144,7 @@ if (!container) return;
 if (messages.length === 0) {
 container.innerHTML = `
 <div class="empty-message">
-<i class="fas fa-cherry-blossom" style="font-size: 1.8rem; opacity: 0.6;"></i>
+<i class="fas fa-spa" style="font-size: 1.8rem; opacity: 0.6;"></i>
 <p style="margin-top: 8px;"> 还没有留言喵，来做第一个留言的喵吧 </p>
 </div>
 `;
@@ -217,10 +217,6 @@ submitBtn.click();
 const trigger = document.getElementById('sakuraAdminTrigger');
 if (!trigger) return;
 trigger.style.cursor = 'pointer';
-/* fa-cherry-blossom 无字体码点，注入样式让触发图标显示为文字花 */
-const st = document.createElement('style');
-st.textContent = '#sakuraAdminTrigger{font-family:inherit !important}#sakuraAdminTrigger:before{content:"🌸" !important;font-style:normal}';
-document.head.appendChild(st);
 let count = 0;
 trigger.addEventListener('click', () => {
 count++;

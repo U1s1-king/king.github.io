@@ -268,9 +268,15 @@ http://127.0.0.1:8888
 # 🛡️ SECURITY LAYER
 
 ```text
-[ CSP ] [ HSTS ] [ X-Content-Type ] [ X-Frame-Options ]
-[ Referrer-Policy ] [ Permissions-Policy ] [ CORS ]
-[ Rate Limit ] [ Input Sanitization ] [ Secret Isolation ]
+本地开发服务器 (server.js)：
+[ X-Content-Type-Options ] [ X-Frame-Options: DENY ] [ Referrer-Policy ]
+
+线上 (GitHub Pages，无法自定义响应头)：
+[ HTTPS ] [ Rate Limit ] [ Input Sanitization ] [ Secret Isolation ]
+
+尚未启用：
+[ CSP ] [ HSTS ] [ Permissions-Policy ] —— GitHub Pages 不能下发响应头，
+如需启用请在 Cloudflare 侧配置 Response Header Rules。
 ```
 
 > **RULE 01:** API Key、Token、密码和 Secret 永远不进入 Git。

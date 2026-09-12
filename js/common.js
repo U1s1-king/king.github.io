@@ -259,7 +259,7 @@ window.__WMO_WEATHER = {
       tipDiv.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translatex(-50%);background:#fff0f3;color:#c76f8b;padding:0.5rem 1rem;border-radius:30px;font-size:0.8rem;z-index:1000;border:1px solid #ffc2d4;backdrop-filter:blur(8px);font-family:monospace;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,0.05);';
       document.body.appendChild(tipDiv);
     }
-    tipDiv.innerHTML = '<i class="fas fa-cherry-blossom"></i> ' + msg;
+    tipDiv.innerHTML = '<i class="fas fa-spa"></i> ' + msg;
     tipDiv.style.opacity = '1';
     clearTimeout(tipTimeout);
     tipTimeout = setTimeout(function () {

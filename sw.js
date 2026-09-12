@@ -32,16 +32,29 @@ const CORE = [
   '/js/version.js?v=' + VERSION,
   '/js/common.js?v=' + VERSION,
   '/js/sidebar.js?v=' + VERSION,
-  '/js/particles-config.js',
+  '/js/particles-config.js?v=' + VERSION,
   '/js/anim.js?v=' + VERSION,
   '/js/music-fx.js?v=' + VERSION,
   '/js/live2d-sing.js?v=' + VERSION,
+
+  /* 各页面自身的控制器脚本：体积小，全部预缓存，保证离线可用 */
+  '/js/index.js?v=' + VERSION,
+  '/js/Journal.js?v=' + VERSION,
+  '/js/Archives.js?v=' + VERSION,
+  '/js/Guestbook.js?v=' + VERSION,
+  '/js/Tools.js?v=' + VERSION,
+  '/js/live2d-fix.js?v=' + VERSION,
+  '/js/music-api.js?v=' + VERSION,
+  '/js/vendor/canvas-confetti.browser.min.js?v=' + VERSION,
+  '/css/giscus-theme.css?v=' + VERSION,
+  /* 注意：js/music-bundle.js (547KB) 与 js/vendor/lunar.js (434KB) 体积过大，
+     故意不预缓存，改由 stale-while-revalidate 在首次访问对应页面时按需缓存 */
   '/icons/icon-192.png',
   '/icons/icon-512.png'
 ];
 
 /* 这些路径是动态数据，永不入缓存 */
-const NEVER_CACHE = ['/data/bili/stats.json'];
+const NEVER_CACHE = ['/data/bili/stats.json', '/data/playlist.json'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(
@@ -66,6 +79,9 @@ function putInCache(request, response) {
 }
 
 function isDynamic(url) {
+  /* 带时间戳的强刷请求（?t=...）一律只走网络：每次时间戳都不同 = 新的缓存 key，
+     否则 Cache Storage 会被无限撑大。 */
+  if (url.searchParams.has('t')) return true;
   return NEVER_CACHE.some((p) => url.pathname === p || url.pathname.endsWith(p));
 }
 
