@@ -38,11 +38,23 @@
 
 <br><br>
 
+### 🏷️ REPOSITORY TOPICS
+
+<a href="https://github.com/topics/personal-website"><img src="https://img.shields.io/badge/personal--website-F45D8A?style=flat-square" alt="personal website"></a>
+<a href="https://github.com/topics/github-pages"><img src="https://img.shields.io/badge/github--pages-222?style=flat-square&logo=githubpages" alt="github pages"></a>
+<a href="https://github.com/topics/vanilla-javascript"><img src="https://img.shields.io/badge/vanilla--javascript-F7DF1E?style=flat-square&logo=javascript&logoColor=111" alt="vanilla javascript"></a>
+<a href="https://github.com/topics/cloudflare"><img src="https://img.shields.io/badge/cloudflare-F38020?style=flat-square&logo=cloudflare&logoColor=white" alt="cloudflare"></a>
+<a href="https://github.com/topics/live2d"><img src="https://img.shields.io/badge/live2d-ff69b4?style=flat-square" alt="live2d"></a>
+<a href="https://github.com/topics/static-site"><img src="https://img.shields.io/badge/static--site-7A6670?style=flat-square" alt="static site"></a>
+<a href="https://github.com/topics/blog"><img src="https://img.shields.io/badge/blog-F45D8A?style=flat-square" alt="blog"></a>
+<a href="https://github.com/topics/web-design"><img src="https://img.shields.io/badge/web--design-E88BB0?style=flat-square" alt="web design"></a>
+<a href="https://github.com/topics/sakura"><img src="https://img.shields.io/badge/sakura-F7A8C0?style=flat-square" alt="sakura"></a><br><br>
+
 > ### 🌸 「春风同花皆闻汝等之声」
 >
 > **记录生活 · 收藏热爱 · 聆听音乐 · 制造一点浪漫**
 
-<a href="#-quick-navigation">⌄ ENTER THE WORLD ⌄</a>
+<a href="#quick-navigation">⌄ ENTER THE WORLD ⌄</a>
 
 </div>
 
@@ -318,7 +330,7 @@ http://127.0.0.1:8888
 ```text
 [ SYSTEM ] Server started.
 [ SYSTEM ] Static assets ready.
-[ SYSTEM ] Welcome to KING'S WORLD. 🌸
+[ SYSTEM ] Welcome to ZHAOKENING'S WORLD. 🌸
 ```
 
 </div>
