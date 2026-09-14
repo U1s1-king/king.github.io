@@ -1,0 +1,160 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="240" viewBox="0 0 1200 240" role="img" aria-label="ZHAOKENING'S WORLD">
+  <title>ZHAOKENING'S WORLD</title>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fff6f9">
+        <animate attributeName="stop-color" values="#fff6f9;#ffedf4;#fff6f9" dur="9s" repeatCount="indefinite"/>
+      </stop>
+      <stop offset="55%" stop-color="#ffd9e7">
+        <animate attributeName="stop-color" values="#ffd9e7;#ffc6db;#ffd9e7" dur="11s" repeatCount="indefinite"/>
+      </stop>
+      <stop offset="100%" stop-color="#f9c0d5">
+        <animate attributeName="stop-color" values="#f9c0d5;#f45d8a;#f9c0d5" dur="13s" repeatCount="indefinite"/>
+      </stop>
+    </linearGradient>
+    <radialGradient id="halo" cx="50%" cy="42%" r="60%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.92"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <path id="petal" d="M0 0c3.4-4.4 9-4.4 11.2 0 2.2 4.4-1 9.8-5.6 9.8S-3.4 4.4 0 0z" fill="#ff9dbb"/>
+  </defs>
+
+  <rect width="1200" height="240" fill="url(#sky)"/>
+  <ellipse cx="600" cy="106" rx="540" ry="96" fill="url(#halo)"/>
+
+  <g opacity="0">
+    <animateTransform attributeName="transform" type="translate" values="1147 -83; 1145 300" dur="15.4s" begin="-1.3s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;0.53;0.53;0" keyTimes="0;0.12;0.8;1" dur="15.4s" begin="-1.3s" repeatCount="indefinite"/>
+    <g transform="scale(1.23)">
+      <animateTransform attributeName="transform" type="rotate" values="0;-360" dur="6.6s" begin="-1.3s" repeatCount="indefinite" additive="sum"/>
+      <use href="#petal" x="0" y="0"/>
+    </g>
+  </g>
+
+  <g opacity="0">
+    <animateTransform attributeName="transform" type="translate" values="410 -70; 423 300" dur="13.5s" begin="-13.0s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;0.78;0.78;0" keyTimes="0;0.12;0.8;1" dur="13.5s" begin="-13.0s" repeatCount="indefinite"/>
+    <g transform="scale(1.32)">
+      <animateTransform attributeName="transform" type="rotate" values="0;360" dur="6.7s" begin="-13.0s" repeatCount="indefinite" additive="sum"/>
+      <use href="#petal" x="0" y="0"/>
+    </g>
+  </g>
+
+  <g opacity="0">
+    <animateTransform attributeName="transform" type="translate" values="71 -69; 76 300" dur="19.4s" begin="-11.9s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;0.60;0.60;0" keyTimes="0;0.12;0.8;1" dur="19.4s" begin="-11.9s" repeatCount="indefinite"/>
+    <g transform="scale(1.01)">
+      <animateTransform attributeName="transform" type="rotate" values="0;-360" dur="4.3s" begin="-11.9s" repeatCount="indefinite" additive="sum"/>
+      <use href="#petal" x="0" y="0"/>
+    </g>
+  </g>
+
+  <g opacity="0">
+    <animateTransform attributeName="transform" type="translate" values="1002 -42; 1040 300" dur="20.2s" begin="-1.4s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;0.48;0.48;0" keyTimes="0;0.12;0.8;1" dur="20.2s" begin="-1.4s" repeatCount="indefinite"/>
+    <g transform="scale(1.47)">
+      <animateTransform attributeName="transform" type="rotate" values="0;360" dur="5.0s" begin="-1.4s" repeatCount="indefinite" additive="sum"/>
+      <use href="#petal" x="0" y="0"/>
+    </g>
+  </g>
+
+  <g opacity="0">
+    <animateTransform attributeName="transform" type="translate" values="673 -65; 644 300" dur="14.1s" begin="-1.3s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;0.67;0.67;0" keyTimes="0;0.12;0.8;1" dur="14.1s" begin="-1.3s" repeatCount="indefinite"/>
+    <g transform="scale(0.73)">
+      <animateTransform attributeName="transform" type="rotate" values="0;360" dur="5.5s" begin="-1.3s" repeatCount="indefinite" additive="sum"/>
+      <use href="#petal" x="0" y="0"/>
+    </g>
+  </g>
+
+  <g opacity="0">
+    <animateTransform attributeName="transform" type="translate" values="645 -41; 672 300" dur="15.1s" begin="-7.4s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;0.53;0.53;0" keyTimes="0;0.12;0.8;1" dur="15.1s" begin="-7.4s" repeatCount="indefinite"/>
+    <g transform="scale(0.98)">
+      <animateTransform attributeName="transform" type="rotate" values="0;360" dur="8.1s" begin="-7.4s" repeatCount="indefinite" additive="sum"/>
+      <use href="#petal" x="0" y="0"/>
+    </g>
+  </g>
+
+  <g opacity="0">
+    <animateTransform attributeName="transform" type="translate" values="187 -58; 197 300" dur="21.3s" begin="-11.6s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;0.61;0.61;0" keyTimes="0;0.12;0.8;1" dur="21.3s" begin="-11.6s" repeatCount="indefinite"/>
+    <g transform="scale(1.43)">
+      <animateTransform attributeName="transform" type="rotate" values="0;-360" dur="6.1s" begin="-11.6s" repeatCount="indefinite" additive="sum"/>
+      <use href="#petal" x="0" y="0"/>
+    </g>
+  </g>
+
+  <g opacity="0">
+    <animateTransform attributeName="transform" type="translate" values="170 -49; 196 300" dur="19.3s" begin="-4.0s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;0.87;0.87;0" keyTimes="0;0.12;0.8;1" dur="19.3s" begin="-4.0s" repeatCount="indefinite"/>
+    <g transform="scale(1.45)">
+      <animateTransform attributeName="transform" type="rotate" values="0;-360" dur="7.2s" begin="-4.0s" repeatCount="indefinite" additive="sum"/>
+      <use href="#petal" x="0" y="0"/>
+    </g>
+  </g>
+
+  <g opacity="0">
+    <animateTransform attributeName="transform" type="translate" values="56 -86; 12 300" dur="19.8s" begin="-8.2s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;0.79;0.79;0" keyTimes="0;0.12;0.8;1" dur="19.8s" begin="-8.2s" repeatCount="indefinite"/>
+    <g transform="scale(1.47)">
+      <animateTransform attributeName="transform" type="rotate" values="0;-360" dur="8.8s" begin="-8.2s" repeatCount="indefinite" additive="sum"/>
+      <use href="#petal" x="0" y="0"/>
+    </g>
+  </g>
+
+  <g opacity="0">
+    <animateTransform attributeName="transform" type="translate" values="856 -51; 894 300" dur="13.2s" begin="-5.5s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;0.47;0.47;0" keyTimes="0;0.12;0.8;1" dur="13.2s" begin="-5.5s" repeatCount="indefinite"/>
+    <g transform="scale(1.29)">
+      <animateTransform attributeName="transform" type="rotate" values="0;360" dur="8.6s" begin="-5.5s" repeatCount="indefinite" additive="sum"/>
+      <use href="#petal" x="0" y="0"/>
+    </g>
+  </g>
+
+  <g opacity="0">
+    <animateTransform attributeName="transform" type="translate" values="905 -52; 910 300" dur="13.7s" begin="-6.3s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;0.57;0.57;0" keyTimes="0;0.12;0.8;1" dur="13.7s" begin="-6.3s" repeatCount="indefinite"/>
+    <g transform="scale(0.77)">
+      <animateTransform attributeName="transform" type="rotate" values="0;360" dur="9.0s" begin="-6.3s" repeatCount="indefinite" additive="sum"/>
+      <use href="#petal" x="0" y="0"/>
+    </g>
+  </g>
+
+  <g opacity="0">
+    <animateTransform attributeName="transform" type="translate" values="930 -71; 887 300" dur="20.8s" begin="-4.8s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;0.72;0.72;0" keyTimes="0;0.12;0.8;1" dur="20.8s" begin="-4.8s" repeatCount="indefinite"/>
+    <g transform="scale(0.83)">
+      <animateTransform attributeName="transform" type="rotate" values="0;-360" dur="7.1s" begin="-4.8s" repeatCount="indefinite" additive="sum"/>
+      <use href="#petal" x="0" y="0"/>
+    </g>
+  </g>
+
+  <g opacity="0">
+    <animateTransform attributeName="transform" type="translate" values="845 -76; 851 300" dur="19.1s" begin="-3.9s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;0.77;0.77;0" keyTimes="0;0.12;0.8;1" dur="19.1s" begin="-3.9s" repeatCount="indefinite"/>
+    <g transform="scale(1.10)">
+      <animateTransform attributeName="transform" type="rotate" values="0;-360" dur="6.5s" begin="-3.9s" repeatCount="indefinite" additive="sum"/>
+      <use href="#petal" x="0" y="0"/>
+    </g>
+  </g>
+
+  <g opacity="0">
+    <animateTransform attributeName="transform" type="translate" values="780 -83; 758 300" dur="18.2s" begin="-9.5s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;0.81;0.81;0" keyTimes="0;0.12;0.8;1" dur="18.2s" begin="-9.5s" repeatCount="indefinite"/>
+    <g transform="scale(1.18)">
+      <animateTransform attributeName="transform" type="rotate" values="0;-360" dur="8.9s" begin="-9.5s" repeatCount="indefinite" additive="sum"/>
+      <use href="#petal" x="0" y="0"/>
+    </g>
+  </g>
+
+  <g>
+    <animateTransform attributeName="transform" type="translate" values="0 0; 0 -5; 0 0" dur="6s" repeatCount="indefinite"/>
+    <text x="600" y="118" text-anchor="middle" font-family="'Segoe UI','PingFang SC','Microsoft YaHei',Helvetica,Arial,sans-serif" font-size="52" font-weight="800" fill="#c9376a" letter-spacing="5">ZHAOKENING'S WORLD</text>
+    <text x="600" y="158" text-anchor="middle" font-family="'Segoe UI','PingFang SC','Microsoft YaHei',Helvetica,Arial,sans-serif" font-size="18" font-weight="600" fill="#b06288" letter-spacing="4">RECORD · CREATE · EXPLORE · KEEP GROWING</text>
+  </g>
+
+  <path d="M0 196 C 200 170, 400 224, 600 196 S 1000 170, 1200 196 L1200 240 L0 240 Z" fill="#ffffff" opacity="0.8">
+    <animateTransform attributeName="transform" type="translate" values="0 0; -70 0; 0 0" dur="13s" repeatCount="indefinite"/>
+  </path>
+</svg>

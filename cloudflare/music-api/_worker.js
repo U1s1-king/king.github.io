@@ -33,7 +33,9 @@ const METING_MIRRORS = [
 
 const SITE_ORIGINS = [
   'https://zhaokening.ccwu.cc',
-  'https://king.github.io',
+  'https://www.zhaokening.ccwu.cc',
+  // GitHub Pages 的用户站地址是 <user>.github.io，原来的 king.github.io 不是本站域名
+  'https://u1s1-king.github.io',
   'http://localhost:8888',
   'http://127.0.0.1:8888',
 ]
@@ -276,14 +278,22 @@ function normPlaylist(p) {
 // ============================================================ 响应
 
 function corsHeaders(origin) {
-  const allow = !origin || SITE_ORIGINS.indexOf(origin) >= 0 ? (origin || '*') : '*'
-  return {
-    'Access-Control-Allow-Origin': allow === '*' ? '*' : origin,
+  /* 只对白名单内的来源回显 Access-Control-Allow-Origin；名单外的来源不带该响应头，
+     浏览器会自行拦截跨域读取。
+     原先写的是
+       const allow = !origin || SITE_ORIGINS.indexOf(origin) >= 0 ? (origin || '*') : '*'
+     两个分支最终都落到 '*'，等于任何第三方站点都能白嫖这个网关，和 README 里
+     「CORS Allowlist」的说法不符。 */
+  const headers = {
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Max-Age': '86400',
     Vary: 'Origin',
   }
+  if (origin && SITE_ORIGINS.indexOf(origin) >= 0) {
+    headers['Access-Control-Allow-Origin'] = origin
+  }
+  return headers
 }
 
 function jsonResponse(data, status, origin, extraHeaders) {

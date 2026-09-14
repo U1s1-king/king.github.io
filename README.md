@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src=".github/assets/sakura-banner.svg" width="100%" alt="ZHAOKENING'S WORLD">
+
 <a href="https://zhaokening.ccwu.cc/" target="_blank">
   <img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/og-image.png" width="100%" alt="樱花物语 · zhaokening.ccwu.cc">
 </a>
@@ -54,7 +56,7 @@
 >
 > **记录生活 · 收藏热爱 · 聆听音乐 · 制造一点浪漫**
 
-<a href="#quick-navigation">⌄ ENTER THE WORLD ⌄</a>
+<a href="#-quick-navigation">⌄ ENTER THE WORLD ⌄</a>
 
 </div>
 
@@ -419,19 +421,19 @@ SECRETS
 
 <div align="center">
 
-<a href="https://github.com/U1s1-king">
-  <img src="https://github-readme-stats.vercel.app/api?username=U1s1-king&show_icons=true&hide_border=true&bg_color=00000000&title_color=F45D8A&text_color=7A6670&icon_color=F45D8A" height="165" alt="U1s1-king GitHub Stats">
-</a>
-
-<a href="https://github.com/U1s1-king?tab=repositories">
-  <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=U1s1-king&layout=compact&hide_border=true&bg_color=00000000&title_color=F45D8A&text_color=7A6670" height="165" alt="U1s1-king Top Languages">
+<a href="https://github.com/U1s1-king/king.github.io/commits/main">
+  <img src="https://ghchart.rshah.org/F45D8A/U1s1-king" width="94%" alt="U1s1-king 贡献热力图">
 </a>
 
 <br><br>
 
 <a href="https://github.com/U1s1-king/king.github.io">
-  <img src="https://github-readme-streak-stats.herokuapp.com/?user=U1s1-king&hide_border=true&background=FFFFFF00&ring=F45D8A&fire=F45D8A&currStreakLabel=F45D8A&sideLabels=7A6670&dates=9A8790" alt="GitHub Streak">
+  <img src="https://streak-stats.demolab.com?user=U1s1-king&hide_border=true&background=FFFFFF00&ring=F45D8A&fire=F45D8A&currStreakLabel=F45D8A&sideLabels=7A6670&dates=9A8790" alt="GitHub Streak">
 </a>
+
+<br><br>
+
+<img src="https://komarev.com/ghpvc/?username=U1s1-king&color=F45D8A&style=for-the-badge&label=VISITORS" alt="Visitors">
 
 </div>
 
@@ -467,5 +469,9 @@ PERSONAL        ──→  最重要的是：它属于自己
 **Made with 💗 · JavaScript · Sakura · Music · and a little bit of magic**
 
 🌸 **THIS IS ZHAOKENING'S WORLD** 🌸
+
+<br>
+
+<img src=".github/assets/sakura-footer.svg" width="100%" alt="">
 
 </div>

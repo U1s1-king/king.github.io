@@ -12,8 +12,36 @@
     "attention": 75
   },
   "online": {
-    "total": 674394
+    "total": 806078
   },
-  "videos": [],
-  "updated_at": "2026-09-14T11:26+00:00"
+  "videos": [
+    {
+      "bvid": "BV1KbQ1YGEY8",
+      "title": "《少女乐队的呐喊》官方MV「爆ぜて咲く」中文字幕（爆裂绽放）",
+      "pic": "https://i1.hdslb.com/bfs/archive/406069ac5be4ef634725999453220caeceb15bcc.jpg",
+      "view": 615139,
+      "like": 49612,
+      "coin": 19371,
+      "favorite": 25912
+    },
+    {
+      "bvid": "BV1cuLdzUECX",
+      "title": "《少女乐队的呐喊》官方MV「飛べない蝶は夢を見る」中文字幕（不会飞的蝴蝶也会做梦）",
+      "pic": "https://i1.hdslb.com/bfs/archive/0bcc1a9f8cc40bafa30b439f65fb84dfb1e64f28.jpg",
+      "view": 780741,
+      "like": 92575,
+      "coin": 31302,
+      "favorite": 40103
+    },
+    {
+      "bvid": "BV1JzQpYTEft",
+      "title": "《少女乐队的呐喊》官方MV「気鬱、白濁す」中文字幕（忧郁、白浊）",
+      "pic": "https://i0.hdslb.com/bfs/archive/9d081e53736caf5eeac4252566ae720eabb8c76c.jpg",
+      "view": 168475,
+      "like": 11936,
+      "coin": 3311,
+      "favorite": 5304
+    }
+  ],
+  "updated_at": "2026-09-14T22:20+08:00"
 }
