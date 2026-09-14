@@ -1078,6 +1078,14 @@ var ALL_PLATFORMS = [
   ["bilibili", "B站"],
   ["itunes", "iTunes"]
 ];
+/* 音源展示优先级：数字越小越靠前，B站固定置顶。
+   注意：这里只管「渲染顺序」，不改并发发起搜索的顺序，也不改任何音源的实现。
+   以后接入真正的 B站 音源时，只要替换掉 bilibili 的搜索实现，这里的置顶行为会自动生效。 */
+var PLATFORM_RANK = { bilibili: 0, netease: 1, tencent: 2, kugou: 3, migu: 4, itunes: 5 };
+function platformRank(id) {
+var r = PLATFORM_RANK[id];
+return r === undefined ? 99 : r;
+}
 function fmt(t) {
 if (!t) return '0:00';
 var m = Math.floor(t / 60), s = Math.round(t % 60);
@@ -1265,7 +1273,11 @@ Array.prototype.forEach.call(resultBox.querySelectorAll('.ns-item'), function (e
 function renderGrouped(groups, anyNetFail) {
 var html = '';
 var total = 0;
-groups.forEach(function (g) {
+/* 按音源优先级重排后再渲染：B站永远排在最前面 */
+var ordered = groups.filter(function (g) { return !!g; }).sort(function (a, b) {
+return platformRank(a.id) - platformRank(b.id);
+});
+ordered.forEach(function (g) {
 if (!g.songs || !g.songs.length) return;
 total += g.songs.length;
 html += '<div class="ns-group"><div class="ns-group-title"> ' + esc2(g.name) + '</div>';
@@ -1285,13 +1297,15 @@ if (!kw) { resultBox.innerHTML = '<div class="ns-empty">输入歌名或歌手喵
 var platform = platformSel ? platformSel.value : 'netease';
 if (platform === 'all') {
 resultBox.innerHTML = '<div class="ns-loading">六个平台同时搜索喵…</div>';
-var groups = [];
+/* 按下标占位：六个音源是并发请求、返回顺序随机，
+   原来用 push 会让「谁先回来谁排前面」，同一个关键词每次搜索的分组顺序都不一样。 */
+var groups = new Array(ALL_PLATFORMS.length);
 var done = 0;
 var anyNetFail = false;
-ALL_PLATFORMS.forEach(function (pf) {
+ALL_PLATFORMS.forEach(function (pf, pi) {
 trySearch(pf[0], kw, function (songs, fail) {
 if (fail) anyNetFail = true;
-groups.push({ name: pf[1], songs: songs });
+groups[pi] = { id: pf[0], name: pf[1], songs: songs };
 done++;
 if (done === ALL_PLATFORMS.length) renderGrouped(groups, anyNetFail);
 });
@@ -7461,9 +7475,22 @@ step(n + 1);
 });
 })(i);
 }
-function pickPlatform() {
-var ps = ['netease', 'tencent', 'kugou', 'migu', 'bilibili'];
-return ps[Math.floor(Math.random() * ps.length)];
+/* 音源优先级：B站最高。
+   原来这里是从五个平台里随机挑一个，同一个关键词每次搜出来的来源都不一样；
+   现在固定按优先级顺序取，B站搜不到才依次回落到其它平台，既不丢覆盖率又保证B站优先。 */
+var PO_PLATFORM_ORDER = ['bilibili', 'netease', 'tencent', 'kugou', 'migu'];
+function searchByPriority(kw, cb) {
+var i = 0;
+var netFail = false;
+(function step() {
+if (i >= PO_PLATFORM_ORDER.length) return cb(null, netFail);
+var pf = PO_PLATFORM_ORDER[i++];
+trySearch([PO_API, PO_BACKUP], 0, pf, kw, function (songs, fail) {
+if (fail) netFail = true;
+if (songs && songs.length) return cb(songs, netFail);
+step();
+});
+})();
 }
 function addToPlaylist(song) {
 if (typeof playlist === 'undefined' || typeof play !== 'function') return false;
@@ -7554,7 +7581,7 @@ var q = kw.trim();
 if (!q) { results.innerHTML = '<div class="po-empty">输入歌名或歌手喵～</div>'; return; }
 saveSearchHist(q);
 results.innerHTML = '<div class="po-loading">正在搜索喵…</div>';
-trySearch([PO_API, PO_BACKUP], 0, pickPlatform(), q, function (songs, netFail) {
+searchByPriority(q, function (songs, netFail) {
 if (!songs || !songs.length) {
 results.innerHTML = netFail ? '<div class="po-empty">搜索接口暂时不可用喵～请稍后再试</div>' : '<div class="po-empty">没搜到喵～换个关键词试试</div>';
 return;
