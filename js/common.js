@@ -158,11 +158,15 @@ document.addEventListener('mousemove', function (e) {
     petal.style.filter = 'blur(' + (Math.random() * 1.2) + 'px)';
     return petal;
   }
-  function desiredCount() { return window.innerWidth < 700 ? 28 : 45; }
+  /* 移动端花瓣 28 → 12。这一层是纯装饰：每个花瓣都是一个带
+     transform/opacity 无限动画的 div，28 个和 12 个在手机上肉眼几乎分不出，
+     但少掉的 16 个一直在合成层里跑。桌面端（>=700px）仍然 45，观感不变。 */
+  function desiredCount() { return window.innerWidth < 700 ? 12 : 45; }
   var petalCount = desiredCount();
   function spawn(n) { for (var i = 0; i < n; i++) flurryContainer.appendChild(createPetal()); }
   spawn(petalCount);
   function replenishPetals() {
+    if (document.hidden) return; /* 页面在后台时别再扫 DOM、别再补花瓣 */
     var currentCount = flurryContainer.children.length;
     if (currentCount < petalCount - 8) {
       spawn(Math.min(petalCount - currentCount, 8));
@@ -186,8 +190,12 @@ document.addEventListener('mousemove', function (e) {
     if (flurryContainer.children.length < 20) spawn(12);
   }, 500);
 })();
-/* ===== 公共：Service Worker 注册（原各页面 JS 各自注册一份，已收敛，统一由本文件注册） ===== */
+/* ===== 公共：Service Worker 注册（原各页面 JS 各自注册一份，已收敛，统一由本文件注册） =====
+ * APP（js/app-shell.js 判定并置 window.__APP_SHELL__）里直接跳过：
+ * 资源已经在安装包内，再叠一层 SW 缓存只会带来「装了新版还是旧页面」，
+ * app-shell.js 那边还会顺手 unregister 并清掉旧的 king-blog-* 缓存。 */
 (function () {
+  if (window.__APP_SHELL__) return;
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("/sw.js").catch(function(){});
   }
@@ -368,7 +376,86 @@ window.escapeHtml = function (str) {
 (function () {
   var mask = null;
   function close() { if (mask) { mask.remove(); mask = null; } }
+
+  /* ---- 手机端图片查看器（二级页面） ----
+     桌面端不参与：open() 里 isNarrow() 为假时直接走回原来的极简 lightbox，
+     所以网页端渲染与交互一行都没变。 */
+  function viewerGroup() {
+    return Array.prototype.slice.call(document.querySelectorAll('img.js-lightbox'));
+  }
+  function openViewer(src, alt) {
+    var api = window.AppShell;
+    if (!api || !api.openDetail) return false;
+    var imgs = viewerGroup();
+    if (!imgs.length) return false;
+    var total = imgs.length;
+    var idx = 0;
+    for (var i = 0; i < total; i++) { if (imgs[i].src === src) { idx = i; break; } }
+
+    var wrap = document.createElement('div');
+    wrap.className = 'iv-wrap';
+    var big = document.createElement('img');
+    big.className = 'iv-img';
+    big.src = imgs[idx].src;
+    big.alt = imgs[idx].alt || alt || '';
+    wrap.appendChild(big);
+
+    var nav = document.createElement('div');
+    nav.className = 'iv-nav';
+    var prev = document.createElement('button');
+    prev.type = 'button'; prev.className = 'iv-arrow iv-prev'; prev.setAttribute('aria-label', '上一张');
+    prev.innerHTML = '<i class="fas fa-chevron-left"></i>';
+    var next = document.createElement('button');
+    next.type = 'button'; next.className = 'iv-arrow iv-next'; next.setAttribute('aria-label', '下一张');
+    next.innerHTML = '<i class="fas fa-chevron-right"></i>';
+    if (total < 2) { prev.disabled = true; next.disabled = true; }
+    nav.appendChild(prev); nav.appendChild(next);
+    wrap.appendChild(nav);
+
+    var bar = document.createElement('div');
+    bar.className = 'iv-bar';
+    var caption = document.createElement('span');
+    caption.className = 'iv-cap';
+    var save = document.createElement('a');
+    save.className = 'iv-btn'; save.setAttribute('download', '');
+    save.innerHTML = '<i class="fas fa-download"></i> 保存';
+    var raw = document.createElement('a');
+    raw.className = 'iv-btn'; raw.target = '_blank'; raw.rel = 'noopener noreferrer';
+    raw.innerHTML = '<i class="fas fa-up-right-from-square"></i> 原图';
+    var shut = document.createElement('button');
+    shut.type = 'button'; shut.className = 'iv-btn iv-close';
+    shut.innerHTML = '<i class="fas fa-xmark"></i> 关闭';
+    bar.appendChild(caption); bar.appendChild(save); bar.appendChild(raw); bar.appendChild(shut);
+    wrap.appendChild(bar);
+
+    var handle;
+    function render() {
+      var cur = imgs[idx];
+      big.src = cur.src;
+      big.alt = cur.alt || '';
+      save.href = cur.src;
+      raw.href = cur.src;
+      caption.textContent = cur.alt || '';
+      handle.setTitle(total > 1 ? (idx + 1) + ' / ' + total : (cur.alt || '图片'));
+    }
+    function go(step) { idx = (idx + step + total) % total; render(); }
+
+    handle = api.openDetail({
+      title: total > 1 ? (idx + 1) + ' / ' + total : (imgs[idx].alt || '图片'),
+      content: wrap,
+      swipeClose: true,
+      onHorizontal: function (dir) { if (total > 1) go(dir); }
+    });
+    prev.addEventListener('click', function () { go(-1); });
+    next.addEventListener('click', function () { go(1); });
+    shut.addEventListener('click', function () { handle.close(); });
+    return true;
+  }
+
   function open(src, alt) {
+    /* 手机端交给二级查看器：序号 / 左右切换 / 保存 / 原图 / 下拉关闭 */
+    if (window.AppShell && window.AppShell.isNarrow && window.AppShell.isNarrow()
+        && openViewer(src, alt)) return;
     if (mask) return;
     mask = document.createElement('div');
     mask.className = 'js-lb-mask';
@@ -386,6 +473,8 @@ window.escapeHtml = function (str) {
     img.addEventListener('click', function (e) {
       e.stopPropagation();
       if (img.closest('a')) return;
+      /* 详情层里的图已经是全宽展示，再套一层查看器会把当前详情顶掉 */
+      if (img.closest('.detail-view')) return;
       open(img.src, img.alt || '');
     });
   }
@@ -404,6 +493,21 @@ window.escapeHtml = function (str) {
     var href = (a.getAttribute('href') || '').split(/[?#]/)[0];
     if (href === here) a.classList.add('active');
   });
+})();
+
+/* ===== 公共：切到后台时停掉装饰性动效 =====
+ * 页面不可见时浏览器本来就会节流 rAF，但全屏的粒子/花瓣/光斑/看板娘
+ * 仍然占着合成层，手机上就是白耗电。这里只切一个 html.page-hidden，
+ * 具体隐藏哪些层由 css/mobile.css 与 css/app.css 决定
+ * （桌面端没有对应规则，等于空转，不影响网页端）。
+ */
+(function () {
+  var root = document.documentElement;
+  function apply() { root.classList.toggle('page-hidden', !!document.hidden); }
+  document.addEventListener('visibilitychange', apply);
+  window.addEventListener('pagehide', function () { root.classList.add('page-hidden'); });
+  window.addEventListener('pageshow', apply);
+  apply();
 })();
 
 

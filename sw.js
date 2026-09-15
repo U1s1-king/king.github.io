@@ -11,12 +11,13 @@
  * __DSH_VERSION 以及各 HTML 里的 ?v= 保持一致。
  * 统一更新请执行： python scripts/bump_version.py <新版本号>
  * ============================================================ */
-const VERSION = '20260939';
+const VERSION = '20260979';
 const CACHE = 'king-blog-' + VERSION;
 
 const CORE = [
   '/',
   '/index.html',
+  '/shell.html',
   '/manifest.json',
   '/css/style.css?v=' + VERSION,
   '/css/sidebar.css?v=' + VERSION,
@@ -29,7 +30,9 @@ const CORE = [
   '/css/anim.css?v=' + VERSION,
   '/css/Tools.css?v=' + VERSION,
   '/css/mobile.css?v=' + VERSION,
+  '/css/app.css?v=' + VERSION,
   '/js/version.js?v=' + VERSION,
+  '/js/app-shell.js?v=' + VERSION,
   '/js/common.js?v=' + VERSION,
   '/js/sidebar.js?v=' + VERSION,
   '/js/particles-config.js?v=' + VERSION,
@@ -45,6 +48,14 @@ const CORE = [
   '/js/Tools.js?v=' + VERSION,
   '/js/live2d-fix.js?v=' + VERSION,
   '/js/music-api.js?v=' + VERSION,
+  '/js/shell.js?v=' + VERSION,
+  '/js/music-app.js?v=' + VERSION,
+  '/js/journal-app.js?v=' + VERSION,
+  '/js/archives-app.js?v=' + VERSION,
+  '/js/tools-app.js?v=' + VERSION,
+  '/js/guestbook-app.js?v=' + VERSION,
+  '/js/live2d-app.js?v=' + VERSION,
+  '/js/music-plus.js?v=' + VERSION,
   '/js/vendor/canvas-confetti.browser.min.js?v=' + VERSION,
   '/js/anim-lib.js?v=' + VERSION,
   '/css/giscus-theme.css?v=' + VERSION,

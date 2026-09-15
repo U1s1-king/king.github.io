@@ -6,7 +6,8 @@
 
 现在：
   - 结构模板 -> _partials/sidebar.html、_partials/bot-tab.html
-  - 链接数据 -> 本文件的 NAV
+  - 链接数据 -> 本文件的 NAV        （桌面侧边栏，6 项，不变）
+              -> 本文件的 NAV_MOBILE （移动端底部 tab，4 项，刻意不含首页/留言）
   - 每页参数 -> 本文件的 PAGES（链接前缀、当前页高亮）
 
 用法：
@@ -37,6 +38,20 @@ NAV = [
     ('Tools.html',     '工具', 'fa-toolbox'),
 ]
 
+# 移动端底部 tab：5 项（主流通行上限 3~5，Material 允许）。
+# 为什么不砍到 4 项：手机浏览器访客必须能一步回首页；一个没有文字标签的
+# 图标不算「首页入口」。首页放第一格，归档保留一级 tab。
+# 「留言」不进 tab —— 它是首页里的二级入口（首页 →「日常点滴」卡片）。
+# 桌面侧边栏仍然是 NAV 那 6 项，两者互不影响
+# （.bot-tab 在桌面端 display:none，所以改这里不会动到网页端）。
+NAV_MOBILE = [
+    ('index.html',     '首页', 'fa-cat'),
+    ('Journal.html',   '日记', 'fa-book-open'),
+    ('Archives.html',  '归档', 'fa-images'),
+    ('music.html',     '音乐', 'fa-music'),
+    ('Tools.html',     '工具', 'fa-toolbox'),
+]
+
 # (页面文件, 链接前缀, 当前页高亮的 href)
 # 404.html 会在任意深度的路径下被命中，必须用根绝对路径，且没有「当前页」
 PAGES = [
@@ -47,7 +62,13 @@ PAGES = [
     ('music.html',     '',  'music.html'),
     ('Tools.html',     '',  'Tools.html'),
     ('404.html',       '/', None),
+    # APP 外壳页：自带顶栏与底部 tab，但没有侧边栏，也没有「当前页」——
+    # tab 高亮由 js/shell.js 在运行时按 iframe 实际加载到哪一页动态切。
+    ('shell.html',     '',  None),
 ]
+
+# 这些页面自己画导航，不生成侧边栏块
+NO_SIDEBAR = {'shell.html'}
 
 SIDEBAR_FALLBACK = re.compile(r'[ \t]*<aside class="site-sidebar".*?</aside>', re.S)
 BOTTAB_FALLBACK = re.compile(r'[ \t]*<nav class="bot-tab".*?</nav>', re.S)
@@ -67,9 +88,9 @@ def norm(text, eol):
     return text.replace('\r\n', '\n').replace('\n', eol)
 
 
-def links(prefix, active, indent, eol):
+def links(prefix, active, indent, eol, nav=NAV):
     out = []
-    for href, label, icon in NAV:
+    for href, label, icon in nav:
         act = ' class="active"' if href == active else ''
         out.append('%s<a href="%s%s"%s><i class="fas %s"></i><span>%s</span></a>'
                    % (indent, prefix, href, act, icon, label))
@@ -83,9 +104,9 @@ def sidebar_block(prefix, active, eol):
             + body.rstrip(eol) + eol + '<!-- nav:sidebar:end -->')
 
 
-def bottab_block(prefix, eol):
+def bottab_block(prefix, eol, nav=NAV_MOBILE):
     body = norm(read(os.path.join(PARTIALS, 'bot-tab.html')), eol)
-    body = body.replace('{{PREFIX}}', prefix).replace('{{NAV}}', links(prefix, None, '    ', eol))
+    body = body.replace('{{PREFIX}}', prefix).replace('{{NAV}}', links(prefix, None, '    ', eol, nav))
     body = eol.join('    ' + l for l in body.rstrip(eol).split(eol))
     return ('    <!-- nav:bot-tab:start - 由 scripts/sync_nav.py 生成，勿手改 -->' + eol
             + body + eol + '    <!-- nav:bot-tab:end -->')
@@ -117,8 +138,13 @@ def main():
         text = read(path)
         eol = eol_of(text)
         before = text
-        text = apply_block(text, 'nav:sidebar', sidebar_block(prefix, active, eol), SIDEBAR_FALLBACK)
-        text = apply_block(text, 'nav:bot-tab', bottab_block(prefix, eol), BOTTAB_FALLBACK)
+        # 404 例外：它没有「当前页」，而移动端 tab 里已经没有首页了，
+        # 如果 404 也用 4 项，用户在错误页上就没有任何回首页的出口。
+        # 404.html 过去要用 NAV 才够拿到「首页」入口，现在 NAV_MOBILE 里就有首页，
+        # 所以不再需要任何特例 —— 全站移动端 tab 统一 5 项。
+        if fname not in NO_SIDEBAR:
+            text = apply_block(text, 'nav:sidebar', sidebar_block(prefix, active, eol), SIDEBAR_FALLBACK)
+        text = apply_block(text, 'nav:bot-tab', bottab_block(prefix, eol, NAV_MOBILE), BOTTAB_FALLBACK)
         if text != before:
             changed.append(fname)
             if not args.check:

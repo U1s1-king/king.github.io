@@ -1,0 +1,2108 @@
+/* ============================================================
+   APP 壳层 / 移动端 App 化样式 (app.css)
+   ------------------------------------------------------------
+   两个开关，别混：
+     html.has-appbar —— 移动端（≤768px）的顶栏 + 迷你播放条布局。
+       由 js/app-shell.js 注入顶栏时加上；桌面端(<768px 以外)靠这里的
+       @media(max-width:768px) 全部隐藏，所以网页端桌面观感零影响。
+     html.is-app     —— 只有 APP 打包壳 / PWA standalone 才有的「浏览器
+       行为收口」：开 viewport-fit=cover、键盘态、禁长按菜单/选中/拖拽、
+       外链交系统浏览器、不注册 Service Worker。这些不改可见布局。
+
+   安全区说明：--sat / --sab 来自 css/mobile.css 的 env()，网页端恒为 0，
+   APP 里 app-shell.js 打开 viewport-fit=cover 后才有真值 —— 同一套
+   calc(var(--appbar-h) + var(--sat)) 在两边都自动正确。
+
+   层级：App Bar 9990 / 迷你播放条 9980 / bot-tab 9998(mobile.css)
+   ============================================================ */
+
+/* ============================================================
+   桌面端兜底（硬约束：网页端 > APP > 手机网页）
+   ------------------------------------------------------------
+   下面所有 App Bar / 迷你播放条样式都写在 @media(max-width:768px) 里。
+   媒体查询不命中 = 样式不应用，**不等于元素被隐藏** —— 少了这条，
+   桌面端也会出现一行没样式的顶栏（图标 + 标题文字 + 带默认边框的
+   分享按钮）。所以这里在媒体查询之外先把它们从布局里拿掉，
+   移动端由媒体查询内等特异性的 !important 规则重新显示（在后面，赢）。
+   ============================================================ */
+html.has-appbar .app-bar {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  html.has-appbar {
+    --appbar-h: 48px; /* 顶栏内容高度，实际总高还要加上 --sat */
+    --mini-h: 56px;   /* 迷你播放条高度 */
+  }
+
+  /* ---------- 顶栏占位：把页面内容推到顶栏下面 ---------- */
+  html.has-appbar body {
+    padding-top: calc(var(--appbar-h) + var(--sat));
+  }
+
+  html.has-appbar .app-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 9990;
+    display: flex !important; /* 对上面那条桌面兜底的反向声明 */
+    align-items: center;
+    gap: 10px;
+    height: calc(var(--appbar-h) + var(--sat));
+    padding: var(--sat) 12px 0;
+    box-sizing: border-box;
+    background: rgba(255, 250, 252, 0.94);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid #ffd6e0;
+    box-shadow: 0 2px 12px rgba(255, 130, 160, 0.12);
+    transition: transform 0.22s ease;
+  }
+  /* 下滚隐藏 / 上滚出现，由 app-shell.js 切类 */
+  html.has-appbar .app-bar.bar-hidden {
+    transform: translateY(-100%);
+  }
+  html.has-appbar .app-bar-home {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    flex: 0 0 auto;
+    border-radius: 12px;
+    color: #e982a2;
+    font-size: 1.15rem;
+    text-decoration: none;
+    /* style.css 里 a:not(.btn) 那条下划线规则带 !important，这里必须压掉 */
+    border-bottom: none !important;
+  }
+  html.has-appbar .app-bar-home:active {
+    background: #ffeaf1;
+  }
+  html.has-appbar .app-bar-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #a14563;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  html.has-appbar .app-bar-share {
+    flex: 0 0 auto;
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 12px;
+    background: transparent;
+    color: #dc8aa3;
+    font-size: 1.05rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  html.has-appbar .app-bar-share:active {
+    background: #ffeaf1;
+  }
+
+  /* 顶部固定元素跟着顶栏下移，别钻到状态栏底下 */
+  html.has-appbar #page-progress,
+  html.has-appbar #offline-bar {
+    top: calc(var(--appbar-h) + var(--sat)) !important;
+  }
+
+  /* ---------- 键盘弹出：底部导航让路 ---------- */
+  html.has-appbar.kb-open .bot-tab {
+    display: none !important;
+  }
+}
+
+/* ============================================================
+   APP 专属：浏览器行为收口（不影响可见布局，只管「不要像网页」）
+   ============================================================ */
+@media (max-width: 768px) {
+  html.is-app {
+    /* APP 里禁掉下拉刷新与回弹：原生壳不该有浏览器手势 */
+    overscroll-behavior-y: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  /* 正文/歌词/输出结果仍然要能选中复制，别一刀切死 */
+  html.is-app input,
+  html.is-app textarea,
+  html.is-app .blog-content,
+  html.is-app .post-content,
+  html.is-app .result-area,
+  html.is-app .lyric-panel,
+  html.is-app pre,
+  html.is-app code {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+  html.is-app img {
+    -webkit-user-drag: none;
+  }
+  html.is-app a,
+  html.is-app button {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* ---------- 二级页面（详情层） ---------- */
+  /* 从右滑入的全屏层。桌面端不会创建它（只有 isNarrow() 时才走这条路）。 */
+  .detail-view {
+    position: fixed;
+    inset: 0;
+    /* 盖住 .bot-tab(9998) 与迷你条(9980)；顶栏(9990) 在内容区之上但不重叠 */
+    z-index: 9999;
+    background: #fff9f7;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.24s cubic-bezier(0.22, 0.61, 0.36, 1);
+    overflow: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    will-change: transform;
+  }
+  .detail-view.in {
+    transform: none;
+  }
+  /* 本页自带顶栏时（手机网页 / APP），详情层让出顶栏高度。
+     外壳里的 iframe 不带 .has-appbar（顶栏归外壳），所以基线是 inset:0。 */
+  html.has-appbar .detail-view {
+    top: calc(var(--appbar-h) + var(--sat, 0px));
+  }
+  /* 详情打开时锁住背景滚动，并收掉顶部滚动进度条（它属于一级页） */
+  body.detail-open {
+    overflow: hidden;
+  }
+  html.has-appbar body.detail-open #page-progress {
+    opacity: 0;
+  }
+  /* 顶栏详情态：左键由 Logo 变返回箭头，分享键收起 */
+  html.has-appbar .app-bar.detail-mode .app-bar-home i::before {
+    content: "\f060" !important;
+  }
+  html.has-appbar .app-bar.detail-mode .app-bar-share {
+    display: none;
+  }
+  /* ---------- 图片查看器（详情层内的内容，非通用） ---------- */
+  .iv-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    padding: 10px 12px calc(12px + var(--sab, 0px));
+    box-sizing: border-box;
+  }
+  .iv-img {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    object-fit: contain;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 6px 22px rgba(214, 122, 156, 0.18);
+  }
+  .iv-nav {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    justify-content: space-between;
+    padding: 0 4px;
+    pointer-events: none;
+  }
+  .iv-arrow {
+    pointer-events: auto;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.86);
+    color: #e06a8f;
+    font-size: 1rem;
+    box-shadow: 0 2px 10px rgba(214, 122, 156, 0.25);
+  }
+  .iv-arrow[disabled] {
+    display: none;
+  }
+  .iv-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  .iv-cap {
+    flex: 1;
+    min-width: 40%;
+    font-size: 0.82rem;
+    color: #a8607b;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .iv-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-height: 44px;
+    padding: 0 14px;
+    border: 1px solid #ffc2d4;
+    border-radius: 12px;
+    background: rgba(255, 243, 247, 0.96);
+    color: #c25f7e;
+    font-size: 0.82rem;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .iv-close {
+    background: #ffd9e3;
+    border-color: #ffb6c1;
+    color: #a14563;
+  }
+
+  /* ============================================================
+     音乐页 App 化（≤768px）
+     ------------------------------------------------------------
+     全屏播放页里的节点是从 .player-right / .disc-zone 里「搬」过来的
+     真实 DOM（见 js/music-app.js 的注释）。搬出来之后，那些以
+     .player-right / .player-left 为前缀的规则就不再命中，所以尺寸要
+     在这里补回来 —— 这也是为什么这一节有不少重复的属性。
+     ============================================================ */
+
+  /* ---- 全屏播放页 ---- */
+  .fs-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    gap: 10px;
+    padding: 8px 16px calc(14px + var(--sab, 0px));
+    box-sizing: border-box;
+  }
+  .fs-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .fs-icon {
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.92);
+    color: #e06a8f;
+    font-size: 1rem;
+    box-shadow: 0 2px 10px rgba(214, 122, 156, 0.2);
+  }
+  .fs-hint {
+    font-size: 0.72rem;
+    color: #c88fa4;
+    letter-spacing: 0.02em;
+  }
+  .fs-cover {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    padding: 4px 0 2px;
+  }
+  /* 转盘本来靠 .cover-inner.playing 这个类转，搬过来动画自动跟着走 */
+  /* 转盘本来靠 .cover-inner.playing 这个类转，搬过来动画自动跟着走 */
+  .detail-view .cover-inner {
+    width: min(58vw, 36vh, 240px);
+    height: min(58vw, 36vh, 240px);
+    border-radius: 50%;
+    background: #ffeef4;
+    box-shadow: inset 0 0 0 2px #fff8f9, 0 12px 30px rgba(203, 106, 128, 0.28);
+  }
+  .detail-view .cover-img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  .fs-meta {
+    text-align: center;
+  }
+  .detail-view .track-title {
+    font-size: 1.12rem;
+    font-weight: 700;
+    line-height: 1.35;
+  }
+  .detail-view .track-artist {
+    margin-top: 2px;
+    font-size: 0.8rem;
+    color: #b5768c;
+  }
+  .fs-lyrics {
+    position: relative;
+    z-index: 2;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 120px;
+    display: flex;
+    padding: 6px 8px;
+    border-radius: 20px;
+    background: rgba(255, 250, 252, 0.6);
+    backdrop-filter: blur(4px);
+  }
+  .detail-view .lyric-panel {
+    /* 搬出 .player-right 后，那边压制绝对定位的 position:relative 就不再生效，
+       基样式会把面板绝对定位，参照物正好是新加了 position:relative 的 .fs-wrap，
+       于是它整个压在唱片上 —— 这里显式钉回正常流 */
+    position: relative;
+    inset: auto;
+    width: auto;
+    z-index: auto;
+    flex: 1 1 auto;
+    height: auto;
+    max-height: none !important;
+    margin: 0;
+    padding: 4px 6px;
+    /* 歌词页里这块面板要能滚；上下用遮罩淡出，不留硬边 */
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    mask-image: linear-gradient(180deg, transparent 0, #000 14%, #000 82%, transparent 100%);
+    -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 14%, #000 82%, transparent 100%);
+  }
+  .detail-view .lyric-panel .lyr-line {
+    white-space: normal;
+    text-overflow: clip;
+    text-align: center;
+    font-size: 0.94rem;
+    line-height: 1.95;
+    /* 原本高亮/变暗规则都锁在 .player-right 里，搬过来会整套失效，这里补齐 */
+    opacity: 0.58;
+    color: #b98297;
+    transition: opacity 0.25s ease, color 0.25s ease, transform 0.25s ease;
+  }
+  .detail-view .lyric-panel .lyr-line.active {
+    opacity: 1;
+    color: #b8406a;
+    font-size: 1.02rem;
+    font-weight: 700;
+    text-shadow: 0 1px 6px rgba(255, 255, 255, 0.9);
+  }
+  .detail-view .lyric-panel .lyr-line {
+    white-space: normal;
+    text-overflow: clip;
+    text-align: center;
+    font-size: 0.94rem;
+    line-height: 1.95;
+  }
+  .detail-view .lyric-panel .lyr-line.active {
+    font-size: 1.02rem;
+  }
+  .fs-progress {
+    padding: 0 2px;
+  }
+  .detail-view .progress-bar-bg {
+    height: 7px;
+  }
+  .detail-view .progress-fill {
+    border-radius: 10px;
+  }
+  /* 控制行：原来靠 .player-right .ctrl-btn 给的尺寸，搬出来后要补 */
+  .fs-controls {
+    display: flex;
+    justify-content: center;
+    padding: 2px 0 0;
+  }
+  .detail-view .controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2.4rem;
+    width: 100%;
+    padding: 0.2rem 0;
+  }
+  .detail-view .ctrl-btn {
+    width: 52px;
+    height: 52px;
+    border: 0;
+    border-radius: 50%;
+    font-size: 1.15rem;
+    background: #ffeef2;
+    color: #c45c7c;
+    box-shadow: 0 4px 10px rgba(165, 79, 99, 0.12);
+  }
+  .detail-view .ctrl-btn.play-main {
+    width: 74px;
+    height: 74px;
+    font-size: 1.7rem;
+    color: #fff;
+    background: linear-gradient(145deg, #f0a0ba, #e06a8f);
+    box-shadow: 0 10px 22px rgba(224, 106, 143, 0.4), 0 0 0 3px rgba(255, 182, 193, 0.38);
+  }
+  .fs-modes {
+    display: flex;
+    justify-content: center;
+    padding-bottom: 2px;
+  }
+  .detail-view .mode-strip {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  /* ---- 封面上的「全屏播放页」入口 ---- */
+  .disc-zone {
+    position: relative;
+  }
+  .fs-open-btn {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    z-index: 12;
+    width: 44px;
+    height: 44px;
+    border: 1px solid #ffc2d4;
+    border-radius: 50%;
+    background: rgba(255, 250, 252, 0.94);
+    color: #d2688a;
+    font-size: 0.95rem;
+    box-shadow: 0 4px 12px rgba(203, 106, 128, 0.24);
+  }
+
+  /* ---- 歌单：右侧抽屉 → 底部 sheet（单手可及，主流做法） ---- */
+  .pl-drawer {
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    height: 78dvh;
+    max-height: 78dvh;
+    padding-bottom: calc(0.8rem + var(--sab, 0px));
+    border-left: 0;
+    border-top: 1px solid #ffd6e0;
+    border-radius: 22px 22px 0 0;
+    transform: translateY(100%);
+  }
+  .pl-drawer::before {
+    content: "";
+    position: absolute;
+    top: 7px;
+    left: 50%;
+    width: 40px;
+    height: 4px;
+    margin-left: -20px;
+    border-radius: 2px;
+    background: #ffcfdd;
+  }
+  .pl-drawer-head {
+    padding-top: 0.6rem;
+  }
+  /* ---- 平台分段：原生 select 让位给可横滑的胶囊 ---- */
+  .ns-platform {
+    display: none;
+  }
+  .ns-searchbar {
+    flex-wrap: wrap;
+  }
+  #nsPlatformChips {
+    flex: 1 0 100%;
+    order: -1;
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 2px 0 8px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  #nsPlatformChips::-webkit-scrollbar {
+    display: none;
+  }
+  .ns-chip {
+    flex: 0 0 auto;
+    min-height: 38px;
+    padding: 0 14px;
+    border: 1px solid #ffd0de;
+    border-radius: 19px;
+    background: #fff;
+    color: #b5768c;
+    font-size: 0.82rem;
+    white-space: nowrap;
+  }
+  .ns-chip.active {
+    background: linear-gradient(145deg, #f0a0ba, #e06a8f);
+    border-color: #e06a8f;
+    color: #fff;
+    font-weight: 600;
+  }
+  /* 页面顶部两个 tab → 胶囊分段控件 */
+  .page-tabs {
+    display: flex;
+    gap: 6px;
+    padding: 5px;
+    border-radius: 16px;
+    background: rgba(255, 250, 252, 0.94);
+    border: 1px solid #ffe0ea;
+  }
+  .page-tab {
+    flex: 1;
+    min-height: 44px;
+    border-radius: 12px;
+  }
+  .page-tab.active {
+    background: linear-gradient(145deg, #f0a0ba, #e06a8f);
+    color: #fff;
+  }
+  /* ---- 搜索二级页 ---- */
+  .ss-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    padding: 10px 14px calc(16px + var(--sab, 0px));
+    box-sizing: border-box;
+  }
+  .ss-body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .ss-hist {
+    margin: 2px 0 8px;
+  }
+  .ss-hist-title {
+    margin-bottom: 6px;
+    font-size: 0.74rem;
+    color: #c88fa4;
+  }
+  .ss-hist-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .ss-hist-chip {
+    max-width: 100%;
+    min-height: 34px;
+    padding: 0 12px;
+    overflow: hidden;
+    border: 1px solid #ffd0de;
+    border-radius: 17px;
+    background: #fff6f9;
+    color: #b5768c;
+    font-size: 0.78rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .detail-view .po-searchbar,
+  .detail-view .ns-searchbar {
+    margin: 0 0 6px;
+    padding: 0;
+  }
+  .detail-view .po-searchbar input,
+  .detail-view .ns-searchbar input {
+    min-height: 46px;
+  }
+  .detail-view #po-results,
+  .detail-view #ns-results {
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* ============================================================
+     日记 / 归档：卡片 → 二级详情页
+     ============================================================ */
+
+  /* ---- 日记：列表态 ---- */
+  .post-card {
+    cursor: pointer;
+  }
+  /* 正文在列表态整体收起，点进去才由 js/journal-app.js 搬进详情层。
+     三点说明：
+       1) 挂 html.pc-list：这个类是脚本跑到了才加的。脚本没跑就整条不生效，
+          页面退回完整正文，不会变成一页光标题。
+       2) 以 .post-card 为前提：正文搬进详情层后就不再命中，自动显示。
+       3) Journal.css 给 .post-card 设了 content-visibility:auto（离屏跳过渲染），
+          正文要被搬走，这里在列表态直接关掉，免得跟 contain 打架。 */
+  html.pc-list .post-card {
+    content-visibility: visible;
+    contain-intrinsic-size: none;
+  }
+  html.pc-list .post-card .post-content {
+    display: none;
+  }
+  .pc-foot {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+  }
+  .pc-teaser {
+    display: -webkit-box;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    color: #b98ba0;
+    font-size: 0.82rem;
+    line-height: 1.5;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+  .pc-more {
+    flex: 0 0 auto;
+    color: #e06a8f;
+    font-size: 0.78rem;
+    white-space: nowrap;
+  }
+  .post-card:active {
+    transform: scale(0.995);
+  }
+  /* ---- 日记：详情态 ---- */
+  .pc-detail {
+    flex: 1;
+    min-height: 100%;
+    padding: 2px 18px calc(30px + var(--sab, 0px));
+    box-sizing: border-box;
+  }
+  /* 顶栏那条标题是截断的，正文里重新给一个完整标题 */
+  .pc-detail-title {
+    margin: 8px 0 12px;
+    color: #6b4453;
+    font-size: 1.2rem;
+    font-weight: 700;
+    line-height: 1.5;
+  }
+  .pc-detail-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    padding-bottom: 14px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid #ffe4ec;
+    color: #b98ba0;
+    font-size: 0.76rem;
+  }
+  .pc-detail-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .pc-detail-body {
+    flex: 1;
+    min-height: 0;
+  }
+  .pc-detail-body p {
+    margin: 0.9rem 0;
+    color: #5d4a52;
+    font-size: 0.95rem;
+    line-height: 1.95;
+  }
+  /* 正文配图拉满宽度：原来 150px 的小图在全屏二级页里又小又飘 */
+  .pc-detail-body img {
+    display: block;
+    width: 100% !important;
+    height: auto !important;
+    margin: 14px 0;
+    border-radius: 16px;
+    box-shadow: 0 8px 22px rgba(224, 106, 143, 0.16);
+  }
+  .pc-detail-body .sakura-image-placeholder {
+    margin: 14px 0;
+  }
+  .pc-detail-body .img-caption {
+    margin-top: -6px;
+    color: #c9a3b1;
+    font-size: 0.75rem;
+    text-align: center;
+  }
+  /* 小纸条与引用块：给块状底色，别跟正文糊成一坨 */
+  .pc-detail-body .placeholder-marker:not(.img-caption),
+  .pc-detail-body .cherry-placeholder {
+    padding: 14px 16px;
+    margin: 14px 0;
+    border-radius: 16px;
+    background: #fff5f8;
+    color: #a8758a;
+    font-size: 0.88rem;
+    line-height: 1.85;
+  }
+  .pc-detail-body .cherry-placeholder {
+    border-left: 3px solid #f3a8c0;
+  }
+  .pc-detail-body .cherry-placeholder i {
+    margin-right: 6px;
+    color: #e58cab;
+  }
+
+  /* ---- 归档：详情入口按钮（不劫持整卡，避免和播放器抢点击） ---- */
+  .mc-detail-row {
+    margin-top: 8px;
+    text-align: right;
+  }
+  .mc-detail {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 40px;
+    padding: 0 14px;
+    border: 1px solid #ffd0de;
+    border-radius: 20px;
+    background: #fff6f9;
+    color: #b5768c;
+    font-size: 0.78rem;
+  }
+  .mc-detail:active {
+    background: #ffe9f0;
+  }
+  /* ---- 归档：详情态 ---- */
+  .mc-detail-wrap {
+    flex: 1;
+    min-height: 100%;
+    padding: 10px 14px calc(18px + var(--sab, 0px));
+    box-sizing: border-box;
+  }
+  .mcd-media {
+    margin-bottom: 12px;
+  }
+  /* 视频/B站播放器：搬进来后占满宽度，仍然保持 16:9 */
+  .detail-view .video-wrapper {
+    position: relative;
+    width: 100%;
+    height: 0;
+    padding-top: 56.25%;
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .detail-view .video-wrapper iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+  .detail-view .media-player,
+  .detail-view .media-player audio {
+    width: 100%;
+  }
+  .mcd-info {
+    padding: 0 2px;
+  }
+  .mcd-info .card-title {
+    margin-bottom: 8px;
+    color: #6b4453;
+    font-size: 1.06rem;
+    font-weight: 700;
+    line-height: 1.5;
+  }
+  .mcd-info .card-desc {
+    margin-bottom: 6px;
+    color: #8a6b76;
+    font-size: 0.85rem;
+    line-height: 1.8;
+  }
+  .mcd-open {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    margin-top: 12px;
+    padding: 0 18px;
+    border-radius: 12px;
+    background: linear-gradient(145deg, #f0a0ba, #e06a8f);
+    color: #fff;
+    font-size: 0.84rem;
+    text-decoration: none;
+  }
+
+  /* ============================================================
+     工具页：标签墙 → 网格入口（手机端）
+     ============================================================ */
+  /* 标签墙只在脚本跑到之后才隐藏（html.tool-grid 由 tools-app.js 加），
+     脚本没跑到就退回原来的标签墙，不会变成一页空白。 */
+  html.tool-grid .tools-tabs {
+    display: none !important;
+  }
+  .mgrid-wrap {
+    margin: 0 0 1rem;
+  }
+  .mgrid-head {
+    margin: 0 0 10px;
+    color: #b5768c;
+    font-size: 0.78rem;
+  }
+  .mgrid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .mgrid-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 54px;
+    padding: 0 14px;
+    border: 1px solid #ffe2ec;
+    border-radius: 16px;
+    background: linear-gradient(150deg, #fffafc, #fff1f6);
+    color: #7d5462;
+    font-size: 0.88rem;
+    text-align: left;
+    transition: transform 0.16s ease, background 0.16s ease;
+  }
+  .mgrid-item > i:first-child {
+    flex: 0 0 auto;
+    width: 18px;
+    color: #e58cab;
+    font-size: 0.95rem;
+    text-align: center;
+  }
+  .mg-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .mg-arrow {
+    flex: 0 0 auto;
+    color: #dcb3c1;
+    font-size: 0.7rem;
+  }
+  .mgrid-item:active {
+    transform: scale(0.97);
+    background: #ffeef4;
+  }
+  /* 二级页里的工具面板：去掉原来的外边距让它铺满（内边距保留，
+     有些面板靠它留呼吸位） */
+  .tool-detail {
+    flex: 1;
+    min-height: 100%;
+    padding: 6px 14px calc(20px + var(--sab, 0px));
+    box-sizing: border-box;
+  }
+  .detail-view .tool-panel {
+    margin: 0 !important;
+    max-width: 100% !important;
+  }
+
+  /* ============================================================
+     留言页：APP 内降级说明 + 手机端「写留言」二级页
+     ============================================================ */
+  .gb-note {
+    display: flex;
+    gap: 10px;
+    padding: 14px;
+    margin: 0 0 14px;
+    border: 1px solid #ffdfe8;
+    border-radius: 16px;
+    background: #fff6f9;
+    color: #7d5462;
+    font-size: 0.84rem;
+    line-height: 1.7;
+  }
+  .gb-note > i {
+    margin-top: 3px;
+    color: #e58cab;
+  }
+  .gb-note b {
+    display: block;
+    margin-bottom: 4px;
+    color: #6b4453;
+    font-size: 0.9rem;
+  }
+  .gb-note p {
+    margin: 0 0 10px;
+    color: #8a6b76;
+  }
+  .gb-note-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    padding: 0 16px;
+    border-radius: 12px;
+    background: linear-gradient(145deg, #f0a0ba, #e06a8f);
+    color: #fff;
+    font-size: 0.85rem;
+    text-decoration: none;
+  }
+  .gb-note-mini {
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  /* APP 里 giscus 的 iframe 必须明确藏掉：脚本可能晚于本页脚本注入 */
+  html.gb-degraded .giscus-wrapper iframe,
+  html.gb-degraded #turnstile-widget {
+    display: none !important;
+  }
+  .gb-compose {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 52px;
+    margin: 0 0 1rem;
+    border: none;
+    border-radius: 16px;
+    background: linear-gradient(145deg, #f4a9c1, #e06a8f);
+    color: #fff;
+    font-size: 0.95rem;
+  }
+  .gb-compose:active {
+    transform: scale(0.98);
+  }
+  /* 表单在列表态收起；搬进二级页后会带上 .in-detail，这条就不再命中 */
+  html.gb-compose-mode .form-card:not(.in-detail) {
+    display: none !important;
+  }
+  .gb-compose-page {
+    flex: 1;
+    min-height: 100%;
+    padding: 6px 0 calc(20px + var(--sab, 0px));
+    box-sizing: border-box;
+  }
+  .detail-view .form-card {
+    margin: 0 !important;
+    max-width: 100% !important;
+  }
+
+  /* ============================================================
+     看板娘（Live2D）：触摸端可用性修正
+     ------------------------------------------------------------
+     只对 ≤768px 生效；选择器再叠一层 html.has-appbar（该类的唯一
+     添加条件是 isNarrow()，桌面端永远不会有），所以网页端不受影响。
+     用 !important 是为了压过 waifu.js 运行时注入 <head> 的那份 <style>
+     （它在 app.css 之后入队，同权重会赢）。
+     ============================================================ */
+  html.has-appbar #waifu-fab .wf-side {
+    left: -74px !important;
+    gap: 8px !important;
+  }
+  html.has-appbar #waifu-fab .wf-side-btn {
+    width: 64px !important;
+    min-height: 48px !important;
+    font-size: 0.8rem !important;
+    border-radius: 14px !important;
+  }
+  /* 面板原本写死 400px 宽、以 fab 为中心，在手机上左右都会溢出 */
+  html.has-appbar #waifu-fab .wf-panel {
+    left: auto !important;
+    right: -6px !important;
+    transform: none !important;
+    width: min(88vw, 340px) !important;
+    max-height: 46vh !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  html.has-appbar #waifu-fab .wf-role-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+  html.has-appbar #waifu-fab .wf-role img {
+    width: 52px !important;
+    height: 52px !important;
+  }
+  html.has-appbar #waifu-fab .wf-tex-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+  html.has-appbar #waifu-fab .wf-tex {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px !important;
+  }
+  /* 隐藏后的恢复条原来只有 30px 宽，手指根本点不准 */
+  html.has-appbar #waifu-toggle {
+    width: 48px !important;
+    min-height: 104px !important;
+    padding: 8px 4px !important;
+    font-size: 0.78rem !important;
+    box-sizing: border-box;
+  }
+
+  /* ============================================================
+     音乐页：手机端 App 化（观感 + 新面板）
+     ------------------------------------------------------------
+     全部写在 ≤768 内；JS 注入的那些节点再叠一层 html.has-appbar
+     （该类唯一的添加条件是 isNarrow()），所以桌面端不可能命中。
+     ============================================================ */
+
+  /* ---------- 1. 页面切换：分段控件 ---------- */
+  .page-tabs {
+    display: flex;
+    gap: 6px;
+    margin: 0 0 1rem;
+    padding: 5px;
+    border: 1px solid #ffe2ec;
+    border-radius: 16px;
+    background: rgba(255, 245, 249, 0.9);
+  }
+  .page-tab {
+    flex: 1;
+    min-height: 44px;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    color: #b5768c;
+    font-size: 0.92rem;
+  }
+  .page-tab.active {
+    background: linear-gradient(145deg, #f4a9c1, #e06a8f);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(224, 106, 143, 0.28);
+  }
+
+  /* ---------- 2. 搜索条：手机端是「点开二级页」的假输入框 ---------- */
+  .po-searchbar,
+  .ns-searchbar {
+    border-radius: 16px;
+  }
+  html.has-appbar .po-searchbar input,
+  html.has-appbar .ns-searchbar input {
+    min-height: 46px;
+    border-radius: 12px;
+  }
+
+  /* ---------- 3. 全屏播放页：按曲名散列的 8 组配色渐变底 + 跟随封面的模糊色块 ----------
+     配色变量 --mp-a / --mp-b / --mp-cover 由 js/music-plus.js 的 paintStage() 维护，
+     它挂在曲名与封面的 MutationObserver 上，所以换歌即变。 */
+  .fs-wrap {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(150deg, var(--mp-a, #ffd7e6) 0%, var(--mp-b, #ffeef4) 100%);
+  }
+  .fs-wrap::before {
+    content: '';
+    position: absolute;
+    /* 稍微出血，模糊之后边缘不会留一圈白 */
+    inset: -18px;
+    background-image: var(--mp-cover, none);
+    background-size: cover;
+    background-position: center;
+    filter: blur(26px) saturate(1.2);
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  .fs-wrap::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(170deg, rgba(255, 249, 247, 0.52) 0%, rgba(255, 240, 246, 0.7) 56%, rgba(255, 249, 247, 0.86) 100%);
+    pointer-events: none;
+  }
+  /* 内容一律抬到两层背景之上；矮屏不压缩唱片/按钮，宁可让二级页整体滚动 */
+  .fs-wrap > * {
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+  }
+  /* 唯一例外：歌词区吃掉剩余高度，放不下时最多缩到 120px */
+  .fs-lyrics {
+    flex: 1 1 auto;
+    min-height: 120px;
+  }
+  /* 顶栏：收起键在左，提示居中，更多/歌单在右；倒计时徽标贴着收起键 */
+  .fs-top {
+    justify-content: flex-start;
+    gap: 8px;
+  }
+  .fs-hint {
+    margin: 0 auto;
+    font-size: 0.7rem;
+  }
+  .fs-sleep-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.9);
+    color: #d06186;
+    font-size: 0.72rem;
+    font-variant-numeric: tabular-nums;
+    box-shadow: 0 2px 8px rgba(214, 122, 156, 0.22);
+  }
+  .fs-sleep-badge::before {
+    content: '\f017';  /* fa-clock */
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    margin-right: 4px;
+    font-size: 0.7rem;
+  }
+  .fs-cover {
+    padding: 6px 0 4px;
+  }
+  /* 歌词视图：进来就把唱片整个收起来（display:none，不是压在上面），
+     歌词在它原本的位置就地铺满。不放网格、不做并排，越简单越不容易出问题。 */
+  .fs-wrap.lyric-mode .fs-cover {
+    display: none !important;
+  }
+  .fs-wrap.lyric-mode .fs-lyrics {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 8px 10px 12px;
+    border: 1px solid #ffe0ea;
+    border-radius: 18px;
+    background: rgba(255, 246, 250, 0.9);
+  }
+  .fs-wrap.lyric-mode .lyric-panel {
+    min-height: 0 !important;
+  }
+  .fs-wrap.lyric-mode .lyric-panel .lyr-line {
+    font-size: 1rem;
+    line-height: 2.1;
+  }
+  /* 歌词按钮：亮起表示当前在歌词视图 */
+  .fs-icon.fs-lyric.on {
+    background: #e06a8f;
+    color: #fff;
+  }
+  .detail-view .lyric-panel .lyr-line.active {
+    font-weight: 700;
+    transform: scale(1.04);
+  }
+  /* 进度条：头上一颗可抓的圆点（bundle 已经支持拖动） */
+  .detail-view .progress-fill {
+    position: relative;
+    background: linear-gradient(90deg, var(--mp-a, #f4a9c1), var(--mp-b, #e06a8f));
+    box-shadow: 0 0 10px rgba(224, 106, 143, 0.45);
+  }
+  .detail-view .progress-fill::after {
+    content: '';
+    position: absolute;
+    right: -7px;
+    top: 50%;
+    width: 14px;
+    height: 14px;
+    margin-top: -7px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 6px rgba(224, 106, 143, 0.55);
+  }
+  .detail-view .progress-bar-bg {
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.75);
+  }
+  .detail-view .ctrl-btn:active {
+    transform: scale(0.92);
+  }
+
+  /* ---------- 4. 底部面板（更多 / 睡眠定时） ---------- */
+  .mp-mask {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: flex-end;
+    background: rgba(80, 50, 62, 0.42);
+    backdrop-filter: blur(2px);
+    animation: mp-fade 0.2s ease;
+  }
+  .mp-sheet {
+    width: 100%;
+    max-height: 82vh;
+    overflow-y: auto;
+    padding: 6px 12px calc(14px + var(--sab, 0px));
+    border-radius: 22px 22px 0 0;
+    background: #fffafc;
+    box-shadow: 0 -12px 32px rgba(180, 100, 130, 0.25);
+    animation: mp-up 0.24s cubic-bezier(0.22, 0.61, 0.36, 1);
+    box-sizing: border-box;
+  }
+  .mp-sheet-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 48px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #7d5462;
+  }
+  .mp-sheet-head span::before {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 4px;
+    margin: 0 auto 10px;
+    border-radius: 999px;
+    background: #ffd3e2;
+  }
+  .mp-sheet-x {
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 50%;
+    background: #fff0f5;
+    color: #c4567a;
+  }
+  .mp-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 54px;
+    margin: 6px 0;
+    padding: 0 14px;
+    border: 1px solid #ffe6ee;
+    border-radius: 14px;
+    background: #fff;
+    color: #7d5462;
+    font-size: 0.92rem;
+    text-align: left;
+    box-sizing: border-box;
+  }
+  .mp-row > i:first-child {
+    width: 20px;
+    color: #e08aa6;
+    text-align: center;
+  }
+  .mp-row-name {
+    flex: 1;
+  }
+  .mp-row-note {
+    color: #c98da6;
+    font-size: 0.78rem;
+  }
+  .mp-row-check {
+    color: #e06a8f;
+  }
+  .mp-row.on {
+    border-color: #ffc8da;
+    background: #fff4f8;
+  }
+
+  /* ---------- 5. 历史 / 收藏 列表页 ---------- */
+  .mp-list {
+    flex: 1;
+    min-height: 100%;
+    padding: 4px 12px calc(20px + var(--sab, 0px));
+    box-sizing: border-box;
+  }
+  .mp-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 66px;
+    margin: 8px 0;
+    padding: 8px 10px;
+    border: 1px solid #ffe6ee;
+    border-radius: 16px;
+    background: #fff;
+    box-sizing: border-box;
+  }
+  .mp-item-cover {
+    width: 50px;
+    height: 50px;
+    flex: 0 0 auto;
+    border-radius: 12px;
+    object-fit: cover;
+    background: linear-gradient(145deg, #ffe1ec, #ffc9dd);
+  }
+  .mp-item-cover.noart {
+    display: block;
+  }
+  .mp-item-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .mp-item-name {
+    overflow: hidden;
+    color: #6b4453;
+    font-size: 0.92rem;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .mp-item-sub {
+    overflow: hidden;
+    margin-top: 3px;
+    color: #b58fa0;
+    font-size: 0.78rem;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .mp-item-btn {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 auto;
+    border: 0;
+    border-radius: 50%;
+    background: #fff2f7;
+    color: #d06186;
+    font-size: 0.92rem;
+  }
+  .mp-item-btn.danger {
+    background: #fdeaef;
+    color: #cf6b8c;
+  }
+  .mp-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 56px 0;
+    color: #c29aab;
+  }
+  .mp-empty > i {
+    font-size: 2rem;
+    opacity: 0.6;
+  }
+  .mp-empty p {
+    margin: 0;
+    font-size: 0.88rem;
+  }
+
+  /* ---------- 6. 搜索页：热词 / 清空 ---------- */
+  .ss-hist-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .ss-hist-clear {
+    min-height: 32px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 999px;
+    background: #fff0f5;
+    color: #c4567a;
+    font-size: 0.74rem;
+  }
+  .ss-hist-chip {
+    min-height: 38px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* ---------- 7. 第三方音乐页：卡片 / 筛选 / 解锁 / 统计 ---------- */
+  html.has-appbar #worksGrid,
+  html.has-appbar .works-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  html.has-appbar .work-card {
+    margin: 0 !important;
+    border: 1px solid #ffe2ec;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #fff;
+  }
+  html.has-appbar .work-card .card-cover {
+    aspect-ratio: 1 / 1;
+    height: auto !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    color: #fff;
+  }
+  html.has-appbar .work-card .card-body {
+    padding: 8px 10px 10px !important;
+  }
+  html.has-appbar .work-card .card-title {
+    font-size: 0.86rem;
+  }
+  html.has-appbar .filter-tabs {
+    display: flex !important;
+    gap: 8px;
+    padding: 2px 2px 10px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  html.has-appbar .filter-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  html.has-appbar .filter-tab {
+    flex: 0 0 auto;
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 14px;
+    border-radius: 999px;
+    background: #fff2f7;
+    font-size: 0.82rem;
+  }
+  html.has-appbar .filter-tab.active {
+    background: linear-gradient(145deg, #f4a9c1, #e06a8f);
+    color: #fff;
+  }
+  html.has-appbar .stats-bar {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+  html.has-appbar .stats-bar .stat-item {
+    padding: 10px 6px;
+    border-radius: 14px;
+    background: #fff5f9;
+    font-size: 0.74rem;
+    text-align: center;
+  }
+  html.has-appbar .stats-bar .stat-number {
+    display: block;
+    margin-top: 4px;
+    font-size: 1rem;
+    color: #d06186;
+  }
+  html.has-appbar .unlock-drop {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 132px;
+    padding: 18px 14px;
+    border: 2px dashed #ffcbdd;
+    border-radius: 18px;
+    background: #fff8fb;
+    box-sizing: border-box;
+  }
+  html.has-appbar .unlock-btn,
+  html.has-appbar .submit-glow {
+    min-height: 48px;
+    padding: 0 20px;
+    border-radius: 14px;
+  }
+  html.has-appbar .unlock-results {
+    margin-top: 10px;
+    font-size: 0.8rem;
+  }
+  html.has-appbar .ns-subtabs {
+    display: flex;
+    gap: 6px;
+    padding: 5px;
+    margin-bottom: 12px;
+    border: 1px solid #ffe2ec;
+    border-radius: 16px;
+    background: rgba(255, 245, 249, 0.9);
+  }
+  html.has-appbar .ns-subtab {
+    flex: 1;
+    min-height: 42px;
+    border-radius: 12px;
+    font-size: 0.86rem;
+  }
+  html.has-appbar .ns-subtab.active {
+    background: linear-gradient(145deg, #f4a9c1, #e06a8f);
+    color: #fff;
+  }
+  /* ---------- 8. 页面上的「最近播放」横向条 ---------- */
+  .mp-strip {
+    margin: 14px 0 6px;
+  }
+  .mp-strip-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    color: #b5768c;
+    font-size: 0.8rem;
+  }
+  .mp-strip-more {
+    min-height: 34px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 999px;
+    background: #fff0f5;
+    color: #c4567a;
+    font-size: 0.74rem;
+  }
+  .mp-strip-row {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding: 2px 2px 8px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .mp-strip-row::-webkit-scrollbar {
+    display: none;
+  }
+  .mp-strip-item {
+    flex: 0 0 auto;
+    width: 78px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    text-align: center;
+  }
+  .mp-strip-item img {
+    display: block;
+    width: 78px;
+    height: 78px;
+    border-radius: 16px;
+    object-fit: cover;
+    background: linear-gradient(145deg, #ffe1ec, #ffc9dd);
+    box-shadow: 0 4px 10px rgba(214, 122, 156, 0.2);
+  }
+  .mp-strip-name {
+    display: block;
+    margin-top: 6px;
+    overflow: hidden;
+    color: #8a6b76;
+    font-size: 0.7rem;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  @keyframes mp-fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes mp-up {
+    from { transform: translateY(24px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+}
+
+/* ============================================================
+   音乐页（桌面端）歌词详情页
+   ------------------------------------------------------------
+   桌面端也走 AppShell 的二级页（.detail-view，和日记/归档同一套），
+   不做「面板原地长高」。桌面端没有 App Bar，所以二级页自带标题 + 关闭。
+   ============================================================ */
+@media (min-width: 769px) {
+  .player-right .lyric-panel {
+    cursor: pointer;
+  }
+
+  /* 二级页本体：移动端那套是全屏贴边，桌面端收成居中一栏 + 遮罩 */
+  .detail-view {
+    top: 0;
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 18px 22px 30px;
+    border-left: 1px solid #ffe0ea;
+    border-right: 1px solid #ffe0ea;
+    box-shadow: 0 0 60px rgba(177, 98, 125, 0.16);
+  }
+  body.detail-open::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    background: rgba(61, 32, 44, 0.28);
+  }
+  .detail-head {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 0 0 14px;
+    padding: 0 0 12px;
+    border-bottom: 1px solid #ffe0ea;
+    background: #fff9f7;
+  }
+  .detail-head-title {
+    color: #a65875;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+  .detail-head-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border: 1px solid #ffe0ea;
+    border-radius: 50%;
+    background: #fff2f6;
+    color: #c06b8a;
+    cursor: pointer;
+  }
+  .detail-head-close:hover {
+    background: #ffe8f1;
+  }
+
+  /* 搬进二级页的歌词面板：桌面端那条 height:152px 不再命中，这里单独给 */
+  .detail-view .lyric-panel {
+    height: auto;
+    max-height: none;
+    margin: 0;
+    padding: 4px 8px;
+    border: 0;
+    background: transparent;
+    text-align: center;
+    font-size: 1rem;
+  }
+  .detail-view .lyric-panel .lyr-line {
+    white-space: normal;
+    text-overflow: clip;
+    line-height: 2.1;
+  }
+  .detail-view .lyric-panel .lyr-line.active {
+    font-size: 1.08rem;
+  }
+}
+
+/* ============================================================
+   音乐页（桌面端）扩展功能
+   ------------------------------------------------------------
+   按钮一律复用站点自己的 .mode-strip / .mode-chip（和「单曲循环 / 随机
+   播放 / 歌单」同一套胶囊），不再另造控件。
+   手机端的面板写在 @media (max-width: 768px) 里，桌面宽度下拿不到样式，
+   这里按同样的值补一份，并把底部抽屉收成居中卡片。
+   ============================================================ */
+@media (min-width: 769px) {
+  .mode-chip .chip-txt {
+    font-size: 0.7rem;
+  }
+  .detail-lyric {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .detail-head-close {
+    width: 44px;
+    height: 44px;
+    border: 0;
+    background: #ffeef2;
+    color: #c45c7c;
+    font-size: 1.1rem;
+  }
+  .mp-sheet-body {
+    display: flex;
+    flex-direction: column;
+  }
+  .mp-mask {
+    align-items: center;
+    justify-content: center;
+  }
+  .mp-sheet {
+    width: min(460px, 92vw);
+    max-height: 78vh;
+    padding: 10px 16px 18px;
+    border-radius: 22px;
+    box-shadow: 0 18px 48px rgba(180, 100, 130, 0.3);
+  }
+  .mp-sheet-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 48px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #7d5462;
+  }
+  .mp-sheet-x {
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 50%;
+    background: #fff0f5;
+    color: #c4567a;
+    cursor: pointer;
+  }
+  .mp-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 54px;
+    margin: 6px 0;
+    padding: 0 14px;
+    border: 1px solid #ffe6ee;
+    border-radius: 14px;
+    background: #fff;
+    color: #7d5462;
+    font-size: 0.92rem;
+    text-align: left;
+    box-sizing: border-box;
+    cursor: pointer;
+  }
+  .mp-row:hover {
+    background: #fffafc;
+  }
+  .mp-row > i:first-child {
+    width: 20px;
+    color: #e08aa6;
+    text-align: center;
+  }
+  .mp-row-name {
+    flex: 1;
+  }
+  .mp-row-note {
+    color: #c98da6;
+    font-size: 0.78rem;
+  }
+  .mp-row-check {
+    color: #e06a8f;
+  }
+  .mp-row.on {
+    border-color: #ffc8da;
+    background: #fff4f8;
+  }
+  .mp-list {
+    flex: 1;
+    min-height: 100%;
+    padding: 4px 4px 20px;
+    box-sizing: border-box;
+  }
+  .mp-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 66px;
+    margin: 8px 0;
+    padding: 8px 10px;
+    border: 1px solid #ffe6ee;
+    border-radius: 16px;
+    background: #fff;
+    box-sizing: border-box;
+  }
+  .mp-item:hover {
+    background: #fffafc;
+  }
+  .mp-item-cover {
+    width: 50px;
+    height: 50px;
+    flex: 0 0 auto;
+    border-radius: 12px;
+    object-fit: cover;
+    background: linear-gradient(145deg, #ffe1ec, #ffc9dd);
+  }
+  .mp-item-cover.noart {
+    display: block;
+  }
+  .mp-item-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .mp-item-name {
+    overflow: hidden;
+    color: #6b4453;
+    font-size: 0.92rem;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .mp-item-sub {
+    overflow: hidden;
+    margin-top: 3px;
+    color: #b58fa0;
+    font-size: 0.78rem;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .mp-item-btn {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 auto;
+    border: 0;
+    border-radius: 50%;
+    background: #fff2f7;
+    color: #d06186;
+    font-size: 0.92rem;
+    cursor: pointer;
+  }
+  .mp-item-btn:hover {
+    background: #ffe6ef;
+  }
+  .mp-item-btn.danger {
+    background: #fdeaef;
+    color: #cf6b8c;
+  }
+  .mp-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 56px 0;
+    color: #c29aab;
+  }
+  .mp-empty > i {
+    font-size: 2rem;
+    opacity: 0.6;
+  }
+  .mp-empty p {
+    margin: 0;
+    font-size: 0.88rem;
+  }
+}
+
+/* ============================================================
+   隔离兜底：手机端注入的节点，在网页端一律不参与布局
+   ------------------------------------------------------------
+   JS 在视口变宽时会把它们拆掉（AppShell.onMode），这里再兜一层：
+   万一某个事件在 resize 之后才把它插回来，也不会以「没样式」的样子
+   留在网页端。样式本体都写在 max-width:768px 里，这里只做清除。
+   ============================================================ */
+@media (min-width: 769px) {
+  #fsOpenBtn,
+  .fs-open-btn,
+  #fsStage,
+  .fs-wrap,
+  #mpRecentStrip,
+  .mp-strip,
+  #nsPlatformChips {
+    display: none !important;
+  }
+}
+
+/* ============================================================
+   续播提示条（所有页面，音乐页除外）
+   ------------------------------------------------------------
+   多页站点里 <audio> 不能跨文档存活，所以这里只提供「回音乐页接着放」
+   的入口。根作用域：手机端与网页端都要出现，也和媒体查询无关。
+   ============================================================ */
+.resume-bar {
+  position: fixed;
+  right: 14px;
+  bottom: calc(var(--tab-h, 0px) + var(--sab, 0px) + 14px);
+  z-index: 9960;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(320px, calc(100vw - 28px));
+  padding: 8px 14px 8px 8px;
+  border: 1px solid #ffd6e0;
+  border-radius: 999px;
+  background: rgba(255, 250, 252, 0.96);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 6px 20px rgba(200, 120, 150, 0.22);
+  cursor: pointer;
+  box-sizing: border-box;
+  animation: resume-in 0.24s ease;
+}
+.resume-bar:hover { background: #ffffff; }
+.resume-bar .resume-cover {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  border-radius: 10px;
+  object-fit: cover;
+  background: linear-gradient(145deg, #ffe1ec, #ffc9dd);
+}
+.resume-bar .resume-meta { min-width: 0; }
+.resume-bar .resume-name {
+  color: #a14563;
+  font-size: 0.82rem;
+  font-weight: 600;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.resume-bar .resume-sub {
+  margin-top: 2px;
+  color: #b5768c;
+  font-size: 0.68rem;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.resume-bar .resume-go {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #ffeef2;
+  color: #c45c7c;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+}
+@keyframes resume-in {
+  from { transform: translateY(10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* ============================================================
+   shell.html 外壳布局（只服务打包用的外壳页）
+   ------------------------------------------------------------
+   全部规则以 html.shell 为前提 —— 只有 shell.html 带这个类，其它页面
+   永远匹配不到，所以对网页端零影响。外壳 = 两个 iframe + 底部 tab +
+   迷你播放条；不画花瓣粒子（iframe 里的页面各自有一份）。
+   ============================================================ */
+html.shell {
+  --mini-h: 56px;
+  overflow: hidden;
+  height: 100%;
+}
+html.shell body { overflow: hidden; height: 100%; }
+html.shell .shell-stage { position: fixed; inset: 0; }
+html.shell #page-frame,
+html.shell #player-frame {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: calc(var(--tab-h, 56px) + var(--sab, 0px));
+  width: 100%;
+  height: auto;
+  border: 0;
+  display: block;
+  background: #fff9f7;
+}
+html.shell .bot-tab { position: fixed; left: 0; right: 0; bottom: 0; }
+html.shell #app-mini-player {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--tab-h, 56px) + var(--sab, 0px));
+  z-index: 9980;
+  display: none;
+  align-items: center;
+  gap: 10px;
+  height: var(--mini-h);
+  padding: 0 12px;
+  box-sizing: border-box;
+  background: rgba(255, 250, 252, 0.96);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid #ffd6e0;
+  box-shadow: 0 -4px 16px rgba(255, 130, 160, 0.16);
+}
+html.shell #app-mini-player.show { display: flex; }
+html.shell #app-mini-player .mp-cover {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  border-radius: 10px;
+  object-fit: cover;
+  background: #ffe9ef;
+}
+html.shell #app-mini-player .mp-meta { flex: 1 1 auto; min-width: 0; }
+html.shell #app-mini-player .mp-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #a14563;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+html.shell #app-mini-player .mp-artist {
+  font-size: 0.7rem;
+  color: #b5768c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+html.shell #app-mini-player .mp-btn {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: #e85d86;
+  font-size: 1.05rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+html.shell #app-mini-player .mp-btn:active { background: #ffeaf1; }
+/* 宽屏（平板 / 桌面 WebView）：页面自己的侧边栏负责导航，底栏让位，
+   迷你条收成右下角一颗胶囊。 */
+@media (min-width: 769px) {
+  html.shell #page-frame,
+  html.shell #player-frame { bottom: 0; }
+  html.shell .bot-tab { display: none !important; }
+  html.shell #app-mini-player {
+    left: auto;
+    right: 12px;
+    bottom: 12px;
+    width: min(340px, 92vw);
+    border: 1px solid #ffd6e0;
+    border-radius: 999px;
+    box-shadow: 0 6px 20px rgba(200, 120, 150, 0.22);
+  }
+}
+
+/* ============================================================
+   ?app=1 在网页端（宽屏）也能用
+   ------------------------------------------------------------
+   下面这组规则是从 @media (max-width: 768px) 里把顶栏那几条原样搬出来的
+   —— 数值不重写，避免两套样式跑偏。生效条件里带 html.is-app，而 is-app
+   只在「URL 显式开关 / Capacitor / 独立窗口」时才有，所以普通网页端不受
+   影响（不带开关时顶栏根本不会建，也就没有可显示的东西）。
+   ============================================================ */
+@media (min-width: 769px) {
+  html.is-app.has-appbar .app-bar {
+    display: flex !important;
+  }
+  html.has-appbar .app-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 9990;
+    display: flex !important; /* 对上面那条桌面兜底的反向声明 */
+    align-items: center;
+    gap: 10px;
+    height: calc(var(--appbar-h) + var(--sat));
+    padding: var(--sat) 12px 0;
+    box-sizing: border-box;
+    background: rgba(255, 250, 252, 0.94);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid #ffd6e0;
+    box-shadow: 0 2px 12px rgba(255, 130, 160, 0.12);
+    transition: transform 0.22s ease;
+  }
+  html.has-appbar .app-bar.bar-hidden {
+    transform: translateY(-100%);
+  }
+  html.has-appbar .app-bar-home {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    flex: 0 0 auto;
+    border-radius: 12px;
+    color: #e982a2;
+    font-size: 1.15rem;
+    text-decoration: none;
+    /* style.css 里 a:not(.btn) 那条下划线规则带 !important，这里必须压掉 */
+    border-bottom: none !important;
+  }
+  html.has-appbar .app-bar-home:active {
+    background: #ffeaf1;
+  }
+  html.has-appbar .app-bar-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #a14563;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  html.has-appbar .app-bar-share {
+    flex: 0 0 auto;
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 12px;
+    background: transparent;
+    color: #dc8aa3;
+    font-size: 1.05rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  html.has-appbar .app-bar-share:active {
+    background: #ffeaf1;
+  }
+  html.has-appbar .app-bar.detail-mode .app-bar-home i::before {
+    content: "\f060" !important;
+  }
+  html.has-appbar .app-bar.detail-mode .app-bar-share {
+    display: none;
+  }
+}
+

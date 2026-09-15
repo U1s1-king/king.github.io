@@ -24,7 +24,9 @@
     particlesJS('particles-js', {
       particles: {
         number: {
-          value: isMobile ? 45 : 90,
+          /* 移动端 45 → 20：粒子是全屏 canvas 上每帧重绘的点，
+             手机上密度减半后观感差别很小，但 CPU/GPU 占用明显下降。 */
+          value: isMobile ? 20 : 90,
           density: { enable: true, value_area: 600 }
         },
         color: { value: ['#ff6b8a', '#ff8fab', '#ff4d7a', '#ff3366', '#ff7096'] },

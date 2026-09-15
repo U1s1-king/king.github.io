@@ -228,13 +228,25 @@
 .bg-tools   { background-image: url('../img/anon-tools.webp'); }
 .bg-404     { background-image: url('../img/anon-404.webp'); }
 
-/* ---------- 心情打卡 GIF 按钮 ---------- */
+/* ---------- 心情打卡按钮（全站唯一定义） ----------
+   这里以前写的是「卡片 + 64px 图片」，而 Journal.css 在它之后又把
+   .mood-btn 定义成 44×44 的圆钮。两个定义叠加的结果是：44px 的盒子先被
+   8px/12px 的 padding 吃掉一圈（内容区只剩 20×28），再被塞进一张 64px 的
+   图片，图片直接撑出按钮 —— 桌面和手机上都溢出。
+   现在这里只负责「形状 + 图片填充」，尺寸交给页面层（Journal.css 定为
+   44px 圆钮）；图片一律填满按钮并裁切，不再写死像素。
+   注意：统一修这一处会同时改变桌面端日记页心情按钮的观感（从溢出变成
+   规整的圆钮），这是本次唯一一处有意动到桌面观感的改动。 */
 .mood-btn {
   display: inline-flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 4px;
-  padding: 8px 12px;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  overflow: hidden;
   border: 2px solid #ffe0e8;
   border-radius: 16px;
   background: #fffefb;
@@ -242,10 +254,10 @@
   transition: var(--d-2);
 }
 .mood-btn img {
-  width: 64px;
-  height: 64px;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  border-radius: 14px;
+  border-radius: inherit;
   display: block;
 }
 .mood-btn:hover {

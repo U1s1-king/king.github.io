@@ -1,10 +1,53 @@
 /* ============================================================
-   移动端适配补充 (mobile.css)
-   策略：不动压缩的 style.css 及各页 css，统一在此追加移动端修补
-   断点：768px(平板/手机) 480px(小屏手机)
+   移动端适配层 (mobile.css)
+   ------------------------------------------------------------
+   分层约定（改这个文件之前先读这段）：
+     1. 桌面端（>768px）必须逐像素不变 —— 所以本文件所有规则一律写在
+        @media (max-width: 768px) / (hover: none) / (pointer: coarse) 里。
+        如果某条规则没法满足这一条，就说明它不该放这里。
+     2. APP 专属的东西（刘海屏安全区、顶栏、迷你播放条、iframe 外壳）不放这，
+        放 css/app.css，用 html.is-app 作用域隔离。
+     3. 加载顺序：style.css → sidebar.css → 各页 css → anim.css → mobile.css。
+        本文件最后加载，同权重下天然赢；只有盖行内样式或盖前面带 !important
+        的规则时才需要 !important，别滥用。
+
+   层级(z-index)一览，改之前先看这里，别再随手加 99999：
+     99999  #offline-bar / .js-lb-mask / #page-progress / #sakura-loading-layer
+     99998  .sakura-tail（装饰拖尾）
+     99997  #an-scrollbar（顶部滚动进度）
+     99996  .an-ripple（点击涟漪）
+      9998  .bot-tab（底部导航）
+        96  .sidebar-toggle-btn
+        95  .site-sidebar
+        20  各页主容器 / 页脚
+        10  .sakura-flurry / 花瓣
+         0  .anon-bg-layer / #particles-js
+
+   断点：768px(平板/手机) 420px(小屏手机)
    ============================================================ */
 
-/* A5 刘海屏安全区 */
+/* ---- 变量：tab 高度与安全区，全文件统一引用，别再散落写魔法数字 ----
+   安全区提示：没有 viewport-fit=cover 时 env() 恒为 0。手机浏览器里就是 0
+   （与改动前完全一致）；只有 APP 里 app-shell.js 打开 viewport-fit=cover
+   之后，--sat / --sab 才会拿到真正的刘海与手势条高度。 */
+@media (max-width: 768px) {
+  :root {
+    --tab-h: 56px; /* 底部 tab 高度；原来是写死的 46px */
+    --sat: 0px;    /* 兜底值：不支持 env() 时用这里，顺序必须在 @supports 之前 */
+    --sab: 0px;
+  }
+}
+/* 支持 env() 时再覆盖成真实安全区数值（顺序很关键：兜底在前，覆盖在后） */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  @media (max-width: 768px) {
+    :root {
+      --sat: env(safe-area-inset-top, 0px);
+      --sab: env(safe-area-inset-bottom, 0px);
+    }
+  }
+}
+
+/* A5 刘海屏安全区（底部） */
 @supports (padding: max(0px)) {
   .site-footer,
   footer {
@@ -12,11 +55,22 @@
   }
 }
 
-/* 万能横向溢出兜底（不裁垂直内容） */
+/* 万能横向溢出兜底（不裁垂直内容）+ 禁回弹 / 禁下拉刷新链 */
 @media (max-width: 768px) {
   html,
   body {
     overflow-x: hidden;
+  }
+  /* 注意：overscroll-behavior（禁下拉刷新/回弹）不在这里 —— 那是 APP 行为，
+     只写在 css/app.css 的 html.is-app 下。手机浏览器访客要能下拉刷新。 */
+  /* 触屏去掉双击缩放带来的 300ms 点击延迟；双指缩放仍然可用 */
+  a,
+  button,
+  input,
+  select,
+  textarea,
+  [role="button"] {
+    touch-action: manipulation;
   }
 }
 
@@ -55,21 +109,31 @@
   }
 }
 
-/* A6 长内容横向滚动防护 + 媒体自适应 */
+/* A6 长内容与媒体自适应
+   改动说明：原来这里给 pre/code/table/.tool-panel/.blog-content/.terminal/
+   .work-card/.ns-item/.stat-card/.unlock-results 一律加了 overflow-x:auto，
+   等于把「内容可能超宽」当成「制造一个横向滚动容器」来治。这些容器内部
+   本来没有超宽内容，被强制成滚动容器后在手机上会产生嵌套横向滚动，
+   和纵向手势互相抢，还容易把圆角/阴影裁掉。现在只给真正会超宽的元素
+   （代码块、表格、结果输出）开横向滚动，其余只限制最大宽度。 */
 @media (max-width: 768px) {
   pre,
-  code,
   table,
+  .result-area,
+  .bili-code {
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  code,
   .tool-panel,
   .blog-content,
   .terminal,
   .work-card,
   .ns-item,
   .stat-card,
-  .st-bd306a33,
   .unlock-results {
     max-width: 100% !important;
-    overflow-x: auto !important;
   }
   iframe,
   video,
@@ -93,34 +157,47 @@
   }
 }
 
-/* A4 触控目标 ≥ 40px（主要交互控件） */
+/* A4 触控目标放大
+   原来统一给 40px，现在分级：一般工具按钮/筛选 44px，
+   主行动按钮（提交、解锁、搜索）48px。
+   注意：刻意不含 .mode-chip / .ctrl-btn —— 音乐页的控件行是 music.css
+   特意排成「永不换行的一行」的，抬高它们会把那一行挤断。 */
 @media (max-width: 768px) {
-  .nav-links a,
-  .btn,
-  .btn-cherry,
+  .tool-btn,
   .filter-tab,
   .pl-view,
   .ns-play,
   .ns-add,
   .ns-dl,
-  .tool-btn,
-  .unlock-btn,
-  .search-btn,
   .wf-side-btn,
+  .bili-btn,
+  .bili-tool-tab,
+  .btn-sm,
+  .btn-cherry,
+  .btn-secondary,
+  .pl-hist-chip {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .btn,
+  .btn-primary,
   .gb-submit,
-  .bili-btn {
-    min-height: 40px;
+  .unlock-btn,
+  .search-btn {
+    min-height: 48px;
+  }
+  /* 工具页里那些 4px 12px 的小圆钮，单点太小 */
+  .bili-btn-row .btn-cherry,
+  .button-group .btn-sm {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
   }
 }
 
 /* 通用小屏细节：文字断词、密度 */
 @media (max-width: 768px) {
-  .nav-links {
-    gap: 4px !important;
-  }
-  .nav-links a {
-    padding: 8px 12px !important;
-  }
   .card-title,
   .post-title,
   .ns-name,
@@ -133,15 +210,44 @@
   }
 }
 
-@media (max-width: 480px) {
-  .nav-links {
-    justify-content: center !important;
+/* ============================================================
+   触屏：清掉 :hover 的「粘住」效果
+   ------------------------------------------------------------
+   触屏浏览器在点按后会保留 :hover 状态，于是按钮/图标会一直停在
+   「抬起 3px + 发光」的样子，看起来像卡住了。这些规则在桌面端
+   （hover:hover）完全不匹配，所以那 26 处 :hover 的桌面手感不变。
+   ============================================================ */
+@media (hover: none) {
+  .social-links a:hover,
+  .btn:hover,
+  .btn-primary:hover,
+  .btn-secondary:hover,
+  .btn-cherry:hover,
+  .cherry-btn:hover,
+  .tool-tab:hover,
+  .bili-tool-tab:hover,
+  .pl-hist-chip:hover,
+  .gallery-img:hover,
+  .mood-btn:hover,
+  .social-links a:hover i {
+    translate: none !important;
+    scale: none !important;
+    rotate: none !important;
   }
-  .info-item {
-    padding: 0.7rem 0.5rem !important;
+  /* 卡片类 hover 在 style.css 里本来就有 (hover:hover) 守卫，这里兜底一次 */
+  .post-card:hover,
+  .media-card:hover,
+  .message-card:hover,
+  .stat-item:hover,
+  .clock-item:hover,
+  .hot-item:hover,
+  .gh-event:hover {
+    translate: none !important;
   }
 }
-/* ===== 底部 Tab 导航（仅移动端显示，桌面隐藏） ===== */
+
+/* ===== 底部 Tab 导航（仅移动端显示，桌面隐藏）=====
+   改动：4 项（日记/归档/音乐/工具），高度走 --tab-h，热区 56px。 */
 .bot-tab {
   display: none;
 }
@@ -157,7 +263,9 @@
     border-top: 1px solid #ffd6e0;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    padding: 4px 2px calc(4px + env(safe-area-inset-bottom, 0px));
+    padding: 0 2px var(--sab);
+    min-height: var(--tab-h);
+    box-sizing: border-box;
     box-shadow: 0 -2px 12px rgba(255, 130, 160, 0.18);
     transform: none !important; /* 免疫入场 reveal 动画残留的 translateY(26px) */
     opacity: 1 !important;
@@ -168,14 +276,14 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 46px;
+    min-height: calc(var(--tab-h) - 4px);
     color: #96576b;
     text-decoration: none;
-    font-size: 11px;
-    gap: 2px;
+    font-size: 12px;
+    gap: 3px;
   }
   .bot-tab a i {
-    font-size: 17px;
+    font-size: 20px;
   }
   .bot-tab a.active {
     color: #e85d86;
@@ -188,10 +296,36 @@
     -webkit-text-fill-color: transparent;
   }
   body {
-    padding-bottom: calc(58px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(var(--tab-h) + var(--sab) + 6px);
   }
   .wf-fab {
-    bottom: calc(68px + env(safe-area-inset-bottom, 0px)) !important;
+    bottom: calc(var(--tab-h) + var(--sab) + 12px) !important;
+  }
+}
+
+/* ===== 装饰动效降级（移动端）=====
+   卡片浮动 / 按钮辉光 / 标题流光在 style.css 的 768 断点里已经是
+   animation:none 了，这里只补还没被关掉的三样：
+     1. #an-aurora 全屏 blur(58px) 光斑层 —— 最贵的一块，手机上几乎看不出来
+     2. 花瓣动画与粒子的数量在 JS 里降（见 js/common.js、js/particles-config.js）
+     3. 页面切到后台时把装饰性动画全停掉（common.js 里的 visibilitychange
+        会加 html.page-hidden），不要在黑屏后台白烧电 */
+@media (max-width: 768px) {
+  #an-aurora {
+    display: none !important;
+  }
+}
+/* 切到后台时把装饰层整体摘掉。.page-hidden 由 js/common.js 的
+   visibilitychange 维护（切回来会立刻移除），只在 ≤768px 生效，
+   桌面端一行都不匹配。 */
+@media (max-width: 768px) {
+  html.page-hidden #sakura-flurry,
+  html.page-hidden #particles-js,
+  html.page-hidden #an-aurora,
+  html.page-hidden #an-scrollbar,
+  html.page-hidden #waifu,
+  html.page-hidden #waifu-fab {
+    display: none !important;
   }
 }
 
@@ -210,7 +344,8 @@
   color: #e85d86;
 }
 
-/* ===== 大图 Lightbox ===== */
+/* ===== 大图 Lightbox =====
+   max-height 用 dvh：手机浏览器地址栏收起/展开时 vh 不变，dvh 才是真实可视高度 */
 .js-lb-mask {
   position: fixed;
   inset: 0;
@@ -228,10 +363,126 @@
   border-radius: 12px;
   box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
 }
+@supports (height: 100dvh) {
+  @media (max-width: 768px) {
+    .js-lb-img {
+      max-height: 86dvh;
+    }
+  }
+}
 @keyframes js-lb-fade {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 img.js-lightbox {
   cursor: zoom-in;
+}
+
+/* ===== 移动端：音乐歌单抽屉用真实可视高度 ===== */
+@supports (height: 100dvh) {
+  @media (max-width: 768px) {
+    .pl-drawer {
+      height: 100dvh;
+      padding-bottom: calc(1rem + var(--sab));
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .info-item {
+    padding: 0.7rem 0.5rem !important;
+  }
+}
+
+/* ============================================================
+   有顶栏时（html.has-appbar）的「去网页化」排版
+   ------------------------------------------------------------
+   app-shell.js 在移动端注入顶部 App Bar 并给 <html> 加 .has-appbar。
+   一旦有了顶栏，原来那套网页端排版线索就成了噪音：
+     · 每页自己的大标题 <h1 class="blog-title"> 会和顶栏标题重复
+     · main 带 margin:0.5rem 0.4rem 的外框，看着像网页里嵌了一张卡片
+     · 卡片又各带一圈左右外边距，和容器内边距叠成双层留白
+     · 32px 的大圆角在满宽卡片上很「网页」
+   这里把它们收掉：内容贴边只留 14px 呼吸位，标题交给顶栏，
+   原来的副标题 .subhead 降级成左对齐小字保留（那点可爱劲儿别丢）。
+   注意：这些规则一律以 html.has-appbar 为前提 —— JS 没跑或桌面端
+   都不命中，所以页面标题不会出现「消失了又没顶栏」的情况。
+   ============================================================ */
+@media (max-width: 768px) {
+  html.has-appbar .about-container,
+  html.has-appbar .blog-container,
+  html.has-appbar .archive-container,
+  html.has-appbar .guestbook-container,
+  html.has-appbar .music-container,
+  html.has-appbar .toolbox-container,
+  html.has-appbar .notfound-wrap,
+  html.has-appbar main {
+    margin: 0 !important;
+    padding: 12px 14px 1.5rem !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* 卡片不再自带左右外边距，避免和容器内边距叠成双层留白 */
+  html.has-appbar .profile-card,
+  html.has-appbar .card,
+  html.has-appbar .post-card,
+  html.has-appbar .page-card,
+  html.has-appbar .message-card,
+  html.has-appbar .media-card,
+  html.has-appbar .player-card,
+  html.has-appbar .tool-panel,
+  html.has-appbar .info-grid {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    max-width: 100% !important;
+  }
+  /* 满宽卡片上 32px 圆角太「网页」，收到接近原生卡片的 18px */
+  html.has-appbar .profile-card,
+  html.has-appbar .card,
+  html.has-appbar .post-card,
+  html.has-appbar .page-card,
+  html.has-appbar .message-card,
+  html.has-appbar .media-card,
+  html.has-appbar .player-card {
+    border-radius: 1.1rem !important;
+  }
+
+  /* 页头条：只对 APP（html.is-app）去网页化 —— 手机网页必须保住 H1。
+     原因：搜索引擎是「移动优先索引」，抓取与排名用的是手机版渲染结果，
+     在手机网页上 display:none 掉 H1 等于直接伤排名，而网页端是最高优先级。
+     APP 里相反：顶栏标题已经把页面名说清楚了，页面再重复一遍大标题才是噪音。 */
+  html.is-app.has-appbar .about-header,
+  html.is-app.has-appbar .blog-header,
+  html.is-app.has-appbar .archive-header,
+  html.is-app.has-appbar .guestbook-header,
+  html.is-app.has-appbar .music-header,
+  html.is-app.has-appbar .toolbox-header {
+    text-align: left !important;
+    margin: 0 0 0.9rem !important;
+    padding: 0 !important;
+    border-bottom: none !important;
+  }
+  /* 标题交给顶栏，APP 里不再重复一遍 */
+  html.is-app.has-appbar .about-header h1.blog-title,
+  html.is-app.has-appbar .blog-header h1.blog-title,
+  html.is-app.has-appbar .archive-header h1.blog-title,
+  html.is-app.has-appbar .guestbook-header h1.blog-title,
+  html.is-app.has-appbar .music-header h1.blog-title,
+  html.is-app.has-appbar .toolbox-header h1.blog-title {
+    display: none !important;
+  }
+  html.is-app.has-appbar .subhead {
+    display: block !important;
+    margin: 0 0 0.6rem !important;
+    padding: 0 !important;
+    background: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border-radius: 0 !important;
+    font-size: 0.8rem !important;
+    color: #b5768c !important;
+    text-align: left !important;
+    line-height: 1.5 !important;
+  }
 }
