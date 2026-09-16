@@ -1000,8 +1000,25 @@ async function tvClassList(params, origin) {
    前端点进详情时带着这个编号回去单点那一个源，各站编号不会串。
    轮转着取（每个源先出 1 条再取第 2 条），首页看起来是混着的，不会被第一个源占满。
    一条都没回来就返回 null，交给下面那套单源接力兜底。 */
+/* 有的采集站压根不认 wd：你搜「蜘蛛侠」，它把最新片单整页塞给你，用户就看到完全不相关的片。
+   搜索时让每个源先自证：这一页里连一条都不沾关键词的，判定它没在搜，整页丢掉。 */
+function tvHit(it, kw) {
+  const s = [
+    it && it.vod_name,
+    it && it.vod_sub,
+    it && it.vod_en,
+    it && it.vod_actor,
+    it && it.vod_director,
+    it && it.vod_tag,
+  ]
+    .join(' ')
+    .toLowerCase()
+  return s.indexOf(kw) >= 0
+}
+
 async function tvAggregate(params, origin, bases, ac) {
   const wd = params.get('wd') || ''
+  const kw = wd.trim().toLowerCase()
   const pg = params.get('pg') || '1'
   const per = wd ? 60 : 6
   const got = []
@@ -1020,15 +1037,23 @@ async function tvAggregate(params, origin, bases, ac) {
       .then(function (text) {
         if (!text || text.indexOf('"list"') < 0) return
         const j = JSON.parse(text)
+        let items = j.list || []
+        if (kw) {
+          items = items.filter(function (it) {
+            return tvHit(it, kw)
+          })
+          /* 这个源这一页一条都不沾关键词 —— 它没在搜，别拿最新片单冒充结果 */
+          if (!items.length) return
+        }
         got.push({
           i: i,
           base: base,
-          list: j.list || [],
+          list: items,
           total: j.total || 0,
           pagecount: j.pagecount || 1,
           /* 顺手记下这次每个源花了多久，前端会把它标在「片源」按钮上，方便挑快的 */
           ms: Date.now() - t0,
-          n: (j.list || []).length,
+          n: items.length,
         })
       })
       .catch(function () {

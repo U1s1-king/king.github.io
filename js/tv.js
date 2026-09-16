@@ -21,7 +21,9 @@
   var MEDIA_EXT = ['.mp4', '.m4v', '.mkv', '.flv', '.avi', '.mov', '.webm', '.mp3', '.m4a'];
 
   /* src：分类列表来自哪号源。各站 type_id 编号不同，翻页/点分类必须带上它 */
-  var state = { t: '', pg: 1, kw: '', src: null, busy: false, pick: false };
+  var state = { t: '', pg: 1, kw: '', src: null, pick: false };
+  /* 每次请求发一个序号：后发的永远赢。慢响应回来只作废、不覆盖页面 */
+  var reqSeq = 0;
   /* 「片源」那排的源清单（由网关下发），以及这次每个源的耗时 */
   var SRCS = [];
   /* 扁平化的选集列表，给播放器的上一集/下一集/自动连播用 */
@@ -29,6 +31,18 @@
   var LINE_NAMES = { liangzi: '量子线路', lzm3u8: '量子 M3U8', lz: '量子' };
 
   function byId(id) { return document.getElementById(id); }
+  /* 页面自带的那句提示，搜索结果显示时临时换掉，换回来用 */
+  var NOTE0 = '';
+  /* 页面 load 之后统一把海报 src 补上 */
+  function flushImgs() {
+    window.__tvLoaded = 1;
+    Array.prototype.forEach.call(document.querySelectorAll('#tvGrid img[data-src]'), function (im) {
+      im.src = im.getAttribute('data-src');
+      im.removeAttribute('data-src');
+    });
+  }
+  if (document.readyState === 'complete') window.__tvLoaded = 1;
+  else window.addEventListener('load', flushImgs);
   function setText(id, s) { var el = byId(id); if (el) el.textContent = s; }
   function say(html) { var g = byId('tvGrid'); if (g) g.innerHTML = '<p class="tv-tip">' + html + '</p>'; }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
@@ -263,13 +277,16 @@
         if (box) box.classList.add('is-empty');
         if (img.parentNode) img.parentNode.removeChild(img);
       });
-      img.src = picUrl(pic);
+      /* 海报延到页面 load 之后再拉：TV 页首屏几十张图会把 load 拖到十几秒，
+         而看板娘(Live2D)是等 load 才初始化的，模型纹理就被挤在后面、一半一半地长。
+         页面已经 load 完了就直接赋 src，不影响后面的翻页/搜索。 */
+      if (window.__tvLoaded) { img.src = picUrl(pic); } else { img.setAttribute('data-src', picUrl(pic)); }
     }
     var badge = a.querySelector('.tv-badge');
     var remark = String(it.vod_remarks || '');
     if (remark) badge.textContent = remark; else badge.remove();
     a.querySelector('.tv-name').textContent = it.vod_name || '未命名';
-    a.addEventListener('click', function () { detail(it.vod_id, it._src); });
+    a.addEventListener('click', function () { detail(it.vod_id, it._src, a); });
     return a;
   }
 
@@ -288,25 +305,42 @@
     if (pager) pager.hidden = pages <= 1;
   }
 
+  /* 为什么不是「有请求在跑就直接 return」：首屏那次聚合要等三四秒，用户经常刚进页面
+     就敲关键词搜索，旧写法会把这次搜索**静默丢掉**，页面上留的还是上一轮结果
+     （表现就是「我搜蜘蛛侠，出来的是别的片」，海报/片名全对不上）。
+     现在改成序号：新请求一律发出，旧的响应回来发现序号过期就整份作废。 */
   function load(pg) {
-    if (state.busy) return;
-    state.busy = true;
+    var my = ++reqSeq;
     state.pg = pg || 1;
     var t0 = Date.now();
     var single = state.pick && typeof state.src === 'number' ? SRCS.filter(function (s) { return s.id === state.src; }) : [];
-    loadingStart(single.length ? ('正在请求「' + single[0].name + '」…') : '正在找片…');
+    loadingStart(
+      state.kw ? ('正在搜「' + state.kw + '」…') : single.length ? ('正在请求「' + single[0].name + '」…') : '正在找片…',
+    );
     apiGet({ ac: 'videolist', t: state.t, pg: state.pg, wd: state.kw, _src: state.src, pick: state.pick ? 1 : '' })
       .then(function (d) {
         /* 动画最少露 500ms：太快反而像闪一下，看不清发生了什么 */
         var wait = Math.max(0, 500 - (Date.now() - t0));
         return new Promise(function (r) { setTimeout(r, wait); }).then(function () {
+          if (my !== reqSeq) return; /* 期间用户又搜了/翻页了/点进详情了，这份结果作废 */
           clearLoad();
           if (d && typeof d._src === 'number' && !state.pick) state.src = d._src;
           if (d && d.sources) renderSrcs(d.sources, d._stats);
           render(d);
+          /* 搜索结果页头写明「搜的是什么、拿到多少条」，用户一眼能核对对不对得上 */
+          if (state.kw) {
+            noteWithLink(
+              '搜索「' + state.kw + '」：' + ((d && d.list) || []).length + ' 条' +
+                (d && d._srcs ? '，来自 ' + d._srcs + ' 个片源' : ''),
+              '',
+            );
+          } else if (NOTE0) {
+            noteWithLink(NOTE0, '');
+          }
         });
       })
       .catch(function (e) {
+        if (my !== reqSeq) return; /* 旧请求的报错别糊在新结果上 */
         var pager = byId('tvPager'); if (pager) pager.hidden = true;
         var m = String(e.message || e);
         var why = /一分钟|timeout|abort/i.test(m)
@@ -317,18 +351,25 @@
               ? '连不上片源（网络或代理不通）'
               : '没找到片源';
         loadingFail(why + '：' + m);
-      })
-      .then(function () { state.busy = false; });
+      });
   }
 
   /* ---------------- 详情与线路 ---------------- */
-  function detail(vodId, src) {
+  function detail(vodId, src, cardEl) {
+    reqSeq++; /* 在飞的列表结果作废，别盖掉「正在打开…」 */
     say('正在打开…');
     /* 聚合列表里每条自带 _src：点哪条就问哪个源要详情，编号才对得上 */
     var pin = typeof src === 'number' ? src : state.src;
     apiGet({ ac: 'videolist', ids: vodId, _src: pin }).then(function (d) {
       var it = (d && d.list && d.list[0]) || null;
       if (!it) throw new Error('没拿到该资源');
+      /* 片名以服务端返回的这条为准：列表里拿到的名字可能是空的、也可能被源写串了。
+         用服务端的标题回填卡片（用户回头还看得见）再开播放器，点进去才知道自己在看什么。 */
+      var nm = String(it.vod_name || '').trim();
+      if (nm && cardEl) {
+        var nmEl = cardEl.querySelector('.tv-name');
+        if (nmEl && nmEl.textContent !== nm) nmEl.textContent = nm;
+      }
       openPlayer(it);
     }).catch(function (e) { say('打开失败：' + String(e.message || e)); });
   }
@@ -422,6 +463,8 @@
 
   /* ---------------- 绑定 ---------------- */
   function boot() {
+    var n0 = byId('tvNote');
+    if (n0) NOTE0 = n0.textContent;
     if (window.TVPlayer) {
       TVPlayer.init({
         gateway: GATEWAY,

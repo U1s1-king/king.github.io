@@ -29,7 +29,6 @@
   var hls = null;
   var hlsLoading = false;
   var cur = '';
-  var retriedProxy = false;
   var hideTimer = 0;
   var clickTimer = 0;
   var watchdog = 0;
@@ -291,76 +290,121 @@
     if (hls) { try { hls.destroy(); } catch (e) {} hls = null; }
     if (window.__tvHls) { try { window.__tvHls.destroy(); } catch (e2) {} window.__tvHls = null; }
   }
-  function playNative(url, viaProxy) {
-    var v = D.video;
-    v.onerror = function () {
-      if (viaProxy || retriedProxy) { showErr('这条线路播不动，换一条试试。'); return; }
-      retriedProxy = true;
-      toast('直连失败，改走本站代理重试…');
-      playNative(url, true);
-    };
-    v.src = viaProxy ? cfg.gateway + '/api/tv/stream?u=' + encodeURIComponent(url) : url;
-    var p = v.play();
-    if (p && p.catch) p.catch(function () { showUI(); });
+  /* ---------------- 播放重试器 ----------------
+     为什么不能一出错就弹「加载失败」：这些采集源的 m3u8 经常是「先给个错/先超时，
+     过几秒又好了」，实测多等几秒画面就出来了。所以统一交给下面这个重试器：
+     没出画面就换个姿势重来（重建 hls → 绕本站代理 → 再交替试），
+     全程只转圈 + 一句提示，不弹失败卡片；等满一分钟还是没画面才认输。 */
+  var PLAY_BUDGET = 60000;
+  var pv = { seq: 0, tries: 0, viaProxy: false, t0: 0, started: false };
+
+  function attempt() {
+    var my = pv.seq;
+    var url = cur;
+    if (!url) return;
+    clearTimeout(watchdog);
+    destroyHls();
+    setSpin(true);
+    var src = pv.viaProxy ? cfg.gateway + '/api/tv/stream?u=' + encodeURIComponent(url) : url;
+    if (classify(url) === 'media' && !pv.viaProxy) {
+      /* 直链 mp4：浏览器原生就能放，出错也只重试不报错 */
+      D.video.onerror = function () { if (my === pv.seq) softRetry('直链失败'); };
+      D.video.src = url;
+      var p = D.video.play();
+      if (p && p.catch) p.catch(function () { showUI(); });
+    } else {
+      D.video.onerror = null;
+      playHls(src, my);
+    }
+    /* 静默看门狗：15 秒还没画面就换姿势，不弹错 */
+    watchdog = setTimeout(function () {
+      if (my === pv.seq && D.video.readyState < 3) softRetry('没画面');
+    }, 15000);
   }
-  function playHls(url, viaProxy) {
+
+  function softRetry(why) {
+    if (!cur) return;
+    if (Date.now() - pv.t0 > PLAY_BUDGET) { giveUp(); return; }
+    pv.tries++;
+    /* 第 2 次起绕本站代理，之后直连/代理交替；两类可能都有问题，多试几轮 */
+    pv.viaProxy = pv.tries >= 2 && pv.tries % 2 === 0;
+    toast(pv.viaProxy ? '再等一下，改走本站代理重试…' : '这个源有点慢，正在自动重试…');
+    setSpin(true);
+    var my = pv.seq;
+    setTimeout(function () { if (my === pv.seq) attempt(); }, Math.min(1200 * pv.tries, 6000));
+  }
+
+  function giveUp() {
+    setSpin(false);
+    showErr('这条线路一直没出画面（自动重试了几次，「' + whyText() + '」）。换一条线路更快，也可以点重试再等一轮。');
+  }
+  function whyText() { return '等了 ' + Math.round((Date.now() - pv.t0) / 1000) + ' 秒'; }
+
+  function playHls(src, my) {
     var v = D.video;
-    var src = viaProxy ? cfg.gateway + '/api/tv/stream?u=' + encodeURIComponent(url) : url;
-    if (v.canPlayType && v.canPlayType('application/vnd.apple.mpegurl')) { playNative(url, viaProxy); return; }
+    if (v.canPlayType && v.canPlayType('application/vnd.apple.mpegurl')) {
+      v.onerror = function () { if (my === pv.seq) softRetry('原生 HLS 失败'); };
+      v.src = src;
+      var pn = v.play();
+      if (pn && pn.catch) pn.catch(function () { showUI(); });
+      return;
+    }
     setSpin(true);
     loadHls(function () {
+      if (my !== pv.seq) return;
       if (!window.Hls || !window.Hls.isSupported()) { showErr('当前浏览器不支持 HLS 播放。'); return; }
       destroyHls();
-      hls = new window.Hls({ maxBufferLength: 30, enableWorker: true });
+      hls = new window.Hls({
+        maxBufferLength: 30,
+        enableWorker: true,
+        manifestLoadingTimeOut: 20000,
+        manifestLoadingMaxRetry: 4,
+        levelLoadingMaxRetry: 4,
+        fragLoadingMaxRetry: 6,
+      });
       window.__tvHls = hls;
       hls.loadSource(src);
       hls.attachMedia(v);
       hls.on(window.Hls.Events.MANIFEST_PARSED, function () {
+        if (my !== pv.seq) return;
         setSpin(false);
         var p = v.play();
         if (p && p.catch) p.catch(function () { showUI(); });
       });
       hls.on(window.Hls.Events.ERROR, function (ev, data) {
-        if (!data || !data.fatal) return;
-        destroyHls();
-        if (!viaProxy && !retriedProxy) {
-          retriedProxy = true;
-          toast('直连失败，改走本站代理重试…');
-          playHls(url, true);
-          return;
+        if (my !== pv.seq || !data || !data.fatal) return;
+        /* 已经出过画面的：先就地救，别把播放进度清零 */
+        if (pv.started && hls) {
+          try {
+            if (data.type === window.Hls.ErrorTypes.MEDIA_ERROR && hls.recoverMediaError) { hls.recoverMediaError(); return; }
+            if (hls.startLoad) { hls.startLoad(); return; }
+          } catch (e) {}
         }
-        showErr('这条流播放失败（' + data.type + ' / ' + data.details + '），换条线路或到原地址看。');
+        softRetry(String(data.details || data.type || ''));
       });
     });
   }
+
   function play(url) {
     if (!D.video || !url) return false;
     if (classify(url) === 'page') return false;
     cur = url;
-    retriedProxy = false;
+    pv.seq++;
+    pv.tries = 0;
+    pv.viaProxy = false;
+    pv.started = false;
+    pv.t0 = Date.now();
     closeMenus();
     document.documentElement.classList.add('tvp-open');
     hideErr();
-    setSpin(true);
-    destroyHls();
-    clearTimeout(watchdog);
-    /* 再慢也不能一直转：满一分钟还没画面就报错让人换线路 */
-    watchdog = setTimeout(function () {
-      if (!D.video || playing() || D.video.readyState >= 3) return;
-      showErr('这个源加载太慢或者没响应（等满一分钟了）。点重试，或者回列表换一条线路。');
-    }, 60000);
-    if (classify(url) === 'media') {
-      D.video.src = url;
-      var p = D.video.play();
-      if (p && p.catch) p.catch(function () { showUI(); });
-      setSpin(false);
-      return true;
-    }
-    playHls(url, false);
+    attempt();
     return true;
   }
   function stop() {
     clearTimeout(watchdog);
+    pv.seq++; /* 作废在飞的重试 */
+    pv.started = false;
+    if (D.video) D.video.onerror = null;
     closeMenus();
     clearFS();
     document.documentElement.classList.remove('tvp-open');
@@ -395,11 +439,11 @@
     ['playing', 'pause', 'ended'].forEach(function (ev) { v.addEventListener(ev, function () { syncPlayIcon(); setTime(); }); });
     v.addEventListener('timeupdate', function () { setTime(); setBuffer(); });
     v.addEventListener('progress', setBuffer);
-    v.addEventListener('loadedmetadata', function () { clearTimeout(watchdog); setTime(); hideErr(); setSpin(false); });
-    v.addEventListener('playing', function () { clearTimeout(watchdog); hideErr(); setSpin(false); });
+    v.addEventListener('loadedmetadata', function () { clearTimeout(watchdog); pv.started = true; setTime(); hideErr(); setSpin(false); });
+    v.addEventListener('playing', function () { clearTimeout(watchdog); pv.started = true; hideErr(); setSpin(false); });
     v.addEventListener('waiting', function () { setSpin(true); });
     v.addEventListener('canplay', function () { setSpin(false); });
-    v.addEventListener('error', function () { if (!hls) showErr('视频加载失败，换一条线路或重试。'); });
+    /* 播放出错一律交给重试器（attempt 里的 onerror），这里不再弹卡片 */
     v.addEventListener('ended', function () { if (S.autonext && cfg.onEnded) cfg.onEnded(); });
     v.addEventListener('dblclick', function () { clearTimeout(clickTimer); toggleFull(); });
     v.addEventListener('click', function () {
