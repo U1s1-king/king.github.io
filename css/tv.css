@@ -116,3 +116,16 @@
     .tv-search { flex-wrap: wrap; }
     .tv-episodes { max-height: 150px; }
 }
+/* 海报拉不动时的降级占位（图床经代理偶尔会失败，AI 图床热链也拦直连） */
+.tv-poster.is-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(145deg, #fff3f6 0%, #ffe3ea 100%);
+    border: 1px dashed #ffcdda;
+}
+.tv-poster.is-empty::after {
+    content: '🎬';
+    font-size: 1.6rem;
+    opacity: .75;
+}

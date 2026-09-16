@@ -56,8 +56,16 @@
     throw new Error('片源返回的不是合法 JSON');
   }
 
+  /* 浏览器端超时：CF 边缘偶尔会把响应传到一半卡住，不能干等 */
+  function timeoutOpt(ms) {
+    try {
+      if (typeof AbortSignal !== 'undefined' && AbortSignal.timeout) return { signal: AbortSignal.timeout(ms) };
+    } catch (e) {}
+    return {};
+  }
+
   function jget(url) {
-    return fetch(url, { mode: 'cors', credentials: 'omit' }).then(function (r) {
+    return fetch(url, Object.assign({ mode: 'cors', credentials: 'omit' }, timeoutOpt(12000))).then(function (r) {
       if (!r.ok) throw new Error('HTTP ' + r.status);
       return r.text();
     }).then(parseJson);
@@ -71,9 +79,18 @@
 
   /* 列表/详情：优先自建 Worker 代理（有 CORS），失败再试直连（几乎必被拦，留个念想） */
   var DIRECT = 'https://cj.lziapi.com/api.php/provide/vod/';
+  function apiTry(url, n) {
+    return jget(url).catch(function (e) {
+      if (n > 1) {
+        return new Promise(function (r) { setTimeout(r, 700); }).then(function () { return apiTry(url, n - 1); });
+      }
+      throw e;
+    });
+  }
+
   function apiGet(params) {
     var q = qs(params);
-    return jget(GATEWAY + '/api/tv?' + q).catch(function (e1) {
+    return apiTry(GATEWAY + '/api/tv?' + q, 3).catch(function (e1) {
       return jget(DIRECT + '?' + q).catch(function () {
         throw new Error('代理不可用（' + e1.message + '）');
       });
@@ -138,7 +155,16 @@
     var pic = String(it.vod_pic || '');
     a.innerHTML = '<span class="tv-poster">' + (pic ? '<img loading="lazy" referrerpolicy="no-referrer" alt="">' : '') +
       '<span class="tv-badge"></span></span><span class="tv-name"></span>';
-    if (pic) a.querySelector('img').src = picUrl(pic);
+    if (pic) {
+      var img = a.querySelector('img');
+      /* 图床经代理偶尔拉不动：降级成站点色占位，不留破图 */
+      img.addEventListener('error', function () {
+        var box = a.querySelector('.tv-poster');
+        if (box) box.classList.add('is-empty');
+        if (img.parentNode) img.parentNode.removeChild(img);
+      });
+      img.src = picUrl(pic);
+    }
     var badge = a.querySelector('.tv-badge');
     var remark = String(it.vod_remarks || '');
     if (remark) badge.textContent = remark; else badge.remove();

@@ -930,7 +930,7 @@ async function tvImage(params, origin) {
   }
   let r
   try {
-    r = await fetch(target, { headers: { 'User-Agent': TV_UA, Referer: host } })
+    r = await fetch(target, { headers: { 'User-Agent': TV_UA, Referer: host }, signal: tvSignal(9000) })
   } catch (e) {
     return fail('拉图失败：' + (e && e.message), 502, origin)
   }
