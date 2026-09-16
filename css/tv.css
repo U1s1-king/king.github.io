@@ -1,0 +1,118 @@
+/* ============================================================
+ * 影视页 (css/tv.css)
+ * ------------------------------------------------------------
+ * 与 game/tools 的 hub.css 同一套视觉语言：同样的边框色 #ffcdda、
+ * 卡片底 #fff4f7、圆角与投影。海报卡是视频站特有的组件，单独放这里。
+ * ============================================================ */
+
+.tv-search {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.tv-search input {
+    flex: 1;
+    padding: 11px 16px;
+    border: 1px solid #ffcdda;
+    border-radius: 12px;
+    background: #fff;
+    color: #a14563;
+    font: inherit;
+    font-size: .95rem;
+}
+
+.tv-search input:focus { outline: none; border-color: #ffb6c1; box-shadow: 0 0 0 3px #ffe3ea; }
+
+.tv-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 16px;
+    margin: 18px 0;
+}
+
+.tv-card {
+    display: block;
+    overflow: hidden;
+    border: 1px solid #ffcdda;
+    border-radius: 12px;
+    background: #fff4f7;
+    text-decoration: none;
+    transition: transform .25s, box-shadow .25s;
+}
+
+.tv-card:hover { transform: translateY(-3px); box-shadow: 0 8px 22px rgba(255, 182, 193, .35); }
+
+.tv-poster {
+    position: relative;
+    aspect-ratio: 2 / 3;
+    background: #ffe3ea;
+}
+
+.tv-poster img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.tv-poster .tv-badge {
+    position: absolute;
+    right: 6px;
+    bottom: 6px;
+    padding: 2px 8px;
+    border-radius: 8px;
+    background: rgba(161, 69, 99, .82);
+    color: #fff;
+    font-size: .72rem;
+}
+
+.tv-name {
+    padding: 8px 10px 10px;
+    color: #a14563;
+    font-size: .88rem;
+    line-height: 1.35;
+}
+
+.tv-tip { padding: 24px 4px; color: #8d6b78; text-align: center; }
+
+.tv-pager { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 6px 0 20px; color: #a14563; }
+
+.tv-player { margin-top: 12px; }
+
+.tv-player-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 10px; color: #a14563; }
+
+.tv-remark { color: #c98ba1; font-size: .85rem; }
+
+.tv-episodes { max-height: 210px; overflow-y: auto; margin-bottom: 12px; }
+
+.tv-line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 8px; }
+
+.tv-line-name { min-width: 92px; color: #c98ba1; font-size: .78rem; }
+
+.tv-line-name.is-html { color: #bda6ae; }
+
+.tv-ep {
+    padding: 6px 12px;
+    border: 1px solid #ffcdda;
+    border-radius: 9px;
+    background: #fff;
+    color: #a14563;
+    font-size: .84rem;
+    cursor: pointer;
+    transition: background .2s, color .2s;
+}
+
+.tv-ep:hover { background: #ffe3ea; }
+
+.tv-ep.is-on { background: #ffb6c1; border-color: #ffb6c1; color: #fff; }
+
+#tvVideo {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: 12px;
+    background: #2b2024;
+}
+
+.tv-note { margin-top: 8px; color: #8d6b78; font-size: .82rem; word-break: break-all; }
+
+@media (max-width: 768px) {
+    .tv-grid { grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 12px; }
+    .tv-search { flex-wrap: wrap; }
+    .tv-episodes { max-height: 150px; }
+}
