@@ -173,7 +173,7 @@
     var remark = String(it.vod_remarks || '');
     if (remark) badge.textContent = remark; else badge.remove();
     a.querySelector('.tv-name').textContent = it.vod_name || '未命名';
-    a.addEventListener('click', function () { detail(it.vod_id); });
+    a.addEventListener('click', function () { detail(it.vod_id, it._src); });
     return a;
   }
 
@@ -207,9 +207,11 @@
   }
 
   /* ---------------- 详情与线路 ---------------- */
-  function detail(vodId) {
+  function detail(vodId, src) {
     say('正在打开…');
-    apiGet({ ac: 'videolist', ids: vodId, _src: state.src }).then(function (d) {
+    /* 聚合列表里每条自带 _src：点哪条就问哪个源要详情，编号才对得上 */
+    var pin = typeof src === 'number' ? src : state.src;
+    apiGet({ ac: 'videolist', ids: vodId, _src: pin }).then(function (d) {
       var it = (d && d.list && d.list[0]) || null;
       if (!it) throw new Error('没拿到该资源');
       openPlayer(it);

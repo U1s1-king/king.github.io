@@ -986,6 +986,87 @@ async function tvClassList(params, origin) {
   })
 }
 
+/* 多源并起来：浏览打全部 10 个源、搜索只打支持 wd 的 7 个。
+   并行发、最多等 4.2 秒，谁先回来算谁的；按片名去重，每条塞上它自己的源编号 _src，
+   前端点进详情时带着这个编号回去单点那一个源，各站编号不会串。
+   轮转着取（每个源先出 1 条再取第 2 条），首页看起来是混着的，不会被第一个源占满。
+   一条都没回来就返回 null，交给下面那套单源接力兜底。 */
+async function tvAggregate(params, origin, bases, ac) {
+  const wd = params.get('wd') || ''
+  const pg = params.get('pg') || '1'
+  const per = wd ? 60 : 6
+  const got = []
+  const jobs = bases.map(function (base, i) {
+    const q = new URLSearchParams({ ac: ac, pg: pg })
+    if (wd) q.set('wd', wd)
+    return fetch(base + '?' + q.toString(), {
+      headers: { 'User-Agent': TV_UA, Referer: base, Accept: 'application/json,text/plain,*/*' },
+      signal: tvSignal(6000),
+      cf: { cacheTtl: 120, cacheEverything: true },
+    })
+      .then(function (r) {
+        return r.ok ? r.text() : ''
+      })
+      .then(function (text) {
+        if (!text || text.indexOf('"list"') < 0) return
+        const j = JSON.parse(text)
+        got.push({ i: i, base: base, list: j.list || [], total: j.total || 0, pagecount: j.pagecount || 1 })
+      })
+      .catch(function () {
+        /* 这个源没赶上就算了 */
+      })
+  })
+  await Promise.race([
+    Promise.all(jobs),
+    new Promise(function (res) {
+      setTimeout(res, 4200)
+    }),
+  ])
+  if (!got.length) return null
+  const seen = Object.create(null)
+  const list = []
+  let total = 0
+  let pagecount = 0
+  got.forEach(function (g) {
+    total += Number(g.total) || 0
+    pagecount = Math.max(pagecount, Number(g.pagecount) || 0)
+  })
+  for (let round = 0; round < per; round++) {
+    for (let k = 0; k < got.length; k++) {
+      const it = got[k].list[round]
+      if (!it) continue
+      const nm = String(it.vod_name || '')
+      const tn = String(it.type_name || '')
+      if (!nm || seen[nm] || TV_ADULT.test(nm) || TV_ADULT.test(tn)) continue
+      seen[nm] = 1
+      it._src = got[k].i
+      list.push(it)
+    }
+  }
+  if (!list.length) return null
+  TV_ACTIVE = got[0].base
+  return jsonResponse(
+    {
+      code: 1,
+      msg: '数据列表',
+      page: Number(pg) || 1,
+      pagecount: Math.max(pagecount, 1),
+      limit: list.length,
+      /* 前端是按 total/limit 算总页数的：聚合后各源 total 相加是上百万，
+         照直给会显示成两万多页。改成「每页条数 × 最深那个源的页数」，并封顶 2000 页。
+         真实相加值放 _total 备查。 */
+      total: Math.max(list.length, 1) * Math.min(Math.max(pagecount, 1), 2000),
+      _total: total,
+      list: list,
+      _src: got[0].i,
+      _srcs: got.length,
+    },
+    200,
+    origin,
+    { 'Cache-Control': 'public, max-age=60' },
+  )
+}
+
 async function tvList(params, origin) {
   const ac = params.get('ac') === 'videolist' ? 'videolist' : 'list'
   if (ac === 'list') return tvClassList(params, origin)
@@ -997,6 +1078,12 @@ async function tvList(params, origin) {
   const errors = []
   const wd = params.get('wd') || ''
   const pin = parseInt(params.get('_src') || '', 10)
+  /* 分类和详情必须只问一个源（各站 type_id 不是一套编号，串了就会点错片），
+     其余情况（首页最新、搜索）把多个源并起来，见上面的 tvAggregate */
+  if (!params.get('t') && !params.get('ids')) {
+    const merged = await tvAggregate(params, origin, wd ? TV_SEARCH_SOURCES : TV_SOURCES, ac)
+    if (merged) return merged
+  }
   /* 各站 type_id 编号不一样（同一部「电影」在 A 站是 1、在 B 站可能是 27），
      所以前端会带上上次分类列表来自哪号源 _src。搜索时只打支持 wd 的源
      （不支持的那些会回「暂不支持搜索」，白等一轮）。 */
