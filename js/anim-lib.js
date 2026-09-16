@@ -208,7 +208,7 @@
   function navIndicator() {
     var nav = document.querySelector('.sidebar-nav');
     if (!nav) return;
-    var here = location.pathname.split('/').pop() || 'index.html';
+    var here = location.pathname.split('/').pop() || 'home.html';
     var active = null;
     Array.prototype.forEach.call(nav.querySelectorAll('a'), function (a) {
       var h = (a.getAttribute('href') || '').split(/[?#]/)[0].split('/').pop();

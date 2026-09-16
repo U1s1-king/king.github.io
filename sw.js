@@ -11,12 +11,13 @@
  * __DSH_VERSION 以及各 HTML 里的 ?v= 保持一致。
  * 统一更新请执行： python scripts/bump_version.py <新版本号>
  * ============================================================ */
-const VERSION = '20260989';
+const VERSION = '20260990';
 const CACHE = 'king-blog-' + VERSION;
 
 const CORE = [
   '/',
   '/index.html',
+  '/home.html',
   '/shell.html',
   '/manifest.json',
   '/css/style.css?v=' + VERSION,

@@ -30,7 +30,7 @@ PARTIALS = os.path.join(ROOT, '_partials')
 
 # (href, 文字, Font Awesome 图标)
 NAV = [
-    ('index.html',     '首页', 'fa-cat'),
+    ('home.html',      '首页', 'fa-cat'),
     ('Journal.html',   '日记', 'fa-book-open'),
     ('Archives.html',  '归档', 'fa-images'),
     ('music.html',     '音乐', 'fa-music'),
@@ -40,11 +40,11 @@ NAV = [
 # 移动端底部 tab：5 项（主流通行上限 3~5，Material 允许）。
 # 为什么不砍到 4 项：手机浏览器访客必须能一步回首页；一个没有文字标签的
 # 图标不算「首页入口」。首页放第一格，归档保留一级 tab。
-# 「留言」不进 tab —— 它是首页里的二级入口（首页 →「日常点滴」卡片）。
-# 桌面侧边栏仍然是 NAV 那 6 项，两者互不影响
+# 「留言」不占 tab —— 它是日记页里的第二个视图（日记 ⇄ 留言板）。
+# 桌面侧边栏就是 NAV 那 5 项，两者互不影响
 # （.bot-tab 在桌面端 display:none，所以改这里不会动到网页端）。
 NAV_MOBILE = [
-    ('index.html',     '首页', 'fa-cat'),
+    ('home.html',      '首页', 'fa-cat'),
     ('Journal.html',   '日记', 'fa-book-open'),
     ('Archives.html',  '归档', 'fa-images'),
     ('music.html',     '音乐', 'fa-music'),
@@ -54,19 +54,19 @@ NAV_MOBILE = [
 # (页面文件, 链接前缀, 当前页高亮的 href)
 # 404.html 会在任意深度的路径下被命中，必须用根绝对路径，且没有「当前页」
 PAGES = [
-    ('index.html',     '',  'index.html'),
+    ('home.html',      '',  'home.html'),
     ('Journal.html',   '',  'Journal.html'),
     ('Archives.html',  '',  'Archives.html'),
     ('music.html',     '',  'music.html'),
     ('Tools.html',     '',  'Tools.html'),
     ('404.html',       '/', None),
-    # APP 外壳页：自带顶栏与底部 tab，但没有侧边栏，也没有「当前页」——
-    # tab 高亮由 js/shell.js 在运行时按 iframe 实际加载到哪一页动态切。
-    ('shell.html',     '',  None),
+    # 首页外壳（原 shell.html）：自带迷你播放条与底部 tab，没有侧边栏，也没有
+    # 「当前页」—— tab 高亮由 js/shell.js 按 iframe 实际加载到哪一页动态切。
+    ('index.html',     '',  None),
 ]
 
 # 这些页面自己画导航，不生成侧边栏块
-NO_SIDEBAR = {'shell.html'}
+NO_SIDEBAR = {'index.html'}
 
 SIDEBAR_FALLBACK = re.compile(r'[ \t]*<aside class="site-sidebar".*?</aside>', re.S)
 BOTTAB_FALLBACK = re.compile(r'[ \t]*<nav class="bot-tab".*?</nav>', re.S)

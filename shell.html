@@ -1,56 +1,15 @@
 <!DOCTYPE html>
-<html lang="zh-CN" class="shell">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>🌸 本喵的 App</title>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#ffb6c1">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
-    <link rel="apple-touch-icon" href="icons/icon-192.png">
-    <link rel="icon" href="/favicon.ico" sizes="any">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
-    <meta name="description" content="Tomo Ebizuka 的 App 外壳页：内容页与播放器各自独立，切页不断音。只服务打包，不作为网站门面。">
-    <script src="js/version.js?v=20260989"></script>
-    <link rel="stylesheet" href="css/style.css?v=20260989">
-    <link rel="stylesheet" href="css/sidebar.css?v=20260989">
-    <link rel="stylesheet" href="css/all.min.css?v=20260989">
-    <link rel="stylesheet" href="css/anim.css?v=20260989">
-    <link rel="stylesheet" href="css/mobile.css?v=20260989">
-    <link rel="stylesheet" href="css/app.css?v=20260989">
+    <title>正在前往首页…</title>
+    <link rel="canonical" href="https://zhaokening.ccwu.cc/">
+    <meta http-equiv="refresh" content="0;url=/">
+    <script>location.replace('/');</script>
 </head>
 <body>
-<!-- 外壳刻意不画花瓣/粒子：两个 iframe 里的页面各自都有一份，叠起来就是双份特效。 -->
-
-<div class="shell-stage">
-    <iframe id="page-frame" title="内容页" src="about:blank"></iframe>
-    <iframe id="player-frame" title="播放器" src="about:blank" allow="autoplay; encrypted-media"></iframe>
-</div>
-
-<!-- 迷你播放条：只在「不在音乐页 且 播放器里有歌」时出现，由 js/shell.js 控制 -->
-<div id="app-mini-player" aria-hidden="true">
-    <img class="mp-cover" id="mpCover" src="img/mortis.webp" alt="">
-    <div class="mp-meta">
-        <div class="mp-title" id="mpTitle">未在播放</div>
-        <div class="mp-artist" id="mpArtist"></div>
-    </div>
-    <button class="mp-btn" id="mpPrev" type="button" aria-label="上一首"><i class="fas fa-backward-step"></i></button>
-    <button class="mp-btn" id="mpPlay" type="button" aria-label="播放或暂停"><i class="fas fa-play"></i></button>
-    <button class="mp-btn" id="mpNext" type="button" aria-label="下一首"><i class="fas fa-forward-step"></i></button>
-</div>
-
-    <!-- nav:bot-tab:start - 由 scripts/sync_nav.py 生成，勿手改 -->
-    <nav class="bot-tab" aria-label="移动端导航">
-        <a href="index.html"><i class="fas fa-cat"></i><span>首页</span></a>
-        <a href="Journal.html"><i class="fas fa-book-open"></i><span>日记</span></a>
-        <a href="Archives.html"><i class="fas fa-images"></i><span>归档</span></a>
-        <a href="music.html"><i class="fas fa-music"></i><span>音乐</span></a>
-        <a href="Tools.html"><i class="fas fa-toolbox"></i><span>工具</span></a>
-    </nav>
-    <!-- nav:bot-tab:end -->
-
-<script src="js/common.js?v=20260989"></script>
-<script src="js/shell.js?v=20260989"></script>
+    <p>正在前往首页……如果没有自动跳转，<a href="/">点这里</a>。</p>
 </body>
 </html>

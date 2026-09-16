@@ -849,7 +849,7 @@ export default {
 
   const handler = ROUTES[url.pathname] || ROUTES[url.pathname.replace(/\/$/, '')]
     if (!handler) {
-      // 非 API 路径交给静态资源（index.html 落地页）
+      // 非 API 路径交给静态资源（静态资源含首页外壳 index.html）
       if (env && env.ASSETS) {
         try {
           return await env.ASSETS.fetch(request)

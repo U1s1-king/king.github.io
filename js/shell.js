@@ -16,7 +16,7 @@
   var mini = byId('app-mini-player');
   var MUSIC = 'music.html';
   var current = '';
-  var lastTab = 'index.html';   /* 内容帧最后停在哪一页（音乐页除外） */
+  var lastTab = 'home.html';   /* 内容帧最后停在哪一页（音乐页除外） */
 
   function tabs() { return Array.prototype.slice.call(document.querySelectorAll('.bot-tab a')); }
   function fileOf(a) { return (a.getAttribute('href') || '').split('/').pop(); }
@@ -192,7 +192,7 @@
 
   /* 起始 tab：支持 shell.html#journal 直接进对应页 */
   var want = (location.hash || '').replace(/^#/, '');
-  var initial = 'index.html';
+  var initial = 'home.html';
   tabs().forEach(function (a) {
     if (want && fileOf(a).replace(/\.html$/, '').toLowerCase() === want.toLowerCase()) initial = fileOf(a);
   });

@@ -320,11 +320,11 @@
 
     var home = document.createElement('a');
     home.className = 'app-bar-home';
-    home.href = BASE + 'index.html';
+    home.href = BASE + 'home.html';
     home.setAttribute('aria-label', '回到首页');
     home.innerHTML = '<i class="fas fa-spa"></i>';
     /* 二级页态下这个「回首页」链接就是返回键：必须拦掉跳转，改成关详情层。
-       不拦的话点一下直接跳 index.html —— 相当于返回键把人送回首页。 */
+       不拦的话点一下直接跳 home.html —— 相当于返回键把人送回首页。 */
     home.addEventListener('click', function (e) {
       if (detail) { e.preventDefault(); closeDetail(); }
     });

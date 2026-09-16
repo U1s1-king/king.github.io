@@ -487,8 +487,8 @@ window.escapeHtml = function (str) {
 (function () {
   var tabs = document.querySelectorAll('.bot-tab a');
   if (!tabs.length) return;
-  var here = location.pathname.split('/').pop() || 'index.html';
-  if (here === '') here = 'index.html';
+  var here = location.pathname.split('/').pop() || 'home.html';
+  if (here === '') here = 'home.html';
   tabs.forEach(function (a) {
     var href = (a.getAttribute('href') || '').split(/[?#]/)[0];
     if (href === here) a.classList.add('active');
