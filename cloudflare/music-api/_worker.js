@@ -847,7 +847,7 @@ const ROUTES = {
 /* 这批源是 2026-09-16 在 TVBox/Fongmi 配置里挖出来后逐个实测的：
    列表 20 条、每条都带 .m3u8 直链、响应 1.1~2.6 秒。支持 wd 关键词搜索的排前面，
    不支持搜索的（实测回「暂不支持搜索」）只在列表/详情时兜底，避免搜索白等一轮。 */
-const TV_SEARCH_SOURCES = [
+const TV_SEARCH_SOURCES_RAW = [
   'https://api.guangsuapi.com/api.php/provide/vod/', // 光速 gsyun/gsm3u8
   'https://api.ukuapi.com/api.php/provide/vod/', // ukyun/ukm3u8
   'https://cj.lziapi.com/api.php/provide/vod/', // 量子 liangzi/lzm3u8
@@ -857,15 +857,28 @@ const TV_SEARCH_SOURCES = [
   'https://api.zuidapi.com/api.php/provide/vod/', // 最大 zuidam3u8
 ]
 
-const TV_LIST_ONLY = [
+const TV_LIST_ONLY_RAW = [
   'https://api.wsyzy.net/api.php/provide/vod/', // 无损云 wsym3u8（88lin/video_vip 用的那个）
   'https://tyyszy.com/api.php/provide/vod/', // 同源 tym3u8
   'https://suoniapi.com/api.php/provide/vod/', // 索尼 snm3u8
 ]
 
-const TV_SOURCES = TV_SEARCH_SOURCES.concat(TV_LIST_ONLY)
-/* 给用户看的源名，和 TV_SOURCES 一一对应，顺序不能动 */
-const TV_NAMES = ['光速', 'uku', '量子', '非凡', '百度', '电影天堂', '最大', '无损云', '同源', '索尼']
+/* 给用户看的源名，和 TV_SOURCES_RAW 一一对应，顺序不能动 */
+const TV_NAMES_RAW = ['光速', 'uku', '量子', '非凡', '百度', '电影天堂', '最大', '无损云', '同源', '索尼']
+
+/* ---------------- 临时停用的源 ----------------
+   只动这一行：写上源名＝彻底不调用它的接口，删掉＝立刻恢复。
+   暂停做法是「从列表里摘掉」而不是打个标记跳过，所以 id 会自动重排成新的连续下标，
+   前端「片源」那排按钮、_src 参数、详情页的线路都跟着新列表走，不会串位。
+   2026-11-11 用户要求先停 光速、uku，随后追加 同源、索尼。 */
+const TV_OFF = ['光速', 'uku', '同源', '索尼']
+const TV_ALL_RAW = TV_SEARCH_SOURCES_RAW.concat(TV_LIST_ONLY_RAW)
+const TV_KEEP = TV_NAMES_RAW.map(function (n, i) { return TV_OFF.indexOf(n) < 0 ? i : -1 })
+  .filter(function (i) { return i >= 0 })
+const TV_SOURCES = TV_KEEP.map(function (i) { return TV_ALL_RAW[i] })
+const TV_NAMES = TV_KEEP.map(function (i) { return TV_NAMES_RAW[i] })
+/* 支持 wd 搜索的源（同样按上面的开关过滤） */
+const TV_SEARCH_SOURCES = TV_SOURCES.filter(function (b) { return TV_SEARCH_SOURCES_RAW.indexOf(b) >= 0 })
 
 /* 前端「片源」那排按钮用这个列表 */
 function tvSourceList() {
