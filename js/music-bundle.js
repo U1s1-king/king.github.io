@@ -1074,6 +1074,7 @@ var ALL_PLATFORMS = [
   ["netease", "网易云"],
   ["tencent", "QQ音乐"],
   ["kugou", "酷狗"],
+  ["kuwo", "酷我"],
   ["migu", "咪咕"],
   ["bilibili", "B站"],
   ["itunes", "iTunes"]
@@ -1081,7 +1082,7 @@ var ALL_PLATFORMS = [
 /* 音源展示优先级：数字越小越靠前，B站固定置顶。
    注意：这里只管「渲染顺序」，不改并发发起搜索的顺序，也不改任何音源的实现。
    以后接入真正的 B站 音源时，只要替换掉 bilibili 的搜索实现，这里的置顶行为会自动生效。 */
-var PLATFORM_RANK = { bilibili: 0, netease: 1, tencent: 2, kugou: 3, migu: 4, itunes: 5 };
+var PLATFORM_RANK = { bilibili: 0, netease: 1, tencent: 2, kugou: 3, kuwo: 4, migu: 5, itunes: 6 };
 function platformRank(id) {
 var r = PLATFORM_RANK[id];
 return r === undefined ? 99 : r;
@@ -7478,7 +7479,7 @@ step(n + 1);
 /* 音源优先级：B站最高。
    原来这里是从五个平台里随机挑一个，同一个关键词每次搜出来的来源都不一样；
    现在固定按优先级顺序取，B站搜不到才依次回落到其它平台，既不丢覆盖率又保证B站优先。 */
-var PO_PLATFORM_ORDER = ['bilibili', 'netease', 'tencent', 'kugou', 'migu'];
+var PO_PLATFORM_ORDER = ['bilibili', 'netease', 'tencent', 'kugou', 'kuwo', 'migu'];
 function searchByPriority(kw, cb) {
 var i = 0;
 var netFail = false;

@@ -25,11 +25,18 @@
 
   var ITUNES = 'https://itunes.apple.com/search';
 
+  /* 第三方公共桥（MusicSquare 同款），一律「桥优先 → Meting 回落」，不改原链路：
+     - 酷我 oiapi.net：?msg=&page=&limit= 拿列表；?msg=&n=1&br=1 拿无损直链
+     - s01s.cn：QQ 音乐的兜底搜索（?msg=&type=json） */
+  var KUWO_API = 'https://oiapi.net/api/Kuwo';
+  var S01S = 'https://tang.api.s01s.cn/music_open_api.php';
+
   var PLATFORMS = [
     ['all', '全部平台'],
     ['netease', '网易云'],
     ['tencent', 'QQ音乐'],
     ['kugou', '酷狗'],
+    ['kuwo', '酷我'],
     ['migu', '咪咕'],
     ['bilibili', 'B站'],
     ['itunes', 'iTunes']
@@ -167,7 +174,57 @@
 
   // ---------------------------------------------------------- 请求层
 
-  function withTimeout(url, opts) {
+/** 酷我桥 -> Song */
+  function fromKuwo(s) {
+    return makeSong({
+      platform: 'kuwo',
+      id: s.rid || '',
+      name: s.song || '',
+      artist: s.singer || '',
+      album: s.album || '',
+      cover: s.picture || '',
+      url: s.url || '',
+      lrc: s.lyric || s.lrc || ''
+    });
+  }
+
+  /** 酷我桥列表搜索：?msg=&page=&limit= -> data[] */
+  function viaKuwo(keywords, limit) {
+    return getJSON(KUWO_API + '?msg=' + encodeURIComponent(keywords) + '&page=1&limit=' + limit).then(function (j) {
+      var arr = (j && j.data) || [];
+      if (!Array.isArray(arr) || !arr.length) throw new Error('kuwo bridge empty');
+      return arr.map(fromKuwo);
+    });
+  }
+
+  /** s01s 开放接口：QQ 音乐兜底搜索 -> [{song_title,singer_name,song_mid}] */
+  function viaS01s(keywords, limit) {
+    return getJSON(S01S + '?msg=' + encodeURIComponent(keywords) + '&type=json').then(function (j) {
+      var arr = Array.isArray(j) ? j : ((j && j.data) || []);
+      if (!Array.isArray(arr) || !arr.length) return [];
+      return arr.slice(0, limit).map(function (it) {
+        return makeSong({
+          platform: 'tencent',
+          id: it.song_mid || '',
+          name: it.song_title || '',
+          artist: it.singer_name || '',
+          album: '', cover: '', url: '', lrc: ''
+        });
+      });
+    }).catch(function () { return []; });
+  }
+
+  /** Meting 通用搜索（原逻辑原样抽出，行为不变） */
+  function viaMeting(platform, keywords, limit) {
+    return meting({ server: platform, type: 'search', id: keywords, limit: limit }).then(function (r) {
+      var arr = null;
+      try { arr = JSON.parse(r.text); } catch (e) { arr = null; }
+      if (!Array.isArray(arr)) arr = arr && arr.data ? arr.data : [];
+      return arr.map(function (s) { return fromMeting(s, platform); });
+    });
+  }
+
+    function withTimeout(url, opts) {
     var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
     var timer = null;
     if (ctrl) {
@@ -313,12 +370,16 @@
           return (j.results || []).map(fromItunes);
         });
       }
-      return meting({ server: platform, type: 'search', id: keywords, limit: limit }).then(function (r) {
-        var arr = null;
-        try { arr = JSON.parse(r.text); } catch (e) { arr = null; }
-        if (!Array.isArray(arr)) arr = arr && arr.data ? arr.data : [];
-        return arr.map(function (s) { return fromMeting(s, platform); });
-      });
+if (platform === 'kuwo') {
+        return viaKuwo(keywords, limit).catch(function () { return viaMeting('kuwo', keywords, limit); });
+      }
+      if (platform === 'tencent') {
+        return viaMeting('tencent', keywords, limit).then(function (songs) {
+          if (songs && songs.length) return songs;
+          return viaS01s(keywords, limit);
+        });
+      }
+      return viaMeting(platform, keywords, limit);
     });
   };
 
@@ -382,6 +443,31 @@
     }
 
     if (platform === 'itunes') return Promise.resolve(song.url || '');
+
+    if (platform === 'kuwo') {
+      var kwKey = cacheKey(['url', 'kuwo-bridge', song.name, song.artist]);
+      return cached(kwKey, 600, function () {
+        var msg = ((song.name || '') + ' ' + (song.artist || '')).trim();
+        return getJSON(KUWO_API + '?msg=' + encodeURIComponent(msg) + '&n=1&br=1').then(function (j) {
+          var d = (j && j.data) || null;
+          return (d && d.url) || '';
+        }).catch(function () { return ''; });
+      }).then(function (u) {
+        if (u) return u;
+        var ps = { server: 'kuwo', type: 'url' };
+        if (song.id) ps.id = song.id; else { ps.name = song.name; ps.artist = song.artist; }
+        return meting(ps).then(function (r) {
+          var t = (r.text || '').trim();
+          if (/^https?:\/\//.test(t)) return t;
+          try {
+            var j = JSON.parse(t);
+            var first = Array.isArray(j) ? j[0] : (j && j.data ? j.data[0] : j);
+            if (first && first.url) return first.url;
+          } catch (e) { }
+          return '';
+        });
+      });
+    }
 
     var key = cacheKey(['url', platform, song.id || song.name, song.artist]);
     return cached(key, 600, function () {

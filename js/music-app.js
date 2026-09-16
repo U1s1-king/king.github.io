@@ -158,7 +158,7 @@
      ============================================================ */
   var PLATFORM_LABELS = {
     all: '全部平台', netease: '网易云', tencent: 'QQ音乐',
-    kugou: '酷狗', migu: '咪咕', bilibili: 'B站', itunes: 'iTunes'
+    kugou: '酷狗', kuwo: '酷我', migu: '咪咕', bilibili: 'B站', itunes: 'iTunes'
   };
 
   function buildPlatformChips() {
