@@ -510,6 +510,17 @@ window.escapeHtml = function (str) {
   apply();
 })();
 
+/* 图标字体（css/all.min.css）是子集：全站用到的 79 个图标没有字形，页面上就是空白
+   （影视分类、游戏分类、工具页一批卡片、页脚品牌图标…）。这里挂上内联 SVG 顶替，
+   见 js/svg-icon.js —— 换成 currentColor + 1em 的描边 SVG，跟着原字号和文字色走。 */
+(function () {
+  if (window.SVGIcon) return;
+  var s = document.createElement('script');
+  s.src = 'js/svg-icon.js' + (window.__DSH_VERSION ? '?v=' + window.__DSH_VERSION : '');
+  s.defer = true;
+  document.head.appendChild(s);
+})();
+
 
 
 
