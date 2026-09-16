@@ -357,7 +357,8 @@
   /* ---------------- 详情与线路 ---------------- */
   function detail(vodId, src, cardEl) {
     reqSeq++; /* 在飞的列表结果作废，别盖掉「正在打开…」 */
-    say('正在打开…');
+    /* 提示写在列表下方的提示行，别清空网格 —— 用户点进一部片还想看到刚才的列表 */
+    noteWithLink('正在打开…', '');
     /* 聚合列表里每条自带 _src：点哪条就问哪个源要详情，编号才对得上 */
     var pin = typeof src === 'number' ? src : state.src;
     apiGet({ ac: 'videolist', ids: vodId, _src: pin }).then(function (d) {
@@ -371,7 +372,7 @@
         if (nmEl && nmEl.textContent !== nm) nmEl.textContent = nm;
       }
       openPlayer(it);
-    }).catch(function (e) { say('打开失败：' + String(e.message || e)); });
+    }).catch(function (e) { noteWithLink('打开失败：' + String(e.message || e), ''); });
   }
 
   function lineName(raw, i) {
@@ -405,6 +406,9 @@
       lab.className = 'tv-line-name' + (playable ? '' : ' is-html');
       lab.textContent = lineName(froms[gi], gi) + (playable ? '' : '（网页线路）');
       box.appendChild(lab);
+      /* 集数放进独立容器：和线路名构成「固定列 + 可换行」两栏，行与行之间按钮才对得齐 */
+      var epsBox = document.createElement('span');
+      epsBox.className = 'tv-line-eps';
       parts.forEach(function (part, pi) {
         var cut = part.indexOf('$');
         var b = document.createElement('button');
@@ -420,10 +424,11 @@
           play(urls[pi] || '');
         });
         EP.list.push({ btn: b, url: urls[pi] || '' });
-        box.appendChild(b);
+        epsBox.appendChild(b);
       });
+      box.appendChild(epsBox);
       eps.appendChild(box);
-      if (playable) LINES.push({ name: lineName(froms[gi], gi), btn: box.querySelector('.tv-ep') });
+      if (playable) LINES.push({ name: lineName(froms[gi], gi), btn: epsBox.querySelector('.tv-ep') });
       if (!firstPlayable && playable) firstPlayable = box.querySelector('.tv-ep');
     });
     if (window.TVPlayer) {

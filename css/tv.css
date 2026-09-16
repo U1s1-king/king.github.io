@@ -94,11 +94,15 @@
 
 .tv-episodes { max-height: 210px; overflow-y: auto; margin-bottom: 12px; }
 
-.tv-line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 8px; }
+/* 线路行：名字占固定一列（不能让它随文字长短伸缩，否则两行的集数按钮会错开），
+   集数单独一个容器，换行时也对齐在第一个按钮下面 */
+.tv-line { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
 
-.tv-line-name { min-width: 92px; color: #c98ba1; font-size: .78rem; }
+.tv-line-name { flex: 0 0 124px; color: #c98ba1; font-size: .78rem; }
 
 .tv-line-name.is-html { color: #bda6ae; }
+
+.tv-line-eps { display: flex; flex-wrap: wrap; gap: 8px; flex: 1 1 240px; }
 
 .tv-ep {
     padding: 6px 12px;
@@ -126,6 +130,7 @@
 
 @media (max-width: 768px) {
     .tv-grid { grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 12px; }
+    .tv-line-name { flex-basis: 96px; }
     .tv-search { flex-wrap: wrap; }
     .tv-episodes { max-height: 150px; }
 }
