@@ -102,36 +102,42 @@
     loadScript('https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback', function () {});
   }
 
-  function openGuestbook() {
-    var src = document.getElementById('gbSource');
-    if (!src || !window.AppShell || !window.AppShell.openDetail) return;
-    if (window.AppShell.detailOpen && window.AppShell.detailOpen()) window.AppShell.closeDetail();
-    var wrap = document.createElement('div');
-    wrap.className = 'pc-detail-body';
-    var body = document.createElement('div');
-    body.className = 'gb-detail-body';
-    wrap.appendChild(body);
-    window.AppShell.openDetail({ title: '留言板', content: wrap, allowDesktop: true });
-    window.AppShell.adopt(src, body);
-    loadGuestbook(function () {
-      if (typeof window.GuestbookAppInit === 'function') window.GuestbookAppInit();
-    });
+  function setView(view, fromHash) {
+    var gb = view === 'guestbook';
+    document.documentElement.classList.toggle('gb-view', gb);
+    var sw = document.getElementById('jrnSwitch');
+    if (sw) {
+      Array.prototype.forEach.call(sw.querySelectorAll('.jrn-switch-item'), function (b) {
+        b.classList.toggle('is-on', (b.getAttribute('data-view') === 'guestbook') === gb);
+      });
+    }
+    if (gb) {
+      loadGuestbook(function () {
+        if (typeof window.GuestbookAppInit === 'function') window.GuestbookAppInit();
+      });
+    }
+    if (!fromHash) {
+      try { history.replaceState(null, '', gb ? '#guestbook' : location.pathname + location.search); } catch (e) {}
+    }
   }
 
-  function initGuestbookEntry() {
-    if (document.documentElement.hasAttribute('data-gb-entry')) return;
-    document.documentElement.setAttribute('data-gb-entry', '1');
-    document.addEventListener('click', function (e) {
-      var t = e.target;
-      if (!t || !t.closest) return;
-      if (!t.closest('#gbOpenBtn')) return;
-      e.preventDefault();
-      openGuestbook();
-    });
-    /* 支持 Journal.html#guestbook 深链，链接可分享 */
-    if (location.hash === '#guestbook') setTimeout(openGuestbook, 500);
+  function initJournalSwitch() {
+    if (document.documentElement.hasAttribute('data-jrn-switch')) return;
+    document.documentElement.setAttribute('data-jrn-switch', '1');
+    var sw = document.getElementById('jrnSwitch');
+    if (sw) {
+      sw.addEventListener('click', function (e) {
+        var b = e.target && e.target.closest ? e.target.closest('.jrn-switch-item') : null;
+        if (!b) return;
+        var gb = b.getAttribute('data-view') === 'guestbook';
+        setView(gb ? 'guestbook' : 'journal');
+        if (gb) window.scrollTo(0, 0);
+      });
+    }
+    /* 深链 Journal.html#guestbook 直接进留言板，刷新也不会丢 */
+    setView(location.hash === '#guestbook' ? 'guestbook' : 'journal', true);
     window.addEventListener('hashchange', function () {
-      if (location.hash === '#guestbook') openGuestbook();
+      setView(location.hash === '#guestbook' ? 'guestbook' : 'journal', true);
     });
   }
 
@@ -153,7 +159,7 @@
     });
   }
 
-  initGuestbookEntry();   /* 与视口无关，网页端也要能开 */
+  initJournalSwitch();   /* 与视口无关，网页端也要能切 */
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();

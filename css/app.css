@@ -2025,28 +2025,46 @@ html.shell #app-mini-player .mp-btn:active { background: #ffeaf1; }
 }
 
 /* ============================================================
-   日记页的「留言板」入口（打开二级页）
-   根作用域：手机端和网页端都要看得见、点得动。
+   日记 / 留言板：同一页里的两个整页视图
+   ------------------------------------------------------------
+   · .jrn-switch 顶部开关，根作用域（手机端和网页端都要用）
+   · html.gb-view 时留言板整页显示，日记正文整块让位（头部和开关都留着）
+   脚本没跑到就没有 gb-view 这个类，页面自动退回「一页完整日记」。
    ============================================================ */
-.gb-open-btn {
+.jrn-switch {
   display: inline-flex;
-  align-items: center;
-  gap: 8px;
+  gap: 6px;
   margin-top: 14px;
-  padding: 8px 18px;
+  padding: 4px;
   border: 1px solid #ffcdda;
   border-radius: 40px;
   background: #fff4f7;
+}
+.jrn-switch-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  border: none;
+  border-radius: 40px;
+  background: transparent;
   color: #ac6b80;
   font-family: inherit;
   font-size: 0.78rem;
   line-height: 1;
   cursor: pointer;
-  transition: background 0.18s ease;
+  transition: background 0.18s ease, color 0.18s ease;
 }
-.gb-open-btn:hover { background: #ffeef3; }
-.gb-open-btn i { font-size: 0.85rem; }
-.gb-detail-body { display: block; }
+.jrn-switch-item i { font-size: 0.85rem; }
+.jrn-switch-item:hover { color: #c45c7c; }
+.jrn-switch-item.is-on {
+  background: #ffffff;
+  color: #c45c7c;
+  box-shadow: 0 2px 8px rgba(200, 120, 150, 0.18);
+}
+.gb-view-block { display: none; }
+html.gb-view .gb-view-block { display: block; }
+html.gb-view .blog-container > *:not(.blog-header) { display: none !important; }
 
 /* ============================================================
    ?app=1 在网页端（宽屏）也能用

@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <script src="js/version.js?v=20260981"></script>
-    <script src="js/app-shell.js?v=20260981"></script>
+    <script src="js/version.js?v=20260982"></script>
+    <script src="js/app-shell.js?v=20260982"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <link rel="stylesheet" href="css/style.css?v=20260981">
-    <link rel="stylesheet" href="css/sidebar.css?v=20260981">
+    <link rel="stylesheet" href="css/style.css?v=20260982">
+    <link rel="stylesheet" href="css/sidebar.css?v=20260982">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#ffb6c1">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -24,11 +24,12 @@
 
     
 
-    <link rel="stylesheet" href="css/all.min.css?v=20260981">
-    <link rel="stylesheet" href="css/Journal.css?v=20260981">
-    <link rel="stylesheet" href="css/anim.css?v=20260981">
-    <link rel="stylesheet" href="css/mobile.css?v=20260981">
-    <link rel="stylesheet" href="css/app.css?v=20260981">
+    <link rel="stylesheet" href="css/all.min.css?v=20260982">
+    <link rel="stylesheet" href="css/Journal.css?v=20260982">
+    <link rel="stylesheet" href="css/Guestbook.css?v=20260982">
+    <link rel="stylesheet" href="css/anim.css?v=20260982">
+    <link rel="stylesheet" href="css/mobile.css?v=20260982">
+    <link rel="stylesheet" href="css/app.css?v=20260982">
     <meta name="description" content="日记：每日诗句、慕尼黑天气、心情打卡、农历黄历、番茄钟与生活随笔。">
     <meta name="keywords" content="日记,诗句,天气,心情打卡,农历,番茄钟,随笔">
     <meta name="author" content="king">
@@ -82,10 +83,15 @@
         <div class="info-note">
             <i class="fas fa-pen-fancy"></i>  <span class="st-38a8d06e"></span>
         </div>
-        <!-- 留言板入口：打开的是 #gbSource 里的真节点（见 js/journal-app.js） -->
-        <button type="button" id="gbOpenBtn" class="gb-open-btn">
-            <i class="fas fa-comment-dots"></i> 留言板
-        </button>
+        <!-- 日记 / 留言板：同一页里的两个整页视图，脚本没跑到就只有日记（原样） -->
+        <nav class="jrn-switch" id="jrnSwitch" aria-label="日记与留言板切换">
+            <button type="button" class="jrn-switch-item is-on" data-view="journal">
+                <i class="fas fa-book-open"></i> 日记
+            </button>
+            <button type="button" class="jrn-switch-item" data-view="guestbook">
+                <i class="fas fa-comments"></i> 留言板
+            </button>
+        </nav>
     </header>
 
     <!-- ===== API：今日诗句 ===== -->
@@ -305,11 +311,11 @@
 
 </main>
 
-    <!-- 留言板的真实节点（原 Guestbook.html 的正文，一字未改）。
-     由 js/journal-app.js 在打开二级页时用 AppShell.adopt 搬进去；adopt 搬的是
-     真节点、不 clone，关掉二级页会自动归还到这里。整块 hidden —— 脚本没跑到
-     就永远不显示，日记页照旧。 -->
-<div id="gbSource" hidden>
+    <!-- 留言板视图（原 Guestbook.html 的正文，一字未改）。
+     默认 display:none，切到留言板时 html 上加 .gb-view 把它整页显示出来，
+     同时把日记正文让位。脚本没跑到 → 没有 .gb-view → 这里永远不显示，
+     日记页退回原样。 -->
+<div id="gbView" class="gb-view-block">
 <main class="guestbook-container">
     <!-- 页眉 -->
     <header class="guestbook-header">
@@ -457,15 +463,15 @@
 </main>
 </div>
 
-<script src="js/vendor/lunar.js?v=20260981"></script>
-    <script src="js/common.js?v=20260981"></script>
-    <script src="js/anim.js?v=20260981"></script>
-    <script src="js/Journal.js?v=20260981"></script>
-    <script src="js/journal-app.js?v=20260981"></script>
-    <script src="js/sidebar.js?v=20260981"></script>
-    <script src="js/particles-config.js?v=20260981"></script>
-    <script src="js/live2d-fix.js?v=20260981" defer></script>
+<script src="js/vendor/lunar.js?v=20260982"></script>
+    <script src="js/common.js?v=20260982"></script>
+    <script src="js/anim.js?v=20260982"></script>
+    <script src="js/Journal.js?v=20260982"></script>
+    <script src="js/journal-app.js?v=20260982"></script>
+    <script src="js/sidebar.js?v=20260982"></script>
+    <script src="js/particles-config.js?v=20260982"></script>
+    <script src="js/live2d-fix.js?v=20260982" defer></script>
     <script src="https://sakura-live2d.pages.dev/live2d/waifu.js?v=20260904" defer></script>
-    <script src="js/live2d-app.js?v=20260981" defer></script>
+    <script src="js/live2d-app.js?v=20260982" defer></script>
 </body>
 </html>
