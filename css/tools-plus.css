@@ -74,6 +74,26 @@
     .xt-row input[type="range"] { width: 150px; }
 }
 
+/* 桌面「二级页」：点开工具后收起胶囊与网格，只留返回条 + 该工具面板 */
+.tool-back { display: none; }
+
+@media (min-width: 769px) {
+    html.tool-open .hub-chips,
+    html.tool-open .hub-grid { display: none; }
+
+    html.tool-open .tool-back {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 18px;
+        padding-bottom: 12px;
+        border-bottom: 1px dashed #ffcdda;
+    }
+}
+
+.tool-back-name { color: #a14563; font-size: .95rem; font-weight: 600; }
+
 /* 手机：网格一律不出现，保持手机端现状不动 */
 @media (max-width: 768px) {
     #toolsFilter,

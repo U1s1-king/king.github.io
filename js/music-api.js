@@ -428,70 +428,96 @@ if (platform === 'kuwo') {
 
   // ---------------------------------------------------------- 播放地址
 
-  /** 取可播放地址；网易云优先走自建网关（内部多镜像聚合） */
-  function songUrl(song, opts) {
+  /* GD Studio（music-api.gdstudio.xyz）：返回真实 CDN 直链、带 CORS、支持 Range，
+     实测网易云可取到 200/206 可播地址。作第一顺位，失败再退下面的流式镜像与网关。
+     它是「返回地址」型；下面的 STREAM_MIRRORS 是「直接吐音频」型，两者不能混。 */
+  var GD_API = 'https://music-api.gdstudio.xyz/api.php';
+
+  /* 流式镜像：这些镜像的 type=url 不返回地址，而是直接把音频流吐回来，
+     所以要把「镜像地址本身」当成播放地址交给 <audio>（不要 fetch，顺带绕开 CORS）。
+     实测 qijieya / injahow 返回 200 + ID3 真音频；qjqq 已 521，仅保留在 Worker 侧镜像池。 */
+  var STREAM_MIRRORS = [
+    'https://api.qijieya.cn/meting/',
+    'https://api.injahow.cn/meting/'
+  ];
+
+  function gdUrl(server, id) {
+    if (!id) return Promise.resolve('');
+    return getJSON(GD_API + '?types=url&source=' + encodeURIComponent(server) + '&id=' + encodeURIComponent(id) + '&br=320')
+      .then(function (j) {
+        var u = Array.isArray(j) ? (j[0] && j[0].url) : (j && j.url);
+        return (u && /^https?:\/\//.test(u)) ? u : '';
+      })
+      .catch(function () { return ''; });
+  }
+
+  function streamUrls(platform, song) {
+    var q = 'server=' + encodeURIComponent(platform) + '&type=url&br=320';
+    if (song.id) q += '&id=' + encodeURIComponent(song.id);
+    if (song.name) q += '&name=' + encodeURIComponent(song.name) + '&artist=' + encodeURIComponent(song.artist || '');
+    return STREAM_MIRRORS.map(function (m) { return m + '?' + q; });
+  }
+
+  /**
+   * 候选播放地址（按优先级排序的数组）。
+   * 播放器应当逐个尝试：网易云很多曲目在某个镜像拿不到（VIP），
+   * 换下一个候选常常就出了 —— 旧版只试一个就报「版权限制」。
+   */
+  function songUrlCandidates(song, opts) {
     opts = opts || {};
-    if (!song) return Promise.reject(new Error('缺少歌曲'));
-    if (song.url && !opts.force) return Promise.resolve(song.url);
-    if (song.isLocal) return Promise.resolve(song.url || '');
-
-    var level = opts.level || 'exhigh';
+    var out = [];
+    if (!song) return Promise.resolve(out);
     var platform = song.platform || 'netease';
+    var level = opts.level || 'exhigh';
+    if (song.url && /^https?:\/\//.test(song.url)) out.push(song.url);
+    if (song.isLocal) return Promise.resolve(out);
 
+    var jobs = [];
     if (platform === 'netease' && song.id) {
-      var gkey = cacheKey(['url', platform, song.id, level]);
-      return cached(gkey, 600, function () {
-        return gateway('/api/url', { id: song.id, server: 'netease' }).then(function (d) {
-          return d.url || '';
-        });
-      }).catch(function () { return ''; });
-    }
-
-    if (platform === 'itunes') return Promise.resolve(song.url || '');
-
-    if (platform === 'kuwo') {
-      var kwKey = cacheKey(['url', 'kuwo-bridge', song.name, song.artist]);
-      return cached(kwKey, 600, function () {
+      jobs.push(gdUrl('netease', song.id));
+      jobs.push(cached(cacheKey(['url', platform, song.id, level]), 600, function () {
+        return gateway('/api/url', { id: song.id, server: 'netease' })
+          .then(function (d) { return (d && d.url) || ''; })
+          .catch(function () { return ''; });
+      }));
+    } else if (platform === 'kuwo') {
+      jobs.push(cached(cacheKey(['url', 'kuwo-bridge', song.name, song.artist]), 600, function () {
         var msg = ((song.name || '') + ' ' + (song.artist || '')).trim();
-        return getJSON(KUWO_API + '?msg=' + encodeURIComponent(msg) + '&n=1&br=2').then(function (j) {  // br=1(无损)是 VIP 专享，游客拿到的是 410 死链；br=2 实测可播
+        return getJSON(KUWO_API + '?msg=' + encodeURIComponent(msg) + '&n=1&br=2').then(function (j) {  // br=1 无损是 VIP 死链，br=2 实测可播
           var d = (j && j.data) || null;
           return (d && d.url) || '';
         }).catch(function () { return ''; });
-      }).then(function (u) {
-        if (u) return u;
-        var ps = { server: 'kuwo', type: 'url' };
-        if (song.id) ps.id = song.id; else { ps.name = song.name; ps.artist = song.artist; }
-        return meting(ps).then(function (r) {
+      }));
+    } else if (platform !== 'itunes') {
+      jobs.push(cached(cacheKey(['url', platform, song.id || song.name, song.artist]), 600, function () {
+        var params = { server: platform, type: 'url' };
+        if (song.id) params.id = song.id;
+        else { params.name = song.name; params.artist = song.artist; }
+        return meting(params).then(function (r) {
           var t = (r.text || '').trim();
           if (/^https?:\/\//.test(t)) return t;
           try {
             var j = JSON.parse(t);
             var first = Array.isArray(j) ? j[0] : (j && j.data ? j.data[0] : j);
             if (first && first.url) return first.url;
-          } catch (e) { }
+          } catch (e) { /* 落空 */ }
           return '';
-        });
-      });
+        }).catch(function () { return ''; });
+      }));
     }
 
-    var key = cacheKey(['url', platform, song.id || song.name, song.artist]);
-    return cached(key, 600, function () {
-      var params = { server: platform, type: 'url' };
-      if (song.id) params.id = song.id;
-      else { params.name = song.name; params.artist = song.artist; }
-      return meting(params).then(function (r) {
-        var t = (r.text || '').trim();
-        if (/^https?:\/\//.test(t)) return t;
-        try {
-          var j = JSON.parse(t);
-          var first = Array.isArray(j) ? j[0] : (j && j.data ? j.data[0] : j);
-          if (first && first.url) return first.url;
-        } catch (e) { /* 落空 */ }
-        return '';
-      });
+    return Promise.all(jobs.map(function (p) { return p.catch(function () { return ''; }); })).then(function (urls) {
+      urls.forEach(function (u) { if (u && out.indexOf(u) < 0) out.push(u); });
+      /* 流式镜像地址放在真实直链之后：它们不需要 fetch，浏览器直接连 */
+      if (platform !== 'itunes') streamUrls(platform, song).forEach(function (u) { if (out.indexOf(u) < 0) out.push(u); });
+      return out;
     });
   }
 
+  /** 取可播放地址（第一个候选）；多候选请用 songUrlCandidates */
+  function songUrl(song, opts) {
+    return songUrlCandidates(song, opts).then(function (list) { return list[0] || ''; });
+  }
   // ---------------------------------------------------------- 歌词
 
   /** Meting / 网关代理的响应可能是一层 {ok, data:{raw}} 信封，这里统一拆出来 */
@@ -649,6 +675,8 @@ if (platform === 'kuwo') {
 
   global.MusicAPI = {
     GATEWAY: GATEWAY,
+    songUrlAll: songUrlCandidates,
+    STREAM_MIRRORS: STREAM_MIRRORS,
     PLATFORMS: PLATFORMS,
     LEVELS: LEVELS,
     makeSong: makeSong,

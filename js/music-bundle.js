@@ -1202,18 +1202,34 @@ var name = el.dataset.name, artist = el.dataset.artist;
 Array.prototype.forEach.call(resultBox.querySelectorAll('.ns-item'), function (c) { c.classList.remove('playing'); });
 el.classList.add('playing');
 el.querySelector('.ns-play i').className = 'fas fa-spinner fa-spin';
-resolveNsUrl(el, function (u) {
+resolveNsUrls(el, function (list) {
 self.querySelector('.ns-play i').className = 'fas fa-play';
-if (!u) {
+if (!list || !list.length) {
 if (typeof showMsg === 'function') showMsg('这首暂时听不了（版权限制）喵～');
 self.classList.remove('playing');
 return;
 }
-if (typeof audio !== 'undefined' && audio) {
+if (typeof audio === 'undefined' || !audio) return;
+/* 多候选依次尝试：同一个 id 在某个镜像拿不到（网易云 VIP 曲常见），
+   换下一个候选往往能出；全部失败才提示版权限制。 */
+var i = 0;
+function tryNext() {
+if (i >= list.length) {
+if (typeof showMsg === 'function') showMsg('这首暂时听不了（版权限制）喵～');
+self.classList.remove('playing');
+return;
+}
+var u = list[i++];
+var onErr = function () {
+audio.removeEventListener('error', onErr);
+tryNext();
+};
+audio.addEventListener('error', onErr, { once: true });
 audio.src = u;
-audio.play().catch(function () {
-if (typeof showMsg === 'function') showMsg('播放失败喵～');
-});
+var pr = audio.play();
+if (pr && pr.catch) pr.catch(function () {});
+}
+tryNext();
 if (typeof currentIndex !== 'undefined') currentIndex = -1;
 if (typeof isPlaying !== 'undefined') isPlaying = true;
 if (typeof playIcon !== 'undefined') playIcon.className = 'fas fa-pause';
@@ -1222,25 +1238,27 @@ if (typeof trackNameSpan !== 'undefined') trackNameSpan.textContent = name;
 if (typeof trackArtistSpan !== 'undefined') trackArtistSpan.textContent = artist;
 /* 歌词统一走 loadLyrics：优先现成 lrc，其次自建网关 /api/lyric（带时间轴） */
 if (window.loadLyrics) window.loadLyrics({ name: name, artist: artist, id: el.dataset.id, platform: el.dataset.platform, lrc: el.dataset.lrc });
-}
 });
 }
-/* 搜索结果里网易云走的是自建网关 /api/search，只返回元数据、没有可播地址，
-   所以 data-url 经常是空的。旧版本是让 Meting 在搜索时就把 url 解析好一并返回，
-   因此能直接点播；改走统一网关后就断了。
-   这里改成点播时按需解析：把 id + platform 交给 MusicAPI.songUrl，
-   网易云会去 /api/url 取，其余平台走 Meting type=url。 */
 function resolveNsUrl(el, cb) {
-  var u = el.dataset.url;
-  if (u && u.indexOf("http") === 0) { cb(u); return; }
-  if (!window.MusicAPI || !MusicAPI.songUrl) { cb(""); return; }
-  MusicAPI.songUrl({
-    id: el.dataset.id || "",
-    platform: el.dataset.platform || "netease",
-    name: el.dataset.name || "",
-    artist: el.dataset.artist || ""
-  }).then(function (url) { cb(url || ""); })
-    .catch(function () { cb(""); });
+resolveNsUrls(el, function (list) { cb((list && list[0]) || ""); });
+}
+/* 返回候选地址数组（有序）：data-url 里已有直链就直接用它，否则向 MusicAPI 要全部候选 */
+function resolveNsUrls(el, cb) {
+var u = el.dataset.url;
+var pre = (u && u.indexOf("http") === 0) ? [u] : [];
+if (!window.MusicAPI || !MusicAPI.songUrl) { cb(pre); return; }
+var song = {
+id: el.dataset.id || "",
+platform: el.dataset.platform || "netease",
+name: el.dataset.name || "",
+artist: el.dataset.artist || ""
+};
+var p = MusicAPI.songUrlAll
+? MusicAPI.songUrlAll(song)
+: MusicAPI.songUrl(song).then(function (x) { return x ? [x] : []; });
+p.then(function (list) { cb(pre.concat(list || [])); })
+.catch(function () { cb(pre); });
 }
 function addNsSong(song) {
 if (!song || !song.url) { if (typeof showMsg === 'function') showMsg('这首暂时没有可播链接，加不了喵～'); return; }

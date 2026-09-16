@@ -11,7 +11,7 @@
  * __DSH_VERSION 以及各 HTML 里的 ?v= 保持一致。
  * 统一更新请执行： python scripts/bump_version.py <新版本号>
  * ============================================================ */
-const VERSION = '20261005';
+const VERSION = '20261015';
 const CACHE = 'king-blog-' + VERSION;
 
 const CORE = [
@@ -68,16 +68,16 @@ const CORE = [
      后两个由 js/anim.js 在 load 之后的空闲时段才拉起，本就不在首屏关键路径上，
      预缓存只会把 30KB 塞进 Service Worker 的安装阶段，得不偿失。 */
   '/icons/icon-192.png',
-  '/icons/icon-512.png'
-    '/TV.html?v=' + VERSION',
-    '/Games.html?v=' + VERSION',
-    '/css/hub.css?v=' + VERSION',
-    '/css/tools-plus.css?v=' + VERSION',
-    '/css/tv.css?v=' + VERSION',
-    '/js/tv.js?v=' + VERSION',
-    '/js/games.js?v=' + VERSION',
-    '/js/tools-hub.js?v=' + VERSION',
-    '/js/tools-extra.js?v=' + VERSION',
+  '/icons/icon-512.png',
+    '/TV.html?v=' + VERSION,
+    '/Games.html?v=' + VERSION,
+    '/css/hub.css?v=' + VERSION,
+    '/css/tools-plus.css?v=' + VERSION,
+    '/css/tv.css?v=' + VERSION,
+    '/js/tv.js?v=' + VERSION,
+    '/js/games.js?v=' + VERSION,
+    '/js/tools-hub.js?v=' + VERSION,
+    '/js/tools-extra.js?v=' + VERSION,
 ];
 
 /* 这些路径是动态数据，永不入缓存 */

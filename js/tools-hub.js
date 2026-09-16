@@ -65,11 +65,38 @@
     });
   }
 
-  function openTool(id) {
+function openTool(id, push) {
     var tab = document.querySelector('.tool-tab[data-tool="' + id + '"]');
-    if (tab) tab.click();
-    var panel = byId('tool-' + id);
-    if (panel && panel.scrollIntoView) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (!tab) return;
+    tab.click();
+    var meta = META[id];
+    var nameEl = byId('toolsBackName');
+    if (nameEl && meta) nameEl.textContent = meta[1];
+    document.documentElement.classList.add('tool-open');
+    if (push) { try { if (location.hash !== HASH + id) location.hash = HASH + id; } catch (e) {} }
+    var back = byId('toolsBack');
+    if (back && back.scrollIntoView) back.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  var HASH = '#tool/';
+
+  function closeTool(silent) {
+    document.documentElement.classList.remove('tool-open');
+    if (!silent) {
+      var bar = byId('toolsFilter');
+      if (bar && bar.scrollIntoView) bar.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
+  /* 支持 #tool/xxx 直达与浏览器返回键：哈希变了就跟着开/关 */
+  function openFromHash(silent) {
+    var h = String(location.hash || '');
+    if (h.indexOf(HASH) === 0) {
+      var id = h.slice(HASH.length);
+      if (id && id.length < 40 && id.indexOf('"') < 0 && id.indexOf(']') < 0 &&
+        document.querySelector('.tool-tab[data-tool="' + id + '"]')) { openTool(id, false); return; }
+    }
+    closeTool(silent);
   }
 
   function init() {
@@ -90,11 +117,19 @@
       render(b.getAttribute('data-cat'));
     });
 
+    var backBtn = byId('toolsBackBtn');
+    if (backBtn) backBtn.addEventListener('click', function () {
+      if (String(location.hash || '').indexOf(HASH) === 0 && history.length > 1) history.back();
+      else closeTool(false);
+    });
+    window.addEventListener('hashchange', function () { openFromHash(false); });
+    openFromHash(true);
+
     grid.addEventListener('click', function (e) {
       var a = e.target && e.target.closest ? e.target.closest('.hub-card') : null;
       if (!a) return;
       e.preventDefault();
-      openTool(a.getAttribute('data-tool'));
+      openTool(a.getAttribute('data-tool'), true);
     });
   }
 
