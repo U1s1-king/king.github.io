@@ -123,8 +123,8 @@
     state.pick = typeof id === 'number';
     state.src = state.pick ? id : null;
     renderSrcs(SRCS, []);
-    /* 各站分类编号不通用，换了源就把分类清掉重来 */
-    if (state.t) { pickCat('', 1); return; }
+    /* 分类现在是固定档（电影/动漫/体育…），跨源通用，换源不用清掉重选；
+       网关会按新源把这一档翻译成它自己的 type_id */
     load(1);
   }
 
@@ -219,6 +219,12 @@
   }
 
   /* ---------------- 分类 ---------------- */
+  /* 固定档的图标（网关只会回这几个名字，对不上就用文件夹图标兜底） */
+  var CAT_ICON = {
+    '电影': 'fa-film', '电视剧': 'fa-tv', '动漫': 'fa-dragon', '综艺': 'fa-star',
+    '纪录片': 'fa-book', '短剧': 'fa-bolt', '体育': 'fa-futbol', '预告片': 'fa-clapperboard',
+  };
+
   function loadCats() {
     return apiGet({ ac: 'list' }).then(function (d) {
       var bar = byId('tvCats');
@@ -240,7 +246,7 @@
         b.type = 'button';
         b.className = 'hub-chip';
         b.setAttribute('data-t', c.type_id);
-        b.innerHTML = '<i class="fas fa-folder"></i><span></span>';
+        b.innerHTML = '<i class="fas ' + (CAT_ICON[name] || 'fa-folder') + '"></i><span></span>';
         b.querySelector('span').textContent = name;
         b.addEventListener('click', function () { pickCat(c.type_id, 1); });
         bar.appendChild(b);
@@ -298,6 +304,16 @@
     var pager = byId('tvPager');
     if (!list.length) { say('没有找到资源，换个关键词试试'); if (pager) pager.hidden = true; return; }
     list.forEach(function (it) { grid.appendChild(card(it)); });
+    /* 片名统一压到两行：卡片高度是定死的，等进了文档再按 scrollHeight 逐字减，
+       比按字数猜准（中英文宽度不一样，CSS 的 line-clamp 实测还会漏出第三行半个字） */
+    Array.prototype.forEach.call(grid.querySelectorAll('.tv-name'), function (n) {
+      var s = n.textContent;
+      var guard = 0;
+      while (n.scrollHeight > n.clientHeight + 1 && s.length > 2 && guard++ < 60) {
+        s = s.slice(0, -1);
+        n.textContent = s + '…';
+      }
+    });
     var total = parseInt(d.total, 10) || 0;
     var limit = parseInt(d.limit, 10) || list.length || 1;
     var pages = Math.max(1, Math.ceil(total / limit));

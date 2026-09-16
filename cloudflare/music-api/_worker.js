@@ -929,6 +929,98 @@ let TV_ACTIVE = ''
    并按源缓存一小时。 */
 const TV_CATS = {}
 
+/* 固定分类档：以前整排分类是「当前活跃源临时扫出什么就显示什么」，活跃源一变整排就变，
+   用户看着就是每次都不一样。现在写死这一排，所有源用同一套名字；
+   点的时候网关再把这个名字翻译成当前源自己的 type_id（各站编号不是一套）。
+   括号里的数字是 10 个源里能对上的数量：电影/电视剧/动漫/综艺/纪录片/短剧 10/10、
+   预告片 8/10、体育 7/10（体育把足球/篮球/网球/斯诺克/台球并在一起）。 */
+/* 每档对应上游哪些子类型。上游只认单个编号（实测 t=6,7,10 只取第一个），
+   而且真正能出片的编号是这些子类型（「电影=1」「电视剧=2」这两个顶层编号各站都几乎是空的），
+   所以一档要并几个编号，见下面 tvMergeTypes。 */
+const TV_CANON = [
+  ['电影', /^(电影片?|动作片|喜剧片|爱情片|科幻片|剧情片|恐怖片|战争片|奇幻片|犯罪片|悬疑片|冒险片|动画电影|动漫电影|4K电影|邵氏电影|Netflix电影)$/],
+  ['电视剧', /^(电视剧|连续剧|其他剧|Netflix自制剧|大陆剧|国产剧|欧美剧|港澳剧|香港剧|港台剧|韩剧|韩国剧|日剧|日本剧|泰剧|泰国剧|台湾剧|台剧|海外剧)$/],
+  ['动漫', /^(动漫片?|动画片|动画电影|动漫电影|中国动漫|国产动漫|日本动漫|日韩动漫|欧美动漫|港台动漫|海外动漫|漫剧|AI漫剧|有声动漫)$/],
+  ['综艺', /^(综艺片?|大陆综艺|日韩综艺|港台综艺|欧美综艺)$/],
+  ['纪录片', /^(纪录片|记录片|科普学习)$/],
+  /* 短剧那些「古装仙侠/现代都市/反转爽剧」其实是竖屏短剧的子类型，并进来，
+     它们就不会再各自占一格、每次刷新换个样子 */
+  ['短剧', /^(短剧|爽文短剧|擦边短剧|反转爽剧|古装仙侠|现代都市|穿越年代|重生民国|言情总裁|脑洞悬疑|女频恋爱)$/],
+  ['体育', /^(体育|体育赛事|足球|篮球|网球|斯诺克|台球|其他赛事)$/],
+  ['预告片', /^(预告片|预告解说)$/],
+]
+
+function tvCanonHit(name, nm) {
+  for (let i = 0; i < TV_CANON.length; i++) {
+    if (TV_CANON[i][0] === name) return TV_CANON[i][1].test(String(nm || ''))
+  }
+  return false
+}
+
+/* 一档对应多个上游编号时，并行拉同一页再合并去重（上游不认逗号，只能自己并） */
+async function tvMergeTypes(base, ids, q) {
+  const res = await Promise.all(
+    ids.map(function (id) {
+      const qq = new URLSearchParams(q)
+      qq.set('t', id)
+      return fetch(base + '?' + qq.toString(), {
+        headers: { 'User-Agent': TV_UA, Referer: base, Accept: 'application/json,text/plain,*/*' },
+        signal: tvSignal(6000),
+        cf: { cacheTtl: 120, cacheEverything: true },
+      })
+        .then(function (r) {
+          return r.ok ? r.text() : ''
+        })
+        .then(function (t) {
+          if (!t || (t.indexOf('"list"') < 0 && t.indexOf('"class"') < 0)) return null
+          return JSON.parse(t)
+        })
+        .catch(function () {
+          return null
+        })
+    }),
+  )
+  const ok = res.filter(Boolean)
+  if (!ok.length) return ''
+  const seen = {}
+  const list = []
+  let total = 0
+  ok.forEach(function (j) {
+    total += parseInt(j.total || 0, 10) || 0
+    ;(j.list || []).forEach(function (it) {
+      const k = String(it.vod_id || '') + '|' + String(it.vod_name || '')
+      if (seen[k]) return
+      seen[k] = 1
+      list.push(it)
+    })
+  })
+  const first = ok[0]
+  first.list = list
+  first.total = total
+  first.pagecount = Math.max(1, Math.ceil(total / (parseInt(first.limit, 10) || 20)))
+  return JSON.stringify(first)
+}
+
+/* 固定档 -> 该源真实编号（可能好几个）。只用扫列表得到的编号：
+   ac=list 里那套 class 编号上游基本不认（实测「电影=1」各站都只出 0~1 条）。结果按 源+档 记一小时。 */
+const TV_CID = {}
+
+async function tvCanonIds(idx, name) {
+  const key = idx + '|' + name
+  const hit = TV_CID[key]
+  if (hit && Date.now() - hit.at < 3600000) return hit.ids
+  const ids = []
+  const cats = await tvCategories(idx)
+  cats.forEach(function (c) {
+    const id = String(c.type_id || '')
+    if (id && tvCanonHit(name, c.type_name) && ids.indexOf(id) < 0) ids.push(id)
+  })
+  /* 一页最多并 4 个编号：再多请求太多，够撑起首屏 */
+  const out = ids.slice(0, 4)
+  TV_CID[key] = { at: Date.now(), ids: out }
+  return out
+}
+
 async function tvCategories(idx) {
   const hit = TV_CATS[idx]
   if (hit && Date.now() - hit.at < 3600000) return hit.list
@@ -937,8 +1029,10 @@ async function tvCategories(idx) {
   const map = new Map()
   /* 并行扫 6 页（串行太慢，首屏等不起）：每页 20 条，凑出几十个真实分类；
      结果按源缓存一小时，之后就是内存命中 */
-  const pages = []
-  for (let pg = 1; pg <= 6; pg++) pages.push(pg)
+  /* 光看最新几页不够：光速最新几页几乎全是短剧，电影/电视剧的子类型编号根本不会出现。
+     掺几个深页（各站列表都是按时间倒排的，深页类型才杂），才能把「动作片=6、大陆剧=13」
+     这些真编号扫出来。 */
+  const pages = [1, 2, 3, 20, 60, 200]
   const results = await Promise.all(
     pages.map(async function (pg) {
       try {
@@ -966,7 +1060,8 @@ async function tvCategories(idx) {
   map.forEach(function (nm, id) {
     list.push({ type_id: id, type_name: nm })
   })
-  if (list.length) TV_CATS[idx] = { at: Date.now(), list: list }
+  /* 扫空也记一下（TTL 只留 1 分钟）：冷启动并发扫描容易失败，不记住就会反复重扫白耗子请求额度 */
+  TV_CATS[idx] = { at: Date.now() - (list.length ? 0 : 3540000), list: list }
   return list
 }
 
@@ -974,22 +1069,17 @@ async function tvCategories(idx) {
 async function tvClassList(params, origin) {
   const pin = parseInt(params.get('_src') || '', 10)
   const idx = !isNaN(pin) && TV_SOURCES[pin] ? pin : TV_SOURCES.indexOf(TV_ACTIVE) >= 0 ? TV_SOURCES.indexOf(TV_ACTIVE) : 0
-  let list = await tvCategories(idx)
-  if (!list.length) {
-    try {
-      const r = await fetch(TV_SOURCES[idx] + '?ac=list', {
-        headers: { 'User-Agent': TV_UA, Referer: TV_SOURCES[idx] },
-        signal: tvSignal(6000),
-      })
-      const j = JSON.parse(await r.text())
-      list = (j['class'] || []).filter(function (c) {
-        return !TV_ADULT.test(String(c.type_name || ''))
-      })
-      if (list.length) TV_ACTIVE = TV_SOURCES[idx]
-    } catch (e) {
-      return fail('拿不到分类：' + (e && e.message), 502, origin)
-    }
-  }
+  /* 返回写死的那一排（不是扫出来的），所以不管当前活跃源是哪个、刷新几次，这一排都一样。
+     type_id 这里放的就是分类名，前端点它、网关再翻译成各源真实编号。
+     等这张表扫出来（最多 3 秒）：分类按钮晚一两秒出无所谓，但用户第一次点分类时
+     表还没热就会空手（冷启动实测过：电影/电视剧点了没反应，等会儿再点又好了）。 */
+  await Promise.race([
+    tvCategories(idx).catch(function () {}),
+    new Promise(function (r) {
+      setTimeout(r, 3000)
+    }),
+  ])
+  const list = TV_CANON.map(function (c) { return { type_id: c[0], type_name: c[0] } })
   return jsonResponse({ code: 1, msg: '数据列表', class: list, _src: idx, sources: tvSourceList() }, 200, origin, {
     'Cache-Control': 'public, max-age=600',
   })
@@ -1119,9 +1209,13 @@ async function tvList(params, origin) {
   const ac = params.get('ac') === 'videolist' ? 'videolist' : 'list'
   if (ac === 'list') return tvClassList(params, origin)
   const q = new URLSearchParams({ ac })
+  /* t 现在可能是固定档的名字（电影/动漫…），也可能还是老编号（前端缓存/手改链接）。
+     名字不直接下发，等下按每个源翻译成它自己的 type_id。 */
+  const tRaw = params.get('t') || ''
+  const tCanon = tRaw && !/^[0-9]+$/.test(tRaw) ? tRaw : ''
   ;['t', 'pg', 'wd', 'ids'].forEach(function (k) {
     const v = params.get(k)
-    if (v) q.set(k, v)
+    if (v && !(k === 't' && tCanon)) q.set(k, v)
   })
   const errors = []
   const wd = params.get('wd') || ''
@@ -1152,11 +1246,46 @@ async function tvList(params, origin) {
               }),
             )
           : TV_SOURCES
+  let tCanonTried = 0
   for (const base of order) {
     try {
-      /* 换了源以后原来那个 t 就没意义了，去掉它按最新拉，免得好好的分类点进去只有一条 */
+      if (tCanon) {
+        /* 固定档 -> 这个源的几个真编号，并起来返回；这个源没有这一档就换下一个源试
+           （体育只有 7 个源有）。最多试 4 个源，免得挨个试 10 个源撞 Worker 子请求上限。 */
+        if (tCanonTried >= 4) break
+        tCanonTried++
+        const ids = await tvCanonIds(TV_SOURCES.indexOf(base), tCanon)
+        if (!ids.length) {
+          errors.push(base + ': 没有「' + tCanon + '」分类')
+          continue
+        }
+        const merged = await tvMergeTypes(base, ids, q)
+        if (!merged) {
+          errors.push(base + ': 该分类没取到数据')
+          continue
+        }
+        TV_ACTIVE = base
+        let out = tvClean(merged)
+        try {
+          const o = JSON.parse(out)
+          o._src = TV_SOURCES.indexOf(base)
+          o.sources = tvSourceList()
+          out = JSON.stringify(o)
+        } catch (e) {
+          /* 不是 JSON 就原样返回 */
+        }
+        return new Response(out, {
+          headers: Object.assign(
+            { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'public, max-age=60' },
+            corsHeaders(origin),
+          ),
+        })
+      }
       const qq = new URLSearchParams(q)
-      if (base !== order[0] && qq.get('t')) qq.delete('t')
+      if (base !== order[0] && qq.get('t')) {
+        /* 换了源以后原来那个编号 t 就没意义了，去掉它按最新拉 */
+        qq.delete('t')
+      }
       const r = await fetch(base + '?' + qq.toString(), {
         headers: { 'User-Agent': TV_UA, Referer: base, Accept: 'application/json,text/plain,*/*' },
         signal: tvSignal(6000),
