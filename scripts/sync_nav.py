@@ -33,7 +33,6 @@ NAV = [
     ('index.html',     '首页', 'fa-cat'),
     ('Journal.html',   '日记', 'fa-book-open'),
     ('Archives.html',  '归档', 'fa-images'),
-    ('Guestbook.html', '留言', 'fa-comments'),
     ('music.html',     '音乐', 'fa-music'),
     ('Tools.html',     '工具', 'fa-toolbox'),
 ]
@@ -58,7 +57,6 @@ PAGES = [
     ('index.html',     '',  'index.html'),
     ('Journal.html',   '',  'Journal.html'),
     ('Archives.html',  '',  'Archives.html'),
-    ('Guestbook.html', '',  'Guestbook.html'),
     ('music.html',     '',  'music.html'),
     ('Tools.html',     '',  'Tools.html'),
     ('404.html',       '/', None),

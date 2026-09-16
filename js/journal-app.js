@@ -71,6 +71,70 @@
     window.AppShell.adopt(content, body);
   }
 
+  /* ---------- 留言板二级页 ----------
+     正文节点常驻在 #gbSource（hidden），打开时用 adopt 搬进二级页，关掉自动归还。
+     留言脚本和 Turnstile 按需加载：日记页平时不拉它们，点开才拉。 */
+  var gbLoading = false, gbReady = false, gbCbs = [];
+
+  function loadScript(src, cb) {
+    var s = document.createElement('script');
+    s.src = src;
+    s.async = false;
+    s.onload = cb;
+    s.onerror = cb;
+    document.body.appendChild(s);
+  }
+
+  function loadGuestbook(cb) {
+    if (gbReady) { cb(); return; }
+    gbCbs.push(cb);
+    if (gbLoading) return;
+    gbLoading = true;
+    loadScript('js/Guestbook.js', function () {
+      loadScript('js/guestbook-app.js', function () {
+        gbReady = true;
+        var fns = gbCbs.slice(0);
+        gbCbs.length = 0;
+        for (var i = 0; i < fns.length; i++) fns[i]();
+      });
+    });
+    /* Turnstile 的 api.js 自己调 window.onloadTurnstileCallback，我们不等它 */
+    loadScript('https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback', function () {});
+  }
+
+  function openGuestbook() {
+    var src = document.getElementById('gbSource');
+    if (!src || !window.AppShell || !window.AppShell.openDetail) return;
+    if (window.AppShell.detailOpen && window.AppShell.detailOpen()) window.AppShell.closeDetail();
+    var wrap = document.createElement('div');
+    wrap.className = 'pc-detail-body';
+    var body = document.createElement('div');
+    body.className = 'gb-detail-body';
+    wrap.appendChild(body);
+    window.AppShell.openDetail({ title: '留言板', content: wrap, allowDesktop: true });
+    window.AppShell.adopt(src, body);
+    loadGuestbook(function () {
+      if (typeof window.GuestbookAppInit === 'function') window.GuestbookAppInit();
+    });
+  }
+
+  function initGuestbookEntry() {
+    if (document.documentElement.hasAttribute('data-gb-entry')) return;
+    document.documentElement.setAttribute('data-gb-entry', '1');
+    document.addEventListener('click', function (e) {
+      var t = e.target;
+      if (!t || !t.closest) return;
+      if (!t.closest('#gbOpenBtn')) return;
+      e.preventDefault();
+      openGuestbook();
+    });
+    /* 支持 Journal.html#guestbook 深链，链接可分享 */
+    if (location.hash === '#guestbook') setTimeout(openGuestbook, 500);
+    window.addEventListener('hashchange', function () {
+      if (location.hash === '#guestbook') openGuestbook();
+    });
+  }
+
   function init() {
     if (!narrow()) return;
     var cards = document.querySelectorAll('.post-card');
@@ -88,6 +152,8 @@
       if (card) openPost(card);
     });
   }
+
+  initGuestbookEntry();   /* 与视口无关，网页端也要能开 */
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();

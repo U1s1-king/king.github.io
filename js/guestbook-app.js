@@ -115,6 +115,9 @@
     watchSubmit();
   }
 
+  /* 供日记页的留言板二级页调用（init 自带 .gb-compose 去重，重入安全） */
+  window.GuestbookAppInit = init;
+
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
   /* 视口从网页端切回手机端：把手机端的注入重新长回来。

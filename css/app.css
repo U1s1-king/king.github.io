@@ -2025,6 +2025,30 @@ html.shell #app-mini-player .mp-btn:active { background: #ffeaf1; }
 }
 
 /* ============================================================
+   日记页的「留言板」入口（打开二级页）
+   根作用域：手机端和网页端都要看得见、点得动。
+   ============================================================ */
+.gb-open-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  padding: 8px 18px;
+  border: 1px solid #ffcdda;
+  border-radius: 40px;
+  background: #fff4f7;
+  color: #ac6b80;
+  font-family: inherit;
+  font-size: 0.78rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.18s ease;
+}
+.gb-open-btn:hover { background: #ffeef3; }
+.gb-open-btn i { font-size: 0.85rem; }
+.gb-detail-body { display: block; }
+
+/* ============================================================
    ?app=1 在网页端（宽屏）也能用
    ------------------------------------------------------------
    下面这组规则是从 @media (max-width: 768px) 里把顶栏那几条原样搬出来的
