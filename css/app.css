@@ -2187,3 +2187,33 @@ html.gb-view .blog-container > *:not(.blog-header) { display: none !important; }
   }
 }
 
+
+/* ============================================================
+   内容页被外壳(index.html)装进 iframe 时：帧内的底部导航必须让位
+   ------------------------------------------------------------
+   壳自己有 .bot-tab，内容页也有一份（scripts/sync_nav.py 生成），两都是
+   position:fixed bottom。桌面端 .bot-tab 本来就是 display:none，所以一直没暴露；
+   手机上就是两层导航叠在一起。js/shell.js 会把 .in-shell 挂到内容帧的 <html> 上。
+   ============================================================ */
+html.in-shell .bot-tab { display: none !important; }
+html.in-shell body { padding-bottom: 0 !important; }
+html.in-shell .wf-fab { bottom: 12px !important; }
+
+/* ============================================================
+   外壳两个帧的高度必须钉死（移动端）
+   ------------------------------------------------------------
+   css/style.css 的移动端块里有：
+     img,video,iframe,canvas,audio{max-width:100% !important;height:auto !important}
+   那条 !important 会把 #page-frame / #player-frame 一起打回 iframe 默认的 150px ——
+   表现就是外壳「只加载了六分之一」，页面自己的底部导航正好落在 150px 底边，
+   看着像中间多了一条导航。这里选择器权重更高 (html.shell #page-frame = 1,1,1
+   对 iframe = 0,0,1)，同样带 !important，所以赢；只作用于外壳，别处不受影响。
+   桌面端(>=769px)有单独的 100dvh 规则，这里用 max-width 圈起来不干扰它。
+   ============================================================ */
+@media (max-width: 768px) {
+  html.shell #page-frame,
+  html.shell #player-frame {
+    height: calc(100vh - var(--tab-h, 56px) - var(--sab, 0px)) !important;
+    height: calc(100dvh - var(--tab-h, 56px) - var(--sab, 0px)) !important;
+  }
+}

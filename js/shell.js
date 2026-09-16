@@ -21,7 +21,11 @@
   function tabs() { return Array.prototype.slice.call(document.querySelectorAll('.bot-tab a')); }
   function fileOf(a) { return (a.getAttribute('href') || '').split('/').pop(); }
   function highlight(file) {
-    tabs().forEach(function (a) { a.classList.toggle('on', fileOf(a) === file); });
+    tabs().forEach(function (a) {
+      var hit = fileOf(a) === file;
+      a.classList.toggle('on', hit);
+      a.classList.toggle('active', hit);   /* mobile.css 的高亮样式挂在 .active 上 */
+    });
   }
 
   function show(file, fromPop) {
@@ -116,7 +120,12 @@
      于是「切页断音」。所以内容帧里的音乐链接一律拦下来，改成亮出播放器帧。 */
   function guardContentNavigation() {
     var d = pageDoc();
-    if (!d || d.__shellGuardedC) return;
+    if (!d) return;
+    /* 帧内页面必须交出自己的底部导航：壳自己有一层 .bot-tab，内容页还有一层，
+       两个都是 fixed bottom —— 桌面端 .bot-tab 本来就 display:none 看不出来，
+       手机上一帧里就叠成两层。每次 syncMini 都会补一次，帧内导航后也还在。 */
+    try { d.documentElement.classList.add('in-shell'); } catch (e) {}
+    if (d.__shellGuardedC) return;
     d.__shellGuardedC = true;
     d.addEventListener('click', function (e) {
       var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
