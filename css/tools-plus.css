@@ -1,0 +1,30 @@
+/* ============================================================
+ * 工具页重构补充 (css/tools-plus.css)
+ * ------------------------------------------------------------
+ * 只管桌面端的入口网格：.tools-tabs 那堵按钮墙在桌面折叠，
+ * 手机端始终保持原样（tools-app.js 的 .mgrid 负责）。
+ * 卡片与胶囊的样式在 css/hub.css，这里不重复定义。
+ * ============================================================ */
+
+/* 桌面：按钮墙收起来，改由卡片网格承担入口 */
+@media (min-width: 769px) {
+    html.tool-hub .tools-tabs { display: none; }
+
+    /* 卡片区与下方工具面板之间留白 */
+    html.tool-hub .hub-grid { margin-bottom: 26px; }
+
+    /* 面板标题做出层次，点开卡片后一眼能定位 */
+    html.tool-hub .tool-panel > .tool-title:first-child {
+        margin-bottom: 14px;
+        padding-bottom: 10px;
+        border-bottom: 1px dashed #ffcdda;
+        color: #a14563;
+        font-size: 1.05rem;
+    }
+}
+
+/* 手机：网格一律不出现，保持手机端现状不动 */
+@media (max-width: 768px) {
+    #toolsFilter,
+    #toolsGrid { display: none; }
+}
