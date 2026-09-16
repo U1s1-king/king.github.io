@@ -35,13 +35,14 @@ NAV = [
     ('Archives.html',  '归档', 'fa-images'),
     ('music.html',     '音乐', 'fa-music'),
     ('Tools.html',     '工具', 'fa-toolbox'),
+    ('Games.html',     '游戏', 'fa-gamepad'),
 ]
 
-# 移动端底部 tab：5 项（主流通行上限 3~5，Material 允许）。
+# 移动端底部 tab：6 项（主流通行上限 3~5，Material 允许）。
 # 为什么不砍到 4 项：手机浏览器访客必须能一步回首页；一个没有文字标签的
 # 图标不算「首页入口」。首页放第一格，归档保留一级 tab。
 # 「留言」不占 tab —— 它是日记页里的第二个视图（日记 ⇄ 留言板）。
-# 桌面侧边栏就是 NAV 那 5 项，两者互不影响
+# 桌面侧边栏就是 NAV 那 6 项，两者互不影响
 # （.bot-tab 在桌面端 display:none，所以改这里不会动到网页端）。
 NAV_MOBILE = [
     ('home.html',      '首页', 'fa-cat'),
@@ -49,6 +50,7 @@ NAV_MOBILE = [
     ('Archives.html',  '归档', 'fa-images'),
     ('music.html',     '音乐', 'fa-music'),
     ('Tools.html',     '工具', 'fa-toolbox'),
+    ('Games.html',     '游戏', 'fa-gamepad'),
 ]
 
 # (页面文件, 链接前缀, 当前页高亮的 href)
@@ -59,6 +61,7 @@ PAGES = [
     ('Archives.html',  '',  'Archives.html'),
     ('music.html',     '',  'music.html'),
     ('Tools.html',     '',  'Tools.html'),
+    ('Games.html',     '',  'Games.html'),
     ('404.html',       '/', None),
     # 首页外壳（原 shell.html）：自带迷你播放条与底部 tab，没有侧边栏，也没有
     # 「当前页」—— tab 高亮由 js/shell.js 按 iframe 实际加载到哪一页动态切。

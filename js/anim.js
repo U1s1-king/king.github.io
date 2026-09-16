@@ -64,7 +64,7 @@
     Array.prototype.forEach.call(document.querySelectorAll('.reveal-in'), stagger);
 
     /* ---------- 2. 卡片抬升 ---------- */
-    var CARDS = '.profile-card,.poem-card,.main-card,.tool-card,.post-card,.page-card,' +
+    var CARDS = '.profile-card,.poem-card,.main-card,.tool-card,.hub-card,.post-card,.page-card,' +
                 '.section-block,.archive-item,.link-card,.guest-card';
     Array.prototype.forEach.call(document.querySelectorAll(CARDS), function (el) {
       el.classList.add('an-lift');

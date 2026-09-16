@@ -1,0 +1,122 @@
+/* ============================================================
+ * 卡片网格 + 分类胶囊 (css/hub.css)
+ * ------------------------------------------------------------
+ * 游戏厅 / 影视页 / 工具页 共用的一套入口卡片样式。
+ * 配色沿用站点既有色板：文字 #a14563、边框 #ffcdda、底 #fff4f7。
+ * ============================================================ */
+
+.hub-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 0 0 22px;
+}
+
+.hub-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 16px;
+    border: 1px solid #ffcdda;
+    border-radius: 999px;
+    background: #fff;
+    color: #a14563;
+    font: inherit;
+    font-size: .9rem;
+    cursor: pointer;
+    transition: background .18s, color .18s, transform .18s, box-shadow .18s;
+}
+
+.hub-chip i { font-size: .86rem; opacity: .85; }
+
+.hub-chip .hub-count {
+    padding: 0 7px;
+    border-radius: 999px;
+    background: #ffe3ea;
+    color: #a14563;
+    font-size: .74rem;
+    line-height: 1.6;
+}
+
+.hub-chip:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(161, 69, 99, .12); }
+
+.hub-chip.is-on {
+    background: #ffb6c1;
+    border-color: #ffb6c1;
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(255, 182, 193, .45);
+}
+
+.hub-chip.is-on .hub-count { background: rgba(255, 255, 255, .3); color: #fff; }
+
+.hub-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+}
+
+.hub-card {
+    position: relative;
+    display: block;
+    padding: 18px 18px 16px;
+    border: 1px solid #ffcdda;
+    border-radius: 16px;
+    background: #fff4f7;
+    text-decoration: none;
+    transition: transform .18s, box-shadow .18s, border-color .18s;
+}
+
+.hub-card:hover {
+    transform: translateY(-3px);
+    border-color: #ffb6c1;
+    box-shadow: 0 8px 22px rgba(161, 69, 99, .14);
+}
+
+.hub-ico {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 13px;
+    background: #ffe3ea;
+    color: #a14563;
+    font-size: 19px;
+}
+
+.hub-go {
+    position: absolute;
+    right: 16px;
+    top: 18px;
+    color: #c98ba1;
+    font-size: 13px;
+    opacity: .6;
+}
+
+.hub-card:hover .hub-go { opacity: 1; }
+
+.hub-name {
+    display: block;
+    margin: 13px 0 6px;
+    color: #a14563;
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.hub-desc {
+    display: block;
+    color: #8d6b78;
+    font-size: .86rem;
+    line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+    .hub-chips { gap: 8px; margin-bottom: 16px; }
+    .hub-chip { padding: 7px 13px; font-size: .84rem; }
+    .hub-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .hub-card { padding: 13px 12px 12px; border-radius: 14px; }
+    .hub-ico { width: 36px; height: 36px; border-radius: 11px; font-size: 16px; }
+    .hub-go { right: 11px; top: 13px; font-size: 11px; }
+    .hub-name { margin: 10px 0 4px; font-size: .92rem; }
+    .hub-desc { font-size: .78rem; line-height: 1.5; }
+}
