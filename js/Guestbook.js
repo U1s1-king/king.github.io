@@ -241,8 +241,11 @@ fetch('https://ipwho.is/')
 .then(r => r.json())
 .then(d => {
 if (d.success !== false) {
-const parts = [d.country, d.region, d.city].filter(Boolean);
-el.textContent = '你来自 ' + (parts.join('·') || '神秘星球') + ' 喵' + suffix;
+/* 香港这类城邦的 country / region / city 同名，直接拼会变成
+   「Hong Kong·Hong Kong·Hong Kong」——先去重再拼，分隔符也统一。 */
+const rawParts = [d.country, d.region, d.city].filter(Boolean);
+const parts = rawParts.filter((v, i) => rawParts.indexOf(v) === i);
+el.textContent = '你来自 ' + (parts.join(' · ') || '神秘星球') + ' 喵' + suffix;
 } else {
 el.textContent = '🌸 定位失败，保持神秘';
 }
