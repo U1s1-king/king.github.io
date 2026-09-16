@@ -1,0 +1,355 @@
+/* ============================================================
+ * 影视播放器皮肤 (css/tv-player.css)
+ * ------------------------------------------------------------
+ * 布局与交互照 B 站网页播放器抄：底部控制条（播放/上一集/下一集/时间/进度/
+ * 音量/倍速/画中画/网页全屏/全屏）、悬停滑出、3 秒无操作自动隐藏、中央大播放键、
+ * 双击全屏、空格/方向键/F/W 快捷键、载入转圈、失败遮罩加重试。
+ * 配色用站点粉（--tvp-accent 一行就能换成 B 站蓝 #00a1d6）。
+ * 内部 class 全部以 tvp- 开头，不会和页面别处撞。
+ * ============================================================ */
+.tvp {
+    --tvp-accent: #ff7a9b;
+    --tvp-accent-weak: rgba(255, 122, 155, 0.32);
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #000;
+    border-radius: 14px;
+    overflow: hidden;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    font-family: inherit;
+}
+
+.tvp.is-web-full {
+    position: fixed;
+    inset: 0;
+    z-index: 2147482000;
+    border-radius: 0;
+    aspect-ratio: auto;
+    height: 100%;
+}
+
+.tvp video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: contain;
+    background: #000;
+}
+
+.tvp.is-idle { cursor: none; }
+
+/* ---------- 顶部标题条 ---------- */
+.tvp-top {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 14px 16px 26px;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    color: #fff;
+    font-size: 0.95rem;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.62), transparent);
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity .2s, transform .2s;
+    pointer-events: none;
+}
+.tvp-top b { font-weight: 700; }
+.tvp-top span { font-size: .8rem; color: rgba(255, 255, 255, .78); }
+.tvp.show-ui .tvp-top { opacity: 1; transform: none; }
+
+/* ---------- 中央大播放键 ---------- */
+.tvp-big {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 78px;
+    height: 78px;
+    margin: -39px 0 0 -39px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, .38);
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .8);
+    color: #fff;
+    font-size: 1.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform .16s, background .16s, opacity .2s;
+    padding-left: 5px;
+}
+.tvp-big:hover { transform: scale(1.07); background: var(--tvp-accent); }
+.tvp-big[hidden] { display: none; }
+
+/* ---------- 转圈 / 失败 / 提示 ---------- */
+.tvp-spin {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 52px;
+    height: 52px;
+    margin: -26px 0 0 -26px;
+    pointer-events: none;
+}
+.tvp-spin[hidden] { display: none; }
+.tvp-spin i {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 3px solid rgba(255, 255, 255, .28);
+    border-top-color: var(--tvp-accent);
+    border-radius: 50%;
+    animation: tvp-rot .8s linear infinite;
+}
+@keyframes tvp-rot { to { transform: rotate(360deg); } }
+
+.tvp-err {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    background: rgba(0, 0, 0, .72);
+    color: #fff;
+    text-align: center;
+    padding: 20px;
+}
+.tvp-err[hidden] { display: none; }
+.tvp-err p { margin: 0; font-size: .9rem; color: rgba(255, 255, 255, .86); line-height: 1.6; max-width: 90%; }
+.tvp-err button {
+    border: none;
+    border-radius: 999px;
+    padding: 9px 22px;
+    background: var(--tvp-accent);
+    color: #fff;
+    font: inherit;
+    font-size: .9rem;
+    cursor: pointer;
+}
+.tvp-err button:hover { filter: brightness(1.05); }
+
+.tvp-toast {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, .72);
+    color: #fff;
+    font-size: .85rem;
+    padding: 8px 16px;
+    border-radius: 8px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity .2s;
+}
+.tvp-toast[hidden] { display: none; }
+.tvp-toast.on { opacity: 1; }
+
+/* ---------- 底部控制条 ---------- */
+.tvp-bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 22px 12px 9px;
+    background: linear-gradient(0deg, rgba(0, 0, 0, .78), transparent);
+    transform: translateY(105%);
+    transition: transform .22s ease;
+    color: #fff;
+}
+.tvp.show-ui .tvp-bar { transform: none; }
+
+.tvp-icon {
+    flex: 0 0 auto;
+    width: 34px;
+    height: 34px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: #fff;
+    font-size: .95rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+}
+.tvp-icon:hover { background: rgba(255, 255, 255, .16); }
+.tvp-icon.tv-text { width: auto; padding: 0 8px; font-size: .82rem; font-weight: 600; }
+.tvp-icon[disabled] { opacity: .35; cursor: default; }
+.tvp-icon[disabled]:hover { background: transparent; }
+
+.tvp-time {
+    flex: 0 0 auto;
+    font-size: .78rem;
+    font-variant-numeric: tabular-nums;
+    color: rgba(255, 255, 255, .9);
+    padding: 0 2px;
+    white-space: nowrap;
+}
+
+/* ---------- 进度条 ---------- */
+.tvp-track {
+    position: relative;
+    flex: 1 1 auto;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    touch-action: none;
+    min-width: 60px;
+}
+.tvp-track::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, .28);
+    transition: height .12s;
+}
+.tvp-track:hover::before,
+.tvp-track.is-drag::before { height: 6px; }
+.tvp-buf,
+.tvp-played {
+    position: absolute;
+    left: 0;
+    height: 4px;
+    border-radius: 2px;
+    transition: height .12s;
+}
+.tvp-track:hover .tvp-buf,
+.tvp-track.is-drag .tvp-buf,
+.tvp-track:hover .tvp-played,
+.tvp-track.is-drag .tvp-played { height: 6px; }
+.tvp-buf { background: rgba(255, 255, 255, .42); }
+.tvp-played { background: var(--tvp-accent); }
+.tvp-dot {
+    position: absolute;
+    right: -7px;
+    top: 50%;
+    width: 14px;
+    height: 14px;
+    margin-top: -7px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 0 3px var(--tvp-accent-weak);
+    transform: scale(0);
+    transition: transform .14s;
+}
+.tvp-track:hover .tvp-dot,
+.tvp-track.is-drag .tvp-dot { transform: scale(1); }
+.tvp-hover {
+    position: absolute;
+    bottom: 18px;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, .78);
+    color: #fff;
+    font-size: .72rem;
+    padding: 2px 7px;
+    border-radius: 5px;
+    opacity: 0;
+    pointer-events: none;
+    white-space: nowrap;
+}
+.tvp-track:hover .tvp-hover { opacity: 1; }
+
+/* ---------- 音量 ---------- */
+.tvp-vol {
+    flex: 0 0 auto;
+    width: 30px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    touch-action: none;
+    transition: width .18s;
+}
+.tvp-vol-track {
+    position: relative;
+    width: 100%;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, .3);
+}
+.tvp-vol-val {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    border-radius: 2px;
+    background: var(--tvp-accent);
+}
+.tvp-vol-val i {
+    position: absolute;
+    right: -6px;
+    top: 50%;
+    width: 11px;
+    height: 11px;
+    margin-top: -5.5px;
+    border-radius: 50%;
+    background: #fff;
+    transform: scale(0);
+    transition: transform .14s;
+}
+.tvp-vol:hover .tvp-vol-val i,
+.tvp-vol.is-drag .tvp-vol-val i { transform: scale(1); }
+
+/* ---------- 倍速菜单 ---------- */
+.tvp-menu {
+    position: absolute;
+    right: 10px;
+    bottom: 58px;
+    background: rgba(20, 20, 22, .93);
+    border-radius: 10px;
+    padding: 6px;
+    min-width: 92px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .4);
+}
+.tvp-menu[hidden] { display: none; }
+.tvp-menu button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    border: none;
+    background: transparent;
+    color: #fff;
+    font: inherit;
+    font-size: .82rem;
+    padding: 7px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+.tvp-menu button:hover { background: rgba(255, 255, 255, .12); }
+.tvp-menu button.is-on { color: var(--tvp-accent); font-weight: 700; }
+
+/* ---------- 移动端 ---------- */
+@media (max-width: 768px) {
+    .tvp { border-radius: 10px; }
+    .tvp-bar { gap: 4px; padding: 18px 8px 7px; }
+    .tvp-icon { width: 30px; height: 30px; font-size: .9rem; }
+    .tvp-time { font-size: .72rem; }
+    .tvp-big { width: 62px; height: 62px; margin: -31px 0 0 -31px; font-size: 1.3rem; }
+    .tvp-vol { display: none; }
+    .tvp-top { font-size: .85rem; padding: 10px 12px 20px; }
+}
+
+/* 播放器打开时把看板娘收起来：她（#waifu-fab，z-index 9999）正好压在右侧控制按钮上，
+   实测 elementFromPoint 命中的就是 #live2d < #waifu < #waifu-fab。关掉播放器就回来。 */
+html.tvp-open #waifu,
+html.tvp-open #waifu-fab {
+    display: none !important;
+}

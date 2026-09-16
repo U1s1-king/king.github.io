@@ -20,7 +20,10 @@
   /* 可以直接塞进 <video> 的直链后缀 */
   var MEDIA_EXT = ['.mp4', '.m4v', '.mkv', '.flv', '.avi', '.mov', '.webm', '.mp3', '.m4a'];
 
-  var state = { t: '', pg: 1, kw: '', busy: false };
+  /* src：分类列表来自哪号源。各站 type_id 编号不同，翻页/点分类必须带上它 */
+  var state = { t: '', pg: 1, kw: '', src: null, busy: false };
+  /* 扁平化的选集列表，给播放器的上一集/下一集/自动连播用 */
+  var EP = { list: [], i: -1 };
   var LINE_NAMES = { liangzi: '量子线路', lzm3u8: '量子 M3U8', lz: '量子' };
 
   function byId(id) { return document.getElementById(id); }
@@ -111,6 +114,7 @@
     return apiGet({ ac: 'list' }).then(function (d) {
       var bar = byId('tvCats');
       if (!bar) return;
+      if (d && typeof d._src === 'number') state.src = d._src;
       var list = (d && d['class']) || [];
       bar.innerHTML = '';
       var all = document.createElement('button');
@@ -193,7 +197,8 @@
     state.busy = true;
     state.pg = pg || 1;
     say('正在加载…');
-    apiGet({ ac: 'videolist', t: state.t, pg: state.pg, wd: state.kw }).then(function (d) {
+    apiGet({ ac: 'videolist', t: state.t, pg: state.pg, wd: state.kw, _src: state.src }).then(function (d) {
+      if (d && typeof d._src === 'number') state.src = d._src;
       render(d);
     }).catch(function (e) {
       say('片源暂时不可用：' + String(e.message || e) + '<br><span style="font-size:.8rem">（若是刚更新，可能 Worker 还没重新部署）</span>');
@@ -204,7 +209,7 @@
   /* ---------------- 详情与线路 ---------------- */
   function detail(vodId) {
     say('正在打开…');
-    apiGet({ ac: 'videolist', ids: vodId }).then(function (d) {
+    apiGet({ ac: 'videolist', ids: vodId, _src: state.src }).then(function (d) {
       var it = (d && d.list && d.list[0]) || null;
       if (!it) throw new Error('没拿到该资源');
       openPlayer(it);
@@ -221,6 +226,9 @@
     if (!p || !eps) return;
     setText('tvTitle', it.vod_name || '');
     setText('tvRemark', it.vod_remarks || '');
+    if (window.TVPlayer) { TVPlayer.setTitle(it.vod_name || ''); TVPlayer.setEpisode(it.vod_remarks || ''); TVPlayer.setNav(false, false); }
+    EP.list = [];
+    EP.i = -1;
     eps.innerHTML = '';
     var froms = String(it.vod_play_from || '').split('$$$');
     var groups = String(it.vod_play_url || '').split('$$$');
@@ -245,8 +253,13 @@
         b.textContent = part.slice(0, cut) || ('第' + (pi + 1) + '集');
         b.addEventListener('click', function () {
           Array.prototype.forEach.call(eps.querySelectorAll('.tv-ep'), function (x) { x.classList.toggle('is-on', x === b); });
+          var idx = -1;
+          for (var k = 0; k < EP.list.length; k++) { if (EP.list[k].btn === b) { idx = k; break; } }
+          EP.i = idx;
+          if (window.TVPlayer) { TVPlayer.setNav(idx > 0, idx >= 0 && idx < EP.list.length - 1); TVPlayer.setEpisode(b.textContent || ''); }
           play(urls[pi] || '');
         });
+        EP.list.push({ btn: b, url: urls[pi] || '' });
         box.appendChild(b);
       });
       eps.appendChild(box);
@@ -266,87 +279,30 @@
     if (p.scrollIntoView) p.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  /* ---------------- 播放 ---------------- */
-  var hlsLoading = false;
-  function stopPlayer() {
-    var v = byId('tvVideo');
-    if (v) { try { v.pause(); } catch (e) {} v.removeAttribute('src'); try { v.load(); } catch (e2) {} }
-    if (window.__tvHls) { try { window.__tvHls.destroy(); } catch (e3) {} window.__tvHls = null; }
-  }
-  function loadHls(cb) {
-    if (window.Hls) { cb(); return; }
-    if (hlsLoading) { setTimeout(function () { cb(); }, 400); return; }
-    hlsLoading = true;
-    var s = document.createElement('script');
-    s.src = HLS_JS;
-    s.onload = cb;
-    s.onerror = function () { setText('tvNote', 'hls.js 没能加载（网络或被拦截），iOS/Safari 仍可原生播放'); };
-    document.head.appendChild(s);
-  }
+  /* ---------------- 播放（B 站风格那套在 js/tv-player.js） ---------------- */
+  function stopPlayer() { if (window.TVPlayer) TVPlayer.stop(); }
 
   function play(url) {
-    var v = byId('tvVideo');
     if (!url) { setText('tvNote', '这条线路没有地址'); return; }
-    if (!v) { setText('tvNote', '页面缺少播放器容器'); return; }
-    if (isPage(url)) {
-      stopPlayer();
+    if (!window.TVPlayer) { setText('tvNote', '播放器脚本没加载（js/tv-player.js）'); return; }
+    if (TVPlayer.classify(url) === 'page') {
+      TVPlayer.stop();
       noteWithLink('这条是网页播放线路（返回 HTML，不是视频流），浏览器跨域播不了。', url);
       return;
     }
-    if (isMedia(url)) {
-      stopPlayer();
-      v.src = url;
-      var p0 = v.play(); if (p0 && p0.catch) p0.catch(function () {});
-      setText('tvNote', '直链播放：' + url);
-      return;
-    }
-    /* m3u8：实测 CDN 对带 Origin 的请求照样回 Access-Control-Allow-Origin:*，
-       所以直连最省事、也绕开了「Worker 拉流可能被 CDN 按客户端指纹判掉」的坑；
-       直连真失败再自动转一次本站代理兜底。 */
-    playM3u8(url, false, false);
-  }
-
-  function playM3u8(url, viaProxy, retried) {
-    var v = byId('tvVideo');
-    if (!v) { setText('tvNote', '页面缺少播放器容器'); return; }
-    var src = viaProxy ? streamUrl(url) : url;
-    var tag = viaProxy ? ' · 经本站代理' : ' · 直连';
-    setText('tvNote', '正在加载：' + url);
-    stopPlayer();
-    if (v.canPlayType('application/vnd.apple.mpegurl')) {
-      v.onerror = function () {
-        if (viaProxy || retried) return;
-        v.onerror = null;
-        playM3u8(url, true, true);
-      };
-      v.src = src;
-      var p1 = v.play(); if (p1 && p1.catch) p1.catch(function () {});
-      setText('tvNote', '系统播放器（原生 HLS）' + tag);
-      return;
-    }
-    loadHls(function () {
-      if (!window.Hls || !window.Hls.isSupported()) { setText('tvNote', '当前浏览器不支持 HLS 播放'); return; }
-      if (window.__tvHls) { try { window.__tvHls.destroy(); } catch (e) {} }
-      var h = new window.Hls({ maxBufferLength: 30, enableWorker: true });
-      window.__tvHls = h;
-      h.loadSource(src);
-      h.attachMedia(v);
-      h.on(window.Hls.Events.MANIFEST_PARSED, function () {
-        var p2 = v.play(); if (p2 && p2.catch) p2.catch(function () {});
-        setText('tvNote', 'hls.js 播放中' + tag);
-      });
-      h.on(window.Hls.Events.ERROR, function (ev, data) {
-        if (!data || !data.fatal) return;
-        try { h.destroy(); } catch (e2) {}
-        window.__tvHls = null;
-        if (!viaProxy && !retried) { setText('tvNote', '直连失败，改走本站代理重试…'); playM3u8(url, true, true); return; }
-        noteWithLink('这条流播放失败（' + data.type + ' / ' + data.details + '），换条线路或去原地址看。', url);
-      });
-    });
+    TVPlayer.play(url);
   }
 
   /* ---------------- 绑定 ---------------- */
   function boot() {
+    if (window.TVPlayer) {
+      TVPlayer.init({
+        gateway: GATEWAY,
+        onPrev: function () { if (EP.i > 0) EP.list[EP.i - 1].btn.click(); },
+        onNext: function () { if (EP.i >= 0 && EP.i < EP.list.length - 1) EP.list[EP.i + 1].btn.click(); },
+        onEnded: function () { if (EP.i >= 0 && EP.i < EP.list.length - 1) EP.list[EP.i + 1].btn.click(); },
+      });
+    }
     var go = byId('tvGo'), kw = byId('tvKw'), back = byId('tvBack');
     if (go) go.addEventListener('click', function () { state.kw = kw ? kw.value.trim() : ''; load(1); });
     if (kw) kw.addEventListener('keydown', function (e) { if (e.key === 'Enter') { state.kw = kw.value.trim(); load(1); } });

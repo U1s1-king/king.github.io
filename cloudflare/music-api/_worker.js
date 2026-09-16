@@ -844,12 +844,49 @@ const ROUTES = {
    这里由 Worker 转发：服务端请求不带 Origin，上游照常返回数据，再按白名单回给本站。
    视频流同理：hls.js 取 m3u8 和分片都是 XHR，所以播放列表和分片也一起代理，
    并把播放列表里的相对/绝对地址重写回本代理，前端不需要知道上游域名。 */
-const TV_SOURCES = [
-  'https://cj.lziapi.com/api.php/provide/vod/',
-  'https://caiji.dyttzyapi.com/api.php/provide/vod/',
-  'https://api.guangsuapi.com/api.php/provide/vod/',
-  'https://cj.ffzyapi.com/api.php/provide/vod/',
+/* 这批源是 2026-09-16 在 TVBox/Fongmi 配置里挖出来后逐个实测的：
+   列表 20 条、每条都带 .m3u8 直链、响应 1.1~2.6 秒。支持 wd 关键词搜索的排前面，
+   不支持搜索的（实测回「暂不支持搜索」）只在列表/详情时兜底，避免搜索白等一轮。 */
+const TV_SEARCH_SOURCES = [
+  'https://api.guangsuapi.com/api.php/provide/vod/', // 光速 gsyun/gsm3u8
+  'https://api.ukuapi.com/api.php/provide/vod/', // ukyun/ukm3u8
+  'https://cj.lziapi.com/api.php/provide/vod/', // 量子 liangzi/lzm3u8
+  'https://cj.ffzyapi.com/api.php/provide/vod/', // 非凡 feifan/ffm3u8
+  'https://api.apibdzy.com/api.php/provide/vod/', // 百度 dbm3u8
+  'https://caiji.dyttzyapi.com/api.php/provide/vod/', // 电影天堂 dytt/dyttm3u8
+  'https://api.zuidapi.com/api.php/provide/vod/', // 最大 zuidam3u8
 ]
+
+const TV_LIST_ONLY = [
+  'https://api.wsyzy.net/api.php/provide/vod/', // 无损云 wsym3u8（88lin/video_vip 用的那个）
+  'https://tyyszy.com/api.php/provide/vod/', // 同源 tym3u8
+  'https://suoniapi.com/api.php/provide/vod/', // 索尼 snm3u8
+]
+
+const TV_SOURCES = TV_SEARCH_SOURCES.concat(TV_LIST_ONLY)
+
+/* 采集站几乎都挂着一个成人栏目；本站不展示，直接在网关里摘干净（前端 js/tv.js 还有一层） */
+const TV_ADULT = /伦理|福利|里番|情色|成人|无码|色情|自拍|偷拍|人妖|淫/
+
+function tvClean(text) {
+  let data
+  try {
+    data = JSON.parse(text)
+  } catch (e) {
+    return text
+  }
+  if (data && Array.isArray(data['class'])) {
+    data['class'] = data['class'].filter(function (c) {
+      return !TV_ADULT.test(String(c.type_name || ''))
+    })
+  }
+  if (data && Array.isArray(data.list)) {
+    data.list = data.list.filter(function (it) {
+      return !TV_ADULT.test(String(it.type_name || ''))
+    })
+  }
+  return JSON.stringify(data)
+}
 
 const TV_UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
@@ -877,22 +914,116 @@ function tvSignal(ms) {
 /* 命中的源记在 isolate 里，后续请求先打它，少绕弯路 */
 let TV_ACTIVE = ''
 
+/* 这些站的 ac=list 里 class[].type_id 和 videolist 真正认的 type_id 不是一个编号空间：
+   实测拿 class 的 id 去筛，电影=1 条甚至 0 条；拿列表条目自带的 type_id 去筛，同一个
+   分类能出 4044 条。所以分类表自己造——扫几页最新列表，按条目里的 type_id/type_name 归类，
+   并按源缓存一小时。 */
+const TV_CATS = {}
+
+async function tvCategories(idx) {
+  const hit = TV_CATS[idx]
+  if (hit && Date.now() - hit.at < 3600000) return hit.list
+  const base = TV_SOURCES[idx]
+  if (!base) return []
+  const map = new Map()
+  /* 并行扫 6 页（串行太慢，首屏等不起）：每页 20 条，凑出几十个真实分类；
+     结果按源缓存一小时，之后就是内存命中 */
+  const pages = []
+  for (let pg = 1; pg <= 6; pg++) pages.push(pg)
+  const results = await Promise.all(
+    pages.map(async function (pg) {
+      try {
+        const r = await fetch(base + '?ac=videolist&pg=' + pg, {
+          headers: { 'User-Agent': TV_UA, Referer: base, Accept: 'application/json,text/plain,*/*' },
+          signal: tvSignal(7000),
+        })
+        if (!r.ok) return []
+        const j = JSON.parse(await r.text())
+        return j.list || []
+      } catch (e) {
+        return []
+      }
+    }),
+  )
+  results.forEach(function (list) {
+    list.forEach(function (it) {
+      const id = String(it.type_id || '')
+      const nm = String(it.type_name || '')
+      if (!id || !nm || TV_ADULT.test(nm)) return
+      if (!map.has(id)) map.set(id, nm)
+    })
+  })
+  const list = []
+  map.forEach(function (nm, id) {
+    list.push({ type_id: id, type_name: nm })
+  })
+  if (list.length) TV_CATS[idx] = { at: Date.now(), list: list }
+  return list
+}
+
+/* 分类表：优先用扫描出来的真实 type_id；扫不到再退回上游原始 class 表 */
+async function tvClassList(params, origin) {
+  const pin = parseInt(params.get('_src') || '', 10)
+  const idx = !isNaN(pin) && TV_SOURCES[pin] ? pin : TV_SOURCES.indexOf(TV_ACTIVE) >= 0 ? TV_SOURCES.indexOf(TV_ACTIVE) : 0
+  let list = await tvCategories(idx)
+  if (!list.length) {
+    try {
+      const r = await fetch(TV_SOURCES[idx] + '?ac=list', {
+        headers: { 'User-Agent': TV_UA, Referer: TV_SOURCES[idx] },
+        signal: tvSignal(6000),
+      })
+      const j = JSON.parse(await r.text())
+      list = (j['class'] || []).filter(function (c) {
+        return !TV_ADULT.test(String(c.type_name || ''))
+      })
+      if (list.length) TV_ACTIVE = TV_SOURCES[idx]
+    } catch (e) {
+      return fail('拿不到分类：' + (e && e.message), 502, origin)
+    }
+  }
+  return jsonResponse({ code: 1, msg: '数据列表', class: list, _src: idx }, 200, origin, {
+    'Cache-Control': 'public, max-age=600',
+  })
+}
+
 async function tvList(params, origin) {
   const ac = params.get('ac') === 'videolist' ? 'videolist' : 'list'
+  if (ac === 'list') return tvClassList(params, origin)
   const q = new URLSearchParams({ ac })
   ;['t', 'pg', 'wd', 'ids'].forEach(function (k) {
     const v = params.get(k)
     if (v) q.set(k, v)
   })
   const errors = []
-  const order = TV_ACTIVE
-    ? [TV_ACTIVE].concat(TV_SOURCES.filter(function (b) { return b !== TV_ACTIVE }))
-    : TV_SOURCES
+  const wd = params.get('wd') || ''
+  const pin = parseInt(params.get('_src') || '', 10)
+  /* 各站 type_id 编号不一样（同一部「电影」在 A 站是 1、在 B 站可能是 27），
+     所以前端会带上上次分类列表来自哪号源 _src。搜索时只打支持 wd 的源
+     （不支持的那些会回「暂不支持搜索」，白等一轮）。 */
+  const order =
+    !isNaN(pin) && TV_SOURCES[pin]
+      ? [TV_SOURCES[pin]].concat(
+          TV_SOURCES.filter(function (b) {
+            return b !== TV_SOURCES[pin]
+          }),
+        )
+      : wd
+        ? TV_SEARCH_SOURCES
+        : TV_ACTIVE
+          ? [TV_ACTIVE].concat(
+              TV_SOURCES.filter(function (b) {
+                return b !== TV_ACTIVE
+              }),
+            )
+          : TV_SOURCES
   for (const base of order) {
     try {
-      const r = await fetch(base + '?' + q.toString(), {
+      /* 换了源以后原来那个 t 就没意义了，去掉它按最新拉，免得好好的分类点进去只有一条 */
+      const qq = new URLSearchParams(q)
+      if (base !== order[0] && qq.get('t')) qq.delete('t')
+      const r = await fetch(base + '?' + qq.toString(), {
         headers: { 'User-Agent': TV_UA, Referer: base, Accept: 'application/json,text/plain,*/*' },
-        signal: tvSignal(8000),
+        signal: tvSignal(6000),
         cf: { cacheTtl: 120, cacheEverything: true },
       })
       if (!r.ok) {
@@ -905,7 +1036,16 @@ async function tvList(params, origin) {
         continue
       }
       TV_ACTIVE = base
-      return new Response(text, {
+      /* 顺带告诉前端这次的源编号，后续分类/翻页带上它，编号才对得上 */
+      let out = tvClean(text)
+      try {
+        const o = JSON.parse(out)
+        o._src = TV_SOURCES.indexOf(base)
+        out = JSON.stringify(o)
+      } catch (e) {
+        /* 不是 JSON 就原样返回 */
+      }
+      return new Response(out, {
         headers: Object.assign(
           { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'public, max-age=60' },
           corsHeaders(origin),

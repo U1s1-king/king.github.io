@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <script src="js/version.js?v=20261075"></script>
-    <script src="js/app-shell.js?v=20261075"></script>
+    <script src="js/version.js?v=20261085"></script>
+    <script src="js/app-shell.js?v=20261085"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <link rel="stylesheet" href="css/style.css?v=20261075">
-    <link rel="stylesheet" href="css/sidebar.css?v=20261075">
+    <link rel="stylesheet" href="css/style.css?v=20261085">
+    <link rel="stylesheet" href="css/sidebar.css?v=20261085">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#ffb6c1">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -22,13 +22,14 @@
     <title>影视 · Tomo Ebizuka</title>
     <link rel="canonical" href="https://zhaokening.ccwu.cc/TV.html">
     
-    <link rel="stylesheet" href="css/all.min.css?v=20261075">
-    <link rel="stylesheet" href="css/Tools.css?v=20261075">
-    <link rel="stylesheet" href="css/hub.css?v=20261075">
-    <link rel="stylesheet" href="css/tv.css?v=20261075">
-    <link rel="stylesheet" href="css/anim.css?v=20261075">
-    <link rel="stylesheet" href="css/mobile.css?v=20261075">
-    <link rel="stylesheet" href="css/app.css?v=20261075">
+    <link rel="stylesheet" href="css/all.min.css?v=20261085">
+    <link rel="stylesheet" href="css/Tools.css?v=20261085">
+    <link rel="stylesheet" href="css/hub.css?v=20261085">
+    <link rel="stylesheet" href="css/tv.css?v=20261085">
+    <link rel="stylesheet" href="css/tv-player.css?v=20261085">
+    <link rel="stylesheet" href="css/anim.css?v=20261085">
+    <link rel="stylesheet" href="css/mobile.css?v=20261085">
+    <link rel="stylesheet" href="css/app.css?v=20261085">
     <meta name="description" content="Tomo Ebizuka 的影视页：聚合公开采集接口，在线看电影、剧集、综艺与动漫，支持 HLS 播放。">
     <meta name="keywords" content="(O_o)??,工具箱,工具,转换器,随机数,密码生成,翻译,OCR,天气">
     <meta name="author" content="king">
@@ -105,7 +106,32 @@
                 <button type="button" class="tv-ep" id="tvBack"><i class="fas fa-arrow-left"></i> 返回列表</button>
             </div>
             <div class="tv-episodes" id="tvEps"></div>
-            <video id="tvVideo" controls playsinline preload="metadata"></video>
+            <div class="tvp" id="tvp">
+                <video id="tvVideo" playsinline webkit-playsinline preload="metadata"></video>
+                <div class="tvp-top"><b id="tvpName"></b><span id="tvpEp"></span></div>
+                <button type="button" class="tvp-big" id="tvpBig" aria-label="播放"><i class="fas fa-play"></i></button>
+                <div class="tvp-spin" id="tvpSpin" hidden><i></i></div>
+                <div class="tvp-err" id="tvpErr" hidden><p id="tvpErrMsg"></p><button type="button" id="tvpRetry">重试</button></div>
+                <div class="tvp-toast" id="tvpToast" hidden></div>
+                <div class="tvp-bar" id="tvpBar">
+                    <button type="button" class="tvp-icon" id="tvpPlay" title="播放/暂停 (空格)"><i class="fas fa-pause"></i></button>
+                    <button type="button" class="tvp-icon" id="tvpPrev" title="上一集"><i class="fas fa-backward-step"></i></button>
+                    <button type="button" class="tvp-icon" id="tvpNext" title="下一集"><i class="fas fa-forward-step"></i></button>
+                    <span class="tvp-time"><span id="tvpCur">00:00</span> / <span id="tvpDur">00:00</span></span>
+                    <div class="tvp-track" id="tvpTrack">
+                        <div class="tvp-buf" id="tvpBuf"></div>
+                        <div class="tvp-played" id="tvpPlayed"><i class="tvp-dot"></i></div>
+                        <div class="tvp-hover" id="tvpHover">00:00</div>
+                    </div>
+                    <button type="button" class="tvp-icon" id="tvpMute" title="静音 (M)"><i class="fas fa-volume-high"></i></button>
+                    <div class="tvp-vol" id="tvpVolWrap"><div class="tvp-vol-track"><div class="tvp-vol-val" id="tvpVolVal"><i></i></div></div></div>
+                    <button type="button" class="tvp-icon tv-text" id="tvpRate" title="倍速">1.0x</button>
+                    <button type="button" class="tvp-icon" id="tvpPip" title="画中画"><i class="fas fa-clone"></i></button>
+                    <button type="button" class="tvp-icon" id="tvpWeb" title="网页全屏 (W)"><i class="fas fa-arrows-left-right"></i></button>
+                    <button type="button" class="tvp-icon" id="tvpFull" title="全屏 (F)"><i class="fas fa-expand"></i></button>
+                </div>
+                <div class="tvp-menu" id="tvpMenu" hidden></div>
+            </div>
         </section>
 
         <div class="info-box">
@@ -133,13 +159,14 @@
     <!-- nav:bot-tab:end -->
 </main>
 
-    <script src="js/tv.js?v=20261075"></script>
-<script src="js/common.js?v=20261075"></script>
-<script src="js/anim.js?v=20261075"></script>
-<script src="js/sidebar.js?v=20261075"></script>
-<script src="js/particles-config.js?v=20261075"></script>
-<script src="js/live2d-fix.js?v=20261075" defer></script>
+    <script src="js/tv-player.js?v=20261085"></script>
+    <script src="js/tv.js?v=20261085"></script>
+<script src="js/common.js?v=20261085"></script>
+<script src="js/anim.js?v=20261085"></script>
+<script src="js/sidebar.js?v=20261085"></script>
+<script src="js/particles-config.js?v=20261085"></script>
+<script src="js/live2d-fix.js?v=20261085" defer></script>
 <script src="https://sakura-live2d.pages.dev/live2d/waifu.js?v=20260904" defer></script>
-<script src="js/live2d-app.js?v=20261075" defer></script>
+<script src="js/live2d-app.js?v=20261085" defer></script>
 </body>
 </html>
