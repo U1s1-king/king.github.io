@@ -104,8 +104,21 @@
     }, true);
   }
 
+  /* ---------- 兜底：播放器帧被偷偷导航走了就拉回来 ----------
+     <a> 拦截覆盖不到的（脚本里的 location.href=...）会真把这一帧导航走，
+     <audio> 随之销毁。一旦发现它不在 music.html，立刻重新装回音乐页 ——
+     续播会从记录的断点接着放。代价是一次加载，而不是"音乐没了"。 */
+  function keepPlayerHome() {
+    var href = '';
+    try { href = (playerFrame.contentWindow || {}).location.href || ''; } catch (e) { href = ''; }
+    if (!href || href.indexOf('about:') === 0) return;
+    if (href.indexOf(MUSIC) >= 0) return;
+    playerFrame.setAttribute('src', MUSIC + location.search);
+  }
+
   function syncMini() {
     guardPlayerNavigation();
+    keepPlayerHome();
     if (!mini) return;
     var s = playerState();
     var on = !!(s && s.started && current !== MUSIC);
