@@ -854,6 +854,29 @@ const TV_SOURCES = [
 const TV_UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
 
+/* 单次上游超时：某个源挂了不能把整页卡住（实测有源会 30s 不响应） */
+function tvSignal(ms) {
+  try {
+    if (typeof AbortSignal !== 'undefined' && AbortSignal.timeout) return AbortSignal.timeout(ms)
+  } catch (e) {
+    /* 走下面的兜底 */
+  }
+  try {
+    const c = new AbortController()
+    setTimeout(function () {
+      try {
+        c.abort()
+      } catch (e) {}
+    }, ms)
+    return c.signal
+  } catch (e) {
+    return undefined
+  }
+}
+
+/* 命中的源记在 isolate 里，后续请求先打它，少绕弯路 */
+let TV_ACTIVE = ''
+
 async function tvList(params, origin) {
   const ac = params.get('ac') === 'videolist' ? 'videolist' : 'list'
   const q = new URLSearchParams({ ac })
@@ -862,10 +885,15 @@ async function tvList(params, origin) {
     if (v) q.set(k, v)
   })
   const errors = []
-  for (const base of TV_SOURCES) {
+  const order = TV_ACTIVE
+    ? [TV_ACTIVE].concat(TV_SOURCES.filter(function (b) { return b !== TV_ACTIVE }))
+    : TV_SOURCES
+  for (const base of order) {
     try {
       const r = await fetch(base + '?' + q.toString(), {
         headers: { 'User-Agent': TV_UA, Referer: base, Accept: 'application/json,text/plain,*/*' },
+        signal: tvSignal(8000),
+        cf: { cacheTtl: 120, cacheEverything: true },
       })
       if (!r.ok) {
         errors.push(base + ': HTTP ' + r.status)
@@ -876,6 +904,7 @@ async function tvList(params, origin) {
         errors.push(base + ': 返回内容不是片单')
         continue
       }
+      TV_ACTIVE = base
       return new Response(text, {
         headers: Object.assign(
           { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'public, max-age=60' },
@@ -906,10 +935,19 @@ async function tvImage(params, origin) {
     return fail('拉图失败：' + (e && e.message), 502, origin)
   }
   if (!r.ok) return fail('上游 ' + r.status, 502, origin)
+  /* 整张取回来再吐：这些图床对数据中心 IP 起步很慢，直接流式转发会把
+     Content-Length 拖着走（实测 17KB 的图 30 秒才到 11KB），缓冲后正常 */
+  let buf
+  try {
+    buf = await r.arrayBuffer()
+  } catch (e) {
+    return fail('读图失败：' + (e && e.message), 502, origin)
+  }
   const headers = Object.assign({ 'Cache-Control': 'public, max-age=86400' }, corsHeaders(origin))
   const ct = r.headers.get('Content-Type')
-  if (ct) headers['Content-Type'] = ct
-  return new Response(r.body, { status: 200, headers })
+  headers['Content-Type'] = ct && ct.indexOf('image/') === 0 ? ct : 'image/jpeg'
+  headers['Content-Length'] = String(buf.byteLength)
+  return new Response(buf, { status: 200, headers })
 }
 
 async function tvStream(params, origin, request) {

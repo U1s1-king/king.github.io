@@ -48,8 +48,24 @@
 | `/api/url` | **可播放地址**（多 Meting 镜像轮询，返回真实 CDN 直链，不代理音频流） |
 | `/api/url/lyric` | 备用歌词源 |
 | `/api/meting` | Meting 通用代理 |
+| `/api/tv` | 影视片单/详情/搜索（`ac` `t` `pg` `wd` `ids`），代理公开苹果 CMS 采集接口 |
+| `/api/tv/img` | 影视海报代理（海报图床普遍有热链保护，浏览器直连会 418） |
+| `/api/tv/stream` | m3u8/分片代理**兜底**（返回的播放列表里地址会重写回本代理） |
 
 未匹配的路径会回退到 `env.ASSETS.fetch`（静态资源）。
+
+## 影视代理（`/api/tv*`）
+
+`TV.html` 直连 `cj.lziapi.com` 这类公开采集接口时会失败：实测 12 个接口
+**只要请求带 `Origin` 就不回 `Access-Control-Allow-Origin`**（不带反而给 `*`），
+浏览器被 CORS 一拦就是空页面。所以片单/详情/搜索由 Worker 转发（服务端请求不带 Origin，
+上游照常返回数据），再按本站白名单回 CORS；上游依次尝试、命中后记住该源，
+单次请求 8 秒超时，避免某个源挂了把整页卡住。
+
+视频流**默认不走代理**：实测视频 CDN 对带 Origin 的请求照样回 `Access-Control-Allow-Origin: *`，
+master / variant / TS 分片全部 200，浏览器直连即可；同时也避开了「CDN 按客户端指纹判掉非浏览器
+请求」的坑——Cloudflare 与 Node 侧实测都会拿到上游 404，因此 `/api/tv/stream` 只作为
+直连失败后的兜底重试（对这类会判指纹的 CDN 兜底可能仍失败，此时换线路即可）。
 
 ## 部署
 
