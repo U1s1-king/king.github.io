@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <script src="js/version.js?v=20261035"></script>
-    <script src="js/app-shell.js?v=20261035"></script>
+    <script src="js/version.js?v=20261045"></script>
+    <script src="js/app-shell.js?v=20261045"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <link rel="stylesheet" href="css/style.css?v=20261035">
-    <link rel="stylesheet" href="css/sidebar.css?v=20261035">
+    <link rel="stylesheet" href="css/style.css?v=20261045">
+    <link rel="stylesheet" href="css/sidebar.css?v=20261045">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#ffb6c1">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -22,13 +22,13 @@
     <title>影视 · Tomo Ebizuka</title>
     <link rel="canonical" href="https://zhaokening.ccwu.cc/TV.html">
     
-    <link rel="stylesheet" href="css/all.min.css?v=20261035">
-    <link rel="stylesheet" href="css/Tools.css?v=20261035">
-    <link rel="stylesheet" href="css/hub.css?v=20261035">
-    <link rel="stylesheet" href="css/tv.css?v=20261035">
-    <link rel="stylesheet" href="css/anim.css?v=20261035">
-    <link rel="stylesheet" href="css/mobile.css?v=20261035">
-    <link rel="stylesheet" href="css/app.css?v=20261035">
+    <link rel="stylesheet" href="css/all.min.css?v=20261045">
+    <link rel="stylesheet" href="css/Tools.css?v=20261045">
+    <link rel="stylesheet" href="css/hub.css?v=20261045">
+    <link rel="stylesheet" href="css/tv.css?v=20261045">
+    <link rel="stylesheet" href="css/anim.css?v=20261045">
+    <link rel="stylesheet" href="css/mobile.css?v=20261045">
+    <link rel="stylesheet" href="css/app.css?v=20261045">
     <meta name="description" content="Tomo Ebizuka 的影视页：聚合公开采集接口，在线看电影、剧集、综艺与动漫，支持 HLS 播放。">
     <meta name="keywords" content="(O_o)??,工具箱,工具,转换器,随机数,密码生成,翻译,OCR,天气">
     <meta name="author" content="king">
@@ -70,6 +70,55 @@
 </aside>
 <!-- nav:sidebar:end -->
 
+<main class="toolbox-container">
+    <header class="toolbox-header">
+        <h1 class="blog-title">
+            <i class="fas fa-tv"></i>
+            影视
+            <i class="fas fa-film"></i>
+        </h1>
+        <div class="subhead">
+            <i class="fas fa-magic"></i> 在线影视 · 分类筛选、搜索、多线路选集
+        </div>
+    </header>
+
+    <div class="main-card">
+        <div class="tv-search">
+            <input id="tvKw" type="search" placeholder="搜片名、演员…" autocomplete="off" aria-label="搜索影视">
+            <button type="button" id="tvGo" class="hub-chip is-on"><i class="fas fa-magnifying-glass"></i><span>搜索</span></button>
+        </div>
+
+        <div class="hub-chips" id="tvCats"></div>
+
+        <div class="tv-grid" id="tvGrid"></div>
+        <div class="tv-pager" id="tvPager" hidden>
+            <button type="button" class="tv-ep" id="tvPrev"><i class="fas fa-chevron-left"></i> 上一页</button>
+            <span class="tv-remark" id="tvPage">1 / 1</span>
+            <button type="button" class="tv-ep" id="tvNext">下一页 <i class="fas fa-chevron-right"></i></button>
+        </div>
+        <div class="tv-note" id="tvNote"></div>
+
+        <section class="tv-player" id="tvPlayer" hidden>
+            <div class="tv-player-head">
+                <strong id="tvTitle"></strong>
+                <span class="tv-remark" id="tvRemark"></span>
+                <button type="button" class="tv-ep" id="tvBack"><i class="fas fa-arrow-left"></i> 返回列表</button>
+            </div>
+            <div class="tv-episodes" id="tvEps"></div>
+            <video id="tvVideo" controls playsinline preload="metadata"></video>
+        </section>
+
+        <div class="info-box">
+            <h3><i class="fas fa-info-circle"></i> 观影小贴士</h3>
+            <ul>
+                <li><strong>来源</strong>：片源来自公开采集接口，本站不托管任何视频文件</li>
+                <li><strong>代理</strong>：片单接口经本站 Worker 转发（第三方接口带 Origin 就不给 CORS）；视频流是 CDN 直连，直连失败会自动改用代理重试一次</li>
+                <li><strong>播放</strong>：手机 Safari 走系统原生 HLS，其它浏览器用 hls.js</li>
+                <li><strong>线路</strong>：标了「网页线路」的返回的是 HTML 播放页，只能在新标签页打开</li>
+            </ul>
+        </div>
+    </div>
+
     <hr>
     <!-- nav:bot-tab:start - 由 scripts/sync_nav.py 生成，勿手改 -->
     <nav class="bot-tab" aria-label="移动端导航">
@@ -84,13 +133,13 @@
     <!-- nav:bot-tab:end -->
 </main>
 
-    <script src="js/tv.js?v=20261035"></script>
-<script src="js/common.js?v=20261035"></script>
-<script src="js/anim.js?v=20261035"></script>
-<script src="js/sidebar.js?v=20261035"></script>
-<script src="js/particles-config.js?v=20261035"></script>
-<script src="js/live2d-fix.js?v=20261035" defer></script>
+    <script src="js/tv.js?v=20261045"></script>
+<script src="js/common.js?v=20261045"></script>
+<script src="js/anim.js?v=20261045"></script>
+<script src="js/sidebar.js?v=20261045"></script>
+<script src="js/particles-config.js?v=20261045"></script>
+<script src="js/live2d-fix.js?v=20261045" defer></script>
 <script src="https://sakura-live2d.pages.dev/live2d/waifu.js?v=20260904" defer></script>
-<script src="js/live2d-app.js?v=20261035" defer></script>
+<script src="js/live2d-app.js?v=20261045" defer></script>
 </body>
 </html>

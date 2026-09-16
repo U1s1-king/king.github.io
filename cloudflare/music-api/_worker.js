@@ -38,6 +38,9 @@ const SITE_ORIGINS = [
   'https://u1s1-king.github.io',
   'http://localhost:8888',
   'http://127.0.0.1:8888',
+  // 本站本地预览常用端口（js/tv.js 的开发联调也用它）
+  'http://localhost:8899',
+  'http://127.0.0.1:8899',
 ]
 
 const CACHE_TTL = {
@@ -831,6 +834,146 @@ const ROUTES = {
   '/api/url': metingApi.url,
   '/api/url/lyric': metingApi.lyric,
   '/api/meting': metingApi.proxy,
+  '/api/tv': tvList,
+  '/api/tv/img': tvImage,
+}
+
+// ============================================================ 影视（苹果 CMS 采集）
+/* 实测 12 个公开采集接口：只要请求带 Origin，响应里就没有 Access-Control-Allow-Origin
+   （不带 Origin 反而给 *）—— 浏览器直连必定被 CORS 拦死，页面只能一片空白。
+   这里由 Worker 转发：服务端请求不带 Origin，上游照常返回数据，再按白名单回给本站。
+   视频流同理：hls.js 取 m3u8 和分片都是 XHR，所以播放列表和分片也一起代理，
+   并把播放列表里的相对/绝对地址重写回本代理，前端不需要知道上游域名。 */
+const TV_SOURCES = [
+  'https://cj.lziapi.com/api.php/provide/vod/',
+  'https://caiji.dyttzyapi.com/api.php/provide/vod/',
+  'https://api.guangsuapi.com/api.php/provide/vod/',
+  'https://cj.ffzyapi.com/api.php/provide/vod/',
+]
+
+const TV_UA =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+
+async function tvList(params, origin) {
+  const ac = params.get('ac') === 'videolist' ? 'videolist' : 'list'
+  const q = new URLSearchParams({ ac })
+  ;['t', 'pg', 'wd', 'ids'].forEach(function (k) {
+    const v = params.get(k)
+    if (v) q.set(k, v)
+  })
+  const errors = []
+  for (const base of TV_SOURCES) {
+    try {
+      const r = await fetch(base + '?' + q.toString(), {
+        headers: { 'User-Agent': TV_UA, Referer: base, Accept: 'application/json,text/plain,*/*' },
+      })
+      if (!r.ok) {
+        errors.push(base + ': HTTP ' + r.status)
+        continue
+      }
+      const text = await r.text()
+      if (text.indexOf('"list"') < 0 && text.indexOf('"class"') < 0) {
+        errors.push(base + ': 返回内容不是片单')
+        continue
+      }
+      return new Response(text, {
+        headers: Object.assign(
+          { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'public, max-age=60' },
+          corsHeaders(origin),
+        ),
+      })
+    } catch (e) {
+      errors.push(base + ': ' + (e && e.message))
+    }
+  }
+  return fail('所有片源都不可用：' + errors.join(' | '), 502, origin)
+}
+
+async function tvImage(params, origin) {
+  /* 海报图床普遍有热链保护（直连会 418），一起代理掉，卡片才有图 */
+  const target = params.get('u') || ''
+  if (!/^https?:\/\//i.test(target)) return fail('u 参数不合法', 400, origin)
+  let host = ''
+  try {
+    host = new URL(target).origin + '/'
+  } catch (e) {
+    host = ''
+  }
+  let r
+  try {
+    r = await fetch(target, { headers: { 'User-Agent': TV_UA, Referer: host } })
+  } catch (e) {
+    return fail('拉图失败：' + (e && e.message), 502, origin)
+  }
+  if (!r.ok) return fail('上游 ' + r.status, 502, origin)
+  const headers = Object.assign({ 'Cache-Control': 'public, max-age=86400' }, corsHeaders(origin))
+  const ct = r.headers.get('Content-Type')
+  if (ct) headers['Content-Type'] = ct
+  return new Response(r.body, { status: 200, headers })
+}
+
+async function tvStream(params, origin, request) {
+  const target = params.get('u') || ''
+  if (!/^https?:\/\//i.test(target)) return fail('u 参数不合法', 400, origin)
+  const upstreamHeaders = { 'User-Agent': TV_UA, Referer: target }
+  const range = request && request.headers.get('Range')
+  if (range) upstreamHeaders.Range = range
+  let r
+  try {
+    r = await fetch(target, { headers: upstreamHeaders })
+  } catch (e) {
+    return fail('拉流失败：' + (e && e.message), 502, origin)
+  }
+  if (!r.ok && r.status !== 206) return fail('上游 ' + r.status, 502, origin)
+
+  const ct = (r.headers.get('Content-Type') || '').toLowerCase()
+  const looksM3u8 = ct.indexOf('mpegurl') >= 0 || /\.m3u8(\?|$)/i.test(target)
+  if (looksM3u8) {
+    let text = await r.text()
+    if (text.indexOf('#EXTM3U') >= 0) {
+      const base = new URL(target)
+      text = text
+        .split('\n')
+        .map(function (line) {
+          const t = line.trim()
+          if (!t) return line
+          if (t.charAt(0) === '#') {
+            /* 加密流的 key 也在上游，顺手代理；其余标签原样保留 */
+            return line.replace(/URI="([^"]+)"/g, function (m, u) {
+              let abs = u
+              try {
+                abs = new URL(u, base).href
+              } catch (e) {
+                /* 解析不了就原样 */
+              }
+              return 'URI="/api/tv/stream?u=' + encodeURIComponent(abs) + '"'
+            })
+          }
+          let abs = t
+          try {
+            abs = new URL(t, base).href
+          } catch (e) {
+            return line
+          }
+          return '/api/tv/stream?u=' + encodeURIComponent(abs)
+        })
+        .join('\n')
+    }
+    return new Response(text, {
+      headers: Object.assign(
+        { 'Content-Type': 'application/vnd.apple.mpegurl; charset=utf-8', 'Cache-Control': 'no-store' },
+        corsHeaders(origin),
+      ),
+    })
+  }
+
+  const headers = Object.assign({}, corsHeaders(origin))
+  ;['Content-Type', 'Content-Length', 'Content-Range', 'Accept-Ranges', 'Last-Modified', 'ETag'].forEach(function (h) {
+    const v = r.headers.get(h)
+    if (v) headers[h] = v
+  })
+  if (!headers['Accept-Ranges']) headers['Accept-Ranges'] = 'bytes'
+  return new Response(r.body, { status: r.status, headers })
 }
 
 export default {
@@ -845,6 +988,11 @@ export default {
     // 音频走 Range 代理（曲库源站不支持 Range）
   if (url.pathname.indexOf('/music/') === 0) {
     return serveMusic(request, ctx)
+  }
+
+  /* 视频流要带 Range 头，handler 签名只有 (params, origin)，所以单独在这里分发 */
+  if (url.pathname === '/api/tv/stream') {
+    return tvStream(url.searchParams, origin, request)
   }
 
   const handler = ROUTES[url.pathname] || ROUTES[url.pathname.replace(/\/$/, '')]
