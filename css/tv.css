@@ -32,7 +32,11 @@
 }
 
 .tv-card {
-    display: block;
+    /* 海报在上、片名在下：这里必须是 flex 才排得稳。
+       之前 .tv-poster/.tv-name 都是 inline span，全靠 <img> 撑高，
+       片名被挤到行外又被 overflow:hidden 裁掉，卡片上就只剩一张海报了 */
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
     border: 1px solid #ffcdda;
     border-radius: 12px;
@@ -44,7 +48,9 @@
 .tv-card:hover { transform: translateY(-3px); box-shadow: 0 8px 22px rgba(255, 182, 193, .35); }
 
 .tv-poster {
+    display: block;
     position: relative;
+    flex: 0 0 auto;
     aspect-ratio: 2 / 3;
     background: #ffe3ea;
 }
@@ -63,10 +69,17 @@
 }
 
 .tv-name {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
     padding: 8px 10px 10px;
+    min-height: 3.3em; /* 一行两行都占同样高，网格才齐整 */
     color: #a14563;
     font-size: .88rem;
     line-height: 1.35;
+    font-weight: 500;
+    word-break: break-all;
 }
 
 .tv-tip { padding: 24px 4px; color: #8d6b78; text-align: center; }
