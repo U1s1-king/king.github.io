@@ -371,7 +371,12 @@
         });
       }
 if (platform === 'kuwo') {
-        return viaKuwo(keywords, limit).catch(function () { return viaMeting('kuwo', keywords, limit); });
+        /* 先 Meting：它的 id 能和歌词/直链接上；空结果再落桥。
+           桥只负责在取直链时给无损地址（songUrl 里优先走桥），两条路互不冲突。 */
+        return viaMeting('kuwo', keywords, limit).then(function (songs) {
+          if (songs && songs.length) return songs;
+          return viaKuwo(keywords, limit);
+        }).catch(function () { return viaKuwo(keywords, limit); });
       }
       if (platform === 'tencent') {
         return viaMeting('tencent', keywords, limit).then(function (songs) {
