@@ -1,0 +1,49 @@
+/* ============================================================
+ * 站点统一皮 (games/_site-skin.css)
+ * ------------------------------------------------------------
+ * 41 款小游戏各自带一套主题（黑底霓虹、紫色、马卡龙都有），点进去像跳到别人站。
+ * 这里只统一「页壳」——页面底色、字体、站点色描边、标题——一律不碰游戏内部布局
+ * 与玩法代码，避免把某款游戏的自适应尺寸弄坏。返回入口仍由 games/_back.js 提供。
+ * ============================================================ */
+:root {
+    --site-ink: #a14563;
+    --site-soft: #8d6b78;
+    --site-line: #ffcdda;
+    --site-pink: #ffb6c1;
+    --site-bg1: #fff9f7;
+    --site-bg2: #ffeef4;
+}
+
+/* 底色统一成站点渐变；很多游戏把 body 设成纯黑/纯紫，这里压掉 */
+html,
+body {
+    background: linear-gradient(145deg, var(--site-bg1) 0%, var(--site-bg2) 100%) fixed !important;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
+        'Hiragino Sans GB', 'Microsoft YaHei', sans-serif !important;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* 视口四周一圈站点粉描边：每个游戏都像装在同一张卡片里。pointer-events:none 保证不挡操作 */
+html::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 2147483001;
+    box-shadow: inset 0 0 0 5px rgba(255, 182, 193, 0.55);
+}
+
+/* 返回胶囊统一用站点字体（位置/配色由 _back.js 决定） */
+#backPill {
+    font-family: inherit !important;
+}
+
+/* 游戏里常见的纯文字说明/按钮，顺手贴近站点配色——只改颜色，不改尺寸与定位 */
+.game-description,
+.instructions,
+.help-text {
+    color: var(--site-soft) !important;
+}
