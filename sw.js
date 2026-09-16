@@ -11,7 +11,7 @@
  * __DSH_VERSION 以及各 HTML 里的 ?v= 保持一致。
  * 统一更新请执行： python scripts/bump_version.py <新版本号>
  * ============================================================ */
-const VERSION = '20261015';
+const VERSION = '20261015'
 const CACHE = 'king-blog-' + VERSION;
 
 const CORE = [
@@ -127,3 +127,22 @@ self.addEventListener('fetch', (e) => {
         .then((res) => { putInCache(req, res); return res; })
         .catch(() => caches.match(req).then((hit) => hit || caches.match('/index.html')))
     );
+    return;
+  }
+
+  /* ---- 2. 动态数据：只走网络 ---- */
+  if (isDynamic(url)) {
+    e.respondWith(fetch(req));
+    return;
+  }
+
+  /* ---- 3. 静态资源：stale-while-revalidate ---- */
+  e.respondWith(
+    caches.match(req).then((hit) => {
+      const network = fetch(req)
+        .then((res) => { putInCache(req, res); return res; })
+        .catch(() => hit);
+      return hit || network;
+    })
+  );
+});
