@@ -39,7 +39,7 @@ const server = http.createServer((req, res) => {
   // 基础安全响应头
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  // SAMEORIGIN 而不是 DENY：shell.html 是「同源 iframe 常驻播放器」，
+  // SAMEORIGIN 而不是 DENY：首页 index.html 是「同源 iframe 常驻播放器」，
   // DENY 会让浏览器直接拒绝把它自己的页面放进 iframe，壳就废了。
   // 同源仍然放行，第三方站点照样不能套我们的页面。
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');

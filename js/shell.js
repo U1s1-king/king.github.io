@@ -1,5 +1,5 @@
 /* ============================================================
- * App 外壳 (js/shell.js) —— 只被 shell.html 加载，网站其它页面不引用
+ * App 外壳 (js/shell.js) —— 只被首页 index.html 加载，网站其它页面不引用
  * ------------------------------------------------------------
  * 目的只有一个：切页不断音。
  *   · #player-frame 装 music.html，加载一次后永不导航 → <audio> 一直活着
@@ -190,7 +190,7 @@
   if (next) next.addEventListener('click', function (e) { e.stopPropagation(); tap('#nextBtn'); });
   if (mini) mini.addEventListener('click', function () { show(MUSIC); });
 
-  /* 起始 tab：支持 shell.html#journal 直接进对应页 */
+  /* 起始 tab：支持 index.html#journal 直接进对应页 */
   var want = (location.hash || '').replace(/^#/, '');
   var initial = 'home.html';
   tabs().forEach(function (a) {
