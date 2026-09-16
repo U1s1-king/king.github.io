@@ -129,3 +129,44 @@
     font-size: 1.6rem;
     opacity: .75;
 }
+
+/* ---------- 片源切换（点一个就只问它，慢了随时换） ---------- */
+.tv-srcbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 10px; }
+.tv-srclabel { color: #c98ba1; font-size: .8rem; }
+.tv-srcbar .hub-chip.is-slow { opacity: .62; }
+
+/* ---------- 加载中 / 加载失败（有下限也有上限，不让空屏也不让一直转） ---------- */
+.tv-loading {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 46px 12px 42px;
+    color: #a14563;
+    text-align: center;
+}
+.tv-loading p { margin: 0; font-size: .9rem; color: #8d6b78; }
+.tv-loading .tv-spin {
+    width: 34px;
+    height: 34px;
+    border: 3px solid #ffe3ea;
+    border-top-color: #ffb6c1;
+    border-radius: 50%;
+    animation: tv-spin .8s linear infinite;
+}
+@keyframes tv-spin { to { transform: rotate(360deg); } }
+.tv-loading.is-fail i { font-size: 1.5rem; color: #ffb6c1; }
+.tv-retry {
+    padding: 8px 18px;
+    border: 1px solid #ffcdda;
+    border-radius: 10px;
+    background: #fff;
+    color: #a14563;
+    font: inherit;
+    font-size: .88rem;
+    cursor: pointer;
+    transition: background .2s;
+}
+.tv-retry:hover { background: #ffe3ea; }
+.tv-loading-hint { font-size: .78rem !important; color: #bda6ae !important; }

@@ -21,7 +21,9 @@
   var MEDIA_EXT = ['.mp4', '.m4v', '.mkv', '.flv', '.avi', '.mov', '.webm', '.mp3', '.m4a'];
 
   /* src：分类列表来自哪号源。各站 type_id 编号不同，翻页/点分类必须带上它 */
-  var state = { t: '', pg: 1, kw: '', src: null, busy: false };
+  var state = { t: '', pg: 1, kw: '', src: null, busy: false, pick: false };
+  /* 「片源」那排的源清单（由网关下发），以及这次每个源的耗时 */
+  var SRCS = [];
   /* 扁平化的选集列表，给播放器的上一集/下一集/自动连播用 */
   var EP = { list: [], i: -1 };
   var LINE_NAMES = { liangzi: '量子线路', lzm3u8: '量子 M3U8', lz: '量子' };
@@ -29,6 +31,88 @@
   function byId(id) { return document.getElementById(id); }
   function setText(id, s) { var el = byId(id); if (el) el.textContent = s; }
   function say(html) { var g = byId('tvGrid'); if (g) g.innerHTML = '<p class="tv-tip">' + html + '</p>'; }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+
+  /* ---------------- 加载中 / 加载失败（别让用户对着空屏或者一直转） ---------------- */
+  var loadTimers = [];
+  var loadTick = 0;
+  function clearLoad() {
+    loadTimers.forEach(clearTimeout);
+    loadTimers = [];
+    if (loadTick) { clearInterval(loadTick); loadTick = 0; }
+  }
+
+  function loadingStart(what) {
+    clearLoad();
+    var g = byId('tvGrid');
+    if (!g) return;
+    g.innerHTML = '<div class="tv-loading"><span class="tv-spin"></span><p id="tvLoadMsg">' + esc(what) +
+      '</p><p class="tv-loading-hint" id="tvLoadSec">已等 0 秒</p></div>';
+    var msg = function (s) { var m = byId('tvLoadMsg'); if (m) m.textContent = s; };
+    var t0 = Date.now();
+    /* 秒表：让用户看得见在等多久，也提醒上限是一分钟 */
+    loadTick = setInterval(function () {
+      var s = byId('tvLoadSec');
+      if (!s) return;
+      var n = Math.floor((Date.now() - t0) / 1000);
+      s.textContent = '已等 ' + n + ' 秒' + (n >= 50 ? '（快到一分钟上限）' : '');
+    }, 1000);
+    loadTimers.push(setTimeout(function () { msg('正在逐个片源抓数据，先到的先出…'); }, 1200));
+    loadTimers.push(setTimeout(function () { msg('有片源回得慢，还在等它这一页…'); }, 6000));
+    loadTimers.push(setTimeout(function () { msg('还没回来。特别慢的话，点上面「片源」换一个快的。'); }, 18000));
+    loadTimers.push(setTimeout(function () { msg('等了半分钟了，这个源大概率不灵 —— 建议点「片源」换一个。'); }, 35000));
+  }
+
+  function loadingFail(msg) {
+    clearLoad();
+    var g = byId('tvGrid');
+    if (!g) return;
+    g.innerHTML = '<div class="tv-loading is-fail"><i class="fas fa-circle-exclamation"></i><p>' + esc(msg) +
+      '</p><button type="button" class="tv-retry" id="tvRetry"><i class="fas fa-rotate-right"></i> 重试一次</button>' +
+      '<p class="tv-loading-hint">还是不行就点上面「片源」换一个源，或者过会儿再来</p></div>';
+    var b = byId('tvRetry');
+    if (b) b.addEventListener('click', function () { load(state.pg); });
+  }
+
+  /* ---------------- 片源切换 ---------------- */
+  function renderSrcs(sources, stats) {
+    if (sources && sources.length) SRCS = sources;
+    var bar = byId('tvSrcs');
+    if (!bar || !SRCS.length) return;
+    var ms = {};
+    (stats || []).forEach(function (s) { ms[s.i] = s.ms; });
+    bar.innerHTML = '';
+    var all = document.createElement('button');
+    all.type = 'button';
+    all.className = 'hub-chip' + (state.pick ? '' : ' is-on');
+    all.innerHTML = '<i class="fas fa-layer-group"></i><span>聚合（全部源）</span>';
+    all.addEventListener('click', function () { pickSrc(null); });
+    bar.appendChild(all);
+    SRCS.forEach(function (s) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'hub-chip' + (state.pick && state.src === s.id ? ' is-on' : '');
+      b.title = s.name + (s.search ? '（支持搜索）' : '（不支持搜索，只能翻列表）');
+      b.innerHTML = '<i class="fas fa-tower-broadcast"></i><span></span>';
+      var nm = s.name;
+      if (ms[s.id]) {
+        nm += ' ' + (ms[s.id] / 1000).toFixed(1) + 's';
+        if (ms[s.id] > 5000) b.classList.add('is-slow');
+      }
+      b.querySelector('span').textContent = nm;
+      b.addEventListener('click', function () { pickSrc(s.id); });
+      bar.appendChild(b);
+    });
+  }
+
+  function pickSrc(id) {
+    state.pick = typeof id === 'number';
+    state.src = state.pick ? id : null;
+    renderSrcs(SRCS, []);
+    /* 各站分类编号不通用，换了源就把分类清掉重来 */
+    if (state.t) { pickCat('', 1); return; }
+    load(1);
+  }
 
   /* 结果提示里要带链接，用 DOM 拼，避免把第三方字符串当 HTML 插 */
   function noteWithLink(msg, url) {
@@ -59,7 +143,9 @@
     throw new Error('片源返回的不是合法 JSON');
   }
 
-  /* 浏览器端超时：CF 边缘偶尔会把响应传到一半卡住，不能干等 */
+  /* 一次请求最慢等一分钟（含重试的总预算，不是每次一分钟）。
+     CF 边缘偶尔会把响应传到一半卡住，所以必须有上限；但也不能短，有的源本来就慢。 */
+  var WAIT_MAX = 60000;
   function timeoutOpt(ms) {
     try {
       if (typeof AbortSignal !== 'undefined' && AbortSignal.timeout) return { signal: AbortSignal.timeout(ms) };
@@ -67,8 +153,8 @@
     return {};
   }
 
-  function jget(url) {
-    return fetch(url, Object.assign({ mode: 'cors', credentials: 'omit' }, timeoutOpt(12000))).then(function (r) {
+  function jget(url, ms) {
+    return fetch(url, Object.assign({ mode: 'cors', credentials: 'omit' }, timeoutOpt(ms || WAIT_MAX))).then(function (r) {
       if (!r.ok) throw new Error('HTTP ' + r.status);
       return r.text();
     }).then(parseJson);
@@ -82,19 +168,28 @@
 
   /* 列表/详情：优先自建 Worker 代理（有 CORS），失败再试直连（几乎必被拦，留个念想） */
   var DIRECT = 'https://cj.lziapi.com/api.php/provide/vod/';
-  function apiTry(url, n) {
-    return jget(url).catch(function (e) {
-      if (n > 1) {
-        return new Promise(function (r) { setTimeout(r, 700); }).then(function () { return apiTry(url, n - 1); });
-      }
-      throw e;
+  var TOO_LONG = '等了超过一分钟还没回来';
+  function leftMs(deadline) { return deadline - Date.now(); }
+
+  /* 重试共用同一个 deadline：不管重试几次，总共就等一分钟。
+     次数也封顶 —— 否则网络一断就会 700ms 一次空转满一分钟，白等 */
+  function apiTry(url, deadline, n) {
+    var left = leftMs(deadline);
+    if (left < 2500) return Promise.reject(new Error(TOO_LONG));
+    return jget(url, left).catch(function (e) {
+      if (n <= 1) throw (leftMs(deadline) < 2500 ? new Error(TOO_LONG) : e);
+      if (leftMs(deadline) < 2500) throw new Error(TOO_LONG);
+      return new Promise(function (r) { setTimeout(r, 700); }).then(function () { return apiTry(url, deadline, n - 1); });
     });
   }
 
   function apiGet(params) {
     var q = qs(params);
-    return apiTry(GATEWAY + '/api/tv?' + q, 3).catch(function (e1) {
-      return jget(DIRECT + '?' + q).catch(function () {
+    var deadline = Date.now() + WAIT_MAX;
+    return apiTry(GATEWAY + '/api/tv?' + q, deadline, 3).catch(function (e1) {
+      var rest = leftMs(deadline);
+      if (rest < 3000) throw new Error(TOO_LONG + '（' + e1.message + '）');
+      return jget(DIRECT + '?' + q, rest).catch(function () {
         throw new Error('代理不可用（' + e1.message + '）');
       });
     });
@@ -114,7 +209,8 @@
     return apiGet({ ac: 'list' }).then(function (d) {
       var bar = byId('tvCats');
       if (!bar) return;
-      if (d && typeof d._src === 'number') state.src = d._src;
+      if (d && typeof d._src === 'number' && !state.pick) state.src = d._src;
+      if (d && d.sources) renderSrcs(d.sources, null);
       var list = (d && d['class']) || [];
       bar.innerHTML = '';
       var all = document.createElement('button');
@@ -196,14 +292,33 @@
     if (state.busy) return;
     state.busy = true;
     state.pg = pg || 1;
-    say('正在加载…');
-    apiGet({ ac: 'videolist', t: state.t, pg: state.pg, wd: state.kw, _src: state.src }).then(function (d) {
-      if (d && typeof d._src === 'number') state.src = d._src;
-      render(d);
-    }).catch(function (e) {
-      say('片源暂时不可用：' + String(e.message || e) + '<br><span style="font-size:.8rem">（若是刚更新，可能 Worker 还没重新部署）</span>');
-      var pager = byId('tvPager'); if (pager) pager.hidden = true;
-    }).then(function () { state.busy = false; });
+    var t0 = Date.now();
+    var single = state.pick && typeof state.src === 'number' ? SRCS.filter(function (s) { return s.id === state.src; }) : [];
+    loadingStart(single.length ? ('正在请求「' + single[0].name + '」…') : '正在找片…');
+    apiGet({ ac: 'videolist', t: state.t, pg: state.pg, wd: state.kw, _src: state.src, pick: state.pick ? 1 : '' })
+      .then(function (d) {
+        /* 动画最少露 500ms：太快反而像闪一下，看不清发生了什么 */
+        var wait = Math.max(0, 500 - (Date.now() - t0));
+        return new Promise(function (r) { setTimeout(r, wait); }).then(function () {
+          clearLoad();
+          if (d && typeof d._src === 'number' && !state.pick) state.src = d._src;
+          if (d && d.sources) renderSrcs(d.sources, d._stats);
+          render(d);
+        });
+      })
+      .catch(function (e) {
+        var pager = byId('tvPager'); if (pager) pager.hidden = true;
+        var m = String(e.message || e);
+        var why = /一分钟|timeout|abort/i.test(m)
+          ? '这个源太慢了或者没响应'
+          : /^HTTP 5/.test(m)
+            ? '源站这会儿出错了'
+            : /failed|fetch|network|load/i.test(m)
+              ? '连不上片源（网络或代理不通）'
+              : '没找到片源';
+        loadingFail(why + '：' + m);
+      })
+      .then(function () { state.busy = false; });
   }
 
   /* ---------------- 详情与线路 ---------------- */

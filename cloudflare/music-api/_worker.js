@@ -864,6 +864,15 @@ const TV_LIST_ONLY = [
 ]
 
 const TV_SOURCES = TV_SEARCH_SOURCES.concat(TV_LIST_ONLY)
+/* 给用户看的源名，和 TV_SOURCES 一一对应，顺序不能动 */
+const TV_NAMES = ['光速', 'uku', '量子', '非凡', '百度', '电影天堂', '最大', '无损云', '同源', '索尼']
+
+/* 前端「片源」那排按钮用这个列表 */
+function tvSourceList() {
+  return TV_SOURCES.map(function (b, i) {
+    return { id: i, name: TV_NAMES[i] || '源 ' + (i + 1), search: TV_SEARCH_SOURCES.indexOf(b) >= 0 }
+  })
+}
 
 /* 采集站几乎都挂着一个成人栏目；本站不展示，直接在网关里摘干净（前端 js/tv.js 还有一层） */
 const TV_ADULT = /伦理|福利|里番|情色|成人|无码|色情|自拍|偷拍|人妖|淫/
@@ -981,7 +990,7 @@ async function tvClassList(params, origin) {
       return fail('拿不到分类：' + (e && e.message), 502, origin)
     }
   }
-  return jsonResponse({ code: 1, msg: '数据列表', class: list, _src: idx }, 200, origin, {
+  return jsonResponse({ code: 1, msg: '数据列表', class: list, _src: idx, sources: tvSourceList() }, 200, origin, {
     'Cache-Control': 'public, max-age=600',
   })
 }
@@ -999,6 +1008,7 @@ async function tvAggregate(params, origin, bases, ac) {
   const jobs = bases.map(function (base, i) {
     const q = new URLSearchParams({ ac: ac, pg: pg })
     if (wd) q.set('wd', wd)
+    const t0 = Date.now()
     return fetch(base + '?' + q.toString(), {
       headers: { 'User-Agent': TV_UA, Referer: base, Accept: 'application/json,text/plain,*/*' },
       signal: tvSignal(6000),
@@ -1010,7 +1020,16 @@ async function tvAggregate(params, origin, bases, ac) {
       .then(function (text) {
         if (!text || text.indexOf('"list"') < 0) return
         const j = JSON.parse(text)
-        got.push({ i: i, base: base, list: j.list || [], total: j.total || 0, pagecount: j.pagecount || 1 })
+        got.push({
+          i: i,
+          base: base,
+          list: j.list || [],
+          total: j.total || 0,
+          pagecount: j.pagecount || 1,
+          /* 顺手记下这次每个源花了多久，前端会把它标在「片源」按钮上，方便挑快的 */
+          ms: Date.now() - t0,
+          n: (j.list || []).length,
+        })
       })
       .catch(function () {
         /* 这个源没赶上就算了 */
@@ -1060,6 +1079,10 @@ async function tvAggregate(params, origin, bases, ac) {
       list: list,
       _src: got[0].i,
       _srcs: got.length,
+      sources: tvSourceList(),
+      _stats: got.map(function (g) {
+        return { i: g.i, ms: g.ms, n: g.n }
+      }),
     },
     200,
     origin,
@@ -1080,7 +1103,8 @@ async function tvList(params, origin) {
   const pin = parseInt(params.get('_src') || '', 10)
   /* 分类和详情必须只问一个源（各站 type_id 不是一套编号，串了就会点错片），
      其余情况（首页最新、搜索）把多个源并起来，见上面的 tvAggregate */
-  if (!params.get('t') && !params.get('ids')) {
+  /* pick=1：用户在「片源」里手动指定了某一个源，那就只问他，别聚合 */
+  if (!params.get('t') && !params.get('ids') && !params.get('pick')) {
     const merged = await tvAggregate(params, origin, wd ? TV_SEARCH_SOURCES : TV_SOURCES, ac)
     if (merged) return merged
   }
@@ -1128,6 +1152,7 @@ async function tvList(params, origin) {
       try {
         const o = JSON.parse(out)
         o._src = TV_SOURCES.indexOf(base)
+        o.sources = tvSourceList()
         out = JSON.stringify(o)
       } catch (e) {
         /* 不是 JSON 就原样返回 */

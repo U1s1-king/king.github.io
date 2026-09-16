@@ -25,6 +25,8 @@
   var clickTimer = 0;
   var volBeforeMute = 1;
   var dragging = 0;
+  /* 加载看门狗：再慢也不能一直转圈，到点就报错让人换线路 */
+  var watchdog = 0;
 
   function $(id) { return document.getElementById(id); }
   function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
@@ -277,6 +279,11 @@
     if (classify(url) === 'page') return false;
     cur = url;
     retriedProxy = false;
+    clearTimeout(watchdog);
+    watchdog = setTimeout(function () {
+      if (!D.video || playing() || D.video.readyState >= 3) return;
+      showErr('这个源加载太慢或者没响应（等满一分钟了）。点重试，或者回列表换一条线路。');
+    }, 60000);
     /* 播放器一开就把看板娘收起来，免得她压住右侧按钮 */
     document.documentElement.classList.add('tvp-open');
     hideErr();
@@ -295,6 +302,7 @@
   }
 
   function stop() {
+    clearTimeout(watchdog);
     document.documentElement.classList.remove('tvp-open');
     destroyHls();
     var v = D.video;
@@ -330,7 +338,8 @@
     ['playing', 'pause', 'ended'].forEach(function (ev) { v.addEventListener(ev, function () { syncPlayIcon(); setTime(); }); });
     v.addEventListener('timeupdate', function () { setTime(); setBuffer(); });
     v.addEventListener('progress', setBuffer);
-    v.addEventListener('loadedmetadata', function () { setTime(); hideErr(); setSpin(false); });
+    v.addEventListener('loadedmetadata', function () { clearTimeout(watchdog); setTime(); hideErr(); setSpin(false); });
+    v.addEventListener('playing', function () { clearTimeout(watchdog); hideErr(); setSpin(false); });
     v.addEventListener('waiting', function () { setSpin(true); });
     v.addEventListener('canplay', function () { setSpin(false); });
     v.addEventListener('error', function () { if (!hls) showErr('视频加载失败，换一条线路或重试。'); });
