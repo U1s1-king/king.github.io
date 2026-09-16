@@ -6,8 +6,8 @@
 
 现在：
   - 结构模板 -> _partials/sidebar.html、_partials/bot-tab.html
-  - 链接数据 -> 本文件的 NAV        （桌面侧边栏，6 项，不变）
-              -> 本文件的 NAV_MOBILE （移动端底部 tab，4 项，刻意不含首页/留言）
+  - 链接数据 -> 本文件的 NAV        （桌面侧边栏，7 项，不变）
+              -> 本文件的 NAV_MOBILE （移动端底部 tab，7 项，刻意不含首页/留言）
   - 每页参数 -> 本文件的 PAGES（链接前缀、当前页高亮）
 
 用法：
@@ -36,13 +36,14 @@ NAV = [
     ('music.html',     '音乐', 'fa-music'),
     ('Tools.html',     '工具', 'fa-toolbox'),
     ('Games.html',     '游戏', 'fa-gamepad'),
+    ('TV.html',       '影视', 'fa-film'),
 ]
 
-# 移动端底部 tab：6 项（主流通行上限 3~5，Material 允许）。
+# 移动端底部 tab：7 项（主流通行上限 3~5，Material 允许）。
 # 为什么不砍到 4 项：手机浏览器访客必须能一步回首页；一个没有文字标签的
 # 图标不算「首页入口」。首页放第一格，归档保留一级 tab。
 # 「留言」不占 tab —— 它是日记页里的第二个视图（日记 ⇄ 留言板）。
-# 桌面侧边栏就是 NAV 那 6 项，两者互不影响
+# 桌面侧边栏就是 NAV 那 7 项，两者互不影响
 # （.bot-tab 在桌面端 display:none，所以改这里不会动到网页端）。
 NAV_MOBILE = [
     ('home.html',      '首页', 'fa-cat'),
@@ -51,6 +52,7 @@ NAV_MOBILE = [
     ('music.html',     '音乐', 'fa-music'),
     ('Tools.html',     '工具', 'fa-toolbox'),
     ('Games.html',     '游戏', 'fa-gamepad'),
+    ('TV.html',       '影视', 'fa-film'),
 ]
 
 # (页面文件, 链接前缀, 当前页高亮的 href)
@@ -66,6 +68,7 @@ PAGES = [
     # 首页外壳（原 shell.html）：自带迷你播放条与底部 tab，没有侧边栏，也没有
     # 「当前页」—— tab 高亮由 js/shell.js 按 iframe 实际加载到哪一页动态切。
     ('index.html',     '',  None),
+    ('TV.html',       '',  'TV.html'),
 ]
 
 # 这些页面自己画导航，不生成侧边栏块
@@ -142,7 +145,7 @@ def main():
         # 404 例外：它没有「当前页」，而移动端 tab 里已经没有首页了，
         # 如果 404 也用 4 项，用户在错误页上就没有任何回首页的出口。
         # 404.html 过去要用 NAV 才够拿到「首页」入口，现在 NAV_MOBILE 里就有首页，
-        # 所以不再需要任何特例 —— 全站移动端 tab 统一 5 项。
+        # 所以不再需要任何特例 —— 全站移动端 tab 统一 7 项。
         if fname not in NO_SIDEBAR:
             text = apply_block(text, 'nav:sidebar', sidebar_block(prefix, active, eol), SIDEBAR_FALLBACK)
         text = apply_block(text, 'nav:bot-tab', bottab_block(prefix, eol, NAV_MOBILE), BOTTAB_FALLBACK)

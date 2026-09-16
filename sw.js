@@ -11,7 +11,7 @@
  * __DSH_VERSION 以及各 HTML 里的 ?v= 保持一致。
  * 统一更新请执行： python scripts/bump_version.py <新版本号>
  * ============================================================ */
-const VERSION = '20260995';
+const VERSION = '20261005';
 const CACHE = 'king-blog-' + VERSION;
 
 const CORE = [
@@ -69,6 +69,15 @@ const CORE = [
      预缓存只会把 30KB 塞进 Service Worker 的安装阶段，得不偿失。 */
   '/icons/icon-192.png',
   '/icons/icon-512.png'
+    '/TV.html?v=' + VERSION',
+    '/Games.html?v=' + VERSION',
+    '/css/hub.css?v=' + VERSION',
+    '/css/tools-plus.css?v=' + VERSION',
+    '/css/tv.css?v=' + VERSION',
+    '/js/tv.js?v=' + VERSION',
+    '/js/games.js?v=' + VERSION',
+    '/js/tools-hub.js?v=' + VERSION',
+    '/js/tools-extra.js?v=' + VERSION',
 ];
 
 /* 这些路径是动态数据，永不入缓存 */
@@ -118,22 +127,3 @@ self.addEventListener('fetch', (e) => {
         .then((res) => { putInCache(req, res); return res; })
         .catch(() => caches.match(req).then((hit) => hit || caches.match('/index.html')))
     );
-    return;
-  }
-
-  /* ---- 2. 动态数据：只走网络 ---- */
-  if (isDynamic(url)) {
-    e.respondWith(fetch(req));
-    return;
-  }
-
-  /* ---- 3. 静态资源：stale-while-revalidate ---- */
-  e.respondWith(
-    caches.match(req).then((hit) => {
-      const network = fetch(req)
-        .then((res) => { putInCache(req, res); return res; })
-        .catch(() => hit);
-      return hit || network;
-    })
-  );
-});
