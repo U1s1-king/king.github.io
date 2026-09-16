@@ -16,6 +16,7 @@
   var mini = byId('app-mini-player');
   var MUSIC = 'music.html';
   var current = '';
+  var lastTab = 'index.html';   /* 内容帧最后停在哪一页（音乐页除外） */
 
   function tabs() { return Array.prototype.slice.call(document.querySelectorAll('.bot-tab a')); }
   function fileOf(a) { return (a.getAttribute('href') || '').split('/').pop(); }
@@ -26,6 +27,7 @@
   function show(file, fromPop) {
     if (!file) return;
     current = file;
+    if (file !== MUSIC) lastTab = file;
     highlight(file);
     if (file === MUSIC) {
       var src = playerFrame.getAttribute('src');
@@ -104,6 +106,46 @@
     }, true);
   }
 
+  function pageDoc() {
+    try { return pageFrame.contentDocument || null; } catch (e) { return null; }
+  }
+
+  /* ---------- 内容帧里点到音乐页，也要交给常驻播放器 ----------
+     真凶就是这条路径：用户在内容帧里点页面自己的「音乐」链接，音乐页被装进
+     内容帧并在那一帧里播放 —— 他下一次切页，这一帧导航，<audio> 随帧销毁，
+     于是「切页断音」。所以内容帧里的音乐链接一律拦下来，改成亮出播放器帧。 */
+  function guardContentNavigation() {
+    var d = pageDoc();
+    if (!d || d.__shellGuardedC) return;
+    d.__shellGuardedC = true;
+    d.addEventListener('click', function (e) {
+      var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+      if (!a) return;
+      var href = a.getAttribute('href') || '';
+      if (!href || href.charAt(0) === '#') return;
+      if (a.target === '_blank') return;
+      if (/^(https?:)?\/\//i.test(href) || /^(mailto|tel|javascript):/i.test(href)) return;
+      var f = href.split('#')[0].split('?')[0].split('/').pop();
+      if (f !== MUSIC) return;   /* 其它页面正常在内容帧里走 */
+      e.preventDefault();
+      show(MUSIC);
+    }, true);
+  }
+
+  /* 兜底：内容帧偷偷落到音乐页（JS 跳转 / 深链 / 表单）→ 交给播放器帧，
+     并把内容帧退回它上一页，避免出现第二个播放实例跟着一起放。 */
+  function keepContentOffMusic() {
+    var d = pageDoc();
+    if (!d) return;
+    var href = '';
+    try { href = d.location.href || ''; } catch (e) { href = ''; }
+    if (!href || href.indexOf('about:') === 0) return;
+    if (href.indexOf(MUSIC) < 0) return;
+    show(MUSIC);
+    pageFrame.setAttribute('data-file', '');
+    pageFrame.setAttribute('src', lastTab + location.search);
+  }
+
   /* ---------- 兜底：播放器帧被偷偷导航走了就拉回来 ----------
      <a> 拦截覆盖不到的（脚本里的 location.href=...）会真把这一帧导航走，
      <audio> 随之销毁。一旦发现它不在 music.html，立刻重新装回音乐页 ——
@@ -119,6 +161,8 @@
   function syncMini() {
     guardPlayerNavigation();
     keepPlayerHome();
+    guardContentNavigation();
+    keepContentOffMusic();
     if (!mini) return;
     var s = playerState();
     var on = !!(s && s.started && current !== MUSIC);
@@ -154,6 +198,9 @@
   });
   playerFrame.addEventListener('load', function () {
     setTimeout(guardPlayerNavigation, 300);   /* 帧里的文档换了就得重新接管 */
+  });
+  pageFrame.addEventListener('load', function () {
+    setTimeout(guardContentNavigation, 300);
   });
   show(initial, true);
   setInterval(syncMini, 1000);
