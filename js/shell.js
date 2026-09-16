@@ -94,7 +94,11 @@
      改成把目标页装进内容帧。 */
   function guardPlayerNavigation() {
     var d = playerDoc();
-    if (!d || d.__shellGuarded) return;
+    if (!d) return;
+    /* 播放器帧里装的就是 music.html，它自己也有 .bot-tab —— 不交出来就和外壳的
+       底栏叠成两层（内容帧那边同理，见 guardContentNavigation）。 */
+    try { d.documentElement.classList.add('in-shell'); } catch (e) {}
+    if (d.__shellGuarded) return;
     d.__shellGuarded = true;
     d.addEventListener('click', function (e) {
       var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
