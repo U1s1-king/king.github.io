@@ -350,6 +350,8 @@
     var froms = String(it.vod_play_from || '').split('$$$');
     var groups = String(it.vod_play_url || '').split('$$$');
     var firstPlayable = null;
+    /* 各条线路（给播放器右上角那个「线路」菜单用，B 站那个位置是清晰度） */
+    var LINES = [];
     groups.forEach(function (g, gi) {
       var parts = [];
       g.split('#').forEach(function (x) { if (x.indexOf('$') > 0) parts.push(x); });
@@ -380,8 +382,16 @@
         box.appendChild(b);
       });
       eps.appendChild(box);
+      if (playable) LINES.push({ name: lineName(froms[gi], gi), btn: box.querySelector('.tv-ep') });
       if (!firstPlayable && playable) firstPlayable = box.querySelector('.tv-ep');
     });
+    if (window.TVPlayer) {
+      TVPlayer.setQualities(
+        LINES.map(function (x) { return { name: x.name }; }),
+        0,
+        function (i) { if (LINES[i] && LINES[i].btn) LINES[i].btn.click(); },
+      );
+    }
     p.hidden = false;
     if (firstPlayable) { firstPlayable.click(); }
     else {

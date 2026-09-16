@@ -1,15 +1,20 @@
 /* ============================================================
  * 影视播放器皮肤 (css/tv-player.css)
  * ------------------------------------------------------------
- * 布局与交互照 B 站网页播放器抄：底部控制条（播放/上一集/下一集/时间/进度/
- * 音量/倍速/画中画/网页全屏/全屏）、悬停滑出、3 秒无操作自动隐藏、中央大播放键、
- * 双击全屏、空格/方向键/F/W 快捷键、载入转圈、失败遮罩加重试。
- * 配色用站点粉（--tvp-accent 一行就能换成 B 站蓝 #00a1d6）。
- * 内部 class 全部以 tvp- 开头，不会和页面别处撞。
+ * 照 bilibili 播放器 1:1 抄的结构和数值（2026-09 实测 bpx-player）：
+ *   · 底栏高 35px、内边距 0 12px、按钮 36×22、图标 20~22px
+ *   · 进度条是独立一行在按钮上方，轨道 4px：已播 = 主题色、缓冲 rgba(255,255,255,.3)、
+ *     未播 rgba(255,255,255,.2)；悬停轨道变 6px、白色圆点 0→1 弹出、跟随时间气泡
+ *   · 左组 = 播放/暂停 + 上一集/下一集 + 时间；右组 = 线路/倍速/音量/设置/画中画/宽屏/网页全屏/全屏
+ *   · 图标默认 rgba(255,255,255,.8)，悬停纯白；文字按钮（自动、倍速）13px
+ *   · 悬停出现深色圆角气泡提示（内容取自 data-tip）
+ * 唯一区别：把 B 站的蓝 #00AEEC 换成站点粉 --tvp-accent。
  * ============================================================ */
 .tvp {
     --tvp-accent: #ff7a9b;
-    --tvp-accent-weak: rgba(255, 122, 155, 0.32);
+    --tvp-accent-soft: rgba(255, 122, 155, 0.32);
+    --tvp-icon: rgba(255, 255, 255, .8);
+    --tvp-panel: rgba(21, 21, 21, .9);
     position: relative;
     width: 100%;
     aspect-ratio: 16 / 9;
@@ -20,90 +25,68 @@
     -webkit-tap-highlight-color: transparent;
     font-family: inherit;
 }
+.tvp.is-web-full { position: fixed; inset: 0; z-index: 2147482000; border-radius: 0; aspect-ratio: auto; height: 100%; }
+.tvp.is-wide { width: 100vw; margin-left: calc(50% - 50vw); border-radius: 0; }
+.tvp.is-idle { cursor: none; }
 
-.tvp.is-web-full {
-    position: fixed;
-    inset: 0;
-    z-index: 2147482000;
-    border-radius: 0;
-    aspect-ratio: auto;
-    height: 100%;
-}
-
-.tvp video {
+/* B 站的 video 铺满容器，背景纯黑 */
+.tvp > video {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
     display: block;
     object-fit: contain;
-    background: #000;
+    background: #000 !important;
 }
 
-.tvp.is-idle { cursor: none; }
-
-/* ---------- 顶部标题条 ---------- */
+/* ---------- 顶部标题（悬停/全屏时出现） ---------- */
 .tvp-top {
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    padding: 14px 16px 26px;
+    top: 0; left: 0; right: 0;
+    padding: 14px 16px 30px;
     display: flex;
     align-items: baseline;
     gap: 10px;
     color: #fff;
-    font-size: 0.95rem;
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0.62), transparent);
+    font-size: 15px;
+    background: linear-gradient(180deg, rgba(0, 0, 0, .6), transparent);
     opacity: 0;
     transform: translateY(-8px);
     transition: opacity .2s, transform .2s;
     pointer-events: none;
 }
-.tvp-top b { font-weight: 700; }
-.tvp-top span { font-size: .8rem; color: rgba(255, 255, 255, .78); }
+.tvp-top b { font-weight: 600; }
+.tvp-top span { font-size: 12px; color: rgba(255, 255, 255, .7); }
 .tvp.show-ui .tvp-top { opacity: 1; transform: none; }
 
 /* ---------- 中央大播放键 ---------- */
 .tvp-big {
     position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 78px;
-    height: 78px;
-    margin: -39px 0 0 -39px;
+    left: 50%; top: 50%;
+    width: 72px; height: 72px;
+    margin: -36px 0 0 -36px;
+    padding: 0;
     border: none;
     border-radius: 50%;
-    background: rgba(0, 0, 0, .38);
-    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .8);
+    background: rgba(0, 0, 0, .35);
     color: #fff;
-    font-size: 1.6rem;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: transform .16s, background .16s, opacity .2s;
-    padding-left: 5px;
+    transition: transform .16s, background .16s;
 }
-.tvp-big:hover { transform: scale(1.07); background: var(--tvp-accent); }
+.tvp-big svg { width: 34px; height: 34px; fill: currentColor; margin-left: 3px; }
+.tvp-big:hover { background: var(--tvp-accent); }
 .tvp-big[hidden] { display: none; }
 
-/* ---------- 转圈 / 失败 / 提示 ---------- */
-.tvp-spin {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 52px;
-    height: 52px;
-    margin: -26px 0 0 -26px;
-    pointer-events: none;
-}
+/* ---------- 转圈 / 失败 / 气泡提示 ---------- */
+.tvp-spin { position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; margin: -23px 0 0 -23px; pointer-events: none; }
 .tvp-spin[hidden] { display: none; }
 .tvp-spin i {
-    display: block;
-    width: 100%;
-    height: 100%;
-    border: 3px solid rgba(255, 255, 255, .28);
+    display: block; width: 100%; height: 100%;
+    border: 3px solid rgba(255, 255, 255, .25);
     border-top-color: var(--tvp-accent);
     border-radius: 50%;
     animation: tvp-rot .8s linear infinite;
@@ -111,245 +94,215 @@
 @keyframes tvp-rot { to { transform: rotate(360deg); } }
 
 .tvp-err {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
     gap: 14px;
-    background: rgba(0, 0, 0, .72);
-    color: #fff;
-    text-align: center;
-    padding: 20px;
+    background: rgba(0, 0, 0, .74);
+    color: #fff; text-align: center; padding: 20px;
 }
 .tvp-err[hidden] { display: none; }
-.tvp-err p { margin: 0; font-size: .9rem; color: rgba(255, 255, 255, .86); line-height: 1.6; max-width: 90%; }
+.tvp-err p { margin: 0; font-size: 14px; color: rgba(255, 255, 255, .85); line-height: 1.6; max-width: 84%; }
 .tvp-err button {
-    border: none;
-    border-radius: 999px;
-    padding: 9px 22px;
+    border: none; border-radius: 6px;
+    padding: 8px 20px;
     background: var(--tvp-accent);
-    color: #fff;
-    font: inherit;
-    font-size: .9rem;
-    cursor: pointer;
+    color: #fff; font: inherit; font-size: 14px; cursor: pointer;
 }
-.tvp-err button:hover { filter: brightness(1.05); }
 
 .tvp-toast {
-    position: absolute;
-    left: 50%;
-    top: 50%;
+    position: absolute; left: 50%; top: 50%;
     transform: translate(-50%, -50%);
     background: rgba(0, 0, 0, .72);
-    color: #fff;
-    font-size: .85rem;
-    padding: 8px 16px;
-    border-radius: 8px;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity .2s;
+    color: #fff; font-size: 13px;
+    padding: 8px 16px; border-radius: 6px;
+    pointer-events: none; opacity: 0; transition: opacity .2s;
 }
 .tvp-toast[hidden] { display: none; }
 .tvp-toast.on { opacity: 1; }
 
-/* ---------- 底部控制条 ---------- */
+/* ---------- 底栏 ---------- */
 .tvp-bar {
     position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 22px 12px 9px;
-    background: linear-gradient(0deg, rgba(0, 0, 0, .78), transparent);
+    left: 0; right: 0; bottom: 0;
+    padding: 0 12px 6px;
+    background: linear-gradient(0deg, rgba(0, 0, 0, .82), transparent);
     transform: translateY(105%);
     transition: transform .22s ease;
     color: #fff;
 }
 .tvp.show-ui .tvp-bar { transform: none; }
+.tvp-ctrls { display: flex; align-items: center; justify-content: space-between; height: 35px; }
+.tvp-left, .tvp-right { display: flex; align-items: center; gap: 8px; }
 
-.tvp-icon {
-    flex: 0 0 auto;
-    width: 34px;
-    height: 34px;
-    border: none;
-    border-radius: 8px;
-    background: transparent;
-    color: #fff;
-    font-size: .95rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background .15s, color .15s;
-}
-.tvp-icon:hover { background: rgba(255, 255, 255, .16); }
-.tvp-icon.tv-text { width: auto; padding: 0 8px; font-size: .82rem; font-weight: 600; }
-.tvp-icon[disabled] { opacity: .35; cursor: default; }
-.tvp-icon[disabled]:hover { background: transparent; }
-
-.tvp-time {
-    flex: 0 0 auto;
-    font-size: .78rem;
-    font-variant-numeric: tabular-nums;
-    color: rgba(255, 255, 255, .9);
-    padding: 0 2px;
-    white-space: nowrap;
-}
-
-/* ---------- 进度条 ---------- */
-.tvp-track {
+/* ---------- 进度条（独立一行，抄 B 站 4px 轨道） ---------- */
+.tvp-progress {
     position: relative;
-    flex: 1 1 auto;
-    height: 18px;
+    height: 14px;
     display: flex;
     align-items: center;
     cursor: pointer;
     touch-action: none;
-    min-width: 60px;
 }
-.tvp-track::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    height: 4px;
-    border-radius: 2px;
-    background: rgba(255, 255, 255, .28);
-    transition: height .12s;
-}
-.tvp-track:hover::before,
-.tvp-track.is-drag::before { height: 6px; }
-.tvp-buf,
-.tvp-played {
+.tvp-schedule, .tvp-buffer, .tvp-played {
     position: absolute;
     left: 0;
     height: 4px;
     border-radius: 2px;
-    transition: height .12s;
+    transition: height .12s, top .12s;
 }
-.tvp-track:hover .tvp-buf,
-.tvp-track.is-drag .tvp-buf,
-.tvp-track:hover .tvp-played,
-.tvp-track.is-drag .tvp-played { height: 6px; }
-.tvp-buf { background: rgba(255, 255, 255, .42); }
+.tvp-schedule { right: 0; background: rgba(255, 255, 255, .2); }
+.tvp-buffer { background: rgba(255, 255, 255, .3); }
 .tvp-played { background: var(--tvp-accent); }
-.tvp-dot {
+.tvp-progress:hover .tvp-schedule,
+.tvp-progress:hover .tvp-buffer,
+.tvp-progress:hover .tvp-played,
+.tvp-progress.is-drag .tvp-schedule,
+.tvp-progress.is-drag .tvp-buffer,
+.tvp-progress.is-drag .tvp-played { height: 6px; }
+.tvp-thumb {
     position: absolute;
-    right: -7px;
-    top: 50%;
-    width: 14px;
-    height: 14px;
-    margin-top: -7px;
+    right: -6px; top: 50%;
+    width: 12px; height: 12px;
+    margin-top: -6px;
     border-radius: 50%;
     background: #fff;
-    box-shadow: 0 0 0 3px var(--tvp-accent-weak);
+    box-shadow: 0 0 0 2px var(--tvp-accent-soft);
     transform: scale(0);
     transition: transform .14s;
 }
-.tvp-track:hover .tvp-dot,
-.tvp-track.is-drag .tvp-dot { transform: scale(1); }
-.tvp-hover {
+.tvp-progress:hover .tvp-thumb,
+.tvp-progress.is-drag .tvp-thumb { transform: scale(1); }
+.tvp-tip {
     position: absolute;
-    bottom: 18px;
+    bottom: 15px;
     transform: translateX(-50%);
-    background: rgba(0, 0, 0, .78);
+    background: var(--tvp-panel);
     color: #fff;
-    font-size: .72rem;
-    padding: 2px 7px;
-    border-radius: 5px;
+    font-size: 12px;
+    padding: 3px 8px;
+    border-radius: 4px;
     opacity: 0;
     pointer-events: none;
     white-space: nowrap;
 }
-.tvp-track:hover .tvp-hover { opacity: 1; }
+.tvp-progress:hover .tvp-tip { opacity: 1; }
 
-/* ---------- 音量 ---------- */
-.tvp-vol {
+/* ---------- 按钮（36×22，图标 currentColor） ---------- */
+.tvp-btn {
+    position: relative;
     flex: 0 0 auto;
-    width: 30px;
-    height: 18px;
+    width: 36px; height: 22px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--tvp-icon);
     display: flex;
     align-items: center;
+    justify-content: center;
     cursor: pointer;
-    touch-action: none;
-    transition: width .18s;
+    transition: color .15s;
 }
-.tvp-vol-track {
-    position: relative;
-    width: 100%;
-    height: 4px;
-    border-radius: 2px;
-    background: rgba(255, 255, 255, .3);
-}
-.tvp-vol-val {
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    border-radius: 2px;
-    background: var(--tvp-accent);
-}
-.tvp-vol-val i {
-    position: absolute;
-    right: -6px;
-    top: 50%;
-    width: 11px;
-    height: 11px;
-    margin-top: -5.5px;
-    border-radius: 50%;
-    background: #fff;
-    transform: scale(0);
-    transition: transform .14s;
-}
-.tvp-vol:hover .tvp-vol-val i,
-.tvp-vol.is-drag .tvp-vol-val i { transform: scale(1); }
+.tvp-btn:hover { color: #fff; }
+.tvp-btn svg { width: 22px; height: 22px; fill: currentColor; }
+.tvp-btn.tvp-text { width: auto; padding: 0 4px; font-size: 13px; gap: 3px; }
+.tvp-btn.tvp-text svg.tvp-caret { width: 9px; height: 9px; fill: currentColor; }
+.tvp-btn[disabled] { color: rgba(255, 255, 255, .3); cursor: default; }
+.tvp-btn[disabled]:hover { color: rgba(255, 255, 255, .3); }
+.tvp-btn.is-on { color: #fff; }
+.tvp-btn .tvp-i-pause { display: none; }
+.tvp-btn.is-pause .tvp-i-play { display: none; }
+.tvp-btn.is-pause .tvp-i-pause { display: block; }
 
-/* ---------- 倍速菜单 ---------- */
+/* 悬停气泡：抄 B 站那种深色小圆角提示 */
+.tvp-btn::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(4px);
+    background: var(--tvp-panel);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1;
+    padding: 7px 10px;
+    border-radius: 4px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .15s, transform .15s;
+}
+.tvp-btn:hover::after { opacity: 1; transform: translateX(-50%) translateY(0); }
+.tvp-btn[disabled]::after { content: none; }
+
+.tvp-time { font-size: 13px; color: var(--tvp-icon); font-variant-numeric: tabular-nums; white-space: nowrap; padding-left: 2px; }
+
+/* ---------- 音量（悬停展开，同 B 站） ---------- */
+.tvp-vol { flex: 0 0 auto; width: 0; overflow: hidden; transition: width .18s, margin .18s; cursor: pointer; touch-action: none; }
+.tvp-right:hover .tvp-vol { width: 56px; }
+.tvp-vol.is-drag { width: 56px; }
+.tvp-vol-track { position: relative; width: 100%; height: 4px; border-radius: 2px; background: rgba(255, 255, 255, .2); }
+.tvp-vol-val { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 2px; background: var(--tvp-accent); }
+.tvp-vol-val i {
+    position: absolute; right: -5px; top: 50%;
+    width: 10px; height: 10px; margin-top: -5px;
+    border-radius: 50%; background: #fff;
+    transform: scale(0); transition: transform .14s;
+}
+.tvp-vol:hover .tvp-vol-val i, .tvp-vol.is-drag .tvp-vol-val i { transform: scale(1); }
+
+/* ---------- 弹出菜单（倍速 / 线路 / 设置） ---------- */
 .tvp-menu {
     position: absolute;
-    right: 10px;
-    bottom: 58px;
-    background: rgba(20, 20, 22, .93);
-    border-radius: 10px;
-    padding: 6px;
-    min-width: 92px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, .4);
+    right: 12px;
+    bottom: 48px;
+    background: var(--tvp-panel);
+    border-radius: 8px;
+    padding: 6px 0;
+    min-width: 108px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, .35);
+    z-index: 3;
 }
 .tvp-menu[hidden] { display: none; }
 .tvp-menu button {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
     width: 100%;
-    text-align: left;
     border: none;
-    background: transparent;
+    background: none;
     color: #fff;
     font: inherit;
-    font-size: .82rem;
-    padding: 7px 10px;
-    border-radius: 6px;
+    font-size: 13px;
+    line-height: 1;
+    padding: 10px 14px;
     cursor: pointer;
+    text-align: left;
 }
-.tvp-menu button:hover { background: rgba(255, 255, 255, .12); }
-.tvp-menu button.is-on { color: var(--tvp-accent); font-weight: 700; }
+.tvp-menu button:hover { background: rgba(255, 255, 255, .1); }
+.tvp-menu button.is-on { color: var(--tvp-accent); }
+.tvp-menu button.is-on::after { content: '✓'; font-size: 12px; }
 
 /* ---------- 移动端 ---------- */
 @media (max-width: 768px) {
     .tvp { border-radius: 10px; }
-    .tvp-bar { gap: 4px; padding: 18px 8px 7px; }
-    .tvp-icon { width: 30px; height: 30px; font-size: .9rem; }
-    .tvp-time { font-size: .72rem; }
-    .tvp-big { width: 62px; height: 62px; margin: -31px 0 0 -31px; font-size: 1.3rem; }
-    .tvp-vol { display: none; }
-    .tvp-top { font-size: .85rem; padding: 10px 12px 20px; }
+    .tvp-bar { padding: 0 8px 4px; }
+    .tvp-ctrls { height: 32px; }
+    .tvp-left, .tvp-right { gap: 4px; }
+    .tvp-btn { width: 32px; }
+    .tvp-btn svg { width: 20px; height: 20px; }
+    .tvp-btn.tvp-text { font-size: 12px; }
+    .tvp-time { font-size: 12px; }
+    .tvp-big { width: 60px; height: 60px; margin: -30px 0 0 -30px; }
+    .tvp-right:hover .tvp-vol { width: 0; }
+    .tvp-vol.is-drag { width: 48px; }
 }
 
-/* 播放器打开时把看板娘收起来：她（#waifu-fab，z-index 9999）正好压在右侧控制按钮上，
-   实测 elementFromPoint 命中的就是 #live2d < #waifu < #waifu-fab。关掉播放器就回来。 */
+/* 播放器打开时把看板娘和飘落花瓣收起来：
+   #waifu-fab（z-index 9999）会压住右侧按钮，#sakura-flurry（z-index 10）会飘在画面上，
+   B 站不会让装饰盖住视频 */
 html.tvp-open #waifu,
-html.tvp-open #waifu-fab {
-    display: none !important;
-}
+html.tvp-open #waifu-fab,
+html.tvp-open #sakura-flurry { display: none !important; }

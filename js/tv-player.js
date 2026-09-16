@@ -1,12 +1,12 @@
 /* ============================================================
  * 影视播放器 (js/tv-player.js)
  * ------------------------------------------------------------
- * 控件布局与交互照 B 站网页播放器做：底部控制条、悬停滑出、3 秒无操作自动隐藏、
- * 中央大播放键、双击全屏、空格/←→/↑↓/F/W/M 快捷键、倍速菜单、画中画、
- * 网页全屏（不占系统全屏）、载入转圈、失败遮罩加重试、缓冲条。
- * 播放策略：CDN 对带 Origin 的请求给 ACAO:*（实测 master/variant/TS 全 200），
- * 所以默认直连；直连失败自动经本站 Worker /api/tv/stream 再试一次。
- * 依赖：可选 hls.js（不支持原生 HLS 的浏览器）。
+ * 交互按 bilibili 网页播放器抄（结构见 css/tv-player.css 顶部注释里的实测数值），
+ * 只有主题色换成站点粉。含：底部控制条（左：播放/暂停·上/下一集·时间；
+ * 右：线路·倍速·音量·设置·画中画·宽屏·网页全屏·全屏）、进度条可拖拽+缓冲+悬停时间、
+ * 音量悬停展开、倍速/线路/设置三个菜单、悬停气泡提示、双击全屏、
+ * 空格/←→/↑↓/M/F/W/T/0-9 快捷键、3 秒自动隐藏、加载看门狗（满一分钟报错）。
+ * 播放策略：CDN 直连为主（实测带 Origin 也给 ACAO:*），失败自动经 /api/tv/stream 重试一次。
  * ============================================================ */
 (function () {
   'use strict';
@@ -14,19 +14,28 @@
   var HLS_SRC = 'https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js';
   var MEDIA_EXT = ['.mp4', '.m4v', '.mkv', '.flv', '.avi', '.mov', '.webm', '.mp3', '.m4a'];
   var RATES = [2, 1.5, 1.25, 1, 0.75, 0.5];
+  var FITS = [
+    { k: 'contain', n: '适应' },
+    { k: 'cover', n: '填充' },
+    { k: '16:9', n: '16:9' },
+    { k: '4:3', n: '4:3' },
+  ];
+  var SVG_VOL = '<svg viewBox="0 0 28 28"><path d="M6 11.4h3.6L14 7.2v13.6l-4.4-4.2H6z"/><path d="M17.4 10.6a5 5 0 0 1 0 6.8" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="M20.3 8a8.6 8.6 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>';
+  var SVG_MUTE = '<svg viewBox="0 0 28 28"><path d="M6 11.4h3.6L14 7.2v13.6l-4.4-4.2H6z"/><path d="M17.6 11 23 16.4M23 11l-5.4 5.4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>';
 
   var D = {};
   var cfg = {};
+  var S = { rate: 1, fit: 'contain', loop: false, autonext: true };
   var hls = null;
   var hlsLoading = false;
   var cur = '';
   var retriedProxy = false;
   var hideTimer = 0;
   var clickTimer = 0;
+  var watchdog = 0;
   var volBeforeMute = 1;
   var dragging = 0;
-  /* 加载看门狗：再慢也不能一直转圈，到点就报错让人换线路 */
-  var watchdog = 0;
+  var quals = [];
 
   function $(id) { return document.getElementById(id); }
   function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
@@ -54,49 +63,18 @@
     clearTimeout(D.toast._t);
     D.toast._t = setTimeout(function () { D.toast.classList.remove('on'); }, 1200);
   }
-
-  function showErr(msg) {
-    if (!D.err) return;
-    if (D.errMsg) D.errMsg.textContent = msg;
-    D.err.hidden = false;
-    setSpin(false);
-  }
+  function showErr(msg) { if (!D.err) return; if (D.errMsg) D.errMsg.textContent = msg; D.err.hidden = false; setSpin(false); }
   function hideErr() { if (D.err) D.err.hidden = true; }
-
   function setSpin(on) { if (D.spin) D.spin.hidden = !on; }
-
-  function setIcon(btn, names) {
-    if (!btn) return;
-    var i = btn.querySelector('i');
-    if (!i) return;
-    names.forEach(function (n) { i.classList.toggle(n, true); });
-  }
-  function switchIcon(btn, remove, add) {
-    if (!btn) return;
-    var i = btn.querySelector('i');
-    if (!i) return;
-    i.classList.remove(remove);
-    i.classList.add(add);
-  }
-
   function playing() { return !!(D.video && !D.video.paused && !D.video.ended); }
+  function syncPlayIcon() { if (D.play) D.play.classList.toggle('is-pause', playing()); if (D.big) D.big.hidden = playing(); }
 
-  function syncPlayIcon() {
-    var on = playing();
-    switchIcon(D.play, on ? 'fa-play' : 'fa-pause', on ? 'fa-pause' : 'fa-play');
-    if (D.big) D.big.hidden = on;
-  }
-
-  function showUI() {
-    if (!D.stage) return;
-    D.stage.classList.add('show-ui');
-    D.stage.classList.remove('is-idle');
-  }
+  function showUI() { if (D.stage) { D.stage.classList.add('show-ui'); D.stage.classList.remove('is-idle'); } }
   function scheduleHide() {
     clearTimeout(hideTimer);
     showUI();
     hideTimer = setTimeout(function () {
-      if (!D.stage || !playing() || D.menu && !D.menu.hidden || dragging) return;
+      if (!D.stage || !playing() || dragging || openMenu()) return;
       D.stage.classList.remove('show-ui');
       if (!D.err || D.err.hidden) D.stage.classList.add('is-idle');
     }, 3000);
@@ -109,7 +87,6 @@
     if (D.dur) D.dur.textContent = fmt(d);
     if (D.played) D.played.style.width = (d > 0 ? Math.min(100, (t / d) * 100) : 0) + '%';
   }
-
   function setBuffer() {
     if (!D.video || !D.buf) return;
     var d = D.video.duration || 0;
@@ -118,7 +95,6 @@
     for (var i = 0; i < b.length; i++) if (b.start(i) <= D.video.currentTime + 0.5) end = Math.max(end, b.end(i));
     D.buf.style.width = Math.min(100, (end / d) * 100) + '%';
   }
-
   function seekTo(t) {
     if (!D.video) return;
     var d = D.video.duration || 0;
@@ -130,46 +106,114 @@
     return Math.max(0, Math.min(1, (e.clientX - r.left) / (r.width || 1)));
   }
 
+  /* ---------------- 菜单 ---------------- */
+  function menus() { return [D.rateMenu, D.qualMenu, D.setMenu].filter(Boolean); }
+  function openMenu() { return menus().filter(function (m) { return !m.hidden; })[0] || null; }
+  function closeMenus() { menus().forEach(function (m) { m.hidden = true; }); }
+  function toggleMenu(m) {
+    if (!m) return;
+    var was = m.hidden;
+    closeMenus();
+    m.hidden = !was;
+    if (!m.hidden) showUI();
+  }
+  function menuBtn(list, label, on) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = label;
+    if (on) b.classList.add('is-on');
+    return b;
+  }
+
+  function buildRateMenu() {
+    if (!D.rateMenu) return;
+    D.rateMenu.innerHTML = '';
+    RATES.forEach(function (r) {
+      var b = menuBtn(RATES, (r === Math.floor(r) ? r.toFixed(1) : String(r)) + 'x', r === S.rate);
+      b.addEventListener('click', function () { setRate(r); closeMenus(); });
+      D.rateMenu.appendChild(b);
+    });
+  }
+  function buildSetMenu() {
+    if (!D.setMenu) return;
+    D.setMenu.innerHTML = '';
+    var loop = menuBtn(0, '循环播放', S.loop);
+    loop.addEventListener('click', function () {
+      S.loop = !S.loop;
+      if (D.video) D.video.loop = S.loop;
+      buildSetMenu();
+      toast(S.loop ? '循环播放：开' : '循环播放：关');
+    });
+    D.setMenu.appendChild(loop);
+    var an = menuBtn(0, '自动连播', S.autonext);
+    an.addEventListener('click', function () { S.autonext = !S.autonext; buildSetMenu(); toast(S.autonext ? '自动连播：开' : '自动连播：关'); });
+    D.setMenu.appendChild(an);
+    FITS.forEach(function (f) {
+      var b = menuBtn(0, '画面 ' + f.n, S.fit === f.k);
+      b.addEventListener('click', function () { setFit(f.k); buildSetMenu(); toast('画面比例：' + f.n); });
+      D.setMenu.appendChild(b);
+    });
+  }
+  /* 线路菜单：tv.js 把各条线路传进来（B 站那个位置是清晰度，我们换成线路） */
+  function setQualities(list, active, onPick) {
+    quals = list || [];
+    if (D.qualMenu) {
+      D.qualMenu.innerHTML = '';
+      quals.forEach(function (q, i) {
+        var b = menuBtn(0, q.name || '线路 ' + (i + 1), i === active);
+        b.addEventListener('click', function () {
+          closeMenus();
+          updateQualBtn(q);
+          if (onPick) onPick(i);
+        });
+        D.qualMenu.appendChild(b);
+      });
+    }
+    updateQualBtn(quals[active]);
+  }
+  function updateQualBtn(q) {
+    if (D.qualName) D.qualName.textContent = (q && q.name) || '自动';
+    if (D.qual) D.qual.hidden = quals.length < 2;
+    if (D.qualMenu) {
+      Array.prototype.forEach.call(D.qualMenu.querySelectorAll('button'), function (b, i) { b.classList.toggle('is-on', i === quals.indexOf(q)); });
+    }
+  }
+
   function setVolume(v, save) {
     if (!D.video) return;
     v = Math.max(0, Math.min(1, v));
     D.video.volume = v;
     D.video.muted = v === 0;
     if (D.volVal) D.volVal.style.width = (v * 100) + '%';
-    switchIcon(D.mute, v === 0 ? 'fa-volume-high' : 'fa-volume-xmark', v === 0 ? 'fa-volume-xmark' : 'fa-volume-high');
+    if (D.mute) D.mute.innerHTML = v === 0 ? SVG_MUTE : SVG_VOL;
     if (v > 0) volBeforeMute = v;
     if (save) store('tvp.vol', String(v));
   }
-
   function setRate(r) {
     if (!D.video) return;
+    S.rate = r;
     D.video.playbackRate = r;
-    if (D.rate) D.rate.textContent = (r === Math.floor(r) ? r.toFixed(1) : String(r)) + 'x';
     store('tvp.rate', String(r));
-    if (D.menu) {
-      Array.prototype.forEach.call(D.menu.querySelectorAll('button'), function (b) {
-        b.classList.toggle('is-on', Number(b.getAttribute('data-r')) === r);
-      });
-    }
+    buildRateMenu();
     toast('倍速 ' + r + 'x');
   }
-
-  function buildMenu() {
-    if (!D.menu) return;
-    D.menu.innerHTML = '';
-    RATES.forEach(function (r) {
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.setAttribute('data-r', String(r));
-      b.textContent = r + 'x';
-      b.addEventListener('click', function () {
-        setRate(r);
-        D.menu.hidden = true;
-      });
-      D.menu.appendChild(b);
-    });
+  function setFit(k) {
+    S.fit = k;
+    persistFit(k);
+    applyFit();
   }
-
+  function persistFit(k) { store('tvp.fit', k); }
+  function applyFit() {
+    if (!D.stage || !D.video) return;
+    if (S.fit === 'contain' || S.fit === 'cover') {
+      D.stage.style.aspectRatio = '';
+      D.video.style.objectFit = S.fit;
+    } else {
+      D.stage.style.aspectRatio = S.fit.replace(':', ' / ');
+      D.video.style.objectFit = 'contain';
+    }
+    if (D.wide) D.wide.classList.toggle('is-on', D.stage.classList.contains('is-wide'));
+  }
   function toggle() {
     if (!D.video) return;
     hideErr();
@@ -177,29 +221,35 @@
     else D.video.play().catch(function () { showUI(); });
   }
   function seekBy(s) { if (D.video) seekTo(D.video.currentTime + s); }
-
   function setNav(hasPrev, hasNext) {
     if (D.prev) D.prev.disabled = !hasPrev;
     if (D.next) D.next.disabled = !hasNext;
   }
 
+  function wideOn() { return D.stage && D.stage.classList.contains('is-wide'); }
   function webFullOn() { return D.stage && D.stage.classList.contains('is-web-full'); }
+  function toggleWide() {
+    if (!D.stage) return;
+    var on = D.stage.classList.toggle('is-wide');
+    document.documentElement.style.overflow = on || webFullOn() ? 'hidden' : '';
+    if (D.wide) D.wide.classList.toggle('is-on', on);
+    toast(on ? '宽屏' : '退出宽屏');
+  }
   function toggleWebFull() {
     if (!D.stage) return;
     var on = D.stage.classList.toggle('is-web-full');
-    document.documentElement.style.overflow = on ? 'hidden' : '';
-    switchIcon(D.web, on ? 'fa-arrows-left-right' : 'fa-arrows-left-right', on ? 'fa-compress' : 'fa-expand');
-    if (D.full) D.full.hidden = on;
+    document.documentElement.style.overflow = on || wideOn() ? 'hidden' : '';
+    if (D.web) D.web.classList.toggle('is-on', on);
     toast(on ? '网页全屏' : '退出网页全屏');
   }
+  function isFull() { return !!(document.fullscreenElement || document.webkitFullscreenElement); }
   function toggleFull() {
     if (!D.stage) return;
     var d = document;
-    if (d.fullscreenElement || d.webkitFullscreenElement) {
-      (d.exitFullscreen || d.webkitExitFullscreen || function () {}).call(d);
-    } else {
+    if (isFull()) (d.exitFullscreen || d.webkitExitFullscreen || function () {}).call(d);
+    else {
       var fn = D.stage.requestFullscreen || D.stage.webkitRequestFullscreen;
-      if (fn) fn.call(D.stage).catch(function () {});
+      if (fn) { var p = fn.call(D.stage); if (p && p.catch) p.catch(function () {}); }
     }
   }
   function togglePip() {
@@ -210,23 +260,37 @@
       else if (D.video.requestPictureInPicture) D.video.requestPictureInPicture();
     } catch (e) {}
   }
+  function clearFS() {
+    if (D.stage && D.stage.classList.contains('is-web-full')) toggleWebFull();
+  }
 
+  /* hls.js 只加载一次；加载期间又来的播放请求排队等脚本，别用定时器猜
+     （之前那个 400ms 猜测会在加载没完成时误报「浏览器不支持 HLS」） */
+  var hlsCbs = [];
   function loadHls(cb) {
     if (window.Hls) { cb(); return; }
-    if (hlsLoading) { setTimeout(function () { cb(); }, 400); return; }
+    hlsCbs.push(cb);
+    if (hlsLoading) return;
     hlsLoading = true;
     var s = document.createElement('script');
     s.src = HLS_SRC;
-    s.onload = cb;
-    s.onerror = function () { showErr('hls.js 没能加载（网络或被拦截）。iOS/Safari 可用系统原生播放。'); };
+    s.onload = function () {
+      hlsLoading = false;
+      var list = hlsCbs;
+      hlsCbs = [];
+      list.forEach(function (x) { try { x(); } catch (e) {} });
+    };
+    s.onerror = function () {
+      hlsLoading = false;
+      hlsCbs = [];
+      showErr('hls.js 没能加载（网络或被拦截）。iOS/Safari 可用系统原生播放。');
+    };
     document.head.appendChild(s);
   }
-
   function destroyHls() {
     if (hls) { try { hls.destroy(); } catch (e) {} hls = null; }
     if (window.__tvHls) { try { window.__tvHls.destroy(); } catch (e2) {} window.__tvHls = null; }
   }
-
   function playNative(url, viaProxy) {
     var v = D.video;
     v.onerror = function () {
@@ -239,14 +303,10 @@
     var p = v.play();
     if (p && p.catch) p.catch(function () { showUI(); });
   }
-
   function playHls(url, viaProxy) {
     var v = D.video;
     var src = viaProxy ? cfg.gateway + '/api/tv/stream?u=' + encodeURIComponent(url) : url;
-    if (v.canPlayType && v.canPlayType('application/vnd.apple.mpegurl')) {
-      playNative(url, viaProxy);
-      return;
-    }
+    if (v.canPlayType && v.canPlayType('application/vnd.apple.mpegurl')) { playNative(url, viaProxy); return; }
     setSpin(true);
     loadHls(function () {
       if (!window.Hls || !window.Hls.isSupported()) { showErr('当前浏览器不支持 HLS 播放。'); return; }
@@ -273,24 +333,23 @@
       });
     });
   }
-
   function play(url) {
     if (!D.video || !url) return false;
     if (classify(url) === 'page') return false;
     cur = url;
     retriedProxy = false;
-    clearTimeout(watchdog);
-    watchdog = setTimeout(function () {
-      if (!D.video || playing() || D.video.readyState >= 3) return;
-      showErr('这个源加载太慢或者没响应（等满一分钟了）。点重试，或者回列表换一条线路。');
-    }, 60000);
-    /* 播放器一开就把看板娘收起来，免得她压住右侧按钮 */
+    closeMenus();
     document.documentElement.classList.add('tvp-open');
     hideErr();
     setSpin(true);
     destroyHls();
-    var kind = classify(url);
-    if (kind === 'media') {
+    clearTimeout(watchdog);
+    /* 再慢也不能一直转：满一分钟还没画面就报错让人换线路 */
+    watchdog = setTimeout(function () {
+      if (!D.video || playing() || D.video.readyState >= 3) return;
+      showErr('这个源加载太慢或者没响应（等满一分钟了）。点重试，或者回列表换一条线路。');
+    }, 60000);
+    if (classify(url) === 'media') {
       D.video.src = url;
       var p = D.video.play();
       if (p && p.catch) p.catch(function () { showUI(); });
@@ -300,17 +359,14 @@
     playHls(url, false);
     return true;
   }
-
   function stop() {
     clearTimeout(watchdog);
+    closeMenus();
+    clearFS();
     document.documentElement.classList.remove('tvp-open');
     destroyHls();
     var v = D.video;
-    if (v) {
-      try { v.pause(); } catch (e) {}
-      v.removeAttribute('src');
-      try { v.load(); } catch (e2) {}
-    }
+    if (v) { try { v.pause(); } catch (e) {} v.removeAttribute('src'); try { v.load(); } catch (e2) {} }
     setSpin(false);
     hideErr();
     setTime();
@@ -329,6 +385,7 @@
     else if (k === 'ArrowDown') { e.preventDefault(); setVolume(D.video.volume - 0.05, true); toast('音量 ' + Math.round(D.video.volume * 100) + '%'); }
     else if (k === 'f' || k === 'F') { e.preventDefault(); toggleFull(); }
     else if (k === 'w' || k === 'W') { e.preventDefault(); toggleWebFull(); }
+    else if (k === 't' || k === 'T') { e.preventDefault(); toggleWide(); }
     else if (k === 'm' || k === 'M') { e.preventDefault(); setVolume(D.video.muted ? (volBeforeMute || 1) : 0, true); toast(D.video.muted ? '已静音' : '取消静音'); }
     else if (k >= '0' && k <= '9' && D.video.duration) { D.video.currentTime = D.video.duration * (Number(k) / 10); }
   }
@@ -343,13 +400,12 @@
     v.addEventListener('waiting', function () { setSpin(true); });
     v.addEventListener('canplay', function () { setSpin(false); });
     v.addEventListener('error', function () { if (!hls) showErr('视频加载失败，换一条线路或重试。'); });
-    v.addEventListener('ended', function () { if (cfg.onEnded) cfg.onEnded(); });
+    v.addEventListener('ended', function () { if (S.autonext && cfg.onEnded) cfg.onEnded(); });
     v.addEventListener('dblclick', function () { clearTimeout(clickTimer); toggleFull(); });
     v.addEventListener('click', function () {
       clearTimeout(clickTimer);
       clickTimer = setTimeout(toggle, 220);
     });
-
     st.addEventListener('pointermove', scheduleHide);
     st.addEventListener('pointerdown', scheduleHide);
 
@@ -363,12 +419,18 @@
       toast(D.video.muted ? '已静音' : '取消静音');
     });
     if (D.pip) D.pip.addEventListener('click', togglePip);
+    if (D.wide) D.wide.addEventListener('click', toggleWide);
     if (D.web) D.web.addEventListener('click', toggleWebFull);
     if (D.full) D.full.addEventListener('click', toggleFull);
-    if (D.rate) D.rate.addEventListener('click', function (e) { e.stopPropagation(); D.menu.hidden = !D.menu.hidden; });
-    document.addEventListener('click', function (e) { if (D.menu && !D.menu.hidden && !D.menu.contains(e.target) && e.target !== D.rate) D.menu.hidden = true; });
+    if (D.rate) D.rate.addEventListener('click', function (e) { e.stopPropagation(); toggleMenu(D.rateMenu); });
+    if (D.qual) D.qual.addEventListener('click', function (e) { e.stopPropagation(); toggleMenu(D.qualMenu); });
+    if (D.setBtn) D.setBtn.addEventListener('click', function (e) { e.stopPropagation(); toggleMenu(D.setMenu); });
+    document.addEventListener('click', function (e) {
+      var m = openMenu();
+      if (m && !m.contains(e.target)) closeMenus();
+    });
 
-    /* 进度条：按下即拖拽（B 站那样拖到哪跳到哪） */
+    /* 进度条：按下即拖拽，跟 B 站一样拖到哪跳到哪 */
     D.track.addEventListener('pointerdown', function (e) {
       dragging = 1;
       D.track.classList.add('is-drag');
@@ -404,8 +466,8 @@
 
     document.addEventListener('keydown', onKey);
     document.addEventListener('fullscreenchange', function () {
-      var on = !!document.fullscreenElement;
-      switchIcon(D.full, on ? 'fa-expand' : 'fa-compress', on ? 'fa-compress' : 'fa-expand');
+      if (D.full) D.full.classList.toggle('is-on', isFull());
+      scheduleHide();
     });
     document.addEventListener('visibilitychange', function () { scheduleHide(); });
   }
@@ -416,7 +478,6 @@
     D.stage = cfg.stage || $('tvp');
     D.video = cfg.video || $('tvVideo');
     if (!D.stage || !D.video) return false;
-    D.top = $('tvpTop');
     D.name = $('tvpName');
     D.ep = $('tvpEp');
     D.big = $('tvpBig');
@@ -438,14 +499,24 @@
     D.mute = $('tvpMute');
     D.volWrap = $('tvpVolWrap');
     D.volVal = $('tvpVolVal');
+    D.qual = $('tvpQual');
+    D.qualName = $('tvpQualName');
     D.rate = $('tvpRate');
+    D.setBtn = $('tvpSet');
     D.pip = $('tvpPip');
+    D.wide = $('tvpWide');
     D.web = $('tvpWeb');
     D.full = $('tvpFull');
-    D.menu = $('tvpMenu');
-    buildMenu();
+    D.rateMenu = $('tvpRateMenu');
+    D.qualMenu = $('tvpQualMenu');
+    D.setMenu = $('tvpSetMenu');
+    S.rate = Number(store('tvp.rate') || 1);
+    S.fit = store('tvp.fit') || 'contain';
+    buildRateMenu();
+    buildSetMenu();
+    applyFit();
     setVolume(Number(store('tvp.vol') === null ? 1 : store('tvp.vol')), false);
-    setRate(Number(store('tvp.rate') || 1));
+    if (D.rateMenu) Array.prototype.forEach.call(D.rateMenu.querySelectorAll('button'), function (b, i) { b.classList.toggle('is-on', RATES[i] === S.rate); });
     bind();
     syncPlayIcon();
     setTime();
@@ -462,6 +533,7 @@
     setTitle: function (t) { if (D.name) D.name.textContent = t || ''; },
     setEpisode: function (t) { if (D.ep) D.ep.textContent = t || ''; },
     setNav: setNav,
+    setQualities: setQualities,
     seekBy: seekBy,
     getVideo: function () { return D.video; },
   };
