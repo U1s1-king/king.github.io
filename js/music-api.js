@@ -26,7 +26,7 @@
   var ITUNES = 'https://itunes.apple.com/search';
 
   /* 第三方公共桥（MusicSquare 同款），一律「桥优先 → Meting 回落」，不改原链路：
-     - 酷我 oiapi.net：?msg=&page=&limit= 拿列表；?msg=&n=1&br=1 拿无损直链
+     - 酷我 oiapi.net：?msg=&page=&limit= 拿列表；?msg=&n=1&br=2 拿可播直链（br=1 的无损是 VIP 死链，实测 410）
      - s01s.cn：QQ 音乐的兜底搜索（?msg=&type=json） */
   var KUWO_API = 'https://oiapi.net/api/Kuwo';
   var S01S = 'https://tang.api.s01s.cn/music_open_api.php';
@@ -453,7 +453,7 @@ if (platform === 'kuwo') {
       var kwKey = cacheKey(['url', 'kuwo-bridge', song.name, song.artist]);
       return cached(kwKey, 600, function () {
         var msg = ((song.name || '') + ' ' + (song.artist || '')).trim();
-        return getJSON(KUWO_API + '?msg=' + encodeURIComponent(msg) + '&n=1&br=1').then(function (j) {
+        return getJSON(KUWO_API + '?msg=' + encodeURIComponent(msg) + '&n=1&br=2').then(function (j) {  // br=1(无损)是 VIP 专享，游客拿到的是 410 死链；br=2 实测可播
           var d = (j && j.data) || null;
           return (d && d.url) || '';
         }).catch(function () { return ''; });
