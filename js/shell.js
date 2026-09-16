@@ -81,7 +81,31 @@
       started: !!(audio.currentSrc || audio.getAttribute('src'))
     };
   }
+  /* ---------- 播放器 iframe 绝不能被导航 ----------
+     壳最容易翻车的地方：音乐 tab 亮出来时，用户看到的、能点的就是播放器这一帧
+     自己（网页端没有底部 tab，切页只能点页面里的侧边栏）。它一旦导航，<audio>
+     就跟着销毁 —— 音乐就断。所以把它里面的站内链接全部接管：不导航这一帧，
+     改成把目标页装进内容帧。 */
+  function guardPlayerNavigation() {
+    var d = playerDoc();
+    if (!d || d.__shellGuarded) return;
+    d.__shellGuarded = true;
+    d.addEventListener('click', function (e) {
+      var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+      if (!a) return;
+      var href = a.getAttribute('href') || '';
+      if (!href || href.charAt(0) === '#') return;
+      if (a.target === '_blank') return;
+      if (/^(https?:)?\/\//i.test(href) || /^(mailto|tel|javascript):/i.test(href)) return;
+      var f = href.split('#')[0].split('?')[0].split('/').pop();
+      e.preventDefault();
+      if (!f || f === MUSIC) return;   /* 指向音乐页自己，什么都不用做 */
+      show(f);
+    }, true);
+  }
+
   function syncMini() {
+    guardPlayerNavigation();
     if (!mini) return;
     var s = playerState();
     var on = !!(s && s.started && current !== MUSIC);
@@ -114,6 +138,9 @@
   var initial = 'index.html';
   tabs().forEach(function (a) {
     if (want && fileOf(a).replace(/\.html$/, '').toLowerCase() === want.toLowerCase()) initial = fileOf(a);
+  });
+  playerFrame.addEventListener('load', function () {
+    setTimeout(guardPlayerNavigation, 300);   /* 帧里的文档换了就得重新接管 */
   });
   show(initial, true);
   setInterval(syncMini, 1000);
