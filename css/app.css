@@ -2067,6 +2067,39 @@ html.gb-view .gb-view-block { display: block; }
 html.gb-view .blog-container > *:not(.blog-header) { display: none !important; }
 
 /* ============================================================
+   留言板视图：只调颜色和字号，往站点配色看齐
+   ------------------------------------------------------------
+   作用域限定在 #gbView（留言板视图自己的容器）—— 日记正文、其它页面一概
+   不受影响。页头的大标题/副标题用的是站点的 .blog-title/.subhead，本来就
+   一致，这里不动；它自己那套（#4f2f39 / #b27b88 / #e982a2 那些）换成站点色。
+   ============================================================ */
+#gbView .visitor-location { font-size: 0.72rem; color: #b5768c; }
+#gbView .visitor-location i { color: #e0a0b4; }
+#gbView .guest-quote { font-size: 0.78rem; color: #a14563; }
+#gbView .guest-quote i { color: #e0a0b4; }
+#gbView .quote-refresh { font-size: 0.78rem; color: #b5768c; }
+#gbView .form-title { font-size: 1.2rem; color: #a14563; }
+#gbView .form-title i { font-size: 1.3rem; color: #e08fa8; }
+#gbView .form-desc { font-size: 0.8rem; color: #b5768c; }
+#gbView .form-desc { border-left-color: #ffcdda; }
+#gbView .input-group label { font-size: 0.8rem; color: #ac6b80; }
+#gbView .input-group label i { color: #e0a0b4; }
+#gbView .input-group input,
+#gbView .input-group textarea { font-size: 0.85rem; color: #7a4a58; }
+#gbView .char-count { font-size: 0.72rem; color: #b5768c; }
+#gbView .submit-btn { font-size: 0.85rem; }
+#gbView .section-header h3 { font-size: 1.2rem; color: #a14563; }
+#gbView .section-header h3 i { color: #e0a0b4; }
+#gbView .message-count { font-size: 0.72rem; color: #ac6b80; }
+#gbView .emoji-item { font-size: 1.05rem; }
+#gbView .message-card .msg-name,
+#gbView .message-card .message-name { font-size: 0.85rem; color: #a14563; }
+#gbView .message-card .msg-time,
+#gbView .message-card .message-time { font-size: 0.7rem; color: #bb8ea0; }
+#gbView .message-card .msg-content,
+#gbView .message-card .message-content { font-size: 0.85rem; color: #7a4a58; }
+
+/* ============================================================
    ?app=1 在网页端（宽屏）也能用
    ------------------------------------------------------------
    下面这组规则是从 @media (max-width: 768px) 里把顶栏那几条原样搬出来的
