@@ -85,21 +85,37 @@
     document.body.appendChild(s);
   }
 
+  /* 等 Turnstile 的 api.js 真正就绪（window.turnstile 可用）再往下走。
+     最多等 10 秒，超时也继续 —— 不能因为挑战脚本被挡就不给看留言板。 */
+  function waitTurnstile(cb) {
+    if (window.turnstile && window.turnstile.render) { cb(); return; }
+    loadScript('https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback', function () {});
+    var tries = 0;
+    var timer = setInterval(function () {
+      tries++;
+      if (window.turnstile && window.turnstile.render) { clearInterval(timer); cb(); return; }
+      if (tries >= 100) { clearInterval(timer); cb(); }
+    }, 100);
+  }
+
   function loadGuestbook(cb) {
     if (gbReady) { cb(); return; }
     gbCbs.push(cb);
     if (gbLoading) return;
     gbLoading = true;
-    loadScript('js/Guestbook.js', function () {
-      loadScript('js/guestbook-app.js', function () {
-        gbReady = true;
-        var fns = gbCbs.slice(0);
-        gbCbs.length = 0;
-        for (var i = 0; i < fns.length; i++) fns[i]();
+    /* 顺序要紧：原页面是「api.js 先、Guestbook.js 后」。反过来它可能在
+       window.turnstile 还没定义时就去 render，控件就退化成 Cloudflare 那张
+       「无法连接到网站」的报错卡。 */
+    waitTurnstile(function () {
+      loadScript('js/Guestbook.js', function () {
+        loadScript('js/guestbook-app.js', function () {
+          gbReady = true;
+          var fns = gbCbs.slice(0);
+          gbCbs.length = 0;
+          for (var i = 0; i < fns.length; i++) fns[i]();
+        });
       });
     });
-    /* Turnstile 的 api.js 自己调 window.onloadTurnstileCallback，我们不等它 */
-    loadScript('https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback', function () {});
   }
 
   function setView(view, fromHash) {
