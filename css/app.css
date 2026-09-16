@@ -1935,9 +1935,12 @@ html.shell #player-frame {
   left: 0;
   right: 0;
   top: 0;
-  bottom: calc(var(--tab-h, 56px) + var(--sab, 0px));
   width: 100%;
-  height: auto;
+  /* 关键：<iframe> 是 replaced 元素，position:fixed 下 height:auto 不会从
+     top/bottom 撑开，而是用它自己的默认高度 150px —— 那正是"只显示六分之一"。
+     高度必须显式算；dvh 那行给移动端地址栏收起/展开用，旧浏览器取上面一行。 */
+  height: calc(100vh - var(--tab-h, 56px) - var(--sab, 0px));
+  height: calc(100dvh - var(--tab-h, 56px) - var(--sab, 0px));
   border: 0;
   display: block;
   background: #fff9f7;
@@ -2005,7 +2008,10 @@ html.shell #app-mini-player .mp-btn:active { background: #ffeaf1; }
    迷你条收成右下角一颗胶囊。 */
 @media (min-width: 769px) {
   html.shell #page-frame,
-  html.shell #player-frame { bottom: 0; }
+  html.shell #player-frame {
+    height: 100vh;
+    height: 100dvh;
+  }
   html.shell .bot-tab { display: none !important; }
   html.shell #app-mini-player {
     left: auto;
