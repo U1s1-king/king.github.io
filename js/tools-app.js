@@ -38,6 +38,8 @@
     luhn: 'fa-credit-card', translate: 'fa-language', qrcode: 'fa-qrcode',
     exchange: 'fa-money-bill-wave', iplookup: 'fa-map-marker-alt', ocr: 'fa-image',
     weather: 'fa-cloud-sun', air: 'fa-wind', pet: 'fa-cat',
+    imgzip: 'fa-compress', imgresize: 'fa-crop-simple', token: 'fa-robot',
+    age: 'fa-cake-candles', tdee: 'fa-fire', apr: 'fa-file-invoice-dollar', zhconv: 'fa-language',
     dict: 'fa-book', poem: 'fa-feather-alt'
   };
 

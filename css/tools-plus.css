@@ -23,6 +23,57 @@
     }
 }
 
+/* 新增工具的表单行与结果列表（沿用站内配色，不引入新控件风格） */
+.xt-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0;
+    color: #a14563;
+    font-size: .92rem;
+}
+
+.xt-row input[type="number"],
+.xt-row input[type="date"],
+.xt-row select {
+    padding: 8px 12px;
+    border: 1px solid #ffcdda;
+    border-radius: 10px;
+    background: #fff;
+    color: #a14563;
+    font: inherit;
+    font-size: .9rem;
+}
+
+.xt-row input[type="number"] { width: 120px; }
+
+.xt-row input[type="range"] { accent-color: #ffb6c1; width: 190px; }
+
+.xt-list { margin: 10px 0; }
+
+.xt-item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+    padding: 9px 12px;
+    border: 1px solid #ffcdda;
+    border-radius: 10px;
+    background: #fff4f7;
+    font-size: .86rem;
+    color: #8d6b78;
+}
+
+.xt-item .xt-name { color: #a14563; font-weight: 600; }
+
+@media (max-width: 768px) {
+    .xt-row { gap: 8px; }
+    .xt-row input[type="number"] { width: 96px; }
+    .xt-row input[type="range"] { width: 150px; }
+}
+
 /* 手机：网格一律不出现，保持手机端现状不动 */
 @media (max-width: 768px) {
     #toolsFilter,
