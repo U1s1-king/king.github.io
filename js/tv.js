@@ -226,6 +226,22 @@
     });
   }
 
+  /* 门卫的会话有 2 小时时间上限（服务端用这道上限兜住「浏览器恢复会话」——
+     Chrome 开「继续浏览上次打开的网页」时会把 session cookie 一起恢复，
+     关掉浏览器也照样免密，服务端分辨不出来，只能靠时间兜）。
+     页面开着就每 20 分钟续一次，看长片不会被中途踢掉；
+     页面一关心跳就停，2 小时后必须重新输口令 —— 这就是
+     「关掉浏览器就要重新验证」想要的效果，而且不依赖 cookie 本身。 */
+  (function keepAlive() {
+    if (GATEWAY !== location.origin) return; /* 本地联调直连 pages.dev，不走门卫 */
+    function ping() {
+      fetch(GATEWAY + '/api/tv/keepalive', { credentials: 'same-origin', cache: 'no-store' })
+        .catch(function () { /* 网络抖一下就跳过这次，还有下一次 */ });
+    }
+    setTimeout(ping, 60 * 1000);
+    setInterval(ping, 20 * 60 * 1000);
+  })();
+
   /* 视频流一律走代理：上游对带 Origin 的请求不给 CORS，分段也一样 */
   function streamUrl(u) { return GATEWAY + '/api/tv/stream?u=' + encodeURIComponent(u); }
   /* 海报同样经代理：图床热链保护会让直连的 <img> 拿不到图 */

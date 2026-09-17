@@ -32,14 +32,28 @@
 const COOKIE_NAME = 'tv_pass';
 const TOKEN_VERSION = 'v1';
 
-/* session cookie 本身「关浏览器即失效」；这里再加一道绝对上限，
-   防止被偷走的 cookie 无限期可用。7 天足够长，不会打断正常观影。 */
-const SESSION_MAX_AGE = 7 * 24 * 60 * 60;
+/* cookie 本身是 session cookie（关浏览器即失效），但浏览器会「恢复会话」——
+   Chrome 开了「继续浏览上次打开的网页」时，会把 session cookie 一并恢复，
+   于是重启浏览器后仍然免密。服务端分辨不出「同一个浏览会话」和「被恢复的会话」，
+   唯一兜得住的就是把时间上限压短：页面开着时由 js/tv.js 定时心跳续期，
+   页面一关心跳就停，2 小时后必然要重新输口令。 */
+const SESSION_MAX_AGE = 2 * 60 * 60;
 
-/* 限速：10 分钟窗口内错 5 次 → 锁 1 小时 */
+/* 限速：10 分钟窗口内错 5 次 → 锁 1 小时。
+   关键：按【浏览器】分桶，不按 IP —— 一个出口 IP 后面可能站着很多人
+   （公司、学校、手机运营商 CGNAT），按 IP 一刀切会让一个人输错
+   就把同 IP 的其他人一起关在门外。 */
 const FAIL_WINDOW = 10 * 60;
 const FAIL_LIMIT = 5;
 const LOCK_TIME = 60 * 60;
+
+/* 同 IP 兜底桶：只有「每次故意丢 cookie 硬刷」才会撞到。
+   门槛设得很高、锁得很短，正常用户（哪怕几百人共用一个出口 IP）碰不到。 */
+const IP_FAIL_LIMIT = 30;
+const IP_LOCK_TIME = 10 * 60;
+
+/* 每台浏览器一个随机设备号，用来把限速分到具体的人头上 */
+const DEVICE_COOKIE = 'tv_did';
 
 const DEFAULT_UPSTREAM = 'https://sakura-music-api.pages.dev';
 
@@ -86,6 +100,15 @@ async function route(request, env) {
     return handleAuth(request, env);
   }
 
+  /* 心跳续期：页面开着时由 js/tv.js 定时调用，把会话往后推。
+     必须放在下面那个「转发给上游」的分支之前 —— 上游没有这个接口。 */
+  if (path === '/api/tv/keepalive') {
+    const alive = await checkSession(request, env);
+    if (!alive) return json({ ok: false, error: '需要影视口令', needGate: true }, 401);
+    const token = await signToken(env.TV_GATE_KEY, Math.floor(Date.now() / 1000));
+    return json({ ok: true }, 200, { 'Set-Cookie': sessionCookie(token) });
+  }
+
   /* 其它 /api/tv* 一律要登录，然后转发给上游 */
   if (path.indexOf('/api/tv') === 0) {
     const passed = await checkSession(request, env);
@@ -126,6 +149,24 @@ function safeEqual(a, b) {
   let diff = 0;
   for (let i = 0; i < x.length; i++) diff |= x.charCodeAt(i) ^ y.charCodeAt(i);
   return diff === 0;
+}
+
+/* 会话 cookie：不写 Max-Age / Expires → 浏览器关闭即失效（用户明确要求） */
+function sessionCookie(token) {
+  return COOKIE_NAME + '=' + token + '; Path=/; HttpOnly; Secure; SameSite=Lax';
+}
+
+/* 设备号 cookie：同样只在本次浏览会话内有效 */
+function deviceCookie(id) {
+  return DEVICE_COOKIE + '=' + id + '; Path=/; HttpOnly; Secure; SameSite=Lax';
+}
+
+function newDeviceId() {
+  const b = new Uint8Array(16);
+  crypto.getRandomValues(b);
+  let out = '';
+  for (let i = 0; i < b.length; i++) out += b[i].toString(16).padStart(2, '0');
+  return out;
 }
 
 function readCookie(header, name) {
@@ -182,18 +223,33 @@ async function handleAuth(request, env) {
   }
 
   const now = Math.floor(Date.now() / 1000);
-  const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
   const kv = env.KING_KV;
 
+  /* 限速按「浏览器」为主，IP 只做一道很宽松的兜底。
+     并且：拿不到 IP 时绝不退化成所有人共用一个桶 —— 那等于一个人输错、全站被锁。 */
+  const ip = request.headers.get('CF-Connecting-IP') || '';
+  let did = readCookie(request.headers.get('Cookie'), DEVICE_COOKIE);
+  if (!/^[a-f0-9]{32}$/.test(did)) did = '';
+
+  const devKey = did ? 'tv:fail:d:' + did : '';
+  const ipKey = ip ? 'tv:fail:i:' + ip : '';
+
+  function lockedOut(wait) {
+    return json(
+      { ok: false, error: '尝试次数过多，请稍后再试', locked: true, retryAfter: wait },
+      429,
+      { 'Retry-After': String(Math.max(1, wait)) },
+    );
+  }
+
   if (kv) {
-    const st = await readFail(kv, ip);
-    if (st.until > now) {
-      const wait = st.until - now;
-      return json(
-        { ok: false, error: '尝试次数过多，请稍后再试', locked: true, retryAfter: wait },
-        429,
-        { 'Retry-After': String(wait) },
-      );
+    if (devKey) {
+      const st = await readFail(kv, devKey);
+      if (st.until > now) return lockedOut(st.until - now);
+    }
+    if (ipKey) {
+      const st = await readFail(kv, ipKey);
+      if (st.until > now) return lockedOut(st.until - now);
     }
   }
 
@@ -202,30 +258,61 @@ async function handleAuth(request, env) {
   const key = payload && payload.key != null ? String(payload.key) : '';
 
   if (!safeEqual(key, env.TV_GATE_KEY)) {
-    const st = kv ? await bumpFail(kv, ip, now) : { fails: 1, until: 0 };
-    const locked = st.until > now;
+    const cookies = [];
+    /* 第一次来还没有设备号：发一个，从下一次起这次尝试就归到这台浏览器名下，
+       于是「一个人输错」永远不会变成「一个 IP 下所有人被锁」。 */
+    if (!did) {
+      did = newDeviceId();
+      cookies.push(deviceCookie(did));
+    }
+
+    let locked = false;
+    let retry = 0;
+    let left = FAIL_LIMIT;
+    if (kv) {
+      if (did) {
+        const st = await bumpFail(kv, 'tv:fail:d:' + did, now, FAIL_LIMIT, LOCK_TIME);
+        if (st.until > now) { locked = true; retry = Math.max(retry, st.until - now); }
+        else left = Math.min(left, FAIL_LIMIT - st.fails);
+      }
+      if (ipKey) {
+        /* 兜底桶：门槛高、锁得短。撞到它的只会是「每次丢 cookie 重新来」的硬刷 */
+        const st = await bumpFail(kv, ipKey, now, IP_FAIL_LIMIT, IP_LOCK_TIME);
+        if (st.until > now) { locked = true; retry = Math.max(retry, st.until - now); }
+      }
+    }
+
     return json({
       ok: false,
-      error: locked ? '口令错误次数过多，已锁定 1 小时' : '口令不正确',
+      error: locked ? '口令错误次数过多，请稍后再试' : '口令不正确',
       locked: locked,
-      remaining: locked ? 0 : Math.max(0, FAIL_LIMIT - st.fails),
-    }, locked ? 429 : 401);
+      retryAfter: locked ? retry : 0,
+      remaining: locked ? 0 : Math.max(0, left),
+    }, locked ? 429 : 401, cookies.length ? { 'Set-Cookie': cookies } : undefined);
   }
 
-  if (kv) { try { await kv.delete('tv:fail:' + ip); } catch (e) { /* 清不掉不影响登录 */ } }
+  /* 登录成功：两个桶都清掉，别把之前的错误留给下一个用这台机器的人 */
+  if (kv) {
+    const keys = [devKey, ipKey, did ? 'tv:fail:d:' + did : ''];
+    for (let i = 0; i < keys.length; i++) {
+      if (!keys[i]) continue;
+      try { await kv.delete(keys[i]); } catch (e) { /* 清不掉不影响登录 */ }
+    }
+  }
 
   const token = await signToken(env.TV_GATE_KEY, now);
   return json({ ok: true }, 200, {
-    /* 不写 Max-Age / Expires → 浏览器关闭即失效（用户明确要求） */
-    'Set-Cookie': COOKIE_NAME + '=' + token + '; Path=/; HttpOnly; Secure; SameSite=Lax',
+    /* session cookie：浏览器关闭即失效。但浏览器「恢复会话」会把它一起恢复，
+       所以服务端另有 SESSION_MAX_AGE 这道时间上限，并由 js/tv.js 心跳续期。 */
+    'Set-Cookie': sessionCookie(token),
   });
 }
 
 /* ============================================================ 限速（KV） */
 
-async function readFail(kv, ip) {
+async function readFail(kv, key) {
   try {
-    const raw = await kv.get('tv:fail:' + ip);
+    const raw = await kv.get(key);
     if (!raw) return { fails: 0, first: 0, until: 0 };
     const o = JSON.parse(raw);
     return { fails: Number(o.f) || 0, first: Number(o.t) || 0, until: Number(o.u) || 0 };
@@ -234,15 +321,15 @@ async function readFail(kv, ip) {
   }
 }
 
-async function bumpFail(kv, ip, now) {
-  const cur = await readFail(kv, ip);
+async function bumpFail(kv, key, now, limit, lockTime) {
+  const cur = await readFail(kv, key);
   const inWindow = cur.first > 0 && now - cur.first <= FAIL_WINDOW;
   const fails = inWindow ? cur.fails + 1 : 1;
   const first = inWindow ? cur.first : now;
-  const until = fails >= FAIL_LIMIT ? now + LOCK_TIME : 0;
+  const until = fails >= limit ? now + lockTime : 0;
   try {
-    await kv.put('tv:fail:' + ip, JSON.stringify({ f: fails, t: first, u: until }), {
-      expirationTtl: Math.max(FAIL_WINDOW, LOCK_TIME) + 120,
+    await kv.put(key, JSON.stringify({ f: fails, t: first, u: until }), {
+      expirationTtl: Math.max(FAIL_WINDOW, lockTime) + 120,
     });
   } catch (e) { /* KV 写失败时不阻断登录流程，只是这一轮没记上 */ }
   return { fails: fails, until: until };
@@ -315,20 +402,32 @@ function cacheFor(path) {
 
 /* ============================================================ 响应工具 */
 
+/* extra 的值允许是数组：一次响应里才能下发多个 Set-Cookie
+   （会话 cookie + 设备号 cookie）。 */
+function mergeHeaders(base, extra) {
+  const headers = new Headers(base);
+  if (extra) {
+    Object.keys(extra).forEach(function (k) {
+      const v = extra[k];
+      if (Array.isArray(v)) v.forEach(function (one) { headers.append(k, one); });
+      else if (v !== undefined && v !== null) headers.set(k, v);
+    });
+  }
+  return headers;
+}
+
 function json(data, status, extra) {
-  const headers = Object.assign(
-    { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' },
-    extra || {},
-  );
-  return new Response(JSON.stringify(data), { status: status || 200, headers: headers });
+  return new Response(JSON.stringify(data), {
+    status: status || 200,
+    headers: mergeHeaders({ 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' }, extra),
+  });
 }
 
 function htmlPage(body, status, extra) {
-  const headers = Object.assign(
-    { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' },
-    extra || {},
-  );
-  return new Response(body, { status: status || 200, headers: headers });
+  return new Response(body, {
+    status: status || 200,
+    headers: mergeHeaders({ 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }, extra),
+  });
 }
 
 /* ============================================================ 页面 HTML */

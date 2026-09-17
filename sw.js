@@ -12,7 +12,7 @@
  * __DSH_VERSION 以及各 HTML 里的 ?v= 保持一致。
  * 统一更新请执行： python scripts/bump_version.py <新版本号>
  * ============================================================ */
-const VERSION = '20261115'
+const VERSION = '20261116'
 const CACHE = 'king-blog-' + VERSION;
 
 const CORE = [
@@ -87,6 +87,11 @@ const CORE = [
 /* 这些路径是动态数据，永不入缓存 */
 const NEVER_CACHE = ['/data/bili/stats.json', '/data/playlist.json'];
 
+/* 门卫（Cloudflare Worker tv-gate）后面的页面，绝不入缓存。
+   这里缓存到的是「已登录」的 HTML —— 等于在本地留一份能绕开门卫的副本，
+   而且 Cache Storage 不随浏览会话清除，关掉浏览器它还在。 */
+const GATED = ['/TV.html', '/TV'];
+
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE)
@@ -135,6 +140,13 @@ self.addEventListener('fetch', (e) => {
 
   /* ---- 1. 导航：network-first ---- */
   if (req.mode === 'navigate') {
+    /* 门卫后面的页面：既不缓存，网络失败时也绝不拿旧副本兜底 ——
+       缓存里那份是「已登录」的页面，拿出来就等于本地绕过了门卫。
+       宁可让浏览器老老实实报网络错误。 */
+    if (GATED.indexOf(url.pathname) >= 0) {
+      e.respondWith(fetch(req));
+      return;
+    }
     e.respondWith(
       fetch(req)
         .then((res) => { putInCache(req, res); return res; })
