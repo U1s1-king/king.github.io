@@ -6,12 +6,13 @@
  *   2. 同源静态资源          -> stale-while-revalidate：先给缓存，后台更新
  *   3. 动态数据（带时间戳）   -> 只走网络，绝不写缓存（避免缓存无限膨胀）
  *   4. 跨域请求              -> 直接放行，交给浏览器
+ *   5. 同源 /api/*           -> 只走网络（影视门卫接口，一旦被缓存就等于绕过鉴权）
  *
  * 版本号：CORE 里的 ?v= 由 VERSION 生成，必须与 js/version.js 的
  * __DSH_VERSION 以及各 HTML 里的 ?v= 保持一致。
  * 统一更新请执行： python scripts/bump_version.py <新版本号>
  * ============================================================ */
-const VERSION = '20261111'
+const VERSION = '20261112'
 const CACHE = 'king-blog-' + VERSION;
 
 const CORE = [
@@ -69,7 +70,10 @@ const CORE = [
      预缓存只会把 30KB 塞进 Service Worker 的安装阶段，得不偿失。 */
   '/icons/icon-192.png',
   '/icons/icon-512.png',
-    '/TV.html?v=' + VERSION,
+    /* TV.html 故意【不预缓存】：它现在挂在 Cloudflare Worker 门卫（cloudflare/tv-gate）
+       后面，未登录时返回的是登录页。而 addAll() 只要碰到一个非 200 ——
+       门卫 fail-closed 时正是 503 —— 就会让整个 Service Worker 安装失败，
+       把全站离线缓存一起拖下水。它按需走网络即可。 */
     '/Games.html?v=' + VERSION,
     '/css/hub.css?v=' + VERSION,
     '/css/tools-plus.css?v=' + VERSION,
@@ -119,6 +123,15 @@ self.addEventListener('fetch', (e) => {
   const url = new URL(req.url);
   /* 跨域（API、CDN、Live2D 等）交给浏览器默认行为 */
   if (url.origin !== self.location.origin) return;
+
+  /* ---- 0. 同源 API：绝不入缓存 ---- */
+  /* tv-gate 门卫把影视接口搬到了同源 /api/tv*。不在这里拦掉的话，
+     它们会掉进下面的 stale-while-revalidate 分支被缓存 ——
+     那等于「关掉浏览器后还能从缓存里白拿数据」，本地把门卫绕过去了。 */
+  if (url.pathname.indexOf('/api/') === 0) {
+    e.respondWith(fetch(req));
+    return;
+  }
 
   /* ---- 1. 导航：network-first ---- */
   if (req.mode === 'navigate') {

@@ -7,13 +7,20 @@
  * （hls.js 用 XHR 取 m3u8/分片，一样要 CORS）。
  * 所以列表/详情/搜索走 /api/tv，m3u8 与分片走 /api/tv/stream，
  * 由 cloudflare/music-api/_worker.js 转发（服务端请求不带 Origin，上游照常给数据）。
- * 部署：把 _worker.js 重新发布一次即可，前端不用改地址。
+ * 部署：把 _worker.js 重新发布一次即可。
+ *
+ * 生产环境走【同源】门卫：Cloudflare Worker tv-gate 挂在
+ * zhaokening.ccwu.cc/api/tv* 上，验完 cookie 再转发给 pages.dev。
+ * 所以 TV.html 会先把 window.TV_GATEWAY 设成 location.origin；
+ * 这里的默认值只留给本地联调（localhost 不走门卫，CORS 白名单里有 8899）。
  * ============================================================ */
 (function () {
   'use strict';
 
-  /* 生产走自建 Worker；window.TV_GATEWAY 留给本地联调覆盖 */
+  /* 生产走同源门卫；window.TV_GATEWAY 留给本地联调覆盖 */
   var GATEWAY = (window.TV_GATEWAY || 'https://sakura-music-api.pages.dev').replace(/\/$/, '');
+  /* 门卫回 401 时拿它做标记：不重试、不降级直连，直接回登录页 */
+  var NEED_GATE = 'NEED_GATE';
   var HLS_JS = 'https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js';
   /* 采集站常见成人向栏目，站点是公开页面，直接不展示 */
   var BLOCK = /伦理|福利|里番|情色|成人|无码|色情|自拍|偷拍|人妖|淫/;
@@ -168,7 +175,15 @@
   }
 
   function jget(url, ms) {
-    return fetch(url, Object.assign({ mode: 'cors', credentials: 'omit' }, timeoutOpt(ms || WAIT_MAX))).then(function (r) {
+    /* credentials 必须是 same-origin：生产环境下 GATEWAY 是同源的，
+       门卫靠 HttpOnly cookie 认人 —— 原来写的 'omit' 会把 cookie 丢掉，一律 401。
+       本地联调时 GATEWAY 指向 pages.dev（跨域），same-origin 不会带凭据，正好。 */
+    return fetch(url, Object.assign({ mode: 'cors', credentials: 'same-origin' }, timeoutOpt(ms || WAIT_MAX))).then(function (r) {
+      if (r.status === 401) {
+        /* 会话过期（关过浏览器）或门卫不认这个 cookie：回登录页重来 */
+        try { location.replace('/TV.html'); } catch (e) {}
+        throw new Error(NEED_GATE);
+      }
       if (!r.ok) throw new Error('HTTP ' + r.status);
       return r.text();
     }).then(parseJson);
@@ -191,6 +206,7 @@
     var left = leftMs(deadline);
     if (left < 2500) return Promise.reject(new Error(TOO_LONG));
     return jget(url, left).catch(function (e) {
+      if (e && e.message === NEED_GATE) throw e; /* 门卫要口令，重试没意义 */
       if (n <= 1) throw (leftMs(deadline) < 2500 ? new Error(TOO_LONG) : e);
       if (leftMs(deadline) < 2500) throw new Error(TOO_LONG);
       return new Promise(function (r) { setTimeout(r, 700); }).then(function () { return apiTry(url, deadline, n - 1); });
@@ -201,6 +217,7 @@
     var q = qs(params);
     var deadline = Date.now() + WAIT_MAX;
     return apiTry(GATEWAY + '/api/tv?' + q, deadline, 3).catch(function (e1) {
+      if (e1 && e1.message === NEED_GATE) throw e1; /* 也别降级去直连上游 */
       var rest = leftMs(deadline);
       if (rest < 3000) throw new Error(TOO_LONG + '（' + e1.message + '）');
       return jget(DIRECT + '?' + q, rest).catch(function () {

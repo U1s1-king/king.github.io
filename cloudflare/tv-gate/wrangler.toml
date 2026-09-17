@@ -1,0 +1,25 @@
+# tv-gate —— 影视页门卫
+# 部署：npx wrangler deploy        （在 cloudflare/tv-gate 目录下）
+# 密钥：npx wrangler secret put TV_GATE_KEY
+#       npx wrangler secret put TV_GATE_SECRET
+
+name = "tv-gate"
+main = "src/index.js"
+compatibility_date = "2026-09-17"
+
+# 保留 workers.dev 地址，方便在不挂路由的情况下先自测
+workers_dev = true
+
+# 只挂这三类路径，千万别写成 zhaokening.ccwu.cc/*
+# —— 那样整站静态资源都要过 Worker，免费版配额会烧光，且 Worker 一挂全站白屏。
+routes = [
+  { pattern = "zhaokening.ccwu.cc/TV*", zone_name = "zhaokening.ccwu.cc" },
+  { pattern = "www.zhaokening.ccwu.cc/TV*", zone_name = "zhaokening.ccwu.cc" },
+  { pattern = "zhaokening.ccwu.cc/api/tv*", zone_name = "zhaokening.ccwu.cc" },
+  { pattern = "www.zhaokening.ccwu.cc/api/tv*", zone_name = "zhaokening.ccwu.cc" },
+]
+
+# 复用留言板已有的 KV 命名空间做失败计数
+[[kv_namespaces]]
+binding = "KING_KV"
+id = "64bd4e36d34f452296dbe12e83405875"

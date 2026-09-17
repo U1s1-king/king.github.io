@@ -1433,6 +1433,15 @@ async function tvStream(params, origin, request) {
   return new Response(r.body, { status: r.status, headers })
 }
 
+/* 定长比较：长度不同直接否，长度相同逐字节异或累加（不提前 return）。
+   用来比对门卫密钥，避免用 === 时泄露「前几位对了」的时间差。 */
+function safeEqualStr(a, b) {
+  if (a.length !== b.length) return false
+  let diff = 0
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i)
+  return diff === 0
+}
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url)
@@ -1440,6 +1449,28 @@ export default {
 
     if (request.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: corsHeaders(origin) })
+    }
+
+    /* ---------------- 影视接口门卫 ----------------
+       影视数据现在必须经由 zhaokening.ccwu.cc/api/tv* 的 tv-gate Worker 转发，
+       它在转发时会带上内部头 X-Gate-Secret。没有这个头的一律拒绝 ——
+       这样公开的 sakura-music-api.pages.dev/api/tv* 直连就作废了。
+       （README 里那个地址本来是写给浏览器直连的，加了门禁之后它就是漏洞。）
+
+       只拦 /api/tv*，音乐那一整套接口（/api/search、/api/url…）完全不受影响。
+       密钥缺失时按「失败关闭」处理：宁可 503，也不把数据漏出去。 */
+    if (url.pathname.indexOf('/api/tv') === 0) {
+      const gateSecret = env && env.TV_GATE_SECRET
+      if (!gateSecret) {
+        return jsonResponse(
+          { ok: false, error: '影视接口未配置门卫密钥（TV_GATE_SECRET 缺失）' },
+          503,
+          origin,
+        )
+      }
+      if (!safeEqualStr(request.headers.get('X-Gate-Secret') || '', gateSecret)) {
+        return jsonResponse({ ok: false, error: '影视接口需要门卫授权' }, 403, origin)
+      }
     }
 
     // 音频走 Range 代理（曲库源站不支持 Range）
