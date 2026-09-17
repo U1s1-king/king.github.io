@@ -184,6 +184,40 @@
     padding-top: 0.5rem;
     padding-bottom: 0.5rem;
   }
+
+  /* style.css 里那条 44px 只管 button 与 .btn，锚点是漏网的。
+     实测剩下的 23 个不达标控件全是 <a>：App Bar 的回首页/分享（36x36）、
+     页脚分享（40x24）、归档的「点击访问网站」（224x40）、
+     以及 <a class="btn-cherry"> 这种锚点按钮（123x40）。 */
+  .app-bar-home,
+  .app-bar-share,
+  .footer-share,
+  a.external-link,
+  a.btn,
+  a.btn-primary,
+  a.btn-secondary,
+  a.btn-cherry,
+  a.cherry-btn {
+    min-width: 44px !important;
+    min-height: 44px !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* 音量条：可视轨道只有 4px 高，手指根本按不准。
+     不能直接把它撑到 44px —— 它在 .mixer（105x15，flex nowrap）里，
+     抬高会把音乐页那行特意排成不换行的控件挤断（见本节开头的注释）。
+     所以撑高元素本身、再用等量负外边距把占位抵消掉：
+     触控区 44px，行高和轨道厚度都不变（background-clip 把粉条
+     限回 4px 的内容盒，观感与改动前一致）。 */
+  .volume-slider {
+    height: 44px !important;
+    padding: 20px 0 !important;
+    margin: -20px 0 !important;
+    box-sizing: border-box !important;
+    background-clip: content-box;
+  }
 }
 
 /* 通用小屏细节：文字断词、密度 */
