@@ -671,6 +671,61 @@ if (platform === 'kuwo') {
     setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
   }
 
+  /* ---------------------------------------------------------- 智能下载
+     把一个「候选地址表」逐个试过去，谁先拿到真音频就用谁。
+
+     为什么需要：songUrlCandidates() 从一开始就是按「候选表」设计的
+     （注释里写得很清楚：网易云很多曲目在某个镜像拿不到，换下一个常常就出了），
+     但两条下载路径都只 fetch 了 list[0]。而 list[0] 经常是：
+       · 歌单里存了几天的过期签名直链（网易云 CDN 地址里带签发时间戳 /20260917191725/）
+       · 某个平台刚好拿不到的死链
+     于是「下载某些音乐会失败」。真正的候选表就摆在手边，没用上。
+     这里把最后那几个「流式镜像」也吃进来（它们 302 到新鲜直链，服务端能跟）。 */
+
+  function dlSay(m) {
+    try { if (typeof global.showMsg === 'function') global.showMsg(m); } catch (e) {}
+  }
+
+  function tryEachUrl(urls, i, name, artist) {
+    if (i >= urls.length) { dlSay('这首下载不了喵～换一首或稍后再试'); return Promise.resolve(false); }
+    return withTimeout(urls[i], { redirect: 'follow' }).then(function (r) {
+      return r.arrayBuffer();
+    }).then(function (buf) {
+      var ext = probeExt(buf);
+      if (!ext || buf.byteLength < 4096) throw new Error('不是有效音频');
+      var base = artist ? (name + ' - ' + artist) : name;
+      saveBlob(buf, (base + '.' + ext).replace(/[\\/:*?"<>|]/g, '_'), ext);
+      dlSay('下载完成喵～');
+      return true;
+    }).catch(function () {
+      /* 这一条不行就试下一条，不要在第一条上认输 */
+      return tryEachUrl(urls, i + 1, name, artist);
+    });
+  }
+
+  /**
+   * @param {{song?:Object, fallback?:string, name?:string, artist?:string}} opts
+   *   song     —— 有 id / platform / name 时用它重新取一份最新的候选表
+   *   fallback —— 调用方手上那条（通常是歌单里存的旧地址），排在候选表最后兜底
+   */
+  function downloadSmart(opts) {
+    opts = opts || {};
+    var name = opts.name || '音乐';
+    var artist = opts.artist || '';
+    var resolve = (opts.song && (opts.song.id || opts.song.name))
+      ? songUrlCandidates(opts.song).catch(function () { return []; })
+      : Promise.resolve([]);
+    return resolve.then(function (list) {
+      var urls = [];
+      (list || []).forEach(function (u) { if (u && urls.indexOf(u) < 0) urls.push(u); });
+      var fb = opts.fallback;
+      if (fb && /^https?:\/\//.test(fb) && urls.indexOf(fb) < 0) urls.push(fb);
+      if (!urls.length) { dlSay('拿不到下载地址喵～'); return false; }
+      dlSay('开始下载喵…');
+      return tryEachUrl(urls, 0, name, artist);
+    });
+  }
+
   // ---------------------------------------------------------- 导出
 
   global.MusicAPI = {
@@ -701,6 +756,7 @@ if (platform === 'kuwo') {
     health: rest.health,
 
     download: download,
+    downloadSmart: downloadSmart,
     saveBlob: saveBlob,
     probeExt: probeExt,
 

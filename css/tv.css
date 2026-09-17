@@ -193,3 +193,77 @@
 }
 .tv-retry:hover { background: #ffe3ea; }
 .tv-loading-hint { font-size: .78rem !important; color: #bda6ae !important; }
+
+/* ============================================================
+   手机端：播放器作为「二级页」铺满整屏
+   ------------------------------------------------------------
+   全部锁在 max-width:768px 里 —— AppShell 的二级页本来也只在窄屏创建，
+   桌面端一行都命中不到，网页端像素不变。
+   ============================================================ */
+
+/* 「横屏观看」只在手机出现（桌面直接点全屏按钮 / 按 F 就行） */
+.tv-rotate { display: none; }
+
+@media (max-width: 768px) {
+    .tv-rotate { display: inline-flex; align-items: center; gap: 6px; }
+
+    /* 手指按得准：选集按钮比桌面大一圈 */
+    .tv-ep { padding: 8px 14px; }
+
+    /* 搬进二级页后整块铺满 */
+    .detail-view .tv-player {
+        display: flex;
+        flex-direction: column;
+        margin: 0;
+        min-height: 100%;
+        background: #fff9f7;
+    }
+    /* 顺序改成「标题条 → 视频 → 选集」：视频必须在第一屏，不然还得往下划 */
+    .detail-view .tv-player-head { order: 0; }
+    .detail-view .tvp { order: 1; }
+    .detail-view .tv-episodes { order: 2; }
+
+    .detail-view .tv-player-head {
+        position: sticky;
+        top: 0;
+        z-index: 6;
+        flex-wrap: nowrap;
+        margin: 0;
+        padding: calc(10px + env(safe-area-inset-top, 0px)) 12px 10px;
+        background: #fff9f7;
+        border-bottom: 1px solid #ffe3ea;
+    }
+    .detail-view .tv-player-head strong {
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    /* 二级页里视频贴边拉满，圆角只会让它看着像嵌在卡片里 */
+    .detail-view .tvp,
+    .detail-view #tvVideo { border-radius: 0; }
+
+    /* 选集区吃掉剩下的高度，自己滚 */
+    .detail-view .tv-episodes {
+        flex: 1 1 auto;
+        max-height: none;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        margin: 0;
+        padding: 12px;
+    }
+    .detail-view .tv-line-name { flex-basis: 84px; }
+
+    /* 进度条别被 iPhone 底部那条横杠压住 */
+    .detail-view .tvp-bar { padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px)); }
+}
+
+/* 已经转成横屏（但还没进全屏）时纵向空间紧张，把留白收掉 */
+@media (max-width: 768px) and (orientation: landscape) {
+    .detail-view .tv-player-head {
+        padding-top: calc(4px + env(safe-area-inset-top, 0px));
+        padding-bottom: 4px;
+    }
+    .detail-view .tv-episodes { padding: 8px 12px; }
+}

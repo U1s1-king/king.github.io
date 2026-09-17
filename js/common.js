@@ -197,7 +197,14 @@ document.addEventListener('mousemove', function (e) {
 (function () {
   if (window.__APP_SHELL__) return;
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("/sw.js").catch(function(){});
+    /* 带上版本号注册：/sw.js 被缓存 4 小时（GH Pages 的 max-age=14400），
+       不带版本号的话浏览器会在这 4 小时里一直用 HTTP 缓存里的旧脚本，
+       于是 SW 里的新策略（比如「同源 /api/* 绝不入缓存」）迟迟不生效。
+       换成 /sw.js?v=<版本> 后每个版本都是一个全新 URL，浏览器必然重新拉取，
+       安装完 skipWaiting + clients.claim 立即接管。
+       同一个 scope 下只会存在一份注册，旧注册会被这次注册替换。 */
+    var v = window.__DSH_VERSION || "1";
+    navigator.serviceWorker.register("/sw.js?v=" + v).catch(function(){});
   }
 })();
 

@@ -242,13 +242,50 @@
     toast(on ? '网页全屏' : '退出网页全屏');
   }
   function isFull() { return !!(document.fullscreenElement || document.webkitFullscreenElement); }
+
+  /* ---------- 手机端横屏 ----------
+     三种浏览器的能力差得很远，这里按「能做到多少做多少」的顺序退：
+       1. Android Chrome / Edge：元素全屏 + screen.orientation.lock('landscape')
+          两个都支持，进去就是横的。
+       2. iOS Safari：没有 orientation.lock，元素全屏也拿不到方向控制。唯一能
+          真正横过来铺满的路是 video.webkitEnterFullscreen()（系统原生播放器，
+          随设备旋转，控件也是系统的）——所以 iOS 直接走它，不要先请求元素全屏，
+          否则先全屏再调原生播放器会闪一下。
+       3. 什么都不支持的：至少把方向锁试一遍（部分安卓 WebView 只有这一半）。 */
+  function lockLandscape() {
+    try {
+      var so = screen.orientation || screen.mozOrientation || screen.msOrientation;
+      if (so && so.lock) { var p = so.lock('landscape'); if (p && p.catch) p.catch(function () {}); }
+    } catch (e) {}
+  }
+  function unlockOrientation() {
+    try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) {}
+  }
+  function isIOS() {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  }
+  /* 「横屏观看」按钮直接调它 */
+  function enterLandscape() {
+    if (!D.video) return;
+    if (isIOS() && D.video.webkitEnterFullscreen) {
+      try { D.video.webkitEnterFullscreen(); return; } catch (e) {}
+    }
+    if (isFull()) { lockLandscape(); return; }
+    var fn = D.stage && (D.stage.requestFullscreen || D.stage.webkitRequestFullscreen);
+    if (!fn) { lockLandscape(); return; }
+    var p = fn.call(D.stage);
+    if (p && p.then) p.then(lockLandscape, lockLandscape);
+    else lockLandscape();
+  }
   function toggleFull() {
     if (!D.stage) return;
     var d = document;
-    if (isFull()) (d.exitFullscreen || d.webkitExitFullscreen || function () {}).call(d);
-    else {
-      var fn = D.stage.requestFullscreen || D.stage.webkitRequestFullscreen;
-      if (fn) { var p = fn.call(D.stage); if (p && p.catch) p.catch(function () {}); }
+    if (isFull()) {
+      unlockOrientation();
+      (d.exitFullscreen || d.webkitExitFullscreen || function () {}).call(d);
+    } else {
+      enterLandscape();
     }
   }
   function togglePip() {
@@ -579,6 +616,9 @@
     setNav: setNav,
     setQualities: setQualities,
     seekBy: seekBy,
+    enterLandscape: enterLandscape,
+    toggleFull: toggleFull,
+    isFull: isFull,
     getVideo: function () { return D.video; },
   };
 })();

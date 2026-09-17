@@ -412,6 +412,40 @@
     return LINE_NAMES[String(raw || '').toLowerCase()] || ('线路 ' + (i + 1));
   }
 
+  /* ---------------- 手机端：播放器进「二级页」 ----------------
+     AppShell 的二级页（.detail-view）只在 ≤768px 生效，正好就是手机。
+     adopt 会把节点整块搬进去并在关闭时自动搬回原位，所以 <video> 不会
+     被重建、播放不中断；这也正是它比「克隆一份 DOM」强的地方。 */
+  var tvDetail = null;
+
+  function tvNarrow() {
+    return (window.AppShell && AppShell.isNarrow) ? AppShell.isNarrow() : (window.innerWidth <= 768);
+  }
+
+  /* 返回 true 表示「本来就有二级页，已经关掉了」 */
+  function closeTvDetail() {
+    if (!tvDetail) return false;
+    var h = tvDetail;
+    tvDetail = null;   /* 先置空：close() 会回调 onClose，不置空会绕回来 */
+    h.close();
+    return true;
+  }
+
+  function openTvDetail(title) {
+    if (!tvNarrow() || !window.AppShell || !AppShell.openDetail) return null;
+    closeTvDetail();
+    tvDetail = AppShell.openDetail({
+      title: title || '播放',
+      swipeClose: true,
+      onClose: function () {
+        tvDetail = null;
+        var p = byId('tvPlayer'); if (p) p.hidden = true;
+        stopPlayer();
+      },
+    });
+    return tvDetail;
+  }
+
   function openPlayer(it) {
     var p = byId('tvPlayer');
     var eps = byId('tvEps');
@@ -472,6 +506,13 @@
       );
     }
     p.hidden = false;
+    /* 手机端把播放器整块搬进二级页：整屏只留「标题 + 视频 + 选集」，
+       比在长页面里往下滚着找播放器舒服得多；关闭时自动搬回原位。 */
+    var det = openTvDetail(it.vod_name || '');
+    if (det && det.el) {
+      AppShell.adopt(p, det.el);
+      document.documentElement.classList.add('tvp-open');
+    }
     if (firstPlayable) { firstPlayable.click(); }
     else {
       var any = eps.querySelector('.tv-ep');
@@ -482,7 +523,8 @@
         noteWithLink('这个资源只有网页线路，浏览器里播不了。', u);
       } else { setText('tvNote', '这个资源没有可播放的地址'); }
     }
-    if (p.scrollIntoView) p.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    /* 二级页里自身就是全屏，再 scrollIntoView 只会把层顶出去 */
+    if (!det && p.scrollIntoView) p.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   /* ---------------- 播放（B 站风格那套在 js/tv-player.js） ---------------- */
@@ -518,10 +560,18 @@
     if (prev) prev.addEventListener('click', function () { if (state.pg > 1) load(state.pg - 1); });
     if (next) next.addEventListener('click', function () { load(state.pg + 1); });
     if (back) back.addEventListener('click', function () {
+      /* 二级页开着时「返回列表」就是关掉它：onClose 里已经隐藏 + 停播了 */
+      if (closeTvDetail()) return;
       var p = byId('tvPlayer'); if (p) p.hidden = true;
       stopPlayer();
       load(state.pg);
     });
+    var rot = byId('tvRotate');
+    if (rot) rot.addEventListener('click', function () {
+      if (window.TVPlayer && TVPlayer.enterLandscape) TVPlayer.enterLandscape();
+    });
+    /* 视口变宽就收掉二级页：它的样式只在窄屏生效，留在宽屏是一层没样式的浮层 */
+    if (window.AppShell && AppShell.onMode) AppShell.onMode(function (n) { if (!n) closeTvDetail(); });
     if (byId('tvGrid')) loadCats().then(function () { load(1); });
   }
 

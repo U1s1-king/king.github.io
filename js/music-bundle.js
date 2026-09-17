@@ -1151,7 +1151,13 @@ if (b[0] === 0x4f && b[1] === 0x67 && b[2] === 0x67 && b[3] === 0x53) return 'og
 if (b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46) return 'wav';
 return '';
 }
-function downloadSong(url, name, artist) {
+function downloadSong(url, name, artist, song) {
+/* 统一走 MusicAPI.downloadSmart：它会按 song 重新取一份最新的候选表逐个试，
+   不再只赌手上这一条 —— 那条很可能是歌单里存了几天的过期签名地址 */
+if (window.MusicAPI && MusicAPI.downloadSmart) {
+MusicAPI.downloadSmart({ song: song, fallback: url, name: name, artist: artist });
+return;
+}
 if (!url) { if (typeof showMsg === 'function') showMsg('无法下载喵～'); return; }
 if (typeof showMsg === 'function') showMsg('开始下载喵…');
 fetch(url)
@@ -1193,7 +1199,9 @@ resolveNsUrl(el, function (u) {
 var dl = el.querySelector('.ns-dl');
 if (dl) dl.addEventListener('click', function (e) {
 e.stopPropagation();
-resolveNsUrl(el, function (u) { downloadSong(u, el.dataset.name, el.dataset.artist); });
+/* 把 id / platform 一起带上：downloadSmart 靠它重新取新鲜地址 */
+var s = { id: el.dataset.id || '', platform: el.dataset.platform || '', name: el.dataset.name || '', artist: el.dataset.artist || '' };
+resolveNsUrl(el, function (u) { downloadSong(u, el.dataset.name, el.dataset.artist, s); });
 });
 }
 function playSong(el) {
@@ -7535,7 +7543,11 @@ if (b[0] === 0x4f && b[1] === 0x67 && b[2] === 0x67 && b[3] === 0x53) return 'og
 if (b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46) return 'wav';
 return '';
 }
-function downloadSong4(url, name, artist) {
+function downloadSong4(url, name, artist, song) {
+if (window.MusicAPI && MusicAPI.downloadSmart) {
+MusicAPI.downloadSmart({ song: song, fallback: url, name: name, artist: artist });
+return;
+}
 if (!url) return;
 fetch(url)
 .then(function (r) {
@@ -7608,7 +7620,7 @@ return;
 if (isCards) {
 var html = '';
 songs.forEach(function (s) {
-html += '<div class="po-card" data-i="' + esc4(JSON.stringify({ name: s.name, artist: s.artist, url: s.url, lrc: s.lrc })) + '">' +
+html += '<div class="po-card" data-i="' + esc4(JSON.stringify({ name: s.name, artist: s.artist, url: s.url, lrc: s.lrc, id: s.id, platform: s.platform })) + '">' +
 '<div class="po-card-cover">' + (s.pic ? '<img src="' + esc4(s.pic) + '" onerror="this.remove()"><i class="fas fa-music"></i>' : '<i class="fas fa-music"></i>') + '</div>' +
 '<div class="po-card-info">' +
 '<div class="po-card-name">' + esc4(s.name) + '</div>' +
@@ -7628,13 +7640,13 @@ if (window.LyricHelper && typeof lyricBox !== 'undefined' && lyricBox) if (windo
 });
 el.querySelector('.po-card-dl').addEventListener('click', function () {
 var d = JSON.parse(el.dataset.i);
-downloadSong4(d.url, d.name, d.artist);
+downloadSong4(d.url, d.name, d.artist, d);
 });
 });
 } else {
 var html = '';
 songs.forEach(function (s) {
-html += '<div class="po-item" data-i="' + esc4(JSON.stringify({ name: s.name, artist: s.artist, url: s.url, lrc: s.lrc })) + '">' +
+html += '<div class="po-item" data-i="' + esc4(JSON.stringify({ name: s.name, artist: s.artist, url: s.url, lrc: s.lrc, id: s.id, platform: s.platform })) + '">' +
 '<div class="po-cover">' + (s.pic ? '<img src="' + esc4(s.pic) + '" onerror="this.remove()"><i class="fas fa-music"></i>' : '<i class="fas fa-music"></i>') + '</div>' +
 '<div class="po-info"><div class="po-name">' + esc4(s.name) + '</div><div class="po-artist">' + esc4(s.artist) + '</div></div>' +
 '<div class="po-dur">' + fmt4(s.duration) + '</div>' +
@@ -7652,7 +7664,7 @@ if (window.LyricHelper && typeof lyricBox !== 'undefined' && lyricBox) if (windo
 });
 el.querySelector('.po-dl').addEventListener('click', function () {
 var d = JSON.parse(el.dataset.i);
-downloadSong4(d.url, d.name, d.artist);
+downloadSong4(d.url, d.name, d.artist, d);
 });
 });
 }
