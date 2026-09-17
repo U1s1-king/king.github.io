@@ -90,6 +90,12 @@
 .tv-tip { padding: 24px 4px; color: #8d6b78; text-align: center; }
 
 .tv-pager { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 6px 0 20px; color: #a14563; }
+/* 必须显式写：上面那条的 display:flex 权重高于浏览器给 [hidden] 的
+   display:none，于是 JS 里设了 pager.hidden = true 也照样显示出来。
+   结果就是「加载失败、一个结果都没有」的页面上，还摆着
+   「上一页 / 1 / 1 / 下一页」，看着像加载完了只是内容空。
+   同一个文件里 .tv-sb-hits / .tv-ep-grid 都写了，唯独这条漏了。 */
+.tv-pager[hidden] { display: none; }
 
 .tv-player { margin-top: 12px; }
 
@@ -222,6 +228,31 @@
 }
 @keyframes tv-spin { to { transform: rotate(360deg); } }
 .tv-loading.is-fail i { font-size: 1.5rem; color: #ffb6c1; }
+/* 失败/无结果时别留那么高的空档：这段本来是按「加载中」那个转圈定的高度，
+   但失败态没有转圈，上下的 46px 就变成两片空白。 */
+.tv-loading.is-fail { padding: 30px 12px 26px; gap: 10px; }
+.tv-loading.is-fail p { max-width: 30ch; line-height: 1.6; }
+
+/* 看板娘（右下角 live2d）会压住失败卡上的重试按钮和提示文字 ——
+   它是 position:fixed 的，不占布局，所以这里没法用「绕开」的办法，
+   只能把这块内容整体往上、往左收，让出它常驻的右下角区域。 */
+@media (max-width: 768px) {
+  .tv-loading.is-fail {
+    align-items: flex-start;
+    text-align: left;
+    padding: 26px 12px 64px;
+    /* 左侧留白 + 上限宽度：文字行不会伸到看板娘底下去 */
+    max-width: 82%;
+  }
+  .tv-loading.is-fail p { max-width: 26ch; }
+}
+/* 无结果提示（render 里 list 为空时走 say()，那是 .tv-tip 不是 .tv-loading） */
+.tv-grid > .tv-tip {
+    grid-column: 1 / -1;
+    margin: 0;
+    padding: 30px 12px 26px;
+    text-align: center;
+}
 .tv-retry {
     padding: 8px 18px;
     border: 1px solid #ffcdda;

@@ -88,6 +88,11 @@
     clearLoad();
     var g = byId('tvGrid');
     if (!g) return;
+    /* 出错了就别再摆着「上一页 / 1 / 1 / 下一页」——
+       页面明明什么都没拿到，分页器却还在，看着像加载完了只是内容空。
+       这里和 render() 的无结果分支保持一致。 */
+    var pager = byId('tvPager');
+    if (pager) pager.hidden = true;
     g.innerHTML = '<div class="tv-loading is-fail"><i class="fas fa-circle-exclamation"></i><p>' + esc(msg) +
       '</p><button type="button" class="tv-retry" id="tvRetry"><i class="fas fa-rotate-right"></i> 重试一次</button>' +
       '<p class="tv-loading-hint">还是不行就点上面「片源」换一个源，或者过会儿再来</p></div>';
@@ -285,8 +290,19 @@
         bar.appendChild(b);
       });
     }).catch(function (e) {
+      /* 只放一枚重试胶囊，不再把原因写在这里 ——
+         片源和分类是一起挂的（同一个接口），下面那张失败卡已经把
+         「没找到片源：…」说清楚了。两处各喊一次同样的话只是噪音，
+         而且分类条上那行字还会把筛选区撑高一截。 */
       var bar = byId('tvCats');
-      if (bar) bar.innerHTML = '<span class="tv-tip">分类加载失败：' + String(e.message || e) + '</span>';
+      if (!bar) return;
+      bar.innerHTML = '';
+      var again = document.createElement('button');
+      again.type = 'button';
+      again.className = 'hub-chip';
+      again.innerHTML = '<i class="fas fa-rotate-right"></i><span>分类没加载出来，点这重试</span>';
+      again.addEventListener('click', function () { loadCats(); });
+      bar.appendChild(again);
     });
   }
 
