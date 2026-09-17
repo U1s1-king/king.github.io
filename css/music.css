@@ -85,7 +85,22 @@
   .disc-zone{margin-bottom:0.35rem}
   .player-left .vinyl{width:118px;height:118px}
   .player-left .cover-inner{width:96px;height:96px}
-  .player-left .spectrum-line{margin-top:0.3rem;height:22px}
+  /* 频谱区别定 height（会出横线穿条的 bug，见下），
+     改用负底边距把它的视觉留白收掉：.spectrum-bars 是
+     align-items:flex-end、条形从底部往上长，所以下方那点空间
+     本来就是空的，收掉不影响观感，但能把音量行留在首屏里。 */
+  .player-left .spectrum-line{margin-top:0.1rem;margin-bottom:-14px}
+
+  /* ---------- 频谱那条横线为什么会「穿过」动画 ----------
+     .spectrum-line::before 就是那条渐变横线，它是
+       position: absolute; bottom: 0
+     —— 贴在容器**底部**。而 .spectrum-bars 高 38~48px、
+     align-items: flex-end，条形是从容器底部**往上长**的。
+     所以容器只要比频谱条矮，横线就会从频谱条中间穿过去。
+     实测给 .spectrum-line 定 height:22px 时，
+     .spectrum-bars 仍是 32px 高，横线正好切在条身上。
+     结论：.spectrum-line 的高度必须是 auto（内容高度），
+     想省纵向空间就去动 .player-left 的其他部分。 */
 
   .player-right .track-title{font-size:1.35rem}
   .player-right .song-details{margin-bottom:0.35rem}
