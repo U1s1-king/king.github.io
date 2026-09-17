@@ -538,3 +538,48 @@ img.js-lightbox {
     font-size: 16px !important;
   }
 }
+
+/* ===== 点按反馈统一 =====
+   先做了普查（9 个页面逐元素量计算值 + 遍历 CSSOM 找 :active 规则），
+   结论和最初的假设相反：全站 a / button 其实都已经有粉色高亮和 :active
+   反馈，覆盖是完整的。真正不一致的只有两处：
+
+   1) 表单控件的点按高亮是安卓 UA 默认的蓝色 rgba(51,181,229,0.4)。
+      style.css 里那条粉色高亮的清单写的是
+      a,button,.btn,input[type="submit"],input[type="button"] ——
+      文本框 / 多行框 / 下拉框都不在里面。在粉色站点上点一下闪一片蓝。
+   2) 按压幅度实际有三档。style.css:455 给 button 的是
+      transform:scale(.96)，anim.css:219 又给同一批元素加了 scale:.972
+      （那里刻意用独立属性，好和动画用的 translate/transform 叠加），
+      两个相乘实际是 .933；没被 anim.css 列到的普通链接只有 .96；
+      被列到的卡片只有 .972。三档肉眼分不出来，但一套手感应该只有一个数。
+
+   统一到 .96：这是 style.css 已经给链接和按钮定下的值，也就是保留占多数
+   的既有手感，只把卡片和叠加那份拉齐。scale:1 是为了关掉 anim.css 那一份，
+   否则又会乘出第二档。 */
+@media (max-width: 768px) {
+  input,
+  textarea,
+  select {
+    -webkit-tap-highlight-color: rgba(255, 182, 193, 0.25) !important;
+  }
+
+  a:active,
+  button:active,
+  .btn:active,
+  .page-tab:active,
+  .ctrl-btn:active,
+  .mode-chip:active,
+  .mood-btn:active,
+  .emoji-item:active,
+  .card:active,
+  .post-card:active,
+  .media-card:active,
+  .page-card:active,
+  .player-card:active,
+  .work-card:active,
+  .link-card:active {
+    transform: scale(0.96) !important;
+    scale: 1 !important;
+  }
+}
