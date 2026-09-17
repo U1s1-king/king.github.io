@@ -65,9 +65,17 @@
     });
   }
 
+/* 进桌面「二级页」之前激活的那个 tab。关闭时要还原回去 —— 否则刚看过的
+   面板仍然是 .active，返回工具列表后它会继续显示在网格下方。 */
+var prevTab = null;
+
 function openTool(id, push) {
     var tab = document.querySelector('.tool-tab[data-tool="' + id + '"]');
     if (!tab) return;
+    /* 只在第一次进入时记：切换工具走 hashchange，会反复调到 openTool */
+    if (!document.documentElement.classList.contains('tool-open')) {
+      prevTab = document.querySelector('.tool-tab.active');
+    }
     tab.click();
     var meta = META[id];
     var nameEl = byId('toolsBackName');
@@ -82,6 +90,8 @@ function openTool(id, push) {
 
   function closeTool(silent) {
     document.documentElement.classList.remove('tool-open');
+    /* 只摘 tool-open、不动 .active 的话，刚看过的面板会赖在页面上不走 */
+    if (prevTab) { prevTab.click(); prevTab = null; }
     if (!silent) {
       var bar = byId('toolsFilter');
       if (bar && bar.scrollIntoView) bar.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -138,8 +148,12 @@ function openTool(id, push) {
   if (window.AppShell && window.AppShell.onMode) {
     window.AppShell.onMode(function (isNarrow) {
       var root = document.documentElement;
-      if (isNarrow) root.classList.remove('tool-hub');
-      else init();
+      if (isNarrow) {
+        root.classList.remove('tool-hub');
+        /* 从桌面宽屏缩到手机时，桌面那套「二级页」状态要一并收掉，
+           否则面板会以 .active 的身份挂在手机网格下面 */
+        closeTool(true);
+      } else init();
     });
   }
 })();

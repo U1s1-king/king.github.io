@@ -88,13 +88,28 @@
     var panel = byId('tool-' + id);
     if (!panel) return;
 
+    /* 记下进来之前是哪个工具，出去时要还原回去 */
+    var prevTab = document.querySelector('.tool-tab.active');
+
     /* 先点原标签按钮：面板要拿到 .active 才可见，也保证状态与原有逻辑一致 */
     var tab = document.querySelector('.tool-tab[data-tool="' + id + '"]');
     if (tab) tab.click();
 
     var wrap = document.createElement('div');
     wrap.className = 'tool-detail';
-    window.AppShell.openDetail({ title: label || '工具', content: wrap });
+    window.AppShell.openDetail({
+      title: label || '工具',
+      content: wrap,
+      /* 还原「当前工具」。原来关掉二级页只把面板搬回原位、不动 .active，
+         于是刚看过的那个面板返回列表后仍然是 .active，会继续显示在页面下方
+         —— 看起来就像二级页的内容没退干净。 */
+      onClose: function () {
+        Array.prototype.forEach.call(document.querySelectorAll('.tool-panel'), function (x) {
+          x.classList.remove('active');
+        });
+        if (prevTab) prevTab.click();
+      },
+    });
     window.AppShell.adopt(panel, wrap);
   }
 
