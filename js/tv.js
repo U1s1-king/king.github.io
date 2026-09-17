@@ -434,10 +434,6 @@
      被重建、播放不中断；这也正是它比「克隆一份 DOM」强的地方。 */
   var tvDetail = null;
 
-  function tvNarrow() {
-    return (window.AppShell && AppShell.isNarrow) ? AppShell.isNarrow() : (window.innerWidth <= 768);
-  }
-
   /* 返回 true 表示「本来就有二级页，已经关掉了」 */
   function closeTvDetail() {
     if (!tvDetail) return false;
@@ -448,10 +444,15 @@
   }
 
   function openTvDetail(title) {
-    if (!tvNarrow() || !window.AppShell || !AppShell.openDetail) return null;
+    if (!window.AppShell || !AppShell.openDetail) return null;
     closeTvDetail();
     tvDetail = AppShell.openDetail({
       title: title || '播放',
+      /* 桌面端也走二级页。以前这里卡了 tvNarrow()，只有 ≤768px 才建层，
+         桌面端点卡片是把播放器就地展开在长页面里 —— 还得往下滚才看得见画面。
+         allowDesktop 正是 AppShell 为这种情况留的开关：桌面端会自动补一条
+         sticky 的「标题 + 关闭」头（手机端用 App Bar，不重复加）。 */
+      allowDesktop: true,
       swipeClose: true,
       onClose: function () {
         tvDetail = null;
@@ -459,6 +460,10 @@
         stopPlayer();
       },
     });
+    /* 桌面端二级页默认是 880px 居中窄栏（music / journal 用的那套），
+       影视页要 B 站那种宽屏两栏，用这个标记类单独放宽，
+       不去动别人的 .detail-view 规则。 */
+    if (tvDetail && tvDetail.el) tvDetail.el.classList.add('tv-detail');
     return tvDetail;
   }
 
@@ -477,29 +482,56 @@
     var firstPlayable = null;
     /* 各条线路（给播放器右上角那个「线路」菜单用，B 站那个位置是清晰度） */
     var LINES = [];
+
+    /* ---- 选集面板：线路做顶部 tab，集数做网格（B 站那个观感）----
+       原来是把所有线路的所有集数一次性铺开成「线路名 + 一长串集数」，
+       线路一多就得滚很久才能翻到下一集；现在一次只显示一条线路。 */
+    var tabsBox = document.createElement('div');
+    tabsBox.className = 'tv-ep-tabs';
+    var panesBox = document.createElement('div');
+    panesBox.className = 'tv-ep-panes';
+    var countEl = byId('tvEpCount');
+    var PANES = [];        /* 每条线路一项：{ tab, pane, count } */
+    var firstPlayablePane = -1;
+
+    function selectLine(k) {
+      if (!PANES.length) return;
+      if (k < 0 || k >= PANES.length) k = 0;
+      PANES.forEach(function (x, i) {
+        x.tab.classList.toggle('is-on', i === k);
+        x.pane.hidden = i !== k;
+      });
+      if (countEl) countEl.textContent = PANES[k].count + ' 集';
+    }
+
     groups.forEach(function (g, gi) {
       var parts = [];
       g.split('#').forEach(function (x) { if (x.indexOf('$') > 0) parts.push(x); });
       if (!parts.length) return;
       var urls = parts.map(function (x) { return x.slice(x.indexOf('$') + 1); });
       var playable = urls.some(function (u) { return isM3u8(u) || isMedia(u); });
-      var box = document.createElement('div');
-      box.className = 'tv-line';
-      var lab = document.createElement('span');
-      lab.className = 'tv-line-name' + (playable ? '' : ' is-html');
-      lab.textContent = lineName(froms[gi], gi) + (playable ? '' : '（网页线路）');
-      box.appendChild(lab);
-      /* 集数放进独立容器：和线路名构成「固定列 + 可换行」两栏，行与行之间按钮才对得齐 */
-      var epsBox = document.createElement('span');
-      epsBox.className = 'tv-line-eps';
+
+      var pane = document.createElement('div');
+      pane.className = 'tv-ep-grid';
+      var tab = document.createElement('button');
+      tab.type = 'button';
+      tab.className = 'tv-ep-tab' + (playable ? '' : ' is-html');
+      tab.textContent = lineName(froms[gi], gi) + (playable ? '' : ' · 网页');
+      var entry = { tab: tab, pane: pane, count: parts.length };
+      PANES.push(entry);
+      tab.addEventListener('click', function () { selectLine(PANES.indexOf(entry)); });
+
       parts.forEach(function (part, pi) {
         var cut = part.indexOf('$');
         var b = document.createElement('button');
         b.type = 'button';
         b.className = 'tv-ep';
         b.textContent = part.slice(0, cut) || ('第' + (pi + 1) + '集');
+        b.title = b.textContent;
         b.addEventListener('click', function () {
           Array.prototype.forEach.call(eps.querySelectorAll('.tv-ep'), function (x) { x.classList.toggle('is-on', x === b); });
+          /* 上一集/下一集可能跨线路，面板得跟着切到那一页 */
+          selectLine(PANES.indexOf(entry));
           var idx = -1;
           for (var k = 0; k < EP.list.length; k++) { if (EP.list[k].btn === b) { idx = k; break; } }
           EP.i = idx;
@@ -507,13 +539,21 @@
           play(urls[pi] || '');
         });
         EP.list.push({ btn: b, url: urls[pi] || '' });
-        epsBox.appendChild(b);
+        pane.appendChild(b);
       });
-      box.appendChild(epsBox);
-      eps.appendChild(box);
-      if (playable) LINES.push({ name: lineName(froms[gi], gi), btn: epsBox.querySelector('.tv-ep') });
-      if (!firstPlayable && playable) firstPlayable = box.querySelector('.tv-ep');
+
+      panesBox.appendChild(pane);
+      tabsBox.appendChild(tab);
+      if (playable) LINES.push({ name: lineName(froms[gi], gi), btn: pane.querySelector('.tv-ep') });
+      if (firstPlayablePane < 0 && playable) { firstPlayablePane = PANES.length - 1; firstPlayable = pane.querySelector('.tv-ep'); }
     });
+    if (PANES.length) {
+      eps.appendChild(tabsBox);
+      eps.appendChild(panesBox);
+      /* 默认停在第一条「能播」的线路上：第一条线路经常是网页线路，直接显示它
+         会让用户以为整部片子都不能播 */
+      selectLine(firstPlayablePane < 0 ? 0 : firstPlayablePane);
+    }
     if (window.TVPlayer) {
       TVPlayer.setQualities(
         LINES.map(function (x) { return { name: x.name }; }),
@@ -539,7 +579,8 @@
         noteWithLink('这个资源只有网页线路，浏览器里播不了。', u);
       } else { setText('tvNote', '这个资源没有可播放的地址'); }
     }
-    /* 二级页里自身就是全屏，再 scrollIntoView 只会把层顶出去 */
+    /* 正常情况下二级页一定建成了（层里自己会滚），再 scrollIntoView 只会把层顶出去；
+       只有 AppShell 没加载出来时才退回「就地展开」，那时才需要滚过去。 */
     if (!det && p.scrollIntoView) p.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
@@ -586,8 +627,10 @@
     if (rot) rot.addEventListener('click', function () {
       if (window.TVPlayer && TVPlayer.enterLandscape) TVPlayer.enterLandscape();
     });
-    /* 视口变宽就收掉二级页：它的样式只在窄屏生效，留在宽屏是一层没样式的浮层 */
-    if (window.AppShell && AppShell.onMode) AppShell.onMode(function (n) { if (!n) closeTvDetail(); });
+    /* 这里原来会在视口变宽时收掉二级页 —— 因为那套样式只在窄屏生效，留在宽屏
+       就是一层没有样式的浮层。现在桌面端有自己的样式了，窄屏宽屏来回切都该留着
+       这个层，没有理由再关。 */
+    if (window.AppShell && AppShell.onMode) AppShell.onMode(function () { /* 保持打开 */ });
     if (byId('tvGrid')) loadCats().then(function () { load(1); });
   }
 
