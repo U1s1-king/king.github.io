@@ -1151,6 +1151,14 @@ if (b[0] === 0x4f && b[1] === 0x67 && b[2] === 0x67 && b[3] === 0x53) return 'og
 if (b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46) return 'wav';
 return '';
 }
+/* 下载用的 MIME。理由见 music-api.js 的 mimeOf：'audio/' + ext 会拼出
+   audio/mp3 这类没注册的类型，浏览器忽略 <a download> 时会导航去渲染它。 */
+function audioMime(ext) {
+if (window.MusicAPI && MusicAPI.mimeOf) return MusicAPI.mimeOf(ext);
+var m = { mp3: 'audio/mpeg', m4a: 'audio/mp4', mp4: 'audio/mp4', aac: 'audio/aac',
+          flac: 'audio/flac', ogg: 'audio/ogg', opus: 'audio/ogg', wav: 'audio/wav' };
+return m[String(ext || '').toLowerCase()] || 'application/octet-stream';
+}
 function downloadSong(url, name, artist, song) {
 /* 统一走 MusicAPI.downloadSmart：它会按 song 重新取一份最新的候选表逐个试，
    不再只赌手上这一条 —— 那条很可能是歌单里存了几天的过期签名地址 */
@@ -1172,7 +1180,7 @@ if (typeof showMsg === 'function') showMsg('该曲受版权/VIP限制，下载�
 return;
 }
 var fn = (name + ' - ' + artist + '.' + ext).replace(/[\\/:*?"<>|]/g, '_');
-var blob = new Blob([buf], { type: 'audio/' + ext });
+var blob = new Blob([buf], { type: audioMime(ext) });
 var a = document.createElement('a');
 a.href = URL.createObjectURL(blob);
 a.download = fn;
@@ -7408,7 +7416,7 @@ reader.onload = function (e) {
 UnlockCore.decryptFile(e.target.result, file.name).then(function (res) {
 var base = file.name.replace(/\.[^.]+$/, '');
 var outName = base + '.' + res.ext;
-var blob = new Blob([res.data], { type: 'audio/' + res.ext });
+var blob = new Blob([res.data], { type: audioMime(res.ext) });
 var url = URL.createObjectURL(blob);
 item.className = 'ul-item done';
 item.innerHTML = '<div class="ul-info"><div class="ul-name"> ' + esc3(outName) + '</div><div class="ul-status">' + (res.data.length / 1024 / 1024).toFixed(1) + ' MB</div></div>' +
@@ -7417,7 +7425,7 @@ item.innerHTML = '<div class="ul-info"><div class="ul-name"> ' + esc3(outName) +
 '<button class="ul-btn" data-add="1" data-name="' + esc3(base) + '" title="加入歌单"><i class="fas fa-heart"></i></button>' +
 '<a class="ul-btn" href="' + url + '" download="' + esc3(outName) + '" title="下载"><i class="fas fa-download"></i></a>' +
 '</div>';
-bindItem(url, outName, base, new File([res.data], outName, { type: 'audio/' + res.ext }), true);
+bindItem(url, outName, base, new File([res.data], outName, { type: audioMime(res.ext) }), true);
 }).catch(function (err) {
 item.className = 'ul-item err';
 item.innerHTML = '<div class="ul-info"><div class="ul-name"> ' + esc3(file.name) + '</div><div class="ul-status">' + esc3(err.message || '解密失败') + '</div></div>';
@@ -7561,7 +7569,7 @@ if (typeof showMsg === 'function') showMsg('该曲受版权/VIP限制，下载�
 return;
 }
 var fn = (name + ' - ' + artist + '.' + ext).replace(/[\\/:*?"<>|]/g, '_');
-var blob = new Blob([buf], { type: 'audio/' + ext });
+var blob = new Blob([buf], { type: audioMime(ext) });
 var a = document.createElement('a');
 a.href = URL.createObjectURL(blob);
 a.download = fn;

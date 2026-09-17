@@ -660,8 +660,23 @@ if (platform === 'kuwo') {
     });
   }
 
+  /* 下载用的 MIME。原来一律拼 'audio/' + ext，会拼出 audio/mp3、audio/m4a
+     这种根本没注册过的类型。浏览器一旦忽略 <a download>（在 iframe、沙箱、
+     APP 壳里就会出现这种情况），它会当场导航去内联渲染这个 blob；渲染不出来
+     就是一个「页面打不开」的错误页，看起来跟跳到 404 一模一样。
+     这里给规范类型；认不出来的一律 application/octet-stream —— 这样最坏
+     也只是老老实实下载，绝不会把页面跳走。 */
+  var AUDIO_MIME = {
+    mp3: 'audio/mpeg', m4a: 'audio/mp4', mp4: 'audio/mp4', m4b: 'audio/mp4',
+    aac: 'audio/aac', flac: 'audio/flac', ogg: 'audio/ogg', oga: 'audio/ogg',
+    opus: 'audio/ogg', wav: 'audio/wav', wma: 'audio/x-ms-wma', ape: 'audio/x-ape'
+  };
+  function mimeOf(ext) {
+    return AUDIO_MIME[String(ext || '').toLowerCase()] || 'application/octet-stream';
+  }
+
   function saveBlob(buffer, filename, ext) {
-    var blob = new Blob([buffer], { type: 'audio/' + ext });
+    var blob = new Blob([buffer], { type: mimeOf(ext) });
     var a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = filename;
@@ -759,6 +774,7 @@ if (platform === 'kuwo') {
     downloadSmart: downloadSmart,
     saveBlob: saveBlob,
     probeExt: probeExt,
+    mimeOf: mimeOf,
 
     formatTime: formatTime,
     escapeHtml: escapeHtml,
