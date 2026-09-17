@@ -187,6 +187,17 @@ hr.sakura-divider {
         padding:0.5rem 1.1rem !important;
         font-size:0.95rem !important;
     }
+    /* 上面那条的 1.1rem 横向内边距是按普通按钮定的，但 .tv-ep 是选集网格里的
+       方块，宽度只有 66px，塞进 35.2px 的左右内边距后文字就被挤成「第…」了。
+       这类按钮的内边距与字号都由 tv.css 自己管，这里整体交还（padding 与
+       font-size 都还原成 tv.css 的值）。放在上面那条之后才压得住 —— 同权重下
+       后者胜。min-height:44px 不还原：触控下限仍由上面那条兜住，
+       而 .tv-ep 靠 tv.css 的纵向内边距本来就有 44px 高。 */
+    button.tv-ep,
+    button.tv-ep-tab {
+        padding-left: 2px !important;
+        padding-right: 2px !important;
+    }
     .blog-title {
         font-size:1.5rem !important;
     }

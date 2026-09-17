@@ -315,7 +315,10 @@
 .tv-ep-grid[hidden] { display: none; }
 
 .tv-ep-grid .tv-ep {
-    padding: 8px 4px;
+    /* 内边距只给纵向：横向一给，66px 的格子就被吃掉大半。
+       文字加粗是因为小字号下粉色底上的常规字重发虚。 */
+    padding: 8px 2px;
+    font-weight: 600;
     text-align: center;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -386,7 +389,7 @@
         grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
         gap: 7px;
     }
-    .detail-view.tv-detail .tv-ep-grid .tv-ep { padding: 7px 4px; font-size: .8rem; }
+    .detail-view.tv-detail .tv-ep-grid .tv-ep { padding: 7px 1px; font-size: .8rem; }
 }
 
 /* ---------- 移动：单栏铺满 ---------- */
@@ -395,7 +398,13 @@
 
     /* 手指按得准：按钮比桌面大一圈 */
     .tv-ep-grid { grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 9px; }
-    .tv-ep-grid .tv-ep { padding: 11px 4px; font-size: .88rem; }
+    /* 纵向内边距撑出 44px 的触控高度；横向只留 1px —— 格子只有 66px 宽。
+       !important 是为了压住 style.css 里给全站按钮定的 1.1rem 横向内边距。 */
+    .tv-ep-grid .tv-ep {
+        padding: 11px 1px !important;
+        font-size: .84rem !important;
+        letter-spacing: -.01em;
+    }
     .tv-ep-tab { padding: 7px 14px; font-size: .82rem; }
 
     .detail-view .tv-player {
