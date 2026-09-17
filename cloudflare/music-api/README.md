@@ -67,6 +67,23 @@ master / variant / TS 分片全部 200，浏览器直连即可；同时也避开
 请求」的坑——Cloudflare 与 Node 侧实测都会拿到上游 404，因此 `/api/tv/stream` 只作为
 直连失败后的兜底重试（对这类会判指纹的 CDN 兜底可能仍失败，此时换线路即可）。
 
+## 影视接口门禁（/api/tv*）
+
+从 2026-09-17 起 `/api/tv*` **不再允许浏览器直连**。所有影视请求必须经由
+`zhaokening.ccwu.cc` 上的独立门卫 Worker（`cloudflare/tv-gate`）转发，
+门卫会带上内部头 `X-Gate-Secret`；这个 Worker 只认该头，其余一律 403。
+
+因此这个 Pages 项目**必须**配置环境变量：
+
+| 变量 | 类型 | 说明 |
+| --- | --- | --- |
+| `TV_GATE_SECRET` | Secret | 与 `cloudflare/tv-gate` 的 `TV_GATE_SECRET` 完全一致 |
+
+**缺少它会让 `/api/tv*` 直接返回 503（fail-closed），影视页会打不开。**
+注意 Pages 的环境变量改完必须重新部署才生效。
+
+音乐那一整套接口（`/api/search`、`/api/url`…）完全不受影响。
+
 ## 部署
 
 ```powershell
