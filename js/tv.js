@@ -28,7 +28,7 @@
   var MEDIA_EXT = ['.mp4', '.m4v', '.mkv', '.flv', '.avi', '.mov', '.webm', '.mp3', '.m4a'];
 
   /* src：分类列表来自哪号源。各站 type_id 编号不同，翻页/点分类必须带上它 */
-  var state = { t: '', pg: 1, kw: '', src: null, pick: false };
+  var state = { t: '', pg: 1, kw: '', src: null, pick: false, hits: [] };
   /* 每次请求发一个序号：后发的永远赢。慢响应回来只作废、不覆盖页面 */
   var reqSeq = 0;
   /* 「片源」那排的源清单（由网关下发），以及这次每个源的耗时 */
@@ -375,6 +375,9 @@
           clearLoad();
           if (d && typeof d._src === 'number' && !state.pick) state.src = d._src;
           if (d && d.sources) renderSrcs(d.sources, d._stats);
+          /* 把这次命中的整批结果带着走：二级页侧栏要拿它做横跳。
+             按分类浏览（没有关键词）时清空，那块也就不会出现。 */
+          state.hits = state.kw ? ((d && d.list) || []) : [];
           render(d);
           /* 搜索结果页头写明「搜的是什么、拿到多少条」，用户一眼能核对对不对得上 */
           if (state.kw) {
@@ -467,12 +470,59 @@
     return tvDetail;
   }
 
+  /* 二级页侧栏顶部的「本次搜索结果」。
+     从列表页点海报进来时，把那次搜索命中的整批结果一并带进层里：用户搜「蜘蛛侠」
+     点开其中一部后，侧栏还列着其它几部，可以直接横跳，不必退回列表重搜。
+     没有关键词（直接按分类浏览）时整块隐藏。 */
+  function renderSbHits(cur) {
+    var box = byId('tvSbHits');
+    var list = byId('tvSbList');
+    if (!box || !list) return;
+    var hits = state.hits || [];
+    list.innerHTML = '';
+    if (!state.kw || hits.length < 2) { box.hidden = true; return; }
+    setText('tvSbKw', state.kw);
+    setText('tvSbCount', hits.length + ' 条');
+    var curId = String((cur && cur.vod_id) || '');
+    hits.forEach(function (h) {
+      var on = String(h.vod_id || '') === curId;
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'tv-sb-item' + (on ? ' is-on' : '');
+      b.title = h.vod_name || '';
+      b.innerHTML = '<span class="tv-sb-poster"></span><span class="tv-sb-body">' +
+        '<span class="tv-sb-name"></span><span class="tv-sb-remark"></span></span>';
+      var pic = String(h.vod_pic || '');
+      if (pic) {
+        var im = document.createElement('img');
+        im.loading = 'lazy';
+        im.referrerPolicy = 'no-referrer';
+        im.alt = '';
+        im.src = picUrl(pic);
+        im.addEventListener('error', function () { if (im.parentNode) im.parentNode.removeChild(im); });
+        b.querySelector('.tv-sb-poster').appendChild(im);
+      }
+      b.querySelector('.tv-sb-name').textContent = h.vod_name || '未命名';
+      var rm = String(h.vod_remarks || '');
+      if (rm) b.querySelector('.tv-sb-remark').textContent = rm;
+      else b.querySelector('.tv-sb-remark').remove();
+      b.addEventListener('click', function () {
+        if (on) return;   /* 点的就是当前这部，别白重开一次层 */
+        noteWithLink('正在打开「' + (h.vod_name || '') + '」…', '');
+        detail(h.vod_id, h._src);
+      });
+      list.appendChild(b);
+    });
+    box.hidden = false;
+  }
+
   function openPlayer(it) {
     var p = byId('tvPlayer');
     var eps = byId('tvEps');
     if (!p || !eps) return;
     setText('tvTitle', it.vod_name || '');
     setText('tvRemark', it.vod_remarks || '');
+    renderSbHits(it);
     if (window.TVPlayer) { TVPlayer.setTitle(it.vod_name || ''); TVPlayer.setEpisode(it.vod_remarks || ''); TVPlayer.setNav(false, false); }
     EP.list = [];
     EP.i = -1;

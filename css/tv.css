@@ -225,6 +225,58 @@
 
 .tv-aside { margin-top: 14px; }
 
+/* ---- 侧栏里的「本次搜索结果」：带回列表页那批命中，在层里直接横跳 ---- */
+.tv-sb-hits { margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid #ffeaf1; }
+
+.tv-sb-hits[hidden] { display: none; }
+
+.tv-sb-list { display: flex; flex-direction: column; gap: 8px; }
+
+.tv-sb-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 6px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    background: #fff8fb;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background .2s, border-color .2s;
+}
+
+.tv-sb-item:hover { background: #ffeaf1; }
+
+.tv-sb-item.is-on { border-color: #ffb6c1; background: #fff0f5; }
+
+.tv-sb-poster {
+    flex: 0 0 auto;
+    width: 40px;
+    height: 56px;
+    overflow: hidden;
+    border-radius: 6px;
+    background: #ffeaf1;
+}
+
+.tv-sb-poster img { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+.tv-sb-body { display: flex; min-width: 0; flex-direction: column; gap: 4px; }
+
+.tv-sb-name {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    color: #a14563;
+    font-size: .84rem;
+    font-weight: 600;
+    line-height: 1.35;
+}
+
+.tv-sb-remark { color: #bda6ae; font-size: .74rem; }
+
 .tv-aside-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; }
 
 .tv-aside-head b { font-size: .95rem; color: #a14563; }
@@ -275,19 +327,36 @@
 
 /* ---------- 桌面：两栏（左播放器 + 右选集） ---------- */
 @media (min-width: 769px) {
-    /* 桌面二级页默认是 880px 居中窄栏（music / journal 那套），影视页放宽。
-       用 .detail-view.tv-detail 提高优先级，不去动别人的 .detail-view 规则。 */
+    /* 影视二级页铺满整屏：盖住底下的列表页，而不是在中间留一张 1280px 卡片。
+       AppShell 给桌面端加的 .detail-head 正好就是顶部返回栏（标题 + 关闭），
+       这里只把它从「卡片的内边距」改成「横贯整宽的条」。
+       铺满之后 body.detail-open::after 那层调暗遮罩会被完全盖住，正是想要的效果。 */
     .detail-view.tv-detail {
-        max-width: 1280px;
-        padding: 16px 24px 40px;
+        max-width: none;
+        width: 100%;
+        margin: 0;
+        padding: 0 0 40px;
+        border-left: 0;
+        border-right: 0;
+        box-shadow: none;
     }
 
+    .detail-view.tv-detail .detail-head {
+        margin: 0 0 18px;
+        padding: 12px 32px;
+        border-bottom: 1px solid #ffe0ea;
+        background: #fff9f7;
+    }
+
+    /* 层铺满了，但正文不必跟着拉到 2000px 宽：居中限一档，宽屏下仍是一屏的观感 */
     .detail-view.tv-detail .tv-player {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) 320px;
-        gap: 16px 24px;
+        grid-template-columns: minmax(0, 1fr) 360px;
+        gap: 16px 28px;
         align-items: start;
-        margin: 0;
+        max-width: 1560px;
+        margin: 0 auto;
+        padding: 0 32px;
     }
 
     .detail-view.tv-detail .tvp { grid-column: 1; grid-row: 1; }
