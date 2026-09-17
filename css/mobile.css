@@ -163,19 +163,7 @@
    注意：刻意不含 .mode-chip / .ctrl-btn —— 音乐页的控件行是 music.css
    特意排成「永不换行的一行」的，抬高它们会把那一行挤断。 */
 @media (max-width: 768px) {
-  .tool-btn,
-  .filter-tab,
-  .pl-view,
-  .ns-play,
-  .ns-add,
-  .ns-dl,
-  .wf-side-btn,
-  .bili-btn,
-  .bili-tool-tab,
-  .btn-sm,
-  .btn-cherry,
-  .btn-secondary,
-  .pl-hist-chip {
+  .tool-btn, .filter-tab, .pl-view, .ns-play, .ns-add, .ns-dl, .wf-side-btn, .bili-btn, .btn-sm, .btn-cherry, .btn-secondary, .pl-hist-chip {
     min-height: 44px;
     display: inline-flex;
     align-items: center;
@@ -218,18 +206,7 @@
    （hover:hover）完全不匹配，所以那 26 处 :hover 的桌面手感不变。
    ============================================================ */
 @media (hover: none) {
-  .social-links a:hover,
-  .btn:hover,
-  .btn-primary:hover,
-  .btn-secondary:hover,
-  .btn-cherry:hover,
-  .cherry-btn:hover,
-  .tool-tab:hover,
-  .bili-tool-tab:hover,
-  .pl-hist-chip:hover,
-  .gallery-img:hover,
-  .mood-btn:hover,
-  .social-links a:hover i {
+  .social-links a:hover, .btn:hover, .btn-primary:hover, .btn-secondary:hover, .btn-cherry:hover, .cherry-btn:hover, .tool-tab:hover, .pl-hist-chip:hover, .mood-btn:hover, .social-links a:hover i {
     translate: none !important;
     scale: none !important;
     rotate: none !important;
@@ -298,7 +275,7 @@
   body {
     padding-bottom: calc(var(--tab-h) + var(--sab) + 6px);
   }
-  .wf-fab {
+  #waifu-fab {
     bottom: calc(var(--tab-h) + var(--sab) + 12px) !important;
   }
 }

@@ -395,13 +395,6 @@ html.has-appbar .app-bar {
     font-weight: 700;
     text-shadow: 0 1px 6px rgba(255, 255, 255, 0.9);
   }
-  .detail-view .lyric-panel .lyr-line {
-    white-space: normal;
-    text-overflow: clip;
-    text-align: center;
-    font-size: 0.94rem;
-    line-height: 1.95;
-  }
   .detail-view .lyric-panel .lyr-line.active {
     font-size: 1.02rem;
   }
@@ -541,15 +534,6 @@ html.has-appbar .app-bar {
     border-color: #e06a8f;
     color: #fff;
     font-weight: 600;
-  }
-  /* 页面顶部两个 tab → 胶囊分段控件 */
-  .page-tabs {
-    display: flex;
-    gap: 6px;
-    padding: 5px;
-    border-radius: 16px;
-    background: rgba(255, 250, 252, 0.94);
-    border: 1px solid #ffe0ea;
   }
   .page-tab {
     flex: 1;
@@ -2197,7 +2181,7 @@ html.gb-view .blog-container > *:not(.blog-header) { display: none !important; }
    ============================================================ */
 html.in-shell .bot-tab { display: none !important; }
 html.in-shell body { padding-bottom: 0 !important; }
-html.in-shell .wf-fab { bottom: 12px !important; }
+html.in-shell #waifu-fab { bottom: 12px !important; }
 
 /* ============================================================
    外壳两个帧的高度必须钉死（移动端）
