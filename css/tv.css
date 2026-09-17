@@ -125,6 +125,61 @@
     .tv-grid { grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 12px; }
     .tv-search { flex-wrap: wrap; }
     .tv-episodes { max-height: 150px; }
+
+    /* ---------- 筛选区改成横向滚动 ----------
+       实测（390px 宽、7 个片源 9 个分类）：片源行折成 6 行占 304px，
+       分类行 148px，两行合计 452px —— 超过 844px 视口的一半，
+       用户还没看到任何一部片子，首屏就被筛选区吃光了。
+
+       片源那一行尤其不值：它平时只用得到最左边那一两个，
+       其余是低频切换项，却和分类一样平铺在首屏。
+
+       所以：两行都改成「一行 + 横滑」，高度立刻从 452px 降到 88px 左右。
+       横滑时右侧刻意留 14px 渐隐，暗示「还能往右划」——
+       否则用户看到一排胶囊整整齐齐收在屏幕边，会以为就这么多了。 */
+    /* 注意 #tvSrcs 是 .tv-srcbar 的子元素（.tv-srcbar 里还有一枚「片源」
+       静态标签），横滑要加在真正装胶囊的那个盒子上，
+       加在外层只会得到一个 302px 的空壳。 */
+    #tvSrcs.hub-chips,
+    #tvCats.hub-chips {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+        overscroll-behavior-x: contain;
+        scroll-snap-type: x proximity;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-bottom: 2px;
+        /* 渐隐用 mask 而不是盖一层渐变：盖层要么挡点击，要么就得 pointer-events:none
+           再加一堆 z-index 去凑，反而容易出问题。 */
+        /* mask 的渐变色标用 calc 在部分内核里不解析，改用百分比：
+           右侧 8% 是渐隐区（302px 上约 24px，够看出「还有」）。
+           mask-size/-repeat 一并写死，免得被 background 的简写带偏。 */
+        -webkit-mask-image: linear-gradient(to right, #000 0%, #000 92%, transparent 100%);
+        mask-image: linear-gradient(to right, #000 0%, #000 92%, transparent 100%);
+        -webkit-mask-size: 100% 100%;
+        mask-size: 100% 100%;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+    }
+    #tvSrcs.hub-chips::-webkit-scrollbar,
+    #tvCats.hub-chips::-webkit-scrollbar { display: none; }
+
+    #tvSrcs.hub-chips > *,
+    #tvCats.hub-chips > * { flex: 0 0 auto; scroll-snap-align: start; }
+
+    /* 片源胶囊收一号：它比分类更次要，字号和左右内边距都压掉一点，
+       一行能露出更多个，横滑的距离也就更短。
+       这里必须 !important —— hub.css 的 .hub-chip 也吃了 style.css 那条
+       给全站按钮定的 padding:0.5rem 1.1rem !important（35.2px 横向内边距）。 */
+    #tvSrcs.hub-chips .hub-chip {
+        padding: 7px 11px !important;
+        font-size: .8rem !important;
+    }
+    #tvSrcs.hub-chips .hub-chip i { font-size: .78rem; }
+
+    /* 分类是主筛选，保持原尺寸不变，但同样只占一行 */
+    #tvCats.hub-chips { margin-bottom: 14px; }
 }
 /* 海报拉不动时的降级占位（图床经代理偶尔会失败，AI 图床热链也拦直连） */
 .tv-poster.is-empty {
