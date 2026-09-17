@@ -334,12 +334,75 @@
     });
   }
 
+  /* ------------------------------------------------------------
+   * 看板娘避让（仅手机端）
+   * ------------------------------------------------------------
+   * 为什么需要：看板娘是 position:fixed 的 200x280 图层（z-index 9999），
+   * 不参与布局。手机屏只有 390px 宽，它一个人就占掉一半；音乐页的播放器
+   * 正好在首屏中央，实测它压住歌词面板、进度条、控制行、音量行各 101px 宽
+   * —— 歌词看不全，进度条右半段也点不到。
+   *
+   * 为什么不是「一直缩小」：那样确实不挡了，但看板娘本身是站点的一个卖点，
+   * 常驻缩得很小就白摆了。所以只在它和正文真正打架时才让位。
+   *
+   * 做法：滚动时判断 fab 与「播放器卡片 / 歌单卡片」是否相交，
+   * 相交就加 html.waifu-dodge，由 CSS 缩小 + 变半透明。rAF 节流。
+   * 这里只有两个矩形求交，比挂 IntersectionObserver 便宜。
+   * ------------------------------------------------------------ */
+  function bindWaifuDodge() {
+    var fab = byId('waifu-fab');
+    if (!fab) return;
+    var zones = [];
+    ['.player-card', '.playlist-card'].forEach(function (s) {
+      var el = q(s);
+      if (el) zones.push(el);
+    });
+    if (!zones.length) return;
+
+    var raf = 0;
+    var last = null;
+
+    function hits() {
+      /* fab 被 transform 缩过，getBoundingClientRect 返回的就是缩放后的
+         实际框，正是判交需要的那个 */
+      var f = fab.getBoundingClientRect();
+      if (f.width < 1 || f.height < 1) return false;
+      for (var i = 0; i < zones.length; i++) {
+        var r = zones[i].getBoundingClientRect();
+        if (r.height < 1) continue;
+        if (!(f.right < r.left || f.left > r.right || f.bottom < r.top || f.top > r.bottom)) return true;
+      }
+      return false;
+    }
+
+    function apply() {
+      raf = 0;
+      var on = hits();
+      if (on === last) return;   /* 状态没变就别碰 DOM：滚动时每帧写 class 很浪费 */
+      last = on;
+      document.documentElement.classList.toggle('waifu-dodge', on);
+    }
+
+    function onScroll() { if (!raf) raf = requestAnimationFrame(apply); }
+
+    apply();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+    /* 播放器高度会随歌词/封面变化，起来之后再称几次；约 20 秒后收工 */
+    var ticks = 0;
+    var timer = setInterval(function () {
+      if (++ticks > 20) { clearInterval(timer); return; }
+      onScroll();
+    }, 1000);
+  }
+
   function init() {
     if (!narrow()) return;
     injectOpeners();
     bindSheetDrag();
     buildPlatformChips();
     bindSearchOpeners();
+    bindWaifuDodge();
   }
 
   /* 视口切到网页端：把「只在手机端存在」的节点拆干净 ——
@@ -347,6 +410,7 @@
      以及可能开着的全屏播放页。它们的样式都在 max-width:768px 里，
      不拆就会以没样式的裸控件形式留在网页端。 */
   function teardown() {
+    document.documentElement.classList.remove('waifu-dodge');
     ['fsOpenBtn', 'nsPlatformChips'].forEach(function (id) {
       var el = byId(id);
       if (el && el.parentNode) el.parentNode.removeChild(el);

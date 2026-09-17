@@ -320,6 +320,83 @@
   #waifu-fab {
     bottom: calc(var(--tab-h) + var(--sab) + 12px) !important;
   }
+
+  /* ---------- 看板娘缩小 ----------
+     实测：看板娘是 200x280 的固定层（bottom:60px right:6px, z-index 9999），
+     在 390px 宽的屏上横向独占 51%，正文一律被它压住 ——
+     音乐页压歌词面板和进度条，TV 页压失败卡的重试按钮。
+     它是 position:fixed、不参与布局，所以没法「绕开」，只能让它变小。
+
+     缩放走 transform 而不是改 width/height：waifu.js 的拖拽写的是
+     left/top，也不读自己的尺寸，用 transform 不会和它打架；
+     而且 transform-origin 定在右下角，缩完仍然贴着屏幕右下角，
+     不会飘到中间去。0.62 之后约 124x174，正文区基本全让出来了。
+
+     !important 是必需的、而且必须放在窄屏断点里：
+     waifu.js 会往 <head> 追加一条自己的内联 <style>
+       #waifu-fab { bottom: calc(60px + env(safe-area-inset-bottom,0px)) !important }
+     它是运行时插入、源码顺序最靠后，同权重下会压过我们。 */
+  #waifu-fab {
+    transform: scale(0.55) !important;
+    transform-origin: 100% 100% !important;
+  }
+  /* 气泡挂在 fab 上一起被缩，字太小；单独放大回接近原始观感 */
+  #waifu-fab .wf-bubble {
+    font-size: 13px !important;
+    max-width: 168px !important;
+  }
+
+  /* ---------- 看板娘避让（与 js/music-app.js 的 bindWaifuDodge 配套） ----------
+     缩到 0.62 之后在 TV 页已经完全不挡内容了（那片正文是列表流，
+     看板娘落在右下角的空白里）。但音乐页的播放器就在首屏中央，
+     实测仍与歌词面板 / 进度条 / 控制行 / 音量行各重叠 101px 宽。
+
+     所以再退一步：当 fab 与播放器/歌单卡片相交时，额外缩到 0.42
+     并把不透明度降到 .55，让它退成背景。滑开之后恢复。
+     用 opacity 而不是 display:none —— 后者会让 waifu.js 自己的
+     显隐状态与我们的判断打架，而且淡出比"啪"地消失自然。 */
+  /* 试过一路缩小（0.42 -> 0.3），但播放器是横跨整屏的，
+     只靠缩小永远会压到控制行右半边（0.3 时仍重叠 41px 宽）。
+
+     所以换思路：不是「缩到不挡」，而是「退出这条带」——
+     往右下角塞到屏幕外侧，只露出一条边。transform-origin 在右下角，
+     translate 用百分比是相对 fab 自身尺寸（200x280），
+     translate(38%, 16%) 约等于右下各移 76px / 45px，
+     配合 0.55 的缩放正好缩进右下角的圆角里，露出的部分贴边、
+     不压任何控件。滑走之后再整个弹回来。
+
+     这个位移只在 dodge 状态生效，不写进 waifu.js 拖拽用的 left/top，
+     所以用户自己拖动过的位置不会被改掉。 */
+  /* 位移这条路走不通，记一下原因免得下次再试：
+     transform-origin: 100% 100% 会让 translate 在**缩放之后**的坐标系里
+     解析，写 -190px 实际只挪 95px（还有一半被 origin 抵消），
+     想把 200px 宽的图层挪出屏幕得给到 -400px 左右，非常难调。
+     而播放器横跨整屏，缩小也永远挡得住（0.3 时仍重叠 41px）。
+
+     所以不跟它较劲了：dodge 时就把它整个淡化下去。它是装饰，
+     与正文冲突时让路的应该是装饰，不是歌词和进度条。
+     .12 基本看不见，只留一点点影子暗示"它还在那儿"；
+     滑开播放器后 0.24s 淡回完整状态，动效不会突兀。 */
+  html.waifu-dodge #waifu-fab {
+    opacity: 0.12 !important;
+    transition: opacity 0.24s ease;
+  }
+  /* 淡化期间别再吃指针事件：用户想点的是它底下的播放控件。
+     恢复显示时这个属性一并撤掉（规则不再匹配）。 */
+  html.waifu-dodge #waifu-fab {
+    pointer-events: none !important;
+  }
+  /* 拖动中的看板娘不参与避让：用户正在摆它，突然缩一下很怪 */
+  html.waifu-dodge #waifu-fab.wf-dragging {
+    transform: scale(0.62) !important;
+    opacity: 1 !important;
+  }
+  /* 播放器进二级页（全屏播放）时正文已经不在原位，避让没有意义 */
+  html.detail-open.waifu-dodge #waifu-fab,
+  html.tvp-open.waifu-dodge #waifu-fab {
+    transform: scale(0.62) !important;
+    opacity: 1 !important;
+  }
 }
 
 /* ===== 装饰动效降级（移动端）=====
