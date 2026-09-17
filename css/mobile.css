@@ -27,9 +27,11 @@
    ============================================================ */
 
 /* ---- 变量：tab 高度与安全区，全文件统一引用，别再散落写魔法数字 ----
-   安全区提示：没有 viewport-fit=cover 时 env() 恒为 0。手机浏览器里就是 0
-   （与改动前完全一致）；只有 APP 里 app-shell.js 打开 viewport-fit=cover
-   之后，--sat / --sab 才会拿到真正的刘海与手势条高度。 */
+   安全区提示：没有 viewport-fit=cover 时 env() 恒为 0。
+   现在 9 个页面的 <meta viewport> 都自带 viewport-fit=cover（index.html 本来就有，
+   其余 8 页补齐），所以手机浏览器里 --sat / --sab 也能拿到真正的刘海与手势条高度，
+   桌面端不受影响（viewport-fit 在桌面浏览器里没有作用）。
+   app-shell.js 里那段「没有就补上」的兜底保留，防止以后新增页面漏写。 */
 @media (max-width: 768px) {
   :root {
     --tab-h: 56px; /* 底部 tab 高度；原来是写死的 46px */
@@ -275,6 +277,12 @@
   body {
     padding-bottom: calc(var(--tab-h) + var(--sab) + 6px);
   }
+  /* 悬浮球站位兜底。注意级联实情：看板娘脚本（waifu.js，CDN 外部脚本）
+     运行时会往文档里注入一条自己的
+       #waifu-fab { bottom: calc(60px + env(safe-area-inset-bottom,0px)) !important }
+     同样是单 id 选择器、同样 !important，但它是**运行时追加**的内联 <style>，
+     源码顺序靠后 → 实际生效的是它，不是下面这条。这条只在脚本没跑到（CDN 被墙 /
+     加载失败）时兜底，数值 68px 与脚本的 60px 都稳稳高于底栏，不会压到导航。 */
   #waifu-fab {
     bottom: calc(var(--tab-h) + var(--sab) + 12px) !important;
   }
