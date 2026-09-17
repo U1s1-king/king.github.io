@@ -69,13 +69,34 @@
 .player-right .extra-actions .pl-drawer-trigger b{font-size:0.7rem}
 
 @media (max-width:768px){
+  /* ---------- 首屏必须放得下「播放」按钮 ----------
+     实测改前（390x844，底栏 56）：播放器卡片 top=303 bottom=902，
+     而视口只有 844 —— 控制行 bottom=837 正好被底栏压住，
+     音量/歌单那一行（bottom=872）整个在首屏之外。
+     用户进页面第一眼看不到播放键，得先滑一下。
+
+     省出来的空间主要来自黑胶区：.player-left 原来占 184px，
+     而移动端封面只有 108px —— 76px 是上下留白与频谱条的余量。
+     桌面端那块留白是唱片机的构图需要，手机上不值得用 76px 去换。
+     所以窄屏下：黑胶区收紧、歌单/音量行提到控制行下面同一屏内。 */
+  .player-card{padding-top:0.9rem}
+  .player-dual{gap:0.7rem}
+  .player-left{min-height:0}
+  .disc-zone{margin-bottom:0.35rem}
+  .player-left .vinyl{width:118px;height:118px}
+  .player-left .cover-inner{width:96px;height:96px}
+  .player-left .spectrum-line{margin-top:0.3rem;height:22px}
+
   .player-right .track-title{font-size:1.35rem}
-  .player-right .controls-row{gap:1.4rem;padding:0.9rem 0 0.6rem}
+  .player-right .song-details{margin-bottom:0.35rem}
+  /* 歌词面板是这块里最"软"的高度：12 行字里手机上真正会看的就那几行，
+     从 112 收到 100 换来的是音量/歌单行能整个进首屏。 */
+  .player-right .lyric-panel{height:100px;max-height:100px;margin-bottom:0.3rem}
+  .player-right .progress-area{margin:0.2rem 0}
+  .player-right .controls-row{gap:1.4rem;padding:0.6rem 0 0.45rem}
   .player-right .ctrl-btn.play-main{width:56px;height:56px;font-size:1.3rem}
   .player-left .tonearm{display:none}
-  .player-left .spectrum-line{max-width:100%}
-  .player-right .lyric-panel{height:126px;max-height:126px}
-  .player-right .extra-actions{gap:0.45rem}
+  .player-right .extra-actions{gap:0.45rem;margin-bottom:0.6rem}
   .player-right .extra-actions .mode-chip{padding:0.26rem 0.5rem!important;font-size:0.68rem!important;gap:4px}
   .player-right .extra-actions .mixer .volume-slider{width:58px!important}
 }
