@@ -28,8 +28,18 @@
     });
   }
 
+  /* show() 是公共入口：底部 tab、popstate、迷你条、两个导航守卫都会调它。
+     只接受「单个文件名 + .html/.htm」，其余一律拒绝。
+     以前不校验，任何被误当成页面名的东西都会被塞进 pageFrame.src ——
+     比如下载用的 blob URL 被 split('/').pop() 取出来的那个 UUID，
+     加载出来就是一个 404 页面，地址栏也跟着变了。 */
+  function isPageName(f) {
+    return !!f && /^[A-Za-z0-9._-]+\.html?$/i.test(f);
+  }
+
   function show(file, fromPop) {
     if (!file) return;
+    if (!isPageName(file)) return;
     current = file;
     if (file !== MUSIC) lastTab = file;
     highlight(file);
@@ -92,6 +102,36 @@
      自己（网页端没有底部 tab，切页只能点页面里的侧边栏）。它一旦导航，<audio>
      就跟着销毁 —— 音乐就断。所以把它里面的站内链接全部接管：不导航这一帧，
      改成把目标页装进内容帧。 */
+  /* 这次点击该不该由外壳接管？接管就返回页面名，不接管返回空串。
+     ------------------------------------------------------------
+     守卫只该接管「真的会换页的站内链接」。原来的判断是反过来的（先排除几种
+     协议，剩下的全拦），于是下载链接被误伤：
+
+       var a = document.createElement('a');
+       a.href = URL.createObjectURL(blob);   // blob:https://…/268c4ffe-…
+       a.download = '…';
+       a.click();                            // 合成点击，照样被 capture 监听抓到
+
+     blob URL 不以 # 开头、不是 http:// 或 //、也不是 mailto:/javascript:，
+     前面所有过滤都被绕过去；接着 preventDefault() 把下载掐死，
+     再 show('268c4ffe-…') 拿这个 UUID 当页面名切页 ——
+     用户看到的就是「点下载，地址栏跳到一个 404」。
+
+     所以改成白名单：只认「相对路径 + .html 结尾」的站内页面。
+     blob / data / 带 download 属性的链接 / 外链 / 邮件 / 电话 /
+     以及以后任何新协议，天然都不会命中，不用逐个枚举。 */
+  function pageOf(a) {
+    if (!a) return '';
+    if (a.hasAttribute('download')) return '';          /* 下载链接：交给浏览器，别拦 */
+    var href = a.getAttribute('href') || '';
+    if (!href || href.charAt(0) === '#') return '';
+    if (a.target === '_blank') return '';
+    var path = href.split('#')[0].split('?')[0];
+    if (/^[a-z][a-z0-9+.-]*:/i.test(path)) return '';    /* 带协议的一律不接管（含 blob:/data:） */
+    if (!/^[A-Za-z0-9._\/-]+\.html?$/i.test(path)) return '';
+    return path.split('/').pop();
+  }
+
   function guardPlayerNavigation() {
     var d = playerDoc();
     if (!d) return;
@@ -102,14 +142,10 @@
     d.__shellGuarded = true;
     d.addEventListener('click', function (e) {
       var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
-      if (!a) return;
-      var href = a.getAttribute('href') || '';
-      if (!href || href.charAt(0) === '#') return;
-      if (a.target === '_blank') return;
-      if (/^(https?:)?\/\//i.test(href) || /^(mailto|tel|javascript):/i.test(href)) return;
-      var f = href.split('#')[0].split('?')[0].split('/').pop();
+      var f = pageOf(a);
+      if (!f) return;                                       /* 不是站内页面链接（下载等）：放行 */
       e.preventDefault();
-      if (!f || f === MUSIC) return;   /* 指向音乐页自己，什么都不用做 */
+      if (f.toLowerCase() === MUSIC.toLowerCase()) return;  /* 指向音乐页自己，什么都不用做 */
       show(f);
     }, true);
   }
@@ -133,13 +169,9 @@
     d.__shellGuardedC = true;
     d.addEventListener('click', function (e) {
       var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
-      if (!a) return;
-      var href = a.getAttribute('href') || '';
-      if (!href || href.charAt(0) === '#') return;
-      if (a.target === '_blank') return;
-      if (/^(https?:)?\/\//i.test(href) || /^(mailto|tel|javascript):/i.test(href)) return;
-      var f = href.split('#')[0].split('?')[0].split('/').pop();
-      if (f !== MUSIC) return;   /* 其它页面正常在内容帧里走 */
+      var f = pageOf(a);
+      if (!f) return;                                        /* 下载 / 外链 / 非页面链接：放行 */
+      if (f.toLowerCase() !== MUSIC.toLowerCase()) return;   /* 其它页面正常在内容帧里走 */
       e.preventDefault();
       show(MUSIC);
     }, true);
