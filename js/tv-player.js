@@ -548,6 +548,11 @@
     document.addEventListener('keydown', onKey);
     document.addEventListener('fullscreenchange', function () {
       if (D.full) D.full.classList.toggle('is-on', isFull());
+      /* 退出全屏必须解方向锁，而且不能只在 toggleFull 里解：
+         用系统手势退出（安卓返回键/手势、ESC、通知栏下拉）根本不经过
+         toggleFull，锁就没人解 —— 整个页面会一直横着，
+         用户只能退出页面重进。这里兜底，任何途径退出全屏都会解。 */
+      if (!isFull()) unlockOrientation();
       scheduleHide();
     });
     document.addEventListener('visibilitychange', function () { scheduleHide(); });
