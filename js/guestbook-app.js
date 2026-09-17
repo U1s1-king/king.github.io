@@ -13,7 +13,10 @@
 (function () {
   'use strict';
 
-  var PAGE_URL = 'https://zhaokening.ccwu.cc/Guestbook.html';
+  /* 原 Guestbook.html 已并入 Journal 的留言板视图（Journal.html#guestbook，
+     见 journal-app.js 的深链处理）。这里还留着旧地址的话，APP 里点「用系统
+     浏览器打开」会直接落到 404。 */
+  var PAGE_URL = 'https://zhaokening.ccwu.cc/Journal.html#guestbook';
 
   function narrow() { return window.innerWidth <= 768; }
   function isApp() { return !!(window.AppShell && window.AppShell.isApp); }
