@@ -1,3 +1,19 @@
+/* 下载/播放用的 MIME 规范化。
+   ★ 必须放在文件顶层 ★
+   music-bundle.js 是多个独立 IIFE 拼起来的，IIFE 之间不共享作用域：
+   函数写在某个 IIFE 里，别的 IIFE 根本看不见（不报错，是运行时 ReferenceError）。
+   提交 d07bb74 把 4 处 'audio/' + ext 换成 audioMime(ext) 时，定义留在了
+   1066-1358 那个 IIFE 里，于是 KGM 解密那段（7365-7463）一执行就
+   "audioMime is not defined"，解密直接失效。
+   放文件顶层（普通 script 的顶层对所有 IIFE 可见）就不会再有这个问题。
+   唯一来源仍是 MusicAPI.mimeOf（js/music-api.js，脚本顺序在本文件之前）。 */
+function audioMime(ext) {
+  if (window.MusicAPI && MusicAPI.mimeOf) return MusicAPI.mimeOf(ext);
+  var m = { mp3: 'audio/mpeg', m4a: 'audio/mp4', mp4: 'audio/mp4', aac: 'audio/aac',
+            flac: 'audio/flac', ogg: 'audio/ogg', opus: 'audio/ogg', wav: 'audio/wav' };
+  return m[String(ext || '').toLowerCase()] || 'application/octet-stream';
+}
+
 const MUSIC_API_BASE = '';
 /* 音频走自家 Worker 代理：曲库源站 sakura-music.pages.dev 不实现 HTTP Range，
    直接引用会让 <audio> 变成不可 seek（audio.seekable 恒为 [0,0]），进度条拖不动。 */
@@ -1150,14 +1166,6 @@ if (b[0] === 0x66 && b[1] === 0x4c && b[2] === 0x61 && b[3] === 0x43) return 'fl
 if (b[0] === 0x4f && b[1] === 0x67 && b[2] === 0x67 && b[3] === 0x53) return 'ogg';
 if (b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46) return 'wav';
 return '';
-}
-/* 下载用的 MIME。理由见 music-api.js 的 mimeOf：'audio/' + ext 会拼出
-   audio/mp3 这类没注册的类型，浏览器忽略 <a download> 时会导航去渲染它。 */
-function audioMime(ext) {
-if (window.MusicAPI && MusicAPI.mimeOf) return MusicAPI.mimeOf(ext);
-var m = { mp3: 'audio/mpeg', m4a: 'audio/mp4', mp4: 'audio/mp4', aac: 'audio/aac',
-          flac: 'audio/flac', ogg: 'audio/ogg', opus: 'audio/ogg', wav: 'audio/wav' };
-return m[String(ext || '').toLowerCase()] || 'application/octet-stream';
 }
 function downloadSong(url, name, artist, song) {
 /* 统一走 MusicAPI.downloadSmart：它会按 song 重新取一份最新的候选表逐个试，
