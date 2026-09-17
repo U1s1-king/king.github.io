@@ -471,3 +471,36 @@ img.js-lightbox {
     line-height: 1.5 !important;
   }
 }
+
+/* ===== iOS 聚焦缩放 =====
+   input / select / textarea 的字号小于 16px 时，Safari 会在聚焦的瞬间把整个
+   页面放大，用户得双指缩回去才行 —— 移动端最容易踩的坑之一。全站实测 142 个
+   控件踩中（Tools 135、music 4、Journal 2、TV 1）。
+   桌面端没有这个问题，所以只在窄屏统一兜住，桌面端保留原来的 0.9rem 观感。
+
+   两个细节：
+   · 逐个列 type，不用 :not() 的选择器列表 —— 后者要到 Safari 14.1 才支持，
+     而且一旦解析不了整条规则会被直接丢掉（等于没改），列 type 在哪都能解析。
+   · !important 是必需的：Tools 的 .xt-row input[type="number"]（0,2,1）、
+     .bili-input-row input[type="text"] 和 Journal 的 #gbView .input-group input
+     都比这条（0,1,1）更具体，不加重写就压不住。
+   range / checkbox / radio / color / file 聚焦不会触发缩放，一律不碰。 */
+@media (max-width: 768px) {
+  input:not([type]),
+  input[type="text"],
+  input[type="search"],
+  input[type="url"],
+  input[type="tel"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"],
+  input[type="month"],
+  input[type="week"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
