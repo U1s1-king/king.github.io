@@ -38,8 +38,17 @@ const nm = document.getElementById('biliName');
 if (nm && card.name) nm.textContent = card.name + (card.level ? ' · LV' + card.level : '');
 const av = document.getElementById('biliAvatar');
 if (av && card.face) {
-av.src = card.face;
+/* B站对 i2.hdslb.com 做了 referer 防盗链：带着本站 referer 请求一律 403，
+   curl 裸请求却是 200，所以服务端没问题、纯粹是防盗链。
+   浏览器<img>默认必带 referer → 必然 403 → onload 永远不触发 → 头像永远不显示。
+   实测 referrerPolicy='no-referrer' 可稳定拿到 200（300x300）。
+   只有 no-referrer 能解：crossOrigin 那条依赖对方返回 ACAO，
+   而 B站是按 referer 判定的，换 CDN 节点就可能失效，不作首选。 */
+av.referrerPolicy = 'no-referrer';
 av.onload = function () { av.style.display = 'inline-block'; };
+/* 兜底：真拿不到就保持隐藏，不要留一个破图占位 */
+av.onerror = function () { av.style.display = 'none'; };
+av.src = card.face;
 }
 const ol = document.getElementById('biliOnline');
 if (ol && d.online && typeof d.online.total === 'number') {
