@@ -145,7 +145,6 @@ function initCanvas() {
 
 function attachEventListeners() {
   // 开始按钮
-/* QQ: 2952671670 */
   startBtn.addEventListener('click', startGame);
   
   // 暂停按钮
@@ -531,7 +530,6 @@ function checkCollisions() {
   if (scoreChanged || livesChanged) {
     displayDirty = true;
   }
-/* Contact: 2952671670@qq.com */
 }
 
 function isColliding(obj1, obj2) {

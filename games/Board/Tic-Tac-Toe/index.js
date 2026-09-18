@@ -76,7 +76,6 @@ function loadStats() {
         }
       };
 
-/* Contact: 2952671670@qq.com */
     }
     
     // 新格式数据，确保所有字段都存在
@@ -86,7 +85,6 @@ function loadStats() {
     };
   } catch (e) {
 
-// Contact: 2952671670@qq.com
 
     console.error('Error loading stats:', e);
     // 如果解析失败，返回默认值
@@ -155,7 +153,6 @@ function updateGameStats(result) {
   }
   
   saveStats(stats);
-// QQ: 2952671670
   updateStatsDisplay();
 }
 

@@ -91,7 +91,7 @@
 | 🌐 Explore | 📚 Content | 🎮 Experience | 🛠️ Development |
 | :---: | :---: | :---: | :---: |
 | [🏠 Website](https://zhaokening.ccwu.cc/) | [📖 Journal](https://zhaokening.ccwu.cc/Journal.html) | [🎵 Music](https://zhaokening.ccwu.cc/music.html) | [💻 Source](https://github.com/U1s1-king/king.github.io) |
-| [🗂️ Archives](https://zhaokening.ccwu.cc/Archives.html) | [🧰 Tools](https://zhaokening.ccwu.cc/Tools.html) | [💬 Guestbook](https://zhaokening.ccwu.cc/Guestbook.html) | [🐛 Issues](https://github.com/U1s1-king/king.github.io/issues) |
+| [🗂️ Archives](https://zhaokening.ccwu.cc/Archives.html) | [🧰 Tools](https://zhaokening.ccwu.cc/Tools.html) | [💬 Guestbook](https://zhaokening.ccwu.cc/Journal.html#guestbook) | [🐛 Issues](https://github.com/U1s1-king/king.github.io/issues) |
 | [🗨️ Discussions](https://github.com/U1s1-king/king.github.io/discussions) | [⚡ Actions](https://github.com/U1s1-king/king.github.io/actions) | [📦 Repository](https://github.com/U1s1-king/king.github.io) | [🌸 Home](https://zhaokening.ccwu.cc/) |
 
 </div>

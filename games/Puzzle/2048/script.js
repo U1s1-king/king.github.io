@@ -196,7 +196,6 @@ document.addEventListener("DOMContentLoaded", () => {
       let column = [
         parseInt(squares[i].innerHTML) || 0,
         parseInt(squares[i + width].innerHTML) || 0,
-/* Contact: 2952671670@qq.com */
         parseInt(squares[i + width * 2].innerHTML) || 0,
         parseInt(squares[i + width * 3].innerHTML) || 0,
       ];

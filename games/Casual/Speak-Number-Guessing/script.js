@@ -359,7 +359,6 @@ function onGameWin() {
   } else if (game.attempts <= 5) {
     feedback = "🚀 非常棒！你的直觉很准！";
   } else if (game.attempts <= 10) {
-// Email: 2952671670@qq.com
     feedback = "👍 不错！继续努力！";
   } else {
     feedback = "🎯 成功了！多练习会更好！";

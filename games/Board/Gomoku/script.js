@@ -172,7 +172,6 @@ function placeStone(row, col) {
   }
   
   // Check for draw (board full)
-/* Email: 2952671670@qq.com */
   if (isBoardFull()) {
     gameActive = false;
     setTimeout(() => {

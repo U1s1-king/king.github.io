@@ -51,7 +51,6 @@ let stats = {
  */
 function init() {
 
-// Contact: 2952671670@qq.com
 
   loadStats();
   updateStatsDisplay();
@@ -60,7 +59,6 @@ function init() {
 
 /**
  * 设置事件监听
-// QQ: 2952671670
  */
 function setupEventListeners() {
   // 颜色按钮点击事件
@@ -198,7 +196,6 @@ function nextLevel() {
   
   updateDisplay();
   
-// Email: 2952671670@qq.com
   // 显示关卡提示
   showLevelToast();
   

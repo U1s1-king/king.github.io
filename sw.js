@@ -12,7 +12,7 @@
  * __DSH_VERSION 以及各 HTML 里的 ?v= 保持一致。
  * 统一更新请执行： python scripts/bump_version.py <新版本号>
  * ============================================================ */
-const VERSION = '20261203'
+const VERSION = '20260918'
 const CACHE = 'king-blog-' + VERSION;
 
 const CORE = [
@@ -26,7 +26,6 @@ const CORE = [
   '/css/index.css?v=' + VERSION,
   '/css/Journal.css?v=' + VERSION,
   '/css/Archives.css?v=' + VERSION,
-  '/css/Guestbook.css?v=' + VERSION,
   '/css/music.css?v=' + VERSION,
   '/css/anim.css?v=' + VERSION,
   '/css/Tools.css?v=' + VERSION,
@@ -45,7 +44,6 @@ const CORE = [
   '/js/index.js?v=' + VERSION,
   '/js/Journal.js?v=' + VERSION,
   '/js/Archives.js?v=' + VERSION,
-  '/js/Guestbook.js?v=' + VERSION,
   '/js/Tools.js?v=' + VERSION,
   '/js/live2d-fix.js?v=' + VERSION,
   '/js/music-api.js?v=' + VERSION,
@@ -54,7 +52,6 @@ const CORE = [
   '/js/journal-app.js?v=' + VERSION,
   '/js/archives-app.js?v=' + VERSION,
   '/js/tools-app.js?v=' + VERSION,
-  '/js/guestbook-app.js?v=' + VERSION,
   '/js/live2d-app.js?v=' + VERSION,
   '/js/music-plus.js?v=' + VERSION,
   '/js/vendor/canvas-confetti.browser.min.js?v=' + VERSION,
@@ -67,7 +64,12 @@ const CORE = [
        js/vendor/anime.min.js (17KB)
        js/vendor/vivus.min.js (12.5KB)
      后两个由 js/anim.js 在 load 之后的空闲时段才拉起，本就不在首屏关键路径上，
-     预缓存只会把 30KB 塞进 Service Worker 的安装阶段，得不偿失。 */
+     预缓存只会把 30KB 塞进 Service Worker 的安装阶段，得不偿失。
+
+     留言板三件套同理（css/Guestbook.css、js/Guestbook.js、js/guestbook-app.js）：
+     原 Guestbook.html 已下线并入 Journal.html#guestbook，这三个文件只在那一个
+     二级视图被点到时才需要，没有任何首屏或离线路径依赖它们。
+     预缓存等于让每次访问都为一个二级视图白付安装开销，改走按需 stale-while-revalidate。 */
   '/icons/icon-192.png',
   '/icons/icon-512.png',
     /* TV.html 故意【不预缓存】：它现在挂在 Cloudflare Worker 门卫（cloudflare/tv-gate）

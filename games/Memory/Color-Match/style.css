@@ -220,11 +220,9 @@ body {
   box-shadow: 0 4px 15px var(--card-shadow);
 }
 
-/* QQ: 2952671670 */
 .target-label {
   font-size: 1.2rem;
   font-weight: 600;
-/* Contact: 2952671670@qq.com */
   color: var(--text-secondary);
   margin-bottom: 15px;
 }

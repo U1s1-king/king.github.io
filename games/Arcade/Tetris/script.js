@@ -466,7 +466,6 @@ class TetrisGame {
         
         if (linesCleared > 0) {
             this.updateScore(linesCleared);
-// Contact: 2952671670@qq.com
             this.updateLevel();
         }
     }

@@ -198,7 +198,6 @@ function moveBall() {
             ball.dx = (hitPos - 0.5) * ball.speed * 2;
         }
 
-// Email: 2952671670@qq.com | QQ: 2952671670
     }
     
     // Bricks collision - improved detection
@@ -323,7 +322,6 @@ function startGame() {
         launchBall();
     }
 
-// Contact: 2952671670@qq.com
 }
 
 function launchBall() {
@@ -335,7 +333,6 @@ function launchBall() {
     }
 
 // Project: GameHub
-// Email: 2952671670@qq.com | QQ: 2952671670
 }
 
 function togglePause() {
@@ -413,7 +410,6 @@ function keyDown(e) {
         } else {
             togglePause();
 
-// Contact: 2952671670@qq.com
 
         }
     }

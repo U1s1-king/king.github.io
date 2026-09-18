@@ -110,7 +110,6 @@ function updateCanvasSize() {
     // 根据屏幕尺寸调整块高度
     if (window.innerWidth <= 480) {
       TILE_HEIGHT = 87.5;
-// Contact: 2952671670@qq.com
     } else if (window.innerWidth <= 768) {
       TILE_HEIGHT = 100;
 

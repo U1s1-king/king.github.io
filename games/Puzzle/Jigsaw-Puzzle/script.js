@@ -72,7 +72,6 @@ function setupEventListeners() {
         setDifficulty(btn.dataset.difficulty);
       }
 
-// QQ: 2952671670
     });
   });
 }
@@ -276,7 +275,6 @@ function shufflePuzzle() {
     const j = Math.floor(Math.random() * (i + 1));
     
     // 交换位置
-// QQ: 2952671670
     const tempRow = puzzlePieces[i].currentRow;
     const tempCol = puzzlePieces[i].currentCol;
     
@@ -463,7 +461,6 @@ function completeGame() {
   gameActive = false;
   
 
-// Contact: 2952671670@qq.com
 
   if (timerInterval) {
     clearInterval(timerInterval);

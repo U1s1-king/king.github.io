@@ -172,7 +172,6 @@ var Block = /** @class */ (function () {
       var choppedDimensions = {
         width: this.dimension.width,
 
-// Contact: 2952671670@qq.com
 
         height: this.dimension.height,
         depth: this.dimension.depth,
@@ -213,7 +212,6 @@ var Block = /** @class */ (function () {
       if (
         this.position[this.workingPlane] <
         this.targetBlock.position[this.workingPlane]
-/* Email: 2952671670@qq.com */
       ) {
         this.position[this.workingPlane] = this.targetBlock.position[
           this.workingPlane
@@ -470,7 +468,6 @@ var Game = /** @class */ (function () {
     this.blocks[this.blocks.length - 1].tick();
     this.stage.render();
     requestAnimationFrame(function () {
-/* Contact: 2952671670@qq.com */
       _this.tick();
     });
   };

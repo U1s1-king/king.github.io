@@ -175,7 +175,6 @@ body.dark-mode .game-header {
 /* ==================== Quote Section ==================== */
 .quote-section {
 
-/* Contact: 2952671670@qq.com */
 
     background: var(--bg-primary);
     padding: 3rem;
@@ -381,7 +380,6 @@ body.dark-mode .game-header {
     align-items: center;
     justify-content: center;
 }
-/* Email: 2952671670@qq.com */
 
 .modal.active {
     display: flex;
@@ -445,7 +443,6 @@ body.dark-mode .game-header {
     font-size: 1.5rem;
 }
 
-/* QQ: 2952671670 */
 
 .modal-btn {
     margin-top: 2rem;
@@ -481,7 +478,6 @@ body.dark-mode .game-header {
 /* GitHub: https://github.com/SinceraXY/GameHub */
     }
 
-/* Email: 2952671670@qq.com | QQ: 2952671670 */
     
     .game-container {
         padding: 0 1rem 1rem;

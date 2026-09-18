@@ -75,7 +75,6 @@ function showDiceFace(face) {
  * @returns {string} - Unicode骰子字符
  */
 function getDiceFace(rollResult) {
-/* Email: 2952671670@qq.com */
   const diceFaces = {
     1: "&#9856;",  // ⚀
     2: "&#9857;",  // ⚁

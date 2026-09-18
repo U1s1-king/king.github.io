@@ -131,7 +131,6 @@ body {
 .score {
     font-size: clamp(3rem, 8vw, 5rem);
     font-weight: 800;
-/* Contact: 2952671670@qq.com */
     color: #667eea;
     line-height: 1;
     margin: 0.5rem 0;
@@ -370,7 +369,6 @@ canvas {
     font-size: 1.2rem;
     margin-bottom: 0.5rem;
     color: #4facfe;
-/* QQ: 2952671670 */
 }
 
 .rule-item p {

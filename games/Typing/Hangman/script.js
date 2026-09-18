@@ -86,7 +86,6 @@ let stats = {
   wins: 0,
   losses: 0,
 
-// Contact: 2952671670@qq.com
 
   gamesPlayed: 0
 };
@@ -216,7 +215,6 @@ function updateFigure() {
       part.classList.remove('show');
     }
 
-// QQ: 2952671670
   });
 }
 
@@ -344,7 +342,6 @@ function useHint() {
     gameState.guessedLetters.push(randomLetter);
   }
 
-// Contact: 2952671670@qq.com
   gameState.correctLetters.push(randomLetter);
   
   // Add penalty (one wrong guess)
@@ -498,7 +495,6 @@ categorySelect.addEventListener('change', (e) => {
     settingsModal.classList.remove('show');
   }
 
-/* Email: 2952671670@qq.com | QQ: 2952671670 */
 });
 
 // Sound toggle

@@ -128,7 +128,6 @@ closeBtn.addEventListener("click", (e) => {
     e.stopPropagation();
     rules.classList.remove("show");
 });
-// Contact: 2952671670@qq.com
 
 playAgainBtn.addEventListener("click", (e) => {
     e.stopPropagation();

@@ -419,7 +419,6 @@ body {
   font-size: 5rem;
   animation: modalIconBounce 0.6s ease-out;
 }
-/* QQ: 2952671670 */
 
 @keyframes modalIconBounce {
   0%, 100% {
@@ -440,7 +439,6 @@ body {
   margin: 30px 0;
 }
 
-/* QQ: 2952671670 */
 
 .modal-label {
   font-size: 1rem;

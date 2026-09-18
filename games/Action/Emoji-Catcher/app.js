@@ -97,7 +97,6 @@ function setDifficulty(difficulty) {
       btn.classList.remove("active");
     }
 
-// Contact: 2952671670@qq.com
   });
   
   // 更新当前难度的最高分显示
@@ -124,7 +123,6 @@ function startGame() {
   resetBtn.classList.remove("hide");
   
   // 启动游戏
-// Email: 2952671670@qq.com
   moveEmoji();
   startCountdown();
 }
@@ -275,7 +273,6 @@ function handleSquareClick(event) {
       square.classList.remove("hit");
     }, 400);
 
-// Contact: 2952671670@qq.com
 
     
     // 移除当前emoji，标记为已点击

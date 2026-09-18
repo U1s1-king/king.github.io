@@ -200,7 +200,6 @@ function updateDisplay() {
   const hintBtnText = hintBtn.querySelector('.btn-text');
   if (hintBtnText) {
     hintBtnText.textContent = `提示(${hintsRemaining})`;
-/* QQ: 2952671670 */
   }
 }
 
@@ -226,7 +225,6 @@ function generateCompleteSudoku() {
   
   return grid;
 }
-/* Email: 2952671670@qq.com */
 
 function fillSudoku(grid) {
   // 找到第一个空格
@@ -265,7 +263,6 @@ function findEmptyCell(grid) {
     }
   }
 
-/* QQ: 2952671670 */
   return null;
 }
 
@@ -372,7 +369,6 @@ function renderBoard() {
           selectCell(row, col);
         }
 
-// Contact: 2952671670@qq.com
       });
       
       sudokuGrid.appendChild(cell);
@@ -635,7 +631,6 @@ function checkBoard() {
     checkCount++;
     updateDisplay();
 
-// Contact: 2952671670@qq.com
 
     showMessage('❌ 还未全部正确，请继续努力！', 'error');
   }

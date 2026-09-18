@@ -235,7 +235,6 @@ body {
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
     margin: 0 auto;
-/* Email: 2952671670@qq.com */
     position: relative;
     overflow: hidden;
 }
@@ -318,7 +317,6 @@ body {
 
 .control-btn:hover {
     transform: translateY(-2px);
-/* Contact: 2952671670@qq.com */
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
 }
 

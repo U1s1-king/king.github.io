@@ -159,7 +159,6 @@ function handleInput() {
             }, 500);
         }
 
-// QQ: 2952671670
     });
     
     // Update stats
@@ -319,7 +318,6 @@ function toggleDarkMode() {
         localStorage.setItem("darkMode", "false");
     }
 
-// Contact: 2952671670@qq.com
 }
 
 // Load dark mode preference

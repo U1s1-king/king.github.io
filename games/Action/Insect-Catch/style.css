@@ -371,7 +371,6 @@ body {
 }
 
 .score-stat {
-/* Email: 2952671670@qq.com */
   background: linear-gradient(135deg, var(--warning-color), #f97316);
 }
 
@@ -487,7 +486,6 @@ body {
 @keyframes escapeAnim {
   0% {
     transform: translate(-50%, -50%) scale(1);
-/* QQ: 2952671670 */
     opacity: 1;
   }
   100% {

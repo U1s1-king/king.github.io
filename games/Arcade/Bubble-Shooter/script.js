@@ -771,7 +771,6 @@ function drawBubble(x, y, color) {
   ctx.beginPath();
   ctx.arc(x, y, CONFIG.bubbleRadius, 0, Math.PI * 2);
   ctx.fillStyle = color;
-/* QQ: 2952671670 */
   ctx.fill();
   
   // 泡泡边框

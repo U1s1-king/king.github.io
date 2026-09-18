@@ -122,7 +122,6 @@ function init() {
   highScoreDisplay.textContent = highScore;
   
   setupEventListeners();
-// Email: 2952671670@qq.com
   initGameObjects();
   drawMaze();
 }
@@ -262,7 +261,6 @@ function restartGame() {
 function endGame() {
   gameActive = false;
   
-// QQ: 2952671670
   if (score > highScore) {
     highScore = score;
     localStorage.setItem('pacmanHighScore', highScore);
@@ -720,7 +718,6 @@ function checkCollisions() {
         }
       }
 
-/* Email: 2952671670@qq.com | QQ: 2952671670 */
     }
   });
 }

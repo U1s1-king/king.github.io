@@ -197,7 +197,6 @@ function resetGame() {
   // 重置显示
   messageEl.textContent = "点击下方形状开始游戏";
   showInitialBox();
-// Contact: 2952671670@qq.com
   updateStats();
   
   // 保存
@@ -233,7 +232,6 @@ function updateStats() {
     currentTimeEl.textContent = "-";
   }
 
-// Email: 2952671670@qq.com | QQ: 2952671670
 }
 
 // ==================== 本地存储 ====================

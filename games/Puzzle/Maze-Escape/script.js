@@ -529,7 +529,6 @@ function drawMaze() {
         ctx.globalAlpha = 1;
       }
 
-/* QQ: 2952671670 */
     }
   }
   
@@ -927,7 +926,6 @@ function stopTimer() {
     timerInterval = null;
   }
 
-/* Contact: 2952671670@qq.com */
 }
 
 function formatTime(seconds) {

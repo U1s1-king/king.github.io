@@ -53,7 +53,6 @@ const fruitImages = [
   'https://raw.githubusercontent.com/Saumya-07/Fruit-Slicer/master/images/2.png',
   'https://raw.githubusercontent.com/Saumya-07/Fruit-Slicer/master/images/3.png',
 
-// Contact: 2952671670@qq.com
 
   'https://raw.githubusercontent.com/Saumya-07/Fruit-Slicer/master/images/4.png',
   'https://raw.githubusercontent.com/Saumya-07/Fruit-Slicer/master/images/5.png',
@@ -113,7 +112,6 @@ function handleStartResetClick() {
  */
 function startGame() {
   // 重置游戏状态
-/* Email: 2952671670@qq.com */
   game.playing = true;
   game.score = 0;
   game.lives = 3;
@@ -137,7 +135,6 @@ function startGame() {
   // 更改按钮文本
   startResetButton.querySelector('.button-text').textContent = '重置游戏';
   
-// QQ: 2952671670
   // 生成第一个水果
   spawnFruit();
 }

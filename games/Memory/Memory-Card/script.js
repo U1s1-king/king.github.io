@@ -125,7 +125,6 @@ function shuffleCard() {
     resetTimer();
     updateMovesDisplay();
     
-/* Contact: 2952671670@qq.com */
     // Shuffle array
     let arr = [1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8];
     arr.sort(() => Math.random() > 0.5 ? 1 : -1);

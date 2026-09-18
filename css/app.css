@@ -398,6 +398,39 @@ html.has-appbar .app-bar {
   .detail-view .lyric-panel .lyr-line.active {
     font-size: 1.02rem;
   }
+  /* 进度区被搬进全屏播放页后，「时间 / 进度条 / 时间」要排在一行。
+     主页面里这套 flex 是 .player-right .progress-area 给的 ——
+     元素搬出 .player-right 之后那条就失效了，进度区退化成
+     块级堆叠：一个 0:00 一行、进度条一行、另一个 0:00 一行，
+     时间是竖着排在进度条上下两侧的（实测就是这个样子）。
+     所以这里必须把同一条 flex 补到 .fs-progress 上，
+     并且要带上 .detail-view 前缀，才能压过主页面那条。
+     搬走的还有 .controls-row 和 .mode-strip —— 它们各自的
+     .player-right 前缀样式同样失效，下面一并补齐。 */
+  .detail-view .fs-progress .progress-area,
+  .fs-progress .progress-area {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0;
+    margin: 0.2rem 0 0;
+  }
+  .fs-progress .progress-area .time {
+    flex: 0 0 auto;
+    min-width: 40px;
+    font-size: 0.72rem;
+    color: #b77d8f;
+    font-variant-numeric: tabular-nums;
+  }
+  .fs-progress .progress-area .time:last-child {
+    text-align: right;
+  }
+  .fs-progress .progress-area .progress-bar-bg {
+    flex: 1 1 auto;
+    width: auto;
+    height: 6px;
+    box-shadow: inset 0 1px 3px rgba(177, 98, 125, 0.16);
+  }
   .fs-progress {
     padding: 0 2px;
   }

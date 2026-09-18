@@ -4,6 +4,9 @@ name: repo-check
 # 是 scripts/sync_nav.py 生成的。谁改了 _partials/ 或页面里的生成块却忘了跑
 # 脚本，这里就让流水线失败，避免重复结构再次漂移
 # （music.html 的 loading="lazy" 就是这样漏掉的）。
+#
+# 另加 check_links.py：拦住「文件已下线、引用还留着」的死链。
+# 这类漂移没有守卫时只会越积越多（README 的 Guestbook.html 就是这么漏的）。
 on:
   push:
     branches: [main]
@@ -27,3 +30,5 @@ jobs:
           python-version: '3.12'
       - name: 导航结构与 _partials/ 是否同步
         run: python scripts/sync_nav.py --check
+      - name: 站内引用完整性（文件下线后引用是否残留）
+        run: python scripts/check_links.py

@@ -363,7 +363,6 @@ function shuffleArray(array) {
     [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
   }
 
-/* Email: 2952671670@qq.com | QQ: 2952671670 */
   return newArray;
 }
 
@@ -420,7 +419,6 @@ function showFeedback(isCorrect, message) {
  * 显示游戏结束弹窗
  */
 function showGameOverModal() {
-/* Contact: 2952671670@qq.com */
   finalScoreEl.textContent = score;
   finalComboEl.textContent = maxCombo;
   

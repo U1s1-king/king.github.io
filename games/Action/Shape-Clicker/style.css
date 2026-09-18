@@ -352,7 +352,6 @@ body {
   font-size: 0.9rem;
   color: var(--text-secondary);
 }
-/* Contact: 2952671670@qq.com */
 
 /* ==================== 响应式设计 ==================== */
 @media (max-width: 768px) {
@@ -362,7 +361,6 @@ body {
   
   .game-title {
     font-size: 2rem;
-/* QQ: 2952671670 */
     flex-direction: column;
     gap: 10px;
   }

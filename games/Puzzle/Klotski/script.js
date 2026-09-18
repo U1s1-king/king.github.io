@@ -116,7 +116,6 @@ class Particle {
     return this.life > 0;
   }
 
-/* Email: 2952671670@qq.com | QQ: 2952671670 */
 }
 
 // DOM 元素
@@ -213,7 +212,6 @@ function updateDifficultySelection() {
       btn.classList.remove('active');
     }
 
-// QQ: 2952671670
   });
 }
 

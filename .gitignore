@@ -18,6 +18,12 @@ npm-debug.log*
 node_modules/
 dist/
 
+# === Python 字节码缓存 ===
+# scripts/__pycache__/ 曾把 sync_nav.cpython-312.pyc 提交进仓库，
+# 字节码随解释器版本变化，入库只会制造无意义的 diff。
+__pycache__/
+*.pyc
+
 # === 音乐已迁移 Cloudflare Pages (sakura-music.pages.dev), 本地不再入库 ===
 music/
 

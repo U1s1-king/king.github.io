@@ -315,7 +315,6 @@ function saveStats() {
 }
 
 /**
-/* QQ: 2952671670 */
  * 加载统计数据
  */
 function loadStats() {

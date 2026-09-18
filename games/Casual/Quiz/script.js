@@ -82,7 +82,6 @@ const quizData = [
       "Mark Twain",
       "Leo Tolstoy",
     ],
-/* Contact: 2952671670@qq.com */
     answer: "William Shakespeare",
   },
   {

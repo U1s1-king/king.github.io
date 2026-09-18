@@ -289,7 +289,6 @@ body {
   position: relative;
 }
 
-/* Email: 2952671670@qq.com */
 .cell:hover:not(.cell-taken) {
   background: rgba(102, 126, 234, 0.1);
   transform: scale(1.05);

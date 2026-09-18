@@ -144,7 +144,6 @@ function backToMenu() {
   
   // 显示开始菜单
   openModal(startOverlay);
-// QQ: 2952671670
 }
 
 function generateLevel() {

@@ -127,7 +127,6 @@ canvas {
   position: absolute;
   bottom: 30px;
   left: 50%;
-/* Contact: 2952671670@qq.com */
   transform: translateX(-50%);
   background: rgba(102, 126, 234, 0.9);
   color: white;
@@ -590,7 +589,6 @@ canvas {
   }
 }
 
-/* QQ: 2952671670 */
 
 @media (max-width: 480px) {
   body {

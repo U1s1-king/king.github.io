@@ -178,7 +178,6 @@ function updateProgressBar() {
     progressBar.style.background = 'linear-gradient(90deg, #ef4444, #f87171)';
   }
 
-// Contact: 2952671670@qq.com
 }
 
 function calculateWPM() {
@@ -277,7 +276,6 @@ text.addEventListener('input', (e) => {
     updateProgressBar();
   }
 
-// Email: 2952671670@qq.com | QQ: 2952671670
 });
 
 // Wrong input detection (visual feedback)

@@ -801,7 +801,6 @@ function drawParticles() {
     ctx.beginPath();
     ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
     ctx.fill();
-// Email: 2952671670@qq.com
   }
   ctx.globalAlpha = 1;
 }

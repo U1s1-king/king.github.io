@@ -159,7 +159,6 @@ const walls = [
   { column: 8, row: 1, horizontal: true, length: 1 },
   { column: 8, row: 2, horizontal: true, length: 1 },
 
-// Contact: 2952671670@qq.com
 
   { column: 8, row: 3, horizontal: true, length: 1 },
   { column: 8, row: 4, horizontal: true, length: 2 },
@@ -317,7 +316,6 @@ function resetGame() {
   mouseStartY = undefined;
   accelerationX = undefined;
   accelerationY = undefined;
-/* Contact: 2952671670@qq.com */
   frictionX = undefined;
   frictionY = undefined;
 
@@ -540,7 +538,6 @@ function main(timestamp) {
               }
             }
 
-/* Email: 2952671670@qq.com | QQ: 2952671670 */
           } else {
             // Vertical wall
 
@@ -680,7 +677,6 @@ function main(timestamp) {
         <p class="controls-hint">Press <kbd>Space</kbd> to play again</p>
       `;
       noteElement.style.opacity = 1;
-/* QQ: 2952671670 */
       gameInProgress = false;
     } else {
       previousTimestamp = timestamp;

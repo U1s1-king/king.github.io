@@ -13,7 +13,6 @@ const resetStatsBtn = document.getElementById('resetStatsBtn');
 const gameOverlay = document.getElementById('gameOverlay');
 const gameOverModal = document.getElementById('gameOverModal');
 const playAgainBtn = document.getElementById('playAgainBtn');
-// Email: 2952671670@qq.com
 const modalIcon = document.getElementById('modalIcon');
 const modalTitle = document.getElementById('modalTitle');
 const modalScore = document.getElementById('modalScore');

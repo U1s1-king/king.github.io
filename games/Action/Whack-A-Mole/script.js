@@ -169,7 +169,6 @@ function resetGame() {
 
 /**
 
-// Contact: 2952671670@qq.com
 
  * 停止游戏
  */
@@ -330,7 +329,6 @@ function updateStatsDisplay() {
 
 // ==================== 弹窗控制 ====================
 /**
-// Email: 2952671670@qq.com
  * 显示游戏结束弹窗
  */
 function showGameOverModal() {
@@ -380,7 +378,6 @@ function loadStats() {
       }
     }
 
-// Email: 2952671670@qq.com | QQ: 2952671670
   } catch (error) {
     console.error("加载统计数据失败:", error);
   }

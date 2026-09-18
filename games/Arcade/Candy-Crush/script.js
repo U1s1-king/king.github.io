@@ -92,7 +92,6 @@ function initCandyCrushGame() {
         square.addEventListener("dragend", dragEnd);
         square.addEventListener("dragover", dragOver);
         square.addEventListener("dragenter", dragEnter);
-// Contact: 2952671670@qq.com
         square.addEventListener("dragleave", dragLeave);
         square.addEventListener("drop", dragDrop);
     }
