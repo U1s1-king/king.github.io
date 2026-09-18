@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <script src="js/version.js?v=20260919"></script>
-    <script src="js/app-shell.js?v=20260919"></script>
+    <script src="js/version.js?v=20260920"></script>
+    <script src="js/app-shell.js?v=20260920"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <link rel="stylesheet" href="css/style.css?v=20260919">
-    <link rel="stylesheet" href="css/sidebar.css?v=20260919">
+    <link rel="stylesheet" href="css/style.css?v=20260920">
+    <link rel="stylesheet" href="css/sidebar.css?v=20260920">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#ffb6c1">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -24,12 +24,12 @@
 
     
 
-    <link rel="stylesheet" href="css/all.min.css?v=20260919">
-    <link rel="stylesheet" href="css/Journal.css?v=20260919">
-    <link rel="stylesheet" href="css/Guestbook.css?v=20260919">
-    <link rel="stylesheet" href="css/anim.css?v=20260919">
-    <link rel="stylesheet" href="css/mobile.css?v=20260919">
-    <link rel="stylesheet" href="css/app.css?v=20260919">
+    <link rel="stylesheet" href="css/all.min.css?v=20260920">
+    <link rel="stylesheet" href="css/Journal.css?v=20260920">
+    <link rel="stylesheet" href="css/Guestbook.css?v=20260920">
+    <link rel="stylesheet" href="css/anim.css?v=20260920">
+    <link rel="stylesheet" href="css/mobile.css?v=20260920">
+    <link rel="stylesheet" href="css/app.css?v=20260920">
     <meta name="description" content="日记：每日诗句、慕尼黑天气、心情打卡、农历黄历、番茄钟与生活随笔。">
     <meta name="keywords" content="日记,诗句,天气,心情打卡,农历,番茄钟,随笔">
     <meta name="author" content="king">
@@ -97,7 +97,7 @@
     </header>
 
     <!-- ===== API：今日诗句 ===== -->
-        <div class="poem-card" id="poemCard">
+        <div class="poem-card" id="poemCard" data-jrn-group="today">
             <div class="section-title"><i class="fas fa-feather-alt"></i> 今日诗句 <span>🌸 每日更新</span></div>
             <blockquote>
                 <p id="poemText">🌸 诗句加载中...</p>
@@ -106,7 +106,7 @@
         </div>
 
         <!-- ===== API：今日天气（慕尼黑） ===== -->
-        <div class="journal-weather" id="journalWeather">
+        <div class="journal-weather" id="journalWeather" data-jrn-group="today">
             <div class="jw-icon" id="jwIcon">🌸</div>
             <div class="jw-info">
                 <div class="jw-city">慕尼黑 · 今日</div>
@@ -117,7 +117,7 @@
         </div>
 
         <!-- ===== 功能：每日心情打卡 ===== -->
-        <div class="mood-card">
+        <div class="mood-card" data-jrn-group="today">
             <div class="section-title"><i class="fas fa-heart"></i> 今日心情打卡 <span id="moodStreak">🌸 还没有记录</span></div>
             <div class="mood-btns" id="moodBtns">
                 <button class="mood-btn" data-mood="开心" title="开心"><img loading="lazy" src="img/mood-happy.webp" alt="开心"></button>
@@ -131,7 +131,7 @@
         </div>
 
 <!-- ===== 开源项目：农历黄历（lunar-javascript） ===== -->
-        <div class="lunar-card" id="lunarCard">
+        <div class="lunar-card" id="lunarCard" data-jrn-group="today">
             <div class="lunar-left">
                 <div class="lunar-date" id="lunarDate">🌸 加载中...</div>
                 <div class="lunar-info" id="lunarInfo"></div>
@@ -140,7 +140,7 @@
         </div>
 
         <!-- ===== 功能：年度倒计时 ===== -->
-        <div class="countdown-card" id="countdownCard">
+        <div class="countdown-card" id="countdownCard" data-jrn-group="today">
             <i class="fas fa-hourglass-half"></i>
             <div>
                 <div class="cd-title">距离 2027 年新年</div>
@@ -149,7 +149,7 @@
         </div>
 
 <!-- ===== API：每日一词 ===== -->
-        <div class="word-card" id="wordCard">
+        <div class="word-card" id="wordCard" data-jrn-group="learn">
             <div class="section-title"><i class="fas fa-spell-check"></i> 每日一词 <span>🌸 学点新单词</span></div>
             <div class="word-main">
                 <span class="word-en" id="wordEn">🌸 加载中...</span>
@@ -161,7 +161,7 @@
         </div>
 
 <!-- ===== API：本周 7 天天气 ===== -->
-        <div class="week-weather" id="weekWeather">
+        <div class="week-weather" id="weekWeather" data-jrn-group="learn">
             <div class="ww-title"><i class="fas fa-calendar-week"></i> 本周天气 <span>🌸 7 天预报</span></div>
             <div class="ww-strip" id="wwStrip">
                 <div class="status-message">🌸 加载中...</div>
@@ -169,7 +169,7 @@
         </div>
 
         <!-- ===== 功能：专注番茄钟 ===== -->
-        <div class="pomodoro-card" id="pomodoroCard">
+        <div class="pomodoro-card" id="pomodoroCard" data-jrn-group="learn">
             <div class="section-title"><i class="fas fa-stopwatch"></i> 专注番茄钟 <span>🌸 写日记也要专注</span></div>
             <div class="pomo-time" id="pomoTime">25:00</div>
             <div class="pomo-btns">
@@ -462,20 +462,22 @@
         <a href="Archives.html"><i class="fas fa-images"></i><span>归档</span></a>
         <a href="music.html"><i class="fas fa-music"></i><span>音乐</span></a>
         <a href="Tools.html"><i class="fas fa-toolbox"></i><span>工具</span></a>
+        <a href="Games.html"><i class="fas fa-gamepad"></i><span>游戏</span></a>
+        <a href="TV.html"><i class="fas fa-film"></i><span>影视</span></a>
     </nav>
     <!-- nav:bot-tab:end -->
 </main>
 </div>
 
-<script src="js/vendor/lunar.js?v=20260919"></script>
-    <script src="js/common.js?v=20260919"></script>
-    <script src="js/anim.js?v=20260919"></script>
-    <script src="js/Journal.js?v=20260919"></script>
-    <script src="js/journal-app.js?v=20260919"></script>
-    <script src="js/sidebar.js?v=20260919"></script>
-    <script src="js/particles-config.js?v=20260919"></script>
-    <script src="js/live2d-fix.js?v=20260919" defer></script>
-    <script src="https://sakura-live2d.pages.dev/live2d/waifu.js?v=20260919" defer></script>
-    <script src="js/live2d-app.js?v=20260919" defer></script>
+<script src="js/vendor/lunar.js?v=20260920"></script>
+    <script src="js/common.js?v=20260920"></script>
+    <script src="js/anim.js?v=20260920"></script>
+    <script src="js/Journal.js?v=20260920"></script>
+    <script src="js/journal-app.js?v=20260920"></script>
+    <script src="js/sidebar.js?v=20260920"></script>
+    <script src="js/particles-config.js?v=20260920"></script>
+    <script src="js/live2d-fix.js?v=20260920" defer></script>
+    <script src="https://sakura-live2d.pages.dev/live2d/waifu.js?v=20260920" defer></script>
+    <script src="js/live2d-app.js?v=20260920" defer></script>
 </body>
 </html>

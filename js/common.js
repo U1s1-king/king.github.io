@@ -395,6 +395,12 @@ window.escapeHtml = function (str) {
     if (!api || !api.openDetail) return false;
     var imgs = viewerGroup();
     if (!imgs.length) return false;
+    /* 层栈化（app-shell v2）之后的必要一步：以前 openDetail 会**静默关掉**
+       已开的那一层，图片查看器因此天然是「替换」语义。现在层栈只压不替，
+       不先关就会把查看器叠在原本的二级页上 —— 返回键要多按一次，
+       下拉关闭也会关错层。这里显式还原旧的「替换」语义。
+       桌面端不建层（openDetail 有 isNarrow 闸门），所以这条对网页端无影响。 */
+    if (api.detailOpen && api.detailOpen()) api.closeDetail({ silent: true });
     var total = imgs.length;
     var idx = 0;
     for (var i = 0; i < total; i++) { if (imgs[i].src === src) { idx = i; break; } }

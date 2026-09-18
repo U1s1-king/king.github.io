@@ -217,7 +217,11 @@ submitBtn.click();
 }
 });
 }
-/* F3: 管理员入口——连续点击底部小花 5 次，开启删除功能（按钮默认隐藏） */
+/* F3: 管理员入口——连续点击底部小花 5 次，开关删除功能。
+   开关状态存在 window.__gbAdmin 上，renderMessages 渲染时就据此决定显隐。
+   原来只对「当前已有的」.delete-btn 改 style.display，而 renderMessages 会把
+   列表整个重建回 style="display:none" —— 发一条留言、切一次排序、拉一次新数据，
+   管理员模式就悄悄失效了。 */
 (function () {
 const trigger = document.getElementById('sakuraAdminTrigger');
 if (!trigger) return;
@@ -225,10 +229,15 @@ trigger.style.cursor = 'pointer';
 let count = 0;
 trigger.addEventListener('click', () => {
 count++;
-if (count >= 5) {
+if (count < 5) return;
 count = 0;
-document.querySelectorAll('#messagesList .delete-btn').forEach(b => { b.style.display = ''; });
-if (typeof window.showFloatingTip === 'function') window.showFloatingTip('🌸 管理员模式已开启喵');
+window.__gbAdmin = !window.__gbAdmin;
+const on = window.__gbAdmin;
+document.querySelectorAll('#messagesList .delete-btn').forEach(b => {
+b.style.display = on ? '' : 'none';
+});
+if (typeof window.showFloatingTip === 'function') {
+window.showFloatingTip(on ? '🌸 管理员模式已开启喵（再点 5 次关闭）' : '🌸 管理员模式已关闭');
 }
 });
 })();

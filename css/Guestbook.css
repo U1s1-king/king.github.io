@@ -113,7 +113,198 @@
     translate:0 -2px;
     box-shadow:0 6px 16px rgba(233,130,156,0.18);
 }
-... (line truncated to 2000 chars)
+/* ============================================================
+   留言卡片内部结构（重建块）
+   ------------------------------------------------------------
+   注意：这一整块是从仓库里**丢失后重建**的。
+   本文件原先这里是句字面的 "... (line truncated to 2000 chars)"，
+   从初始提交 88a2cc6 起就是这样 —— 原始内容是在别处被截断后才提交的，
+   git 历史追不回来。这里按「markup + JS 实际引用到的类名」反推补齐：
+     · js/Guestbook.js 的 renderMessages 模板（message-header / message-name /
+       message-date / message-content / message-footer / reply-name /
+       delete-btn / copy-msg-btn / empty-message）
+     · css/app.css 的 #gbView 覆盖块（msg-name / msg-time / msg-content 等价类）
+     · css/mobile.css 的触控与安全区规则（emoji-item / mood 那批）
+   只补缺失，不重写本文件已有的规则（.message-card / .section-header /
+   .message-count / .sort-btn / .message-avatar 全部原样保留）。 */
+
+/* ---- 卡片内部排版 ---- */
+.message-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.75rem;
+}
+.message-name {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-width: 0;
+    font-weight: 600;
+    color: #a14563;
+}
+.message-date {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.7rem;
+    color: #bb8ea0;
+    white-space: nowrap;
+}
+.message-date i {
+    color: #e0a0b4;
+}
+.message-content {
+    font-size: 0.85rem;
+    color: #7a4a58;
+    line-height: 1.75;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+}
+.message-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 0.6rem;
+}
+.message-footer:empty {
+    display: none;
+}
+
+/* ---- 昵称 / 删除 / 复制 ---- */
+.reply-name {
+    cursor: pointer;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.reply-name:hover {
+    color: #e06a8f;
+    text-decoration: underline;
+}
+.delete-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0.25rem 0.7rem;
+    border: 1px solid #ffc2d4;
+    border-radius: 30px;
+    background: #fff0f3;
+    color: #c2557a;
+    font-size: 0.72rem;
+    cursor: pointer;
+    transition: all var(--d-2);
+}
+.delete-btn:hover {
+    background: #ffe0e8;
+    color: #9c405e;
+    border-color: #f6a5c0;
+}
+.copy-msg-btn {
+    border: none;
+    background: transparent;
+    color: #c9a3b1;
+    font-size: 0.72rem;
+    padding: 0 2px;
+    cursor: pointer;
+    transition: color var(--d-2);
+}
+.copy-msg-btn:hover {
+    color: #e06a8f;
+}
+
+/* ---- 空态 / 加载态 ---- */
+.empty-message {
+    text-align: center;
+    padding: 2.5rem 1rem;
+    color: #bb8ea0;
+    font-size: 0.85rem;
+}
+.empty-message i {
+    color: #e6b3c4;
+    opacity: 0.6;
+}
+.empty-message p {
+    margin-top: 8px;
+}
+
+/* ---- 字数统计与表情行 ---- */
+.char-count {
+    margin-top: 0.4rem;
+    font-size: 0.72rem;
+    color: #b5768c;
+    text-align: right;
+}
+.emoji-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 0.5rem;
+}
+.emoji-item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    min-height: 34px;
+    border-radius: 10px;
+    background: #fff4f7;
+    border: 1px solid #ffe2ec;
+    font-size: 1.05rem;
+    line-height: 1;
+    cursor: pointer;
+    user-select: none;
+    transition: all var(--d-2) var(--e-out);
+}
+.emoji-item:hover {
+    background: #ffe4ec;
+    border-color: #f6a5c0;
+    translate: 0 -1px;
+}
+
+/* ---- 访客定位 / 今日寄语 ---- */
+.visitor-location {
+    margin: 0.6rem 0 0.9rem;
+    font-size: 0.72rem;
+    color: #b5768c;
+}
+.visitor-location i {
+    color: #e0a0b4;
+}
+.guest-quote {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 1.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 40px;
+    background: #fff4f7;
+    border: 1px dashed #ffcdda;
+    font-size: 0.78rem;
+    color: #a14563;
+}
+.guest-quote i {
+    color: #e0a0b4;
+}
+
+/* ---- 人机验证容器 ---- */
+.turnstile-wrap {
+    display: flex;
+    justify-content: center;
+}
+
+/* ---- 小屏：日期换行、表情按钮收一点 ---- */
+@media (max-width: 480px) {
+    .message-header {
+        align-items: flex-start;
+    }
+    .emoji-item {
+        min-width: 32px;
+        min-height: 32px;
+    }
+}
 
 /* ===== giscus 论坛容器 · 樱花粉卡片 ===== */
 .forum-section {

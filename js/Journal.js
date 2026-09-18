@@ -134,11 +134,51 @@ try {
 const WORDS = ['sakura','blossom','melody','breeze','twilight','harbor','voyage','lantern','serene','wander','ember','velvet','meadow','cascade','aurora','dawn','dusk','rain','snow','cloud','star','moon','ocean','river','forest','garden','journey','memory','dream','hope','smile','gentle','cozy','petal','feather','crystal','amber','coral','azure','golden','silver','spring','summer','autumn','winter','morning','evening','whisper','echo','rhythm'];
 const word = WORDS[Math.floor(new Date().setHours(0,0,0,0) / 86400000) % WORDS.length];
 enEl.textContent = word;
-const res = await fetch('https://api.mymemory.translated.net/get?q=' + encodeURIComponent(word) + '&langpair=en|zh-CN');
-const data = await res.json();
-const translated = data.responseData && data.responseData.translatedText;
-if (!translated) throw new Error('no word');
+/* 实测 2026-09-19：MyMemory 对本站出口 IP 持续返回 429 Too Many Requests
+   （换了单词、换了语言对、连着 5 次都失败 —— 是配额/IP 级限流，不是参数问题）。
+   原来的写法把「限流」和「单词不存在」混成同一句"单词加载失败"，用户看不出该等
+   还是该换。这里分开：先带超时重试一次，仍失败就明确说是服务繁忙、稍后再来，
+   并且不再把已经显示的单词清掉（单词来自本地词表，本来就一定是好的）。 */
+const DEF_CACHE_KEY = 'jrnWordDefCache';
+function cachedDef(w) {
+try { var m = JSON.parse(localStorage.getItem(DEF_CACHE_KEY) || '{}'); return m[w] || ''; } catch (e) { return ''; }
+}
+function cacheDef(w, d) {
+try {
+var m = JSON.parse(localStorage.getItem(DEF_CACHE_KEY) || '{}');
+m[w] = d;
+localStorage.setItem(DEF_CACHE_KEY, JSON.stringify(m));
+} catch (e) {}
+}
+async function fetchDef(w, ms) {
+var ctl = (typeof AbortController === 'function') ? new AbortController() : null;
+var to = setTimeout(function () { if (ctl) ctl.abort(); }, ms);
+try {
+var res = await fetch('https://api.mymemory.translated.net/get?q=' + encodeURIComponent(w) + '&langpair=en|zh-CN', ctl ? { signal: ctl.signal } : undefined);
+if (res.status === 429) { var e429 = new Error('rate'); e429.rate = true; throw e429; }
+if (!res.ok) throw new Error('http ' + res.status);
+var data = await res.json();
+var t = data.responseData && data.responseData.translatedText;
+if (!t) throw new Error('empty');
+return t;
+} finally { clearTimeout(to); }
+}
+/* 有缓存就先上缓存：限流期间也能看到上次查到的释义 */
+var hit = cachedDef(word);
+if (hit) defEl.textContent = '[释义] ' + hit + '（上次查到的）';
+try {
+var translated;
+try { translated = await fetchDef(word, 8000); }
+catch (e1) { translated = await fetchDef(word, 8000); }   /* 重试一次 */
 defEl.textContent = '[释义] ' + translated + '（每日一词，明天再来解锁新的～）';
+cacheDef(word, translated);
+} catch (e) {
+if (e && e.rate) {
+defEl.textContent = '[释义] 🌸 词典服务今天太忙了（限流），稍后再点「换一个」试试';
+} else if (!defEl.textContent) {
+defEl.textContent = '[释义] 🌸 暂时查不到，点「换一个」重试';
+}
+}
 } catch (e) {
 enEl.textContent = '🌸 单词加载失败，点「换一个」重试';
 }

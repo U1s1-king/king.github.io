@@ -104,6 +104,9 @@
     '.mgrid-wrap', '.mgrid-head', '.mgrid', '.mgrid-item',
     '.gb-note', '.gb-compose',
     '.pc-foot', '.pc-teaser', '.pc-more',
+    /* 日记页的工具卡入口：窄屏注入，变宽必须拆掉，否则网页端会多出一排
+       没有样式的按钮（它们的样式写在 @media (max-width:768px) 里）。 */
+    '.jrn-entry-row', '.jrn-entry', '.jrn-subentry',
     '#fsOpenBtn', '#nsPlatformChips'
   ];
   function clearNarrowOnly() {
@@ -118,6 +121,7 @@
     r.classList.remove('gb-degraded');
     r.classList.remove('tool-grid');
     r.classList.remove('pc-list');
+    r.classList.remove('jrn-app');
     r.classList.remove('kb-open');
     r.classList.remove('bar-hidden');
   }
@@ -282,7 +286,7 @@
     var d = stack.pop();          /* 只弹栈顶：下面的层原样留着 */
     d.el.classList.remove('in');
     if (d.onClose) { try { d.onClose(); } catch (e) {} }
-    releaseAdopted();             /* 搬进来的真实节点一律归位，调用方不用管 */
+    releaseAdopted(d);            /* 只归还这一层搬进来的节点，别动下面各层 */
     setTimeout(function () { if (d.el.parentNode) d.el.parentNode.removeChild(d.el); }, 260);
 
     if (stack.length) {
@@ -494,20 +498,26 @@
   var adopted = [];
   function adopt(node, into) {
     if (!node || !into || !node.parentNode) return null;
-    adopted.push({ n: node, p: node.parentNode, s: node.nextSibling });
+    /* 记下「搬给哪一层」。层栈化之后这很关键：三级页关掉时只能归还
+       三级页自己搬进来的节点，不能把二级页壳里的内容也一起掀回去 ——
+       否则从正文返回列表，列表会整个空掉。 */
+    adopted.push({ n: node, p: node.parentNode, s: node.nextSibling, layer: top() });
     into.appendChild(node);
     return node;
   }
-  function releaseAdopted() {
+  function releaseAdopted(layer) {
+    /* 只归还属于这一层的节点；layer 为空时（兼容旧调用）全部归还。 */
+    var keep = [];
     for (var i = adopted.length - 1; i >= 0; i--) {
       var it = adopted[i];
+      if (layer && it.layer !== layer) { keep.push(it); continue; }
       if (!it.p) continue;
       try {
         if (it.s && it.s.parentNode === it.p) it.p.insertBefore(it.n, it.s);
         else it.p.appendChild(it.n);
       } catch (e) {}
     }
-    adopted = [];
+    adopted = keep;
   }
 
   window.AppShell = {

@@ -758,6 +758,32 @@ html.has-appbar .app-bar {
     color: #e58cab;
   }
 
+  /* ---------- 日记壳（二级页）：4 篇列表 + 关于博主 ---------- */
+  .pc-shell-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  /* 壳里的卡片：去掉网页端那圈外边距，贴满内容区 */
+  .pc-shell-list > .post-card {
+    margin: 0 !important;
+    max-width: 100% !important;
+    border-radius: 1.1rem !important;
+  }
+  .pc-shell-about {
+    margin-top: 18px;
+  }
+  .pc-shell-about > * {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    max-width: 100% !important;
+  }
+  /* 壳里第一层的分隔线：搬进来之后它上面没有内容了，去掉免得顶格一条线 */
+  .pc-shell-about > .st-27791aae > .sakura-divider:first-child {
+    display: none;
+  }
+
+
   /* ---- 归档：详情入口按钮（不劫持整卡，避免和播放器抢点击） ---- */
   .mc-detail-row {
     margin-top: 8px;
@@ -2234,3 +2260,143 @@ html.in-shell #waifu-fab { bottom: 12px !important; }
     height: calc(100dvh - var(--tab-h, 56px) - var(--sab, 0px)) !important;
   }
 }
+/* ============================================================
+   日记页：工具卡收进「入口 → 二级页 → 三级页」
+   ------------------------------------------------------------
+   一级页：3 张入口卡（今日 / 学习 / 专注），原来那 8 张工具卡整体收走
+   二级页：一组工具卡
+   三级页：二级页里的单个子块（今日天气 / 农历黄历 / 本周天气）
+
+   回退开关：全部挂在 html.jrn-app 下。脚本没跑到就没有这个类，
+   8 张卡照旧堆在页面上，与改动前一致（桌面端更是完全不受影响 ——
+   整块包在窄屏媒体查询里）。
+   ============================================================ */
+@media (max-width: 768px) {
+  /* 一级页：被收进二级页的那 8 张工具卡先藏起来。
+     两个条件缺一不可：
+       · html.jrn-app —— 脚本跑到了才加这个类；没跑到整条不命中，8 张卡照旧
+         显示，页面退回改动前的原样（而不是变成一页空白）。
+       · 直接子代选择器 —— 卡片被 adopt 搬进二级/三级页后就不再是
+         .blog-container 的直接子节点，这条自然不命中，无需再写反向声明。
+         用后代选择器会踩权重坑：html.jrn-app .card 是 (0,2,1)，
+         压得过 .jrn-page .card (0,2,0)，搬进去的子卡会一直 display:none。 */
+  html.jrn-app .blog-container > .journal-weather,
+  html.jrn-app .blog-container > .mood-card,
+  html.jrn-app .blog-container > .lunar-card,
+  html.jrn-app .blog-container > .poem-card,
+  html.jrn-app .blog-container > .countdown-card,
+  html.jrn-app .blog-container > .word-card,
+  html.jrn-app .blog-container > .week-weather,
+  html.jrn-app .blog-container > .pomodoro-card,
+  /* 日记壳：4 篇日记与底部「关于博主」也收进二级页。
+     同一个直接子代判据 —— 搬进 .pc-shell 之后自动恢复显示。 */
+  html.jrn-app .blog-container > .post-card,
+  html.jrn-app .blog-container > .st-27791aae {
+    display: none;
+  }
+
+  .jrn-entry-row {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .jrn-entry {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 64px;
+    padding: 14px 16px;
+    border: 1px solid #ffdbe3;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #fff6f9, #ffffff);
+    box-sizing: border-box;
+    text-align: left;
+    cursor: pointer;
+  }
+  .jrn-entry-ic {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: #ffe4ec;
+    color: #e06a8f;
+    font-size: 1.05rem;
+  }
+  .jrn-entry-tx {
+    flex: 1;
+    min-width: 0;
+  }
+  .jrn-entry-tx b {
+    display: block;
+    color: #6b4453;
+    font-size: 0.95rem;
+    font-weight: 700;
+  }
+  .jrn-entry-tx small {
+    display: block;
+    margin-top: 3px;
+    color: #b98ba0;
+    font-size: 0.74rem;
+    line-height: 1.4;
+  }
+  .jrn-entry-go {
+    flex: 0 0 auto;
+    color: #d3a7b7;
+    font-size: 0.8rem;
+  }
+
+  /* ---------- 二级 / 三级页容器 ---------- */
+  .jrn-page {
+    flex: 1;
+    min-height: 100%;
+    padding: 2px 14px calc(24px + var(--sab, 0px));
+    box-sizing: border-box;
+  }
+  .jrn-box {
+    margin-bottom: 4px;
+  }
+  /* 搬进二级/三级页的卡片无需反向声明：上面那条 hide 用的是
+     .blog-container 的直接子代选择器，卡片一旦被 adopt 搬走就不再匹配，
+     自然恢复显示。这里刻意不写覆盖规则 —— 少一条可以互相打架的声明。 */
+  /* 搬进二级/三级页的卡片：去掉网页端那圈外边距，贴满内容区 */
+  .jrn-page > .jrn-box > * {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    max-width: 100% !important;
+  }
+  /* 二级页里的三级入口按钮 */
+  .jrn-subentry {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 52px;
+    margin-bottom: 10px;
+    padding: 12px 16px;
+    border: 1px solid #ffdbe3;
+    border-radius: 16px;
+    background: #fff;
+    color: #8a5568;
+    font-size: 0.88rem;
+    box-sizing: border-box;
+    text-align: left;
+    cursor: pointer;
+  }
+  .jrn-subentry > i:first-child {
+    color: #e06a8f;
+  }
+  .jrn-subentry .jrn-entry-go {
+    margin-left: auto;
+  }
+
+  /* 二级页顶栏层数标记：三级页时箭头再缩一点，暗示还能退一层 */
+  .app-bar[data-depth="2"] .app-bar-home i {
+    font-size: 1rem;
+  }
+}
+

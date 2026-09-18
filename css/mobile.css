@@ -283,8 +283,15 @@
     transform: none !important; /* 免疫入场 reveal 动画残留的 translateY(26px) */
     opacity: 1 !important;
   }
+  /* 实测：导航从 4 项加到 7 项之后，每项的最小内容宽约 70px，
+     7 × 70 = 490px > 390px 视口 —— 而 .bot-tab 是 position:fixed，
+     溢出部分直接跑到屏幕外，「游戏」「影视」被裁掉（截图可见）。
+     根因是 flex 项默认 min-width:auto，不允许收缩到内容宽以下。
+     这里三件事一起做：允许收缩、禁止文字撑破、窄屏把字号收一档。 */
   .bot-tab a {
-    flex: 1;
+    flex: 1 1 0;
+    min-width: 0;            /* 关键：允许收缩到内容宽以下 */
+    overflow: hidden;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -295,12 +302,37 @@
     font-size: 12px;
     gap: 3px;
   }
+  .bot-tab a span {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
   .bot-tab a i {
     font-size: 20px;
   }
   .bot-tab a.active {
     color: #e85d86;
     font-weight: 600;
+  }
+  /* 7 项在 390px 下每项约 55px：图标 20px 已偏挤，标签 12px 也容易触边。
+     这里按屏宽分两档收字号，保证 7 项都完整显示、不裁切。 */
+  @media (max-width: 400px) {
+    .bot-tab a {
+      font-size: 11px;
+      gap: 2px;
+    }
+    .bot-tab a i {
+      font-size: 18px;
+    }
+  }
+  @media (max-width: 340px) {
+    .bot-tab a {
+      font-size: 10px;
+    }
+    .bot-tab a i {
+      font-size: 16px;
+    }
   }
   .bot-tab a.active span {
     background: linear-gradient(180deg, #ff8fab, #e85d86);
