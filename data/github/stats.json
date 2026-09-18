@@ -2,6 +2,71 @@
   "login": "U1s1-king",
   "public_repos": 11,
   "followers": 2,
-  "following": 5,
-  "_note": "首次由 scripts/gh_sync.py 在 Actions 中覆盖（见 .github/workflows/gh-sync.yml）"
+  "following": 3,
+  "repos": [
+    {
+      "name": "king.github.io",
+      "html_url": "https://github.com/U1s1-king/king.github.io",
+      "description": "一个个人博客网站",
+      "stargazers_count": 2,
+      "language": "JavaScript",
+      "updated_at": "2026-09-18T15:36:22Z"
+    },
+    {
+      "name": "dsh-live2d-avemujica",
+      "html_url": "https://github.com/U1s1-king/dsh-live2d-avemujica",
+      "description": null,
+      "stargazers_count": 2,
+      "language": "JavaScript",
+      "updated_at": "2026-09-18T10:24:26Z"
+    },
+    {
+      "name": "dsh-live2d-morfonica",
+      "html_url": "https://github.com/U1s1-king/dsh-live2d-morfonica",
+      "description": null,
+      "stargazers_count": 2,
+      "language": "JavaScript",
+      "updated_at": "2026-09-18T10:24:25Z"
+    },
+    {
+      "name": "dsh-live2d-afterglow",
+      "html_url": "https://github.com/U1s1-king/dsh-live2d-afterglow",
+      "description": null,
+      "stargazers_count": 2,
+      "language": "JavaScript",
+      "updated_at": "2026-09-18T10:24:24Z"
+    },
+    {
+      "name": "dsh-live2d-hhw",
+      "html_url": "https://github.com/U1s1-king/dsh-live2d-hhw",
+      "description": null,
+      "stargazers_count": 2,
+      "language": "JavaScript",
+      "updated_at": "2026-09-18T10:24:23Z"
+    },
+    {
+      "name": "dsh-live2d-pastelpalettes",
+      "html_url": "https://github.com/U1s1-king/dsh-live2d-pastelpalettes",
+      "description": null,
+      "stargazers_count": 2,
+      "language": "JavaScript",
+      "updated_at": "2026-09-18T10:24:21Z"
+    },
+    {
+      "name": "dsh-live2d-roselia",
+      "html_url": "https://github.com/U1s1-king/dsh-live2d-roselia",
+      "description": null,
+      "stargazers_count": 2,
+      "language": "JavaScript",
+      "updated_at": "2026-09-18T10:24:03Z"
+    },
+    {
+      "name": "dsh-live2d-ras",
+      "html_url": "https://github.com/U1s1-king/dsh-live2d-ras",
+      "description": null,
+      "stargazers_count": 2,
+      "language": "JavaScript",
+      "updated_at": "2026-09-18T10:23:48Z"
+    }
+  ]
 }
