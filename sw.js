@@ -12,7 +12,7 @@
  * __DSH_VERSION 以及各 HTML 里的 ?v= 保持一致。
  * 统一更新请执行： python scripts/bump_version.py <新版本号>
  * ============================================================ */
-const VERSION = '20260918'
+const VERSION = '20260919'
 const CACHE = 'king-blog-' + VERSION;
 
 const CORE = [
@@ -31,6 +31,7 @@ const CORE = [
   '/css/Tools.css?v=' + VERSION,
   '/css/mobile.css?v=' + VERSION,
   '/css/app.css?v=' + VERSION,
+  '/css/home-app.css?v=' + VERSION,
   '/js/version.js?v=' + VERSION,
   '/js/app-shell.js?v=' + VERSION,
   '/js/common.js?v=' + VERSION,
@@ -53,6 +54,7 @@ const CORE = [
   '/js/archives-app.js?v=' + VERSION,
   '/js/tools-app.js?v=' + VERSION,
   '/js/live2d-app.js?v=' + VERSION,
+  '/js/home-app.js?v=' + VERSION,
   '/js/music-plus.js?v=' + VERSION,
   '/js/vendor/canvas-confetti.browser.min.js?v=' + VERSION,
   '/js/anim-lib.js?v=' + VERSION,

@@ -170,7 +170,7 @@ html += `
 ${escapeHtml(msg.content).replace(/\n/g, '<br>')}
 </div>
 <div class="message-footer">
-<button class="delete-btn" data-id="${escapeHtml(msg.id)}" title="删除留言" style="display:none">
+<button class="delete-btn" data-id="${escapeHtml(msg.id)}" title="删除留言" style="${window.__gbAdmin ? '' : 'display:none'}">
 <i class="fas fa-trash-alt"></i> 删除
 </button>
 </div>
@@ -187,7 +187,12 @@ deleteMessageById(id);
 });
 });
 }
-document.addEventListener('DOMContentLoaded', () => {
+/* 本文件在日记页里是「切到留言板时按需动态加载」的（见 js/journal-app.js 的
+   loadGuestbook），那时 document.readyState 早已是 complete ——
+   DOMContentLoaded 永远不会再触发，挂在它里面的提交监听等于没写，
+   表现就是「点了留言没反应」。所以改成 readyState 判断：
+   脚本晚到就立刻执行，早到才排队。 */
+function bootGuestbook() {
 loadMessages();
 const submitBtn = document.getElementById('submitBtn');
 const nameInput = document.getElementById('nameInput');
@@ -227,7 +232,15 @@ if (typeof window.showFloatingTip === 'function') window.showFloatingTip('🌸 �
 }
 });
 })();
-});
+}
+
+/* 按需加载时 readyState 已是 complete / interactive，必须立刻跑；
+   只有真的还在解析中（首屏同步引入）才等 DOMContentLoaded。 */
+if (document.readyState === 'loading') {
+document.addEventListener('DOMContentLoaded', bootGuestbook);
+} else {
+bootGuestbook();
+}
 (function () {
 const el = document.getElementById('visitorLocText');
 if (!el) return;

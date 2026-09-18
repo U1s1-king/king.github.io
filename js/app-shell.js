@@ -55,9 +55,27 @@
 
      顶栏归谁管：
    · 普通页面（网页 / APP）—— 本页自己的 .app-bar，由 app-shell 注入
+
+     层栈（v2）：
+   从「单槽位」升级成真正的层栈，支持最多三级（一级页 → 二级 → 三级）。
+   升级前 openDetail 里那句 `if (detail) closeDetail({silent:true})` 意味着
+   在二级页里再开一层会**当场销毁二级页**，用户看到的是「闪一下换了个页」
+   而不是进入更深一层；硬件返回键也会错乱。
+   现在每层各占一个数组元素，closeDetail 只弹栈顶。
+
+   兼容性：对外 API 的语义一个字没改 ——
+     · openDetail(opts)   仍旧返回 { el, close, setTitle }
+     · closeDetail(opts)  仍旧只关一层（现在是栈顶）
+     · detailOpen()       仍旧是布尔（现在是「栈非空」）
+   全站 16 处 `if (detailOpen()) return` 的调用点**不需要改**：
+   它们本来就是「一层都别叠」的正确写法，行为与升级前一致。
+
+   历史哨兵：每层压一个 pushState。返回键 / 浏览器后退
+   → popstate → 只弹栈顶一层，栈空才真正离开本页。
      ============================================================ */
-  var detail = null;              /* { el, title } */
+  var stack = [];                 /* [{ el, title, onClose }]，末位是栈顶 */
   var suppressHistClose = false;  /* 自己调 history.back() 时压掉随之而来的 popstate */
+  function top() { return stack.length ? stack[stack.length - 1] : null; }
 
   function isNarrow() { return window.innerWidth <= 768; }
 
@@ -115,6 +133,9 @@
     if (!bar) return;
     var t = bar.querySelector('.app-bar-title');
     var home = bar.querySelector('.app-bar-home');
+    /* 层数标记：CSS 靠它决定顶栏箭头是「返回上一级」还是「回到首页」，
+       也为以后做「三级页再多一级箭头」留了口子。 */
+    bar.dataset.depth = String(stack.length);
     if (on) {
       if (bar.dataset.baseTitle === undefined) bar.dataset.baseTitle = t ? t.textContent : '';
       bar.classList.add('detail-mode');
@@ -178,7 +199,12 @@
          那比「没反应」更糟。 */
       return { el: null, close: function () {}, setTitle: function () {} };
     }
-    if (detail) closeDetail({ silent: true });
+    /* 注意：这里**不再**关掉已有层。层栈化之后，在二级页里再开一层
+       就是合法的三级页（见文件头「层栈（v2）」）。上限由 openDetail 的
+       调用方各自把关（它们普遍带 if (detailOpen()) return），
+       这里再补一道硬上限，防止某条链路无限压栈。 */
+    var MAX_DEPTH = 3;
+    if (stack.length >= MAX_DEPTH) return { el: null, close: function () {}, setTitle: function () {} };
 
     var el = document.createElement('div');
     el.className = 'detail-view';
@@ -221,35 +247,53 @@
     document.body.appendChild(el);
     document.body.classList.add('detail-open');
     var self = { el: el, title: opts.title || '', onClose: opts.onClose };
-    detail = self;
+    stack.push(self);
     requestAnimationFrame(function () { el.classList.add('in'); });
 
+    /* 顶栏只显示栈顶那层的标题：新层压入时它就是新层，弹栈时由
+       closeDetail 重启上一层的。 */
     setBarDetail(true, opts.title);
     if (opts.swipeClose || opts.onHorizontal) bindGestures(el, opts);
 
-    /* 历史哨兵：硬件返回键 / 浏览器后退先关详情，而不是直接离开本页 */
-    try { history.pushState({ apDetail: 1 }, '', location.href); } catch (e) {}
+    /* 历史哨兵：硬件返回键 / 浏览器后退只弹栈顶一层，栈空才离开本页。
+       每层各压一个，和层栈一一对应。 */
+    try { history.pushState({ apDetail: stack.length }, '', location.href); } catch (e) {}
 
     return {
       el: el,
       close: function () { closeDetail(); },
       setTitle: function (t) {
-        if (detail && detail.el === el) { detail.title = t; setBarDetail(true, t); }
+        /* 这一层可能已经被弹掉了（setTitle 常常在异步回调里调用），
+           所以按 el 现查而不是比对某个全局变量。 */
+        for (var i = 0; i < stack.length; i++) {
+          if (stack[i].el === el) {
+            stack[i].title = t;
+            if (i === stack.length - 1) setBarDetail(true, t);
+            return;
+          }
+        }
       }
     };
   }
 
   function closeDetail(opts) {
     opts = opts || {};
-    if (!detail) return;
-    var d = detail;
-    detail = null;
+    if (!stack.length) return;
+    var d = stack.pop();          /* 只弹栈顶：下面的层原样留着 */
     d.el.classList.remove('in');
-    document.body.classList.remove('detail-open');
-    setBarDetail(false);
     if (d.onClose) { try { d.onClose(); } catch (e) {} }
-    releaseAdopted();   /* 搬进来的真实节点一律归位，调用方不用管 */
+    releaseAdopted();             /* 搬进来的真实节点一律归位，调用方不用管 */
     setTimeout(function () { if (d.el.parentNode) d.el.parentNode.removeChild(d.el); }, 260);
+
+    if (stack.length) {
+      /* 还有上层：顶栏回到上一层的标题，页面保持 detail-open，
+         被揭开的那层要重新滑回视野（它一直挂着 .in，无需重播动画）。 */
+      setBarDetail(true, stack[stack.length - 1].title);
+    } else {
+      document.body.classList.remove('detail-open');
+      setBarDetail(false);
+    }
+
     /* 界面按钮触发的关闭要把哨兵弹掉；popstate 触发的关闭绝不能再 back 一次 */
     if (!opts.fromHistory && !opts.silent) {
       suppressHistClose = true;
@@ -259,11 +303,11 @@
 
   window.addEventListener('popstate', function () {
     if (suppressHistClose) { suppressHistClose = false; return; }
-    if (detail) closeDetail({ fromHistory: true });
+    if (stack.length) closeDetail({ fromHistory: true });
   });
 
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && detail) closeDetail();
+    if (e.key === 'Escape' && stack.length) closeDetail();
   });
 
   /* 外壳顶栏的左箭头点了之后，会往这里发 detail-back —— 兜底，
@@ -273,7 +317,7 @@
     if (!d || d.type !== 'detail-back') return;
     /* 这里要走正常关闭：closeDetail() 会 history.back() 把本 iframe 压下的
        历史哨兵还回去。用 fromHistory 关的话哨兵会留在栈上，越积越多。 */
-    if (detail) closeDetail();
+    if (stack.length) closeDetail();
   });
 
   /* ============================================================
@@ -326,7 +370,7 @@
     /* 二级页态下这个「回首页」链接就是返回键：必须拦掉跳转，改成关详情层。
        不拦的话点一下直接跳 home.html —— 相当于返回键把人送回首页。 */
     home.addEventListener('click', function (e) {
-      if (detail) { e.preventDefault(); closeDetail(); }
+      if (stack.length) { e.preventDefault(); closeDetail(); }
     });
 
     var title = document.createElement('div');
@@ -475,7 +519,10 @@
     setBarDetail: setBarDetail,
     adopt: adopt,
     releaseAdopted: releaseAdopted,
-    detailOpen: function () { return !!detail; }
+    detailOpen: function () { return stack.length > 0; },
+    /* 层栈深度：0 = 一级页，1 = 二级页，2 = 三级页。
+       日记页的二级/三级入口靠它判断「现在是不是已经到头了」。 */
+    detailDepth: function () { return stack.length; }
   };
 
   /* ---------- 续播提示条：音乐页之外显示「继续播放《xx》」 ----------

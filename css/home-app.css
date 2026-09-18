@@ -1,0 +1,328 @@
+/* ============================================================
+ * 首页移动端重构 (home-app.css)
+ * ------------------------------------------------------------
+ * 全部规则都关在 @media (max-width: 768px) 里。
+ * 桌面端（>=769px）拿不到任何一条 —— 这是「桌面端一切不变」的硬保证。
+ * 与 js/home-app.js 配套；不加载该脚本时本文件也不会有可见影响。
+ *
+ * 高度预算（以 393x852 实测视口 796px 为准，P1 实测）：
+ *   改造前：header 70 + profile 273 + bio 325 + grid 171 = 839 > 796（宫格被挤出屏幕）
+ *   改造后：header 46 + profile 196 + bio 148 + grid 171 = 561，余量充足
+ * ============================================================ */
+
+@media (max-width: 768px) {
+
+  /* ---------- 1. 页面级不可滑动 ----------
+     目标：documentElement.scrollHeight == clientHeight。
+     html/body 一起锁，高度钉成视口高度。
+     overscroll-behavior 顺带禁掉橡皮筋与下拉刷新 —— 这正是「像 App」的关键。 */
+  html.ha-narrow,
+  html.ha-narrow body {
+    overflow: hidden !important;
+    height: 100% !important;
+    overscroll-behavior: none;
+  }
+  /* 内容容器自己不得撑出视口；真正超出的部分由二级页承载。
+     刻意【不】给 .about-container 设 overflow:auto ——
+     开了就等于「首屏内部可滚」，与不可滑动的目标相悖。 */
+  html.ha-narrow .about-container {
+    overflow: hidden;
+  }
+
+  /* ---------- 2. 首屏紧凑化 ----------
+     目标是让 4 个宫格入口完整落在首屏内（这是「不可滑动」的前提：
+     锁了滚动又够不着入口 = 内容永久不可达）。 */
+  html.ha-narrow .about-container {
+    /* 关键：把容器变成「一屏高的纵向 flex」。
+       只锁 html/body 的 overflow 是不够的 —— 内容照样按自然高度堆叠，
+       超出视口的部分被裁掉就永远够不着（实测 320x568 宫格就掉在屏外）。
+       flex + min-height:0 让宫格成为可压缩的末项，永远收在屏内。 */
+    display: flex !important;
+    flex-direction: column;
+    /* 高度 = 视口 - 顶栏。两个数字都是实测出来的，别凭感觉改：
+       · 外壳已把 iframe 高度算成 calc(100dvh - --tab-h - --sab)（app.css:1959），
+         所以 iframe 内部的 100dvh 就是可用区，底栏【不需要】再减一次
+         （减了就是减重，之前踩过）。
+       · 但 body 有 padding-top:48px 给固定顶栏让位（实测 bodyPadding="48px 0 0"），
+         容器排在它下面，所以必须【减去这 48px】，否则整体下移正好 48px。 */
+    height: calc(100dvh - 48px) !important;
+    max-height: calc(100dvh - 48px) !important;
+    box-sizing: border-box;
+    padding-top: 6px !important;         /* index.css:190 是 padding:...!important */
+    padding-left: 0.9rem !important;
+    padding-right: 0.9rem !important;
+    /* 底部导航是 fixed 的 56px（--tab-h），内容必须给它让位，
+       否则最后一行宫格会被压在导航下面。 */
+    padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px) + 8px);
+  }
+
+  /* 标题区：波浪线是纯装饰，窄屏省掉；缩紧上下留白 */
+  html.ha-narrow .about-header {
+    margin-bottom: 2px;
+  }
+  html.ha-narrow .about-header .an-deco,
+  html.ha-narrow .an-wave {
+    display: none;
+  }
+
+  /* 头像卡：273 -> ~196。头像是最大一块，等比压但不至于太小 */
+  html.ha-narrow .profile-card {
+    padding: 10px 12px 8px !important;   /* index.css:211 同样带 !important */
+    margin: 4px 0 6px;
+  }
+  /* 必须带 !important：css/index.css:202 那条窄屏规则就是
+     width/height:100px !important，不带就永远压不过它（实测踩过）。 */
+  html.ha-narrow .sakura-avatar-frame {
+    width: 84px !important;
+    height: 84px !important;
+  }
+  html.ha-narrow .avatar-section {
+    margin-bottom: 10px;
+  }
+  html.ha-narrow .intro-name {
+    font-size: 1.5rem !important;        /* index.css:200 */
+    margin-bottom: 4px;
+  }
+  html.ha-narrow .intro-tagline {
+    margin-bottom: 8px;
+  }
+
+  /* 自我介绍区：325 -> ~148。
+     「睡觉喵」占位块整块移入「我的数据」二级页（它是静态装饰，不是首屏必需），
+     一言保留但压缩内边距。 */
+  /* flex 子项默认 min-height:auto —— 内容多高就多高、不会收缩。
+     给 .bio-text 显式 min-height:0，宫格贴底（margin-top:auto）才挤得出空间。
+     注意：只让 bio-text 收缩，header / profile-card 保持固定 ——
+     它们本来就矮，再压只会把头像文字挤花（320px 实测过）。
+     而且 bio-text 必须留够两行的高度，否则正文会被整段裁掉。 */
+  html.ha-narrow .about-header,
+  html.ha-narrow .profile-card {
+    flex: 0 0 auto;
+  }
+  html.ha-narrow .bio-text {
+    flex: 0 1 auto;
+    min-height: 4.2em;      /* 两行正文 + 标题，保证不被裁空 */
+    overflow: hidden;
+  }
+  html.ha-narrow .bio-text {
+    margin-top: 6px;
+    margin-bottom: 0;
+  }
+  html.ha-narrow .bio-text .placeholder-marker {
+    padding: 8px 12px;
+    margin: 6px 0;
+  }
+  /* 一言（诗词）内置到「我的数据」二级页 —— 首屏让位给宫格入口。
+     它是装饰性文案，不是首屏必需信息，放进二级页一样能看到。 */
+  html.ha-narrow .bio-text .hitokoto-box {
+    display: none;
+  }
+  html.ha-narrow .bio-text > .cherry-placeholder {
+    display: none;              /* 「睡觉喵」-> 我的数据 */
+  }
+
+  /* 首屏不再出现页脚与分隔线：它们是「页面结束」的信号，
+     但这一页永远不结束（不可滑动），留着只会被裁掉。 */
+  html.ha-narrow .sakura-divider,
+  html.ha-narrow .blog-footer,
+  html.ha-narrow .st-da84fbc7 {
+    display: none;
+  }
+
+  /* ---------- 2b. 自适应紧凑档 ----------
+     为什么需要分档：首屏内容高度是【绝对值】（约 630px 固定），
+     但视口高度差异极大 —— 实测 320x568 只有 512px，392x852 有 796px。
+     一套尺寸打天下会出现「锁了滚动又够不着入口」= 内容永久不可达，
+     那比可滑动更糟。所以按【高度】分三档。
+
+     断点依据（实测视口高，已扣掉 56px 底部导航）：
+       >= 780  宽松：iPhone 14 Pro(796) / Pixel7(859) / 平板(968) / iPhone SE(611)
+       >= 620  适中：iPhone SE 竖屏(611 接近) / 多数中端机
+       <  620  紧凑：320x568(512) / 极矮屏
+
+     注意：用 max-height 而不是 max-width —— 这里限制的是【高度】，
+     宽度再窄只要够高就不必压缩（768x1024 平板就是这种）。 */
+  @media (max-height: 779px) {
+    /* 适中档 */
+    html.ha-narrow .sakura-avatar-frame { width: 72px !important; height: 72px !important; }
+    html.ha-narrow .avatar-section { margin-bottom: 6px; }
+    html.ha-narrow .profile-card { padding: 8px 12px 6px !important; margin: 2px 0 4px; }
+    html.ha-narrow .intro-name { font-size: 1.3rem !important; }
+    html.ha-narrow .intro-tagline { margin-bottom: 4px; }
+    html.ha-narrow .bio-text .placeholder-marker { padding: 6px 10px; margin: 4px 0; }
+    /* 一言已移入二级页，这里无需再压缩 */
+    html.ha-narrow .about-header .subhead { display: none; }
+    .ha-card { min-height: 72px; padding: 10px; }
+  }
+  @media (max-height: 619px) {
+    /* 紧凑档：320x568 这类极矮屏（实测视口只有 512px）。
+       首屏只保证「头像 + 一句签名 + 宫格」三件事绝对可见；
+       简介压到最短，一言整条让位（它是装饰性文案，进「我的数据」也能看）。 */
+    html.ha-narrow .about-container { padding-top: 2px !important; padding-bottom: 4px !important; }
+    html.ha-narrow .about-header { margin-bottom: 0; }
+    html.ha-narrow .about-header .blog-title { font-size: 1.28rem; }
+    /* 花朵装饰线整条去掉，极矮屏不留纯装饰 */
+    html.ha-narrow .about-header ~ svg { display: none; }
+
+    html.ha-narrow .sakura-avatar-frame { width: 48px !important; height: 48px !important; padding: 3px !important; }
+    html.ha-narrow .avatar-section { margin-bottom: 2px; }
+    html.ha-narrow .profile-card { padding: 4px 8px 2px !important; margin: 0 0 2px; }
+    html.ha-narrow .intro-name { font-size: 1.05rem !important; margin-bottom: 0; }
+    html.ha-narrow .intro-tagline { margin-bottom: 0; font-size: .72rem; }
+    html.ha-narrow .intro-tagline::before,
+    html.ha-narrow .intro-tagline::after { display: none; }   /* 两侧星形装饰 */
+
+    /* 简介：极矮屏只留一行 */
+    html.ha-narrow .bio-text { margin-top: 2px; }
+    html.ha-narrow .bio-text .placeholder-marker {
+      padding: 4px 8px; margin: 2px 0; font-size: .74rem; line-height: 1.35;
+      max-height: 3.4em; overflow: hidden;
+    }
+
+    .ha-grid { margin: 4px 0 0; padding-top: 4px; gap: 6px; }
+    .ha-card { min-height: 0; padding: 7px 9px; gap: 1px; border-radius: 12px; }
+    .ha-card-icon { font-size: .92rem; }
+    .ha-card-title { font-size: .8rem; }
+    .ha-card-sub { font-size: .62rem; line-height: 1.25; }
+  }
+
+  /* ---------- 3. 2×2 宫格入口 ---------- */
+  .ha-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    /* 负外边距会把宫格【拽到上方内容之上】造成文字被压住（截图实测过），
+       所以改用 flex 正常排布 + 让上方区块可收缩：
+       宫格用 margin-top:auto 贴底，上方区块靠 min-height:0 让出空间。 */
+    margin: auto 0 0;
+    padding: 6px 0 0;
+    flex: 0 0 auto;
+  }
+  .ha-card {
+    /* button 重置 */
+    appearance: none;
+    -webkit-appearance: none;
+    border: 1px solid #ffd6e0;
+    font: inherit;
+    text-align: left;
+
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    min-height: 80px;
+    padding: 12px 12px;
+    box-sizing: border-box;
+    border-radius: 16px;
+    background: linear-gradient(160deg, #fffafc 0%, #ffeff5 100%);
+    box-shadow: 0 2px 10px rgba(255, 130, 160, 0.10);
+    cursor: pointer;
+    /* 触控目标 80px 高，远大于 44px 下限 */
+    transition: transform .12s ease, box-shadow .12s ease;
+  }
+  .ha-card:active {
+    transform: scale(0.97);
+    box-shadow: 0 1px 4px rgba(255, 130, 160, 0.16);
+  }
+  .ha-card-icon {
+    font-size: 1.1rem;
+    color: #e56a92;
+    line-height: 1;
+  }
+  .ha-card-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #a14563;
+    line-height: 1.2;
+  }
+  .ha-card-sub {
+    font-size: 0.7rem;
+    line-height: 1.3;
+    color: #b5768c;
+    opacity: .9;
+  }
+
+  /* ---------- 4. 二级页（复用 app-shell 的 .detail-view） ----------
+     二级页【允许内部滚动】—— 页面级不滑，但内容超长时层内可滑。
+     overscroll-behavior:contain 阻止滚动穿透到底层页面。 */
+  .detail-view {
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  .detail-view .ha-detail {
+    padding: 4px 2px 24px;
+  }
+  .detail-view .ha-detail-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #a14563;
+    margin-bottom: 10px;
+  }
+  .detail-view .ha-detail-note {
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: #b5768c;
+  }
+  /* 二级页内的分区 */
+  .detail-view .ha-section { margin-bottom: 16px; }
+  .detail-view .ha-section-label {
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: #c78299;
+    letter-spacing: .04em;
+    margin-bottom: 8px;
+  }
+  /* info-item 在二级页里改为左图标 + 右文字的横向列表，
+     比首屏的网格更适合阅读，也更好按。 */
+  .detail-view .ha-info-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .detail-view .ha-info-list .info-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: #fff7fa;
+    border: 1px solid #ffe2ec;
+    text-align: left;
+  }
+  .detail-view .ha-info-list .info-item > i,
+  .detail-view .ha-info-list .info-item > svg {
+    flex: 0 0 auto;
+    width: 20px;
+    font-size: 1rem;
+    color: #e56a92;
+    text-align: center;
+  }
+  .detail-view .ha-info-list .info-item .info-label {
+    flex: 0 0 auto;
+    margin: 0;
+    font-size: 0.82rem;
+    color: #a14563;
+    font-weight: 600;
+  }
+  .detail-view .ha-info-list .info-item .info-desc {
+    flex: 1 1 auto;
+    margin: 0;
+    text-align: right;
+    font-size: 0.82rem;
+    color: #7d5561;
+    word-break: break-word;
+  }
+  /* 一言在二级页里正常显示（首屏是被 CSS 隐藏的） */
+  .detail-view .ha-section .hitokoto-box {
+    display: block !important;
+    margin: 0;
+  }
+  /* 纪念册图片在二级页里放大展示 */
+  .detail-view .st-d01d8085,
+  .detail-view .st-c2f5961e,
+  .detail-view .social-links {
+    display: block !important;
+    margin: 0;
+  }
+}
