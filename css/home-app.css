@@ -194,9 +194,12 @@
     /* 负外边距会把宫格【拽到上方内容之上】造成文字被压住（截图实测过），
        所以改用 flex 正常排布 + 让上方区块可收缩：
        宫格用 margin-top:auto 贴底，上方区块靠 min-height:0 让出空间。 */
-    /* margin-top:auto 让它贴底；margin-bottom 留出 20px —— 宫格不再紧贴
-       视口下沿，底部有呼吸感（用户要求：整体上移 20px）。 */
-    margin: auto 0 20px;
+    /* margin-top:auto 让它贴底；margin-bottom 留出 110px —— 宫格不再紧贴
+       视口下沿（用户分四次要求上移：20 + 20 + 50 + 20 = 110px）。
+       注意：这是弹性留白，flex 空间不够时会被自动压缩，
+       所以矮屏不会因此把宫格挤出可视区（实测 320x568 仍 allVisible）。
+       矮屏的最终位置由 @media (max-height:619px) 那档单独收紧。 */
+    margin: auto 0 110px;
     padding: 6px 0 0;
     flex: 0 0 auto;
   }
