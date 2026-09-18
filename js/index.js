@@ -80,7 +80,15 @@ img.src = url;
 (function () {
 const el = document.getElementById('gitHubInfo');
 if (!el) return;
-fetchCachedJSON('https://api.github.com/users/U1s1-king')
+/* 数据走 Actions 同步的 data/github/stats.json，不再直连 api.github.com。
+   原因：api.github.com 未鉴权是 60 次/小时/**出口 IP**，而 Cloudflare 与
+   GitHub Pages 的出口 IP 是共享的，配额常被别处用光 ——
+   实测浏览器直连稳定 403「API rate limit exceeded」，
+   这张卡片因此长期显示「加载失败」。
+   现在由 scripts/gh_sync.py 在 Actions 里带 GITHUB_TOKEN 抓取，
+   页面只读同源静态 JSON。与 data/bili/stats.json 同一套模式。 */
+fetch('data/github/stats.json?v=' + Date.now())
+.then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
 .then(d => {
 if (d.public_repos === undefined) throw new Error('bad');
 el.textContent = d.public_repos + ' 个仓库 · ' + d.followers + ' 粉丝';

@@ -40,7 +40,13 @@ copyToClipboard(text, '网盘链接已复制');
 (function () {
 const box = document.getElementById('github-repos');
 if (!box) return;
-fetchCachedJSON('https://api.github.com/users/U1s1-king/repos?sort=updated&per_page=8')
+/* 走 Actions 同步的快照，不直连 api.github.com：
+   未鉴权配额 60 次/小时/出口 IP，Cloudflare 与 Pages 的出口 IP 共享，
+   实测浏览器直连稳定 403，这里长期显示「加载失败」。
+   见 scripts/gh_sync.py 与 .github/workflows/gh-sync.yml。 */
+fetch('data/github/stats.json?v=' + Date.now())
+.then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+.then(d => d.repos)
 .then(repos => {
 if (!Array.isArray(repos)) throw new Error('bad');
 box.innerHTML = '';
