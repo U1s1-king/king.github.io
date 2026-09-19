@@ -9,33 +9,36 @@
  *     歌词高亮 / 自动滚动、进度条、转盘旋转(.cover-inner.playing)、
  *     播放状态 —— 全部零同步成本，bundle 一行不改。
  *
- * 桌面端：narrow() 为假，直接 return，页面一个字节都不动。
+ * 桌面端（阶段 B1 起）：同一条路径也开放，版式交给媒体查询分流 ——
+ *   ≤768 是全屏竖排播放页，≥769 是二级页里的两栏（见 app.css 的 B1 块）。
+ *   所以这里不再有「桌面直接 return」的分支。
  * ============================================================ */
 (function () {
   'use strict';
 
-  function narrow() { return window.innerWidth <= 768; }
+  /* 视口判断只有一个权威来源：AppShell.isNarrow()。
+     这里以前自己写了一遍 innerWidth <= 768；两处一旦不同步，就会出现
+     「外壳认为是网页端、音乐页认为是手机端」的错位。 */
+  function narrow() {
+    return window.AppShell && window.AppShell.isNarrow
+      ? window.AppShell.isNarrow()
+      : window.innerWidth <= 768;
+  }
   function byId(id) { return document.getElementById(id); }
   function q(sel, root) { return (root || document).querySelector(sel); }
 
-  /* 被搬走的节点 + 它们的原位，关闭时按记录逆序搬回 */
-  var moved = [];
-
+  /* ------------------------------------------------------------
+   * 节点搬移：统一走 AppShell.adopt / releaseAdopted（阶段 D1）
+   * ------------------------------------------------------------
+   * 这里原来自带一套 moved[] / take() / putBack()，和 AppShell.adopt 做的是
+   * 同一件事，但少了「层」的概念：层栈化之后，三级页关掉时只能归还它自己
+   * 搬进来的节点，而自带的那套只能整表归还 —— 从正文返回列表时会把列表
+   * 的内容一并掀回去。
+   * 现在收敛到 AppShell：closeDetail() 内部会 releaseAdopted(本层)，
+   * 调用方不必再写 onClose 收拾残局。
+   * ------------------------------------------------------------ */
   function take(node, into) {
-    if (!node || !into || !node.parentNode) return;
-    moved.push({ n: node, p: node.parentNode, s: node.nextSibling });
-    into.appendChild(node);
-  }
-  function putBack() {
-    for (var i = moved.length - 1; i >= 0; i--) {
-      var it = moved[i];
-      if (!it.p) continue;
-      try {
-        if (it.s && it.s.parentNode === it.p) it.p.insertBefore(it.n, it.s);
-        else it.p.appendChild(it.n);
-      } catch (e) {}
-    }
-    moved = [];
+    return window.AppShell.adopt(node, into);
   }
 
   function buildStage() {
@@ -59,7 +62,11 @@
 
   var opening = false;
   function openFull() {
-    if (!narrow()) return false;
+    /* 阶段 B1：桌面端也要有播放页。以前这一句 !narrow() 直接把桌面挡掉，
+       再叠加 app.css「隔离兜底」里对 .fs-wrap 的 display:none，
+       桌面点封面等于没反应（实测 detailOpen=false / detailCount=0）。
+       现在两端共用同一条路径，版式由媒体查询分流：
+       ≤768 全屏竖排，≥769 二级页里的两栏（见 app.css 的 B1 块）。 */
     if (!window.AppShell || !window.AppShell.openDetail) return false;
     if (window.AppShell.detailOpen()) return false;
     if (opening) return false;
@@ -70,12 +77,14 @@
       title: '正在播放',
       content: wrap,
       swipeClose: true,
+      allowDesktop: true,
       /* 左右滑 = 上一首/下一首（走原按钮，复用 bundle 的切歌逻辑） */
       onHorizontal: function (dir) {
         var b = byId(dir > 0 ? 'nextBtn' : 'prevBtn');
         if (b) b.click();
       },
-      onClose: function () { putBack(); opening = false; }
+      /* 归还由 closeDetail 的 releaseAdopted(本层) 负责，这里只复位开锁标记 */
+      onClose: function () { opening = false; }
     });
 
     /* 按主流播放页的顺序把真实节点搬进去 */
@@ -85,7 +94,17 @@
     take(byId('lyricBox'), q('.fs-lyrics', wrap));
     take(q('.progress-area'), q('.fs-progress', wrap));
     take(q('.controls-row'), q('.fs-controls', wrap));
-    take(q('.extra-actions .mode-strip'), q('.fs-modes', wrap));
+    /* 搬「整个」.extra-actions，不要只搬第一个 .mode-strip：
+       music.html 里 .extra-actions 有三个子节点 ——
+         .mode-strip（循环/随机/倍速）、.mixer（音量滑块）、.mode-strip（歌单入口 + 计数）
+       querySelector 只返回第一个匹配，旧写法只搬走了第一个 .mode-strip，
+       留在底层的 .mixer 被全屏层盖住 —— 实测手机上音量条完全没有入口，
+       用户根本没法调音量（music-bundle.js 里 volumeRange 只有「定义 + 赋值 +
+       绑 input」三处，没有任何替代控件）。整块搬走后音量、歌单计数一起进播放页。
+       注：.extra-actions 是 .player-right 的子节点，其中每条样式都带
+       .player-right 前缀（见 css/music.css:63-69），搬出后靠 css/app.css
+       的 .detail-view/.fs-modes 规则补齐版式。 */
+    take(q('.extra-actions'), q('.fs-modes', wrap));
 
     var collapse = q('.fs-collapse', wrap);
     if (collapse) collapse.addEventListener('click', function () { handle.close(); });
@@ -104,12 +123,13 @@
 
   /* ---- 入口一：点封面转盘 / 右下角展开按钮 ---- */
   function injectOpeners() {
-    /* 先绑封面：下面那道守卫只跟右下角按钮有关，不该连累封面点击 */
+    /* 先绑封面：两端都要（桌面端没有下面那颗按钮，封面就是唯一入口） */
     var disc = byId('coverInner');
     if (disc && !disc.__fsOpen) {
       disc.__fsOpen = true;
       disc.addEventListener('click', function () { openFull(); });
     }
+    if (!narrow()) return;   /* 右下角那颗按钮的样式只写在 ≤768 里，桌面不注入 */
     var zone = q('.disc-zone');
     if (!zone || byId('fsOpenBtn')) return;
     var btn = document.createElement('button');
@@ -227,7 +247,8 @@
     var handle = window.AppShell.openDetail({
       title: '搜索',
       content: wrap,
-      onClose: function () { alive = false; putBack(); }
+      /* 归还由 closeDetail 的 releaseAdopted(本层) 负责 */
+      onClose: function () { alive = false; }
     });
 
     take(bar, body);
@@ -396,6 +417,11 @@
     }, 1000);
   }
 
+  function initDesktop() {
+    /* 桌面端只需要「点封面进播放页」这一条入口 */
+    injectOpeners();
+  }
+
   function init() {
     if (!narrow()) return;
     injectOpeners();
@@ -421,12 +447,17 @@
   }
 
   function applyMode(isNarrow) {
-    if (isNarrow === undefined) isNarrow = narrow();
+    /* 必须按类型判，不能只判 undefined：这个函数同时挂在
+       DOMContentLoaded 上（见文件末尾），浏览器会把 Event 对象当第一个
+       参数传进来 —— Event 是 truthy，于是桌面端一直走 init() 分支，
+       而 init() 首行就是 if (!narrow()) return，桌面端等于什么都没做。
+       这是阶段 B1 才暴露出来的老 bug（以前桌面端本来就没有要做的初始化）。 */
+    if (typeof isNarrow !== 'boolean') isNarrow = narrow();
     if (isNarrow) init();
-    else teardown();
+    else { teardown(); initDesktop(); }
   }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', applyMode);
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { applyMode(); });
   else applyMode();
   if (window.AppShell && window.AppShell.onMode) window.AppShell.onMode(applyMode);
 })();

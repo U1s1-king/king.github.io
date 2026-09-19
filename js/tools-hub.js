@@ -22,6 +22,11 @@
   };
   var CATS = [["dev","开发者","fa-code"],["text","文字工具","fa-font"],["calc","计算·换算","fa-calculator"],["media","图片·媒体","fa-image"],["net","网络·查询","fa-globe"],["life","生活·健康","fa-heart"],["sec","密码·安全","fa-shield-alt"],["fun","随机·娱乐","fa-dice"]];
 
+  /* 分类表对手机端公开：tools-app.js 的三级结构直接用这一份，
+     免得桌面/手机各写一张，加工具时只改一处、两边不分叉。 */
+  window.HUB_META = META;
+  window.HUB_CATS = CATS;
+
   function desktop() { return window.innerWidth > 768; }
   function byId(id) { return document.getElementById(id); }
 
@@ -65,9 +70,90 @@
     });
   }
 
+/* ============================================================
+   桌面首页的面板也必须移出
+   ------------------------------------------------------------
+   原来 60 个 .tool-panel 直接躺在 .main-card 里，且 HTML 里第一个
+   面板写着 class="tool-panel active"。桌面没有手机那套「详情层」，
+   html.tool-open 只在「已经点开某个工具」时才收起网格 —— 于是
+   一级页上空着没点任何东西时，那个 .active 的面板照样渲染出来，
+   .main-card 被撑到 3000px 以上，提示盒也跟着排下去。
+   要求是「只有二级页面才能使用工具」，所以桌面同样把面板搬进
+   隐藏容器：进页面不激活任何工具，点卡片才把对应面板搬回来。
+   搬移而非克隆（canvas / input / 已算结果 / 监听器都要留住）。
+   注意手机端由 tools-app.js 走另一套（详情层 + adopt），
+   两边各自管理，靠 desktop()/narrow() 互不重叠。
+   ============================================================ */
+  var STASH = null;      /* 隐藏容器 */
+  var MOVED = [];        /* 被搬走的面板原始位置，用于还原 */
+
+  function ensureStash() {
+    if (STASH && STASH.parentNode) return STASH;
+    STASH = document.createElement('div');
+    STASH.id = 'toolsStashDesktop';
+    STASH.className = 'tools-stash';
+    STASH.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(STASH);
+    return STASH;
+  }
+
+  /* 把面板与提示盒搬走。只搬 .tool-panel / .info-box，.main-card 本身留着，
+     卡片网格与返回条都还在里面。 */
+  function stashPanels() {
+    if (MOVED.length) return;
+    var main = document.querySelector('.main-card');
+    if (!main) return;
+    var host = ensureStash();
+    ['tool-panel', 'info-box'].forEach(function (cls) {
+      Array.prototype.forEach.call(main.querySelectorAll('.' + cls), function (el) {
+        MOVED.push({ n: el, p: el.parentNode, s: el.nextSibling });
+        host.appendChild(el);
+      });
+    });
+  }
+
+  /* 把一个面板搬到返回条下面显示。其余面板留在隐藏容器里。 */
+  function showPanel(panel) {
+    var main = document.querySelector('.main-card');
+    var back = byId('toolsBack');
+    if (!main || !panel) return;
+    /* 插在返回条后面：这样「返回工具列表」永远在面板上方 */
+    if (back && back.parentNode === main) main.insertBefore(panel, back.nextSibling);
+    else main.appendChild(panel);
+  }
+
+  /* 把当前显示的面板收回隐藏容器 */
+  function hidePanel(panel) {
+    if (!panel) return;
+    var host = ensureStash();
+    if (panel.parentNode !== host) host.appendChild(panel);
+  }
+
+  /* 全部还原回 .main-card 原位（离开桌面视口时用） */
+  function unstashPanels() {
+    for (var i = 0; i < MOVED.length; i++) {
+      var it = MOVED[i];
+      try {
+        if (it.s && it.s.parentNode === it.p) it.p.insertBefore(it.n, it.s);
+        else it.p.appendChild(it.n);
+      } catch (e) {}
+    }
+    MOVED = [];
+    if (STASH && STASH.parentNode) STASH.parentNode.removeChild(STASH);
+    STASH = null;
+  }
+
+  /* 清掉所有 .active：进页面不该有任何工具处于「已打开」状态 */
+  function deactivateAll() {
+    Array.prototype.forEach.call(document.querySelectorAll('.tool-panel'), function (p) {
+      p.classList.remove('active');
+    });
+  }
+
 /* 进桌面「二级页」之前激活的那个 tab。关闭时要还原回去 —— 否则刚看过的
    面板仍然是 .active，返回工具列表后它会继续显示在网格下方。 */
 var prevTab = null;
+var openPanel = null;      /* 当前搬到返回条下面的那个面板 */
 
 function openTool(id, push) {
     var tab = document.querySelector('.tool-tab[data-tool="' + id + '"]');
@@ -81,6 +167,10 @@ function openTool(id, push) {
     var nameEl = byId('toolsBackName');
     if (nameEl && meta) nameEl.textContent = meta[1];
     document.documentElement.classList.add('tool-open');
+    /* 上一个工具收起、当前工具搬到返回条下面 */
+    if (openPanel && openPanel !== byId('tool-' + id)) hidePanel(openPanel);
+    openPanel = byId('tool-' + id);
+    showPanel(openPanel);
     if (push) { try { if (location.hash !== HASH + id) location.hash = HASH + id; } catch (e) {} }
     var back = byId('toolsBack');
     if (back && back.scrollIntoView) back.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -90,8 +180,19 @@ function openTool(id, push) {
 
   function closeTool(silent) {
     document.documentElement.classList.remove('tool-open');
-    /* 只摘 tool-open、不动 .active 的话，刚看过的面板会赖在页面上不走 */
-    if (prevTab) { prevTab.click(); prevTab = null; }
+    /* 只摘 tool-open、不动 .active 的话，刚看过的面板会赖在页面上不走。
+       返回列表要把面板收回隐藏容器，并清掉 .active —— 否则它会以
+       「已打开」的身份留在 DOM 里，下次进页面又被渲染出来。 */
+    /* 返回列表 = 回到一级页。一级页不该有任何工具处于激活/显示状态，
+       所以这里不再「还原 prevTab」——改动前还原的是 HTML 里默认带
+       .active 的转换器，结果刚返回那个面板又冒出来了。现在统一：
+       所有面板清掉 .active 并收回隐藏容器。 */
+    openPanel = null;
+    prevTab = null;
+    Array.prototype.forEach.call(document.querySelectorAll('.tool-panel'), function (p) {
+      p.classList.remove('active');
+      hidePanel(p);
+    });
     if (!silent) {
       var bar = byId('toolsFilter');
       if (bar && bar.scrollIntoView) bar.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -115,6 +216,12 @@ function openTool(id, push) {
     if (!bar || !grid || bar.getAttribute('data-built')) return;
     bar.setAttribute('data-built', '1');
     document.documentElement.classList.add('tool-hub');
+
+    /* 面板移出 + 清默认激活：一级页上不该常驻任何工具面板。
+       顺序要紧：先 deactivateAll（HTML 里第一个面板写着 active），
+       再 stashPanels 搬走，最后 openFromHash 才知道要不要打开一个。 */
+    deactivateAll();
+    stashPanels();
 
     bar.appendChild(chip('all', '全部', 'fa-border-all', count('all'), true));
     CATS.forEach(function (c) { bar.appendChild(chip(c[0], c[1], c[2], count(c[0]), false)); });
@@ -153,6 +260,10 @@ function openTool(id, push) {
         /* 从桌面宽屏缩到手机时，桌面那套「二级页」状态要一并收掉，
            否则面板会以 .active 的身份挂在手机网格下面 */
         closeTool(true);
+        /* 面板还给 .main-card：窄屏那边（tools-app.js）要按自己的方式
+           重新搬一次，桌面必须先把自己搬走的放回原位，否则手机端
+           找不到面板，三级页会是空的。 */
+        unstashPanels();
       } else init();
     });
   }

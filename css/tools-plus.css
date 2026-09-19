@@ -99,3 +99,182 @@
     #toolsFilter,
     #toolsGrid { display: none; }
 }
+
+/* ============================================================
+   工具页三级结构（手机端）—— 分类折叠面板
+   ------------------------------------------------------------
+   tools-app.js 在窄屏注入；桌面端一行都不生效（整块写在 max-width:768px 里）。
+   一级页：.tcat-wrap 手风琴，只有分类，没有工具
+   二级页：.tcat-page 某分类下的工具网格（AppShell 详情层）
+   三级页：.tool-detail 工具本体（沿用既有 .mgrid-item 的观感）
+   配色沿用站点色板：文字 #a14563 / 边框 #ffcdda / 底 #fff4f7。
+   ============================================================ */
+@media (max-width: 768px) {
+
+    /* 一级页只留分类：标签墙与旧网格一律不出现。
+       两个类都由脚本加 —— 脚本没跑到就退回原来的标签墙，不会白屏。 */
+    html.tool-cats .tools-tabs { display: none !important; }
+    html.tool-cats .mgrid-wrap { display: none !important; }
+
+    /* 面板与提示盒被搬到这个隐藏容器；一级页不再出现它们。
+       display:none 必须连子元素一起压：.tool-panel.active{display:block}
+       （Tools.css）的特异性高于父级的 display:none，光藏父级的话
+       当前 .active 的那个面板会照常渲染出来。方括号属性选择器把
+       特异性提到 (0,2,0)，稳过 .tool-panel.active (0,2,0) 且靠后。 */
+    .tools-stash,
+    .tools-stash[aria-hidden="true"],
+    .tools-stash[aria-hidden="true"] > * { display: none !important; }
+
+    .tcat-wrap { margin: 0 0 6px; }
+
+    .tcat-head {
+        margin: 0 0 12px;
+        color: #b5768c;
+        font-size: .78rem;
+        letter-spacing: .02em;
+    }
+
+    /* ---------- 分类条（整条 56px 高，满足触控目标） ---------- */
+    .tcat {
+        margin-bottom: 10px;
+        border: 1px solid #ffe2ec;
+        border-radius: 16px;
+        background: linear-gradient(150deg, #fffafc, #fff1f6);
+        overflow: hidden;
+        transition: border-color .18s ease, box-shadow .18s ease;
+    }
+
+    .tcat.is-open {
+        border-color: #ffcdda;
+        box-shadow: 0 6px 18px -10px rgba(216, 112, 140, .5);
+    }
+
+    .tcat-btn {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        min-height: 56px;
+        padding: 0 14px;
+        border: 0;
+        background: none;
+        color: #7d5462;
+        font: inherit;
+        font-size: .92rem;
+        text-align: left;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .tcat-btn:active { background: #ffeef4; }
+
+    .tcat-ico {
+        display: grid;
+        flex: 0 0 auto;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 11px;
+        background: #ffe3ea;
+        color: #d9769a;
+        font-size: .9rem;
+    }
+
+    .tcat.is-open .tcat-ico {
+        background: #ffb6c1;
+        color: #fff;
+    }
+
+    .tcat-name {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        font-weight: 600;
+        color: #a14563;
+    }
+
+    .tcat-count {
+        flex: 0 0 auto;
+        padding: 1px 9px;
+        border-radius: 999px;
+        background: #ffe3ea;
+        color: #a14563;
+        font-size: .72rem;
+        line-height: 1.7;
+    }
+
+    .tcat-arrow {
+        flex: 0 0 auto;
+        color: #dcb3c1;
+        font-size: .72rem;
+        transition: transform .2s ease;
+    }
+
+    .tcat.is-open .tcat-arrow { transform: rotate(180deg); }
+
+    /* ---------- 分类展开后的工具列表 ---------- */
+    .tcat-body {
+        padding: 0 10px 10px;
+        border-top: 1px dashed #ffdfe8;
+    }
+
+    /* 分类展开后的工具网格：两列 */
+    .tcat-inner {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        padding-top: 10px;
+    }
+
+    .tcat-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 48px;
+        padding: 0 12px;
+        border: 1px solid #ffe2ec;
+        border-radius: 13px;
+        background: #fff;
+        color: #7d5462;
+        font: inherit;
+        font-size: .84rem;
+        text-align: left;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        transition: transform .16s ease, background .16s ease;
+    }
+
+    .tcat-item:active {
+        transform: scale(.97);
+        background: #ffeef4;
+    }
+
+    .tcat-item > i:first-child {
+        flex: 0 0 auto;
+        width: 17px;
+        color: #e58cab;
+        font-size: .88rem;
+        text-align: center;
+    }
+
+    .tc-name {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    .tc-arrow {
+        flex: 0 0 auto;
+        color: #dcb3c1;
+        font-size: .62rem;
+    }
+
+    /* ---------- 三级页（工具本体）容器：底部让开安全区 ---------- */
+    .tool-detail {
+        padding-bottom: calc(24px + var(--sab, 0px));
+    }
+}

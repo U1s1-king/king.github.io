@@ -320,31 +320,8 @@ html.has-appbar .app-bar {
   }
   /* 转盘本来靠 .cover-inner.playing 这个类转，搬过来动画自动跟着走 */
   /* 转盘本来靠 .cover-inner.playing 这个类转，搬过来动画自动跟着走 */
-  .detail-view .cover-inner {
-    width: min(58vw, 36vh, 240px);
-    height: min(58vw, 36vh, 240px);
-    border-radius: 50%;
-    background: #ffeef4;
-    box-shadow: inset 0 0 0 2px #fff8f9, 0 12px 30px rgba(203, 106, 128, 0.28);
-  }
-  .detail-view .cover-img {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    object-fit: cover;
-  }
   .fs-meta {
     text-align: center;
-  }
-  .detail-view .track-title {
-    font-size: 1.12rem;
-    font-weight: 700;
-    line-height: 1.35;
-  }
-  .detail-view .track-artist {
-    margin-top: 2px;
-    font-size: 0.8rem;
-    color: #b5768c;
   }
   .fs-lyrics {
     position: relative;
@@ -358,46 +335,6 @@ html.has-appbar .app-bar {
     background: rgba(255, 250, 252, 0.6);
     backdrop-filter: blur(4px);
   }
-  .detail-view .lyric-panel {
-    /* 搬出 .player-right 后，那边压制绝对定位的 position:relative 就不再生效，
-       基样式会把面板绝对定位，参照物正好是新加了 position:relative 的 .fs-wrap，
-       于是它整个压在唱片上 —— 这里显式钉回正常流 */
-    position: relative;
-    inset: auto;
-    width: auto;
-    z-index: auto;
-    flex: 1 1 auto;
-    height: auto;
-    max-height: none !important;
-    margin: 0;
-    padding: 4px 6px;
-    /* 歌词页里这块面板要能滚；上下用遮罩淡出，不留硬边 */
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    mask-image: linear-gradient(180deg, transparent 0, #000 14%, #000 82%, transparent 100%);
-    -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 14%, #000 82%, transparent 100%);
-  }
-  .detail-view .lyric-panel .lyr-line {
-    white-space: normal;
-    text-overflow: clip;
-    text-align: center;
-    font-size: 0.94rem;
-    line-height: 1.95;
-    /* 原本高亮/变暗规则都锁在 .player-right 里，搬过来会整套失效，这里补齐 */
-    opacity: 0.58;
-    color: #b98297;
-    transition: opacity 0.25s ease, color 0.25s ease, transform 0.25s ease;
-  }
-  .detail-view .lyric-panel .lyr-line.active {
-    opacity: 1;
-    color: #b8406a;
-    font-size: 1.02rem;
-    font-weight: 700;
-    text-shadow: 0 1px 6px rgba(255, 255, 255, 0.9);
-  }
-  .detail-view .lyric-panel .lyr-line.active {
-    font-size: 1.02rem;
-  }
   /* 进度区被搬进全屏播放页后，「时间 / 进度条 / 时间」要排在一行。
      主页面里这套 flex 是 .player-right .progress-area 给的 ——
      元素搬出 .player-right 之后那条就失效了，进度区退化成
@@ -408,37 +345,8 @@ html.has-appbar .app-bar {
      搬走的还有 .controls-row 和 .mode-strip —— 它们各自的
      .player-right 前缀样式同样失效，下面一并补齐。 */
   .detail-view .fs-progress .progress-area,
-  .fs-progress .progress-area {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 0;
-    margin: 0.2rem 0 0;
-  }
-  .fs-progress .progress-area .time {
-    flex: 0 0 auto;
-    min-width: 40px;
-    font-size: 0.72rem;
-    color: #b77d8f;
-    font-variant-numeric: tabular-nums;
-  }
-  .fs-progress .progress-area .time:last-child {
-    text-align: right;
-  }
-  .fs-progress .progress-area .progress-bar-bg {
-    flex: 1 1 auto;
-    width: auto;
-    height: 6px;
-    box-shadow: inset 0 1px 3px rgba(177, 98, 125, 0.16);
-  }
   .fs-progress {
     padding: 0 2px;
-  }
-  .detail-view .progress-bar-bg {
-    height: 7px;
-  }
-  .detail-view .progress-fill {
-    border-radius: 10px;
   }
   /* 控制行：原来靠 .player-right .ctrl-btn 给的尺寸，搬出来后要补 */
   .fs-controls {
@@ -446,42 +354,29 @@ html.has-appbar .app-bar {
     justify-content: center;
     padding: 2px 0 0;
   }
-  .detail-view .controls-row {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 2.4rem;
-    width: 100%;
-    padding: 0.2rem 0;
-  }
-  .detail-view .ctrl-btn {
-    width: 52px;
-    height: 52px;
-    border: 0;
-    border-radius: 50%;
-    font-size: 1.15rem;
-    background: #ffeef2;
-    color: #c45c7c;
-    box-shadow: 0 4px 10px rgba(165, 79, 99, 0.12);
-  }
-  .detail-view .ctrl-btn.play-main {
-    width: 74px;
-    height: 74px;
-    font-size: 1.7rem;
-    color: #fff;
-    background: linear-gradient(145deg, #f0a0ba, #e06a8f);
-    box-shadow: 0 10px 22px rgba(224, 106, 143, 0.4), 0 0 0 3px rgba(255, 182, 193, 0.38);
-  }
   .fs-modes {
     display: flex;
     justify-content: center;
     padding-bottom: 2px;
   }
-  .detail-view .mode-strip {
-    display: flex;
-    justify-content: center;
-    gap: 0.5rem;
-  }
+  /* .extra-actions 整块被搬进全屏播放页后，它在主页面的版式全部失效 ——
+     css/music.css:63-69、114-116、122-126 里的每一条都带 .player-right 前缀，
+     节点一离开 .player-right 就整套不命中。结果会是：
+       · .mixer（音量条）失去 margin-left:auto，不再靠右
+       · .mode-strip 失去 nowrap，窄屏下折行
+       · .volume-slider 失去固定宽度，flex:1 撑满整行
+     这里按同样语义补一份，并显式借用 .detail-view 前缀压过主页面里
+     可能残留的同名规则（搬回原位时这些选择器自然不再命中）。 */
+  .detail-view .fs-modes .extra-actions,
+  .detail-view .fs-modes .extra-actions .mode-strip,
+  .detail-view .fs-modes .extra-actions .mode-chip,
+  .detail-view .fs-modes .extra-actions .mode-chip i,
+  /* 音量条：主页面靠 .player-right 给的 margin-left:auto 靠右，
+     搬过来必须补回，否则它会贴着左边的循环/随机按钮。 */
+  .detail-view .fs-modes .extra-actions .mixer,
+  .detail-view .fs-modes .extra-actions .mixer .volume-slider,
+  .detail-view .fs-modes .extra-actions .pl-drawer-trigger b,
+  /* 全屏页比主页面宽裕一点：音量条给到 88px，歌单胶囊保持一行 */
 
   /* ---- 封面上的「全屏播放页」入口 ---- */
   .disc-zone {
@@ -1207,35 +1102,43 @@ html.has-appbar .app-bar {
     background: #e06a8f;
     color: #fff;
   }
-  .detail-view .lyric-panel .lyr-line.active {
-    font-weight: 700;
-    transform: scale(1.04);
-  }
   /* 进度条：头上一颗可抓的圆点（bundle 已经支持拖动） */
-  .detail-view .progress-fill {
+  /* ============================================================
+     进度条命中区：视觉 7px，可点区域 28px
+     ------------------------------------------------------------
+     现状（未修前）：.progress-bar-bg 视觉高度只有 6px（css/music.css:52）
+     到 7px（本文件上方），而 .progress-fill::after 那颗 14px 圆点是
+     装饰、且 right:-7px 还探到条外 —— 真正能接住手指的仍是一条 6~7px 的细线。
+     手机上远低于 44px 触控标准，表现就是「点进度条没反应 / 拖不动」。
+
+     做法：给容器加一个透明的 ::before 撑出 28px 高的命中区，
+     视觉高度（7px）完全不变。容器本身转 position:relative 作为定位参照。
+     命中区用负 top 上下各外扩，避免把下方控制行顶下去（不占布局）。
+     注意 ::before 必须留 pointer-events:auto（默认值），否则接不到事件。
+     ============================================================ */
+  .detail-view .progress-bar-bg,
+  .player-right .progress-area .progress-bar-bg {
     position: relative;
-    background: linear-gradient(90deg, var(--mp-a, #f4a9c1), var(--mp-b, #e06a8f));
-    box-shadow: 0 0 10px rgba(224, 106, 143, 0.45);
   }
-  .detail-view .progress-fill::after {
+  .detail-view .progress-bar-bg::before,
+  .progress-area .progress-bar-bg::before {
     content: '';
     position: absolute;
-    right: -7px;
+    left: 0;
+    right: 0;
     top: 50%;
-    width: 14px;
-    height: 14px;
-    margin-top: -7px;
-    border-radius: 50%;
-    background: #fff;
-    box-shadow: 0 1px 6px rgba(224, 106, 143, 0.55);
+    height: 28px;
+    margin-top: -14px;
+    border-radius: 14px;
+    background: transparent;
   }
-  .detail-view .progress-bar-bg {
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.75);
-  }
-  .detail-view .ctrl-btn:active {
-    transform: scale(0.92);
-  }
+
+  /* 层级修正（toast / 上传弹窗 / 歌单抽屉抬到二级页之上）原先写在这里。
+     但整个块在 @media (max-width:768px) 内 —— 桌面端与 iPad(820px) 一行都
+     不命中，实测 desktop：.pl-drawer=901 / .toast=1100 / .modal-global=1000，
+     全在 .detail-view(9999) 之下，于是桌面端「上传本地音乐」点了没反应。
+     已改为全视口生效：数值下沉到 css/music.css 的 :root token
+     （--z-drawer-mask / --z-drawer / --z-toast / --z-modal）。 */
 
   /* ---------- 4. 底部面板（更多 / 睡眠定时） ---------- */
   .mp-mask {
@@ -1871,6 +1774,370 @@ html.has-appbar .app-bar {
 }
 
 /* ============================================================
+   音乐 App 共享层（阶段 C2：从窄屏媒体查询里拆出来）
+   ------------------------------------------------------------
+   这些规则原先全躺在上面那个 @media (max-width:768px) 里（app.css 第 128
+   行起、1572 行的大块）。它们本身与视口无关 —— 全是「真实节点被搬进二级页
+   之后，原来的 .player-right 前缀失效」的补丁（封面尺寸、歌词面板、进度区、
+   控制行、音量行），外加播放页里 .fs-* 作用域内的版式。锁在窄屏里只有一个
+   后果：桌面端要用它们就必须再抄一份（阶段 B1 就是这么干的，抄在下面）。
+   现在提到顶层，两端共用；桌面端真正需要不同的部分继续由下面的
+   @media (min-width: 769px) 覆盖。
+
+   为什么可以整段搬走：这 31 条规则的选择器在窄屏主块内没有任何其它规则命中
+   （脚本核对：0 处冲突）；而在主块之后、新位置之前也不存在同名规则（桌面块
+   与 B1 块都锁在 min-width:769px 里，窄屏本来就拿不到）。因此移动前后两档
+   视口的计算样式应当一致 —— 六档实测已逐项核对。
+   ============================================================ */
+.detail-view .cover-inner {
+  width: min(58vw, 36vh, 240px);
+  height: min(58vw, 36vh, 240px);
+  border-radius: 50%;
+  background: #ffeef4;
+  box-shadow: inset 0 0 0 2px #fff8f9, 0 12px 30px rgba(203, 106, 128, 0.28);
+}
+.detail-view .cover-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.detail-view .track-title {
+  font-size: 1.12rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+.detail-view .track-artist {
+  margin-top: 2px;
+  font-size: 0.8rem;
+  color: #b5768c;
+}
+.detail-view .lyric-panel {
+  /* 搬出 .player-right 后，那边压制绝对定位的 position:relative 就不再生效，
+     基样式会把面板绝对定位，参照物正好是新加了 position:relative 的 .fs-wrap，
+     于是它整个压在唱片上 —— 这里显式钉回正常流 */
+  position: relative;
+  inset: auto;
+  width: auto;
+  z-index: auto;
+  flex: 1 1 auto;
+  height: auto;
+  max-height: none !important;
+  margin: 0;
+  padding: 4px 6px;
+  /* 歌词页里这块面板要能滚；上下用遮罩淡出，不留硬边 */
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  mask-image: linear-gradient(180deg, transparent 0, #000 14%, #000 82%, transparent 100%);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 14%, #000 82%, transparent 100%);
+}
+.detail-view .lyric-panel .lyr-line {
+  white-space: normal;
+  text-overflow: clip;
+  text-align: center;
+  font-size: 0.94rem;
+  line-height: 1.95;
+  /* 原本高亮/变暗规则都锁在 .player-right 里，搬过来会整套失效，这里补齐 */
+  opacity: 0.58;
+  color: #b98297;
+  transition: opacity 0.25s ease, color 0.25s ease, transform 0.25s ease;
+}
+.detail-view .lyric-panel .lyr-line.active {
+  opacity: 1;
+  color: #b8406a;
+  font-size: 1.02rem;
+  font-weight: 700;
+  text-shadow: 0 1px 6px rgba(255, 255, 255, 0.9);
+}
+.detail-view .lyric-panel .lyr-line.active {
+  font-size: 1.02rem;
+}
+.fs-progress .progress-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0;
+  margin: 0.2rem 0 0;
+}
+.fs-progress .progress-area .time {
+  flex: 0 0 auto;
+  min-width: 40px;
+  font-size: 0.72rem;
+  color: #b77d8f;
+  font-variant-numeric: tabular-nums;
+}
+.fs-progress .progress-area .time:last-child {
+  text-align: right;
+}
+.fs-progress .progress-area .progress-bar-bg {
+  flex: 1 1 auto;
+  width: auto;
+  height: 6px;
+  box-shadow: inset 0 1px 3px rgba(177, 98, 125, 0.16);
+}
+.detail-view .progress-bar-bg {
+  height: 7px;
+}
+.detail-view .progress-fill {
+  border-radius: 10px;
+}
+.detail-view .controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2.4rem;
+  width: 100%;
+  padding: 0.2rem 0;
+}
+.detail-view .ctrl-btn {
+  width: 52px;
+  height: 52px;
+  border: 0;
+  border-radius: 50%;
+  font-size: 1.15rem;
+  background: #ffeef2;
+  color: #c45c7c;
+  box-shadow: 0 4px 10px rgba(165, 79, 99, 0.12);
+}
+.detail-view .ctrl-btn.play-main {
+  width: 74px;
+  height: 74px;
+  font-size: 1.7rem;
+  color: #fff;
+  background: linear-gradient(145deg, #f0a0ba, #e06a8f);
+  box-shadow: 0 10px 22px rgba(224, 106, 143, 0.4), 0 0 0 3px rgba(255, 182, 193, 0.38);
+}
+.fs-modes .extra-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+  width: 100%;
+  gap: 0.5rem;
+  margin: 0;
+}
+.fs-modes .extra-actions .mode-strip {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 0.4rem;
+  margin: 0;
+}
+.fs-modes .extra-actions .mode-chip {
+  padding: 0.3rem 0.6rem !important;
+  font-size: 0.72rem !important;
+  gap: 5px;
+}
+.fs-modes .extra-actions .mode-chip i {
+  font-size: 0.72rem;
+}
+.fs-modes .extra-actions .mixer {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  padding: 0;
+  gap: 0.4rem !important;
+}
+.fs-modes .extra-actions .mixer .volume-slider {
+  width: 72px !important;
+}
+.fs-modes .extra-actions .pl-drawer-trigger b {
+  font-size: 0.7rem;
+}
+.detail-view .fs-modes .extra-actions .mixer .volume-slider {
+  width: 88px !important;
+}
+.detail-view .mode-strip {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.detail-view .lyric-panel .lyr-line.active {
+  font-weight: 700;
+  transform: scale(1.04);
+}
+.detail-view .progress-fill {
+  position: relative;
+  background: linear-gradient(90deg, var(--mp-a, #f4a9c1), var(--mp-b, #e06a8f));
+  box-shadow: 0 0 10px rgba(224, 106, 143, 0.45);
+}
+.detail-view .progress-fill::after {
+  content: '';
+  position: absolute;
+  right: -7px;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  margin-top: -7px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 6px rgba(224, 106, 143, 0.55);
+}
+.detail-view .progress-bar-bg {
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.75);
+}
+.detail-view .ctrl-btn:active {
+  transform: scale(0.92);
+}
+
+/* ============================================================
+   阶段 B1：桌面端全屏播放页
+   ------------------------------------------------------------
+   以前音乐页的二级播放页只在 ≤768px 存在：.fs-* 样式全在上面那个大
+   媒体查询里，而且「隔离兜底」还显式把 .fs-wrap 在 ≥769px 设为
+   display:none。实测 desktop 点封面 detailOpen=false —— 桌面端根本
+   没有播放页入口。
+   现在补一份桌面版式：二级页本身是 880px 居中一栏（见 .detail-view
+   的桌面块），这里把搬进来的真实节点排成「左唱片 / 右信息」两栏。
+   搬移导致的 .player-right 前缀失效，同样在这里补齐。
+   ============================================================ */
+@media (min-width: 769px) {
+  .fs-wrap {
+    position: relative;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: minmax(200px, 280px) minmax(0, 1fr);
+    grid-template-areas:
+      "top      top"
+      "cover    meta"
+      "cover    lyrics"
+      "cover    progress"
+      "cover    controls"
+      "modes    modes";
+    align-content: start;
+    gap: 10px 30px;
+    min-height: 0;
+    padding: 20px 26px 26px;
+    box-sizing: border-box;
+    background: linear-gradient(150deg, var(--mp-a, #ffd7e6) 0%, var(--mp-b, #ffeef4) 100%);
+  }
+  .fs-wrap::before {
+    content: '';
+    position: absolute;
+    inset: -18px;
+    background-image: var(--mp-cover, none);
+    background-size: cover;
+    background-position: center;
+    filter: blur(26px) saturate(1.2);
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  .fs-wrap::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(170deg, rgba(255, 249, 247, 0.52) 0%, rgba(255, 240, 246, 0.7) 56%, rgba(255, 249, 247, 0.86) 100%);
+    pointer-events: none;
+  }
+  .fs-wrap > * { position: relative; z-index: 1; }
+  .fs-top { grid-area: top; justify-content: flex-start; gap: 8px; }
+  .fs-hint { margin: 0 auto; font-size: 0.72rem; }
+  .fs-cover { grid-area: cover; align-self: start; justify-self: center; padding: 8px 0 0; overflow: visible; }
+  .fs-meta { grid-area: meta; text-align: left; }
+  .fs-lyrics {
+    grid-area: lyrics;
+    display: flex;
+    flex-direction: column;
+    min-height: 170px;
+    max-height: min(42vh, 320px);
+    padding: 6px 10px;
+    border-radius: 18px;
+    background: rgba(255, 250, 252, 0.66);
+    backdrop-filter: blur(4px);
+    overflow: hidden;
+  }
+  .fs-progress { grid-area: progress; padding: 0 2px; }
+  .fs-controls { grid-area: controls; display: flex; justify-content: flex-start; padding: 2px 0 0; }
+  .fs-modes { grid-area: modes; display: flex; justify-content: flex-start; padding-bottom: 2px; }
+
+  .detail-view .cover-inner {
+    width: min(240px, 100%);
+    height: min(240px, 100%);
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+    background: #ffeef4;
+    box-shadow: inset 0 0 0 2px #fff8f9, 0 12px 30px rgba(203, 106, 128, 0.28);
+  }
+  .detail-view .cover-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+  .detail-view .track-title { font-size: 1.35rem; line-height: 1.4; }
+  .detail-view .track-artist { margin-top: 2px; font-size: 0.85rem; color: #b5768c; }
+
+  /* 歌词面板：搬出 .player-right 后那套前缀规则失效，这里补回正常流 */
+  .detail-view .lyric-panel {
+    position: relative;
+    inset: auto;
+    width: auto;
+    z-index: auto;
+    flex: 1 1 auto;
+    height: auto;
+    max-height: none !important;
+    margin: 0;
+    padding: 4px 8px;
+    border: 0;
+    background: transparent;
+    text-align: center;
+    font-size: 0.95rem;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    mask-image: linear-gradient(180deg, transparent 0, #000 12%, #000 84%, transparent 100%);
+    -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 12%, #000 84%, transparent 100%);
+  }
+  .detail-view .lyric-panel .lyr-line {
+    white-space: normal;
+    text-overflow: clip;
+    line-height: 2.05;
+    opacity: 0.58;
+    color: #b98297;
+    transition: opacity 0.25s ease, color 0.25s ease;
+  }
+  .detail-view .lyric-panel .lyr-line.active { opacity: 1; color: #b8406a; font-weight: 700; font-size: 1.05rem; }
+
+  /* 进度区 / 控制行 / 音量行：同样是搬移导致的样式失效 */
+  .detail-view .fs-progress .progress-area,
+  .fs-progress .progress-area { display: flex; align-items: center; gap: 12px; padding: 0; margin: 0.2rem 0 0; }
+  .fs-progress .progress-area .time {
+    flex: 0 0 auto; min-width: 46px; font-size: 0.75rem;
+    color: #b77d8f; font-variant-numeric: tabular-nums;
+  }
+  .fs-progress .progress-area .time:last-child { text-align: right; }
+  .fs-progress .progress-area .progress-bar-bg { flex: 1 1 auto; width: auto; height: 7px; }
+  .detail-view .controls-row {
+    display: flex; align-items: center; justify-content: flex-start;
+    gap: 2.6rem; width: 100%; padding: 0.2rem 0;
+  }
+  .detail-view .ctrl-btn {
+    width: 52px; height: 52px; border: 0; border-radius: 50%;
+    font-size: 1.15rem; background: #ffeef2; color: #c45c7c;
+    box-shadow: 0 4px 10px rgba(165, 79, 99, 0.12);
+  }
+  .detail-view .ctrl-btn.play-main {
+    width: 74px; height: 74px; font-size: 1.7rem; color: #fff;
+    background: linear-gradient(145deg, #f0a0ba, #e06a8f);
+    box-shadow: 0 10px 22px rgba(224, 106, 143, 0.4), 0 0 0 3px rgba(255, 182, 193, 0.38);
+  }
+  .detail-view .fs-modes .extra-actions,
+  .fs-modes .extra-actions {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: nowrap; width: 100%; gap: 0.5rem; margin: 0;
+  }
+  .fs-modes .extra-actions .mode-strip {
+    display: flex; align-items: center; justify-content: center;
+    flex-wrap: nowrap; gap: 0.4rem; margin: 0;
+  }
+  .fs-modes .extra-actions .mode-chip { padding: 0.3rem 0.7rem !important; font-size: 0.72rem !important; gap: 5px; }
+  .fs-modes .extra-actions .mixer { display: flex; align-items: center; margin-left: auto; padding: 0; gap: 0.4rem !important; }
+  .fs-modes .extra-actions .mixer .volume-slider { width: 110px !important; }
+  .fs-modes .extra-actions .pl-drawer-trigger b { font-size: 0.7rem; }
+
+  /* 歌词模式：桌面只留一栏 */
+  .fs-wrap.lyric-mode { grid-template-columns: minmax(0, 1fr); grid-template-areas: "top" "lyrics" "progress" "controls" "modes"; }
+  .fs-wrap.lyric-mode .fs-cover { display: none !important; }
+  .fs-wrap.lyric-mode .fs-lyrics { min-height: 260px; max-height: none; }
+}
+
+/* ============================================================
    隔离兜底：手机端注入的节点，在网页端一律不参与布局
    ------------------------------------------------------------
    JS 在视口变宽时会把它们拆掉（AppShell.onMode），这里再兜一层：
@@ -1881,7 +2148,7 @@ html.has-appbar .app-bar {
   #fsOpenBtn,
   .fs-open-btn,
   #fsStage,
-  .fs-wrap,
+  /* .fs-wrap 已在阶段 B1 里补了桌面版式，不再隐藏 */
   #mpRecentStrip,
   .mp-strip,
   #nsPlatformChips {
@@ -2399,4 +2666,154 @@ html.in-shell #waifu-fab { bottom: 12px !important; }
     font-size: 1rem;
   }
 }
+
+/* ============================================================
+   归档页：入口 → 二级列表 → 三级详情
+   ------------------------------------------------------------
+   一级页：5 张入口卡（视频 / 音乐 / 外链 / 网盘 / 小工具）
+   二级页：该区块的紧凑列表行；无卡片的「小工具」区整块搬进来
+   三级页：原有的详情页 / 播放器（.mc-detail-wrap）
+
+   回退开关：全部挂在 html.arc-app 下。脚本没跑到就没有这个类，
+   页面退回改动前的长页原样。整块包在窄屏媒体查询里，桌面端不受影响。
+   ============================================================ */
+@media (max-width: 768px) {
+  /* 一级页：被收进二级页的区块先藏起来。
+     注意结构：.archive-sections 在第 371 行就闭合了，只有前 4 个区块在它里面；
+     「GitHub 开源项目」起的那 10 个小工具区是它的**兄弟**，直接挂在
+     .archive-container 下。所以这里要同时匹配两处，否则小工具区会留在
+     一级页上（实测踩过：只写 .archive-sections > 时 14 个区块只藏住 4 个）。
+     用直接子代选择器 —— 搬进二级页后不再匹配，自动恢复显示。 */
+  html.arc-app .archive-container > .archive-sections > .section-block,
+  html.arc-app .archive-container > .section-block {
+    display: none;
+  }
+
+  /* ---------- 一级页入口卡 ---------- */
+  .arc-entry-row {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .arc-entry {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 64px;
+    padding: 14px 16px;
+    border: 1px solid #ffdbe3;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #fff6f9, #ffffff);
+    box-sizing: border-box;
+    text-align: left;
+    cursor: pointer;
+  }
+  .arc-entry-ic {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: #ffe4ec;
+    color: #e06a8f;
+    font-size: 1.05rem;
+  }
+  .arc-entry-tx { flex: 1; min-width: 0; }
+  .arc-entry-tx b {
+    display: block;
+    color: #6b4453;
+    font-size: 0.95rem;
+    font-weight: 700;
+  }
+  .arc-entry-tx small {
+    display: block;
+    margin-top: 3px;
+    color: #b98ba0;
+    font-size: 0.74rem;
+    line-height: 1.4;
+  }
+  .arc-entry-go { flex: 0 0 auto; color: #d3a7b7; font-size: 0.8rem; }
+
+  /* ---------- 二级页：紧凑列表 ---------- */
+  .arc-page {
+    flex: 1;
+    min-height: 100%;
+    padding: 2px 14px calc(24px + var(--sab, 0px));
+    box-sizing: border-box;
+  }
+  .arc-list { display: flex; flex-direction: column; }
+
+  /* 区块分组小标题（外链页只有一个区块时也会显示，作为页内说明） */
+  .arc-sep {
+    margin: 4px 2px 8px;
+    color: #b98ba0;
+    font-size: 0.74rem;
+    letter-spacing: 0.5px;
+  }
+  .arc-sep:not(:first-child) { margin-top: 14px; }
+
+  /* 一行：图标 + 标题/元信息 + 箭头。一屏能放 5~6 条。 */
+  .arc-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 62px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    border: 1px solid #ffdbe3;
+    border-radius: 14px;
+    background: #fff;
+    box-sizing: border-box;
+    text-align: left;
+    cursor: pointer;
+  }
+  .arc-row-thumb {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+    background: #fff1f5;
+    color: #e06a8f;
+    font-size: 0.95rem;
+  }
+  .arc-row-tx { flex: 1; min-width: 0; }
+  .arc-row-tx b {
+    display: block;
+    color: #5d4a52;
+    font-size: 0.88rem;
+    font-weight: 600;
+    line-height: 1.35;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .arc-row-tx small {
+    display: block;
+    margin-top: 3px;
+    color: #b98ba0;
+    font-size: 0.72rem;
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .arc-row-go { flex: 0 0 auto; color: #d3a7b7; font-size: 0.75rem; }
+
+  /* 小工具区整块搬进来：去掉外边距贴满内容区 */
+  .arc-block { margin-bottom: 12px; }
+  .arc-block > * {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    max-width: 100% !important;
+  }
+}
+
 

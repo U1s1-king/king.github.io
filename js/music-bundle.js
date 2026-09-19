@@ -185,8 +185,11 @@ function formatTime(sec) { if(isNaN(sec)) return '0:00'; let m = Math.floor(sec/
 function showMsg(msg) { let t = document.getElementById('toastMsg'); t.textContent = msg; t.style.display='block'; setTimeout(()=>t.style.display='none',2000); }
 function escapeHtml(str) { if (str == null) return ""; return String(str).replace(/[&<>"]/g, function (m) { return m === "&" ? "&amp;" : m === "<" ? "&lt;" : m === ">" ? "&gt;" : "&quot;"; }); }
 /* ===== 真·频谱可视化 =====
- * 用 Web Audio 的 AnalyserNode 取真实频谱。audio.captureStream() 是「旁路取样」，
- * 不改动音频输出链路，所以跨域歌曲顶多是分析不到（自动降级为装饰动画），绝不会变静音。 */
+ * 用 Web Audio 的 AnalyserNode 取真实频谱，媒体源走 createMediaElementSource()
+ * （captureStream() 已弃用：实测轨道是 live 的，但 getByteFrequencyData 恒为 0，
+ *  详见 ensureAnalyser() 里的注释）。
+ * 这条链路唯一「出错就没声音」的地方是：建好 source 之后必须显式 connect 回
+ * audioCtx.destination。改这里之前一定要实机听一遍。 */
 let audioCtx = null;
 let analyserNode = null;
 let freqData = null;
@@ -194,6 +197,12 @@ let spectrumRaf = null;
 let spectrumSilent = 0;
 let spectrumPhase = 0;
 let spectrumMax = 44;
+/* 频谱参数：原先散在四处（128 / 0.78 / 40 / 1000）。集中在这里，调参时不用满文件找。 */
+const SPECTRUM_FFT_SIZE = 128;          /* 频率桶数 = fftSize/2 = 64 */
+const SPECTRUM_SMOOTHING = 0.78;        /* 越大越稳、越迟钝 */
+const SPECTRUM_SILENT_FRAMES = 40;      /* 连续多少帧全 0 就判定「拿不到真实频谱」 */
+const SPECTRUM_CURVE = 1.35;            /* 低频拉伸指数：让左边柱子更活跃 */
+const ANALYSER_RETRY_MS = 1000;         /* 建分析器失败后的重试间隔 */
 function prefersReducedMotion() {
   try { return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches); } catch (e) { return false; }
 }
@@ -229,7 +238,7 @@ function ensureAnalyser() {
      那样分析器就永远建不起来（表现就是频谱不跳）。建好之后真正的 FFT 数据会在出声时自然到来。 */
   var now = Date.now();
   if (now < analyserRetryAt) return null;           /* 失败后每秒重试，不永久放弃 */
-  analyserRetryAt = now + 1000;
+  analyserRetryAt = now + ANALYSER_RETRY_MS;
   try {
     if (!audioCtx) audioCtx = new Ctx();
     if (audioCtx.state === "suspended") { try { audioCtx.resume(); } catch (e) {} }
@@ -238,8 +247,8 @@ function ensureAnalyser() {
       mediaSourceNode.connect(audioCtx.destination);   /* 不接回去就没声音 */
     }
     analyserNode = audioCtx.createAnalyser();
-    analyserNode.fftSize = 128;
-    analyserNode.smoothingTimeConstant = 0.78;
+    analyserNode.fftSize = SPECTRUM_FFT_SIZE;
+    analyserNode.smoothingTimeConstant = SPECTRUM_SMOOTHING;
     mediaSourceNode.connect(analyserNode);
     freqData = new Uint8Array(analyserNode.frequencyBinCount);
   } catch (e) {
@@ -258,14 +267,14 @@ function renderRealSpectrum() {
   analyserNode.getByteFrequencyData(freqData);
   var sum = 0;
   for (var i = 0; i < freqData.length; i++) sum += freqData[i];
-  if (sum === 0) { spectrumSilent++; return spectrumSilent <= 40; }
+  if (sum === 0) { spectrumSilent++; return spectrumSilent <= SPECTRUM_SILENT_FRAMES; }
   spectrumSilent = 0;
   var n = spectrumBars.length;
   var usable = Math.floor(freqData.length * 0.72);
   var levels = [];
   for (var b = 0; b < n; b++) {
-    var from = Math.floor(Math.pow(b / n, 1.35) * usable);
-    var to = Math.max(from + 1, Math.floor(Math.pow((b + 1) / n, 1.35) * usable));
+    var from = Math.floor(Math.pow(b / n, SPECTRUM_CURVE) * usable);
+    var to = Math.max(from + 1, Math.floor(Math.pow((b + 1) / n, SPECTRUM_CURVE) * usable));
     var peak = 0;
     for (var k = from; k < to && k < usable; k++) if (freqData[k] > peak) peak = freqData[k];
     levels.push(3 + (peak / 255) * (spectrumMax - 4));
@@ -293,7 +302,10 @@ function spectrumLoop() {
 function startSpectrum() {
   if (audioCtx && audioCtx.state === "suspended") { try { audioCtx.resume(); } catch (e) {} }
   analyserRetryAt = 0;
-  stallRetry = 0;
+  /* 这里**不能**再清 stallRetry。它同时挂在 audio 的 play 事件上，暂停后
+     继续播放也会走到这里；以前每次 startSpectrum 都把计数清零，于是
+     armStallWatch 里那道 stallRetry >= 3 的上限永远到不了 —— 一个真正挂死的
+     源会被无限重拉，用户看到的是「一直转圈」。计数只在换曲时重置。 */
   armStallWatch();
   if (spectrumRaf) return;
   spectrumSilent = 0;
@@ -311,6 +323,10 @@ function stopSpectrum() {
    这里在开播后盯一会儿，卡住就重新拉一次源，最多两次。 */
 let stallTimer = null;
 let stallRetry = 0;
+/* 卡死判定：开播后 STALL_CHECK_MS 还没进入可播放状态、进度也是 0，就当 CDN 把
+   请求挂住了；最多重拉 STALL_MAX_RETRY 次。数值以前散在代码里，这里收成常量。 */
+const STALL_CHECK_MS = 6000;
+const STALL_MAX_RETRY = 3;
 function clearStallWatch() {
   if (stallTimer) { clearTimeout(stallTimer); stallTimer = null; }
 }
@@ -321,7 +337,7 @@ function armStallWatch() {
     try {
       if (!audio || audio.paused) return;
       if (audio.readyState >= 2 && audio.currentTime > 0) return;   /* 正常出声，收工 */
-      if (stallRetry >= 3) return;
+      if (stallRetry >= STALL_MAX_RETRY) return;
       stallRetry++;
       /* 第二次起加一个一次性查询串：CDN 边缘偶尔会把某个 range 请求挂死，
          换个 URL 就能重新命中一个健康的边缘节点。 */
@@ -336,7 +352,7 @@ function armStallWatch() {
       var p = audio.play(); if (p && p.catch) p.catch(function () {});
       armStallWatch();                                             /* 再盯一轮 */
     } catch (e) {}
-  }, 6000);
+  }, STALL_CHECK_MS);
 }
 /* ===== 收藏 / 歌单删除（UX 增强；删除为本次访问生效，刷新后歌单还原）===== */
 let favOnly = false;
@@ -397,6 +413,24 @@ function restoreUserPlaylist() {
   }
   return added;
 }
+/* 释放某条曲目自己持有的 objectURL（本地上传 / 解锁出来的歌才有）。
+   一条曲目可能被多处引用，所以先比对 path 是不是同一个 url：
+   当前正在播的那条如果被 revoke，<audio> 会当场断流，
+   所以调用方要保证只在「这条真的要从歌单消失」时调它。 */
+function releaseObjectUrl(song) {
+  if (!song || !song._objectUrl) return;
+  var u = song._objectUrl;
+  song._objectUrl = null;
+  /* 正在播的这条先停下并摘掉 src，否则 revoke 之后 audio 会报错 */
+  try {
+    if (audio && audio.src === u) {
+      audio.pause();
+      audio.removeAttribute('src');
+      audio.load();
+    }
+  } catch (e) {}
+  try { URL.revokeObjectURL(u); } catch (e) {}
+}
 function removeUploadedRecord(idbKey) {
   if (!idbKey) return Promise.resolve();
   return openDB().then(function (db) {
@@ -416,6 +450,7 @@ function removeFromPlaylist(idx) {
   var removed = playlist[idx];
   var name = removed ? removed.name : "";
   if (removed && removed.idbKey) removeUploadedRecord(removed.idbKey);
+  releaseObjectUrl(removed);
   playlist.splice(idx, 1);
   if (currentIndex > idx) currentIndex--;
   saveUserPlaylist();
@@ -530,7 +565,22 @@ function updateList() {
       var fav = el.closest(".track-fav");
       if (fav) { e.stopPropagation(); toggleFav(playlist[parseInt(fav.dataset.fav, 10)]); return; }
       var item = el.closest(".track-item");
-      if (item) { var idx = parseInt(item.dataset.idx, 10); if (!isNaN(idx)) play(idx); }
+      if (item) {
+        var idx = parseInt(item.dataset.idx, 10);
+        if (!isNaN(idx)) {
+          play(idx);
+          /* 选完歌把歌单收起来。
+             原来不关：play() 里会 updateList() → #playlistContainer.innerHTML 整体重建，
+             而 .pl-drawer.show .track-item 上挂着 0.34s 的逐条滑入动画
+             （css/music.css:244-256），于是每点一首歌整个列表就重播一次入场动画，
+             看着像「抽屉刷新了一下」而不是「切歌完成、回到播放页」。
+             关抽屉用页面里那份实现（music.html 内联脚本挂的 window.sakuraPlDrawer），
+             不在这里重复一套开关逻辑。桌面端没有这个抽屉，取不到就静默跳过。 */
+          try {
+            if (window.sakuraPlDrawer && window.sakuraPlDrawer.close) window.sakuraPlDrawer.close();
+          } catch (err) {}
+        }
+      }
     });
   }
   var act = playlistContainer.querySelector(".track-item.active");
@@ -550,15 +600,20 @@ let s = playlist[currentIndex];
 trackNameSpan.innerText = s.name;
 trackArtistSpan.innerText = s.artist;
 coverImg.src = DEFAULT_COVER;
+stallRetry = 0;                     /* 换曲：卡死重试计数归零（见 startSpectrum 注释） */
 audio.src = s.path;
 audio.load();
 audio.playbackRate = playbackRateVal;
 audio.addEventListener('loadedmetadata', function onLoad() {
 playFailCount = 0;
 totalDurSpan.innerText = formatTime(audio.duration);
-if(playlist[currentIndex] && !playlist[currentIndex].durFixed) {
-playlist[currentIndex].dur = formatTime(audio.duration);
-playlist[currentIndex].durFixed = true;
+/* 必须用本次闭包抓到的 s，不能读 currentIndex：
+   快速连点两首歌时，A 的 loadedmetadata 可能迟到，此刻 currentIndex 已经是 B，
+   读全局就会把 A 的时长写进 B 的 dur —— 歌单里 B 的时长显示成 A 的。
+   （s 在 564 行已经取好，这里直接用。） */
+if(s && !s.durFixed) {
+s.dur = formatTime(audio.duration);
+s.durFixed = true;
 updateList();
 }
 audio.removeEventListener('loadedmetadata', onLoad);
@@ -598,6 +653,7 @@ var s = playlist[idx];
 trackNameSpan.innerText = s.name;
 trackArtistSpan.innerText = s.artist;
 coverImg.src = DEFAULT_COVER;
+stallRetry = 0;
 audio.src = s.path;
 audio.load();
 /* 续播也要把歌词拉回来：否则打开页面直接按播放，歌词框会一直停在初始占位文案 */
@@ -737,20 +793,45 @@ let name = f.name.replace(/\.[^/.]+$/, '');
 let temp = new Audio();
 temp.src = url;
 let dur = '0:00';
+/* 等真实的 loadedmetadata，不再用 400ms 抢跑。
+   原来 setTimeout(resolve, 400) 对本地 flac（十几 MB）几乎必然先到 ——
+   元数据还没解析完就 resolve，dur 恒为 '0:00'，歌单里每首本地歌都显示 0:00。
+   现在以 loadedmetadata 为准，5s 只是兜底（个别损坏/超长文件不该卡住整个上传流程）；
+   两条路径都摘监听器，避免超时之后回调又跑一次。 */
 await new Promise(resolve => {
-temp.addEventListener('loadedmetadata', () => { dur = formatTime(temp.duration); resolve(); }, { once: true });
-setTimeout(resolve, 400);
+let done = false;
+function finish() {
+if (done) return;
+done = true;
+try { temp.removeEventListener('loadedmetadata', onMeta); } catch (err) {}
+try { temp.removeEventListener('error', finish); } catch (err) {}
+resolve();
+}
+function onMeta() { dur = formatTime(temp.duration); finish(); }
+temp.addEventListener('loadedmetadata', onMeta);
+temp.addEventListener('error', finish);
+setTimeout(finish, 5000);
 });
+/* 试听用的临时 objectURL 用完即弃：它只是拿来读时长的，
+   真正的播放源是下面 push 进歌单的那一个（同一个 blob 另建）。
+   不 revoke 的话每次重开上传弹窗重选文件都会再攒一批。 */
+try { temp.removeAttribute('src'); temp.load(); } catch (err) {}
+try { URL.revokeObjectURL(url); } catch (err) {}
 try {
 await addUploadedFile(f, name, '本地音乐喵');
 } catch (e) {
 console.warn('保存到 IndexedDB 失败：', e);
 showMsg('缓存保存失败，本次播放不受影响，但刷新后可能需要重新上传');
 }
+/* 歌单里这条要用「自己的一份」objectURL，不能复用上面那个临时 url ——
+   临时 url 已经 revoke 了。同时把 url 记在 _objectUrl 上，
+   这样从歌单删除 / 清空缓存时才能把它一并 revoke（见 removeFromPlaylist）。 */
+var playUrl = URL.createObjectURL(f);
 playlist.push({
 name: name,
 artist: '本地音乐喵',
-path: url,
+path: playUrl,
+_objectUrl: playUrl,
 dur: dur,
 durFixed: true,
 cover: null,
@@ -768,7 +849,13 @@ document.getElementById('filePreviewList').innerHTML = '';
 document.getElementById('fileInput').value = '';
 showMsg(` 成功添加 ${addedCount} 首歌曲~ ヽ(=^･ω･^=)丿`);
 };
-window.onclick = (e) => { if(e.target.classList.contains('modal-global')) e.target.style.display = 'none'; };
+/* 事件委托取代 window.onclick：赋值式 handler 会顶掉页面上任何别的
+   window.onclick（本站历史上就踩过一次），而且只在冒泡到 window 时才生效。
+   换成 document 上的监听，语义完全一样，但不会互相覆盖。 */
+document.addEventListener('click', function (e) {
+  var t = e.target;
+  if (t && t.classList && t.classList.contains('modal-global')) t.style.display = 'none';
+});
 playBtn.addEventListener('click', playPause);
 prevBtn.addEventListener('click', prev);
 nextBtn.addEventListener('click', next);
@@ -862,10 +949,15 @@ records.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
 let loadedCount = 0;
 for (let rec of records) {
 let url = URL.createObjectURL(rec.file);
+/* 记住这条 url 归本曲目所有：loadLocalSongs 每次进页面都会重新建一批，
+   以前从不释放 —— 本地歌越多、进出页面越频繁，内存里堆的 blob 越多
+   （每个都等于整首音频的大小）。记在 _objectUrl 上，
+   删除 / 清空缓存时由 releaseObjectUrl() 统一回收。 */
 playlist.push({
 name: rec.name,
 artist: rec.artist || '本地音乐喵',
 path: url,
+_objectUrl: url,
 dur: '0:00',
 durFixed: false,
 cover: null,
@@ -886,6 +978,10 @@ document.getElementById('clearUploadCacheBtn')?.addEventListener('click', async 
 if (!confirm('确定要清空所有已上传的本地音乐缓存吗？')) return;
 try {
 await clearUploadCache();
+/* 清缓存 = 这些曲目真的要从歌单消失，顺手把各自的 objectURL 收掉。
+   被过滤掉的那批里，只要当前正在播的不是它们中的一条，
+   releaseObjectUrl 就不会碰 audio（它内部比对 audio.src）。 */
+playlist.filter(s => s.isUserUploaded).forEach(releaseObjectUrl);
 playlist = playlist.filter(s => !s.isUserUploaded);
 if (currentIndex >= playlist.length) currentIndex = 0;
 if (playlist.length > 0) {
@@ -956,12 +1052,20 @@ return String(s).replace(/[&<>]/g, function (m) {
 return m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;';
 });
 }
+var WORKS_PREVIEW = 12;
+var worksExpanded = false;
+var DUR_KEY = 'sakuraDurMap';
+function durMap() { try { var m = JSON.parse(localStorage.getItem(DUR_KEY) || '{}'); return m && typeof m === 'object' ? m : {}; } catch (e) { return {}; } }
+function durSave(m) { try { localStorage.setItem(DUR_KEY, JSON.stringify(m)); } catch (e) {} }
+function fmtSec(sec) { sec = Math.round(sec); if (!isFinite(sec) || sec <= 0) return ''; var m = Math.floor(sec / 60), s = sec % 60; return m + ':' + (s < 10 ? '0' + s : s); }
 function renderWorks(filter) {
-var data = filter === 'all' ? works : works.filter(function (w) { return w.artist === filter; });
-if (data.length === 0) {
+var all = filter === 'all' ? works : works.filter(function (w) { return w.artist === filter; });
+if (all.length === 0) {
 grid.innerHTML = '<div class="empty-works"><i class="fas fa-spa" style="font-size:2rem;opacity:0.5;"></i><p style="margin-top:10px;">🌸 没有找到作品喵～</p></div>';
 return;
 }
+var limit = worksExpanded ? all.length : Math.min(WORKS_PREVIEW, all.length);
+var data = all.slice(0, limit);
 var html = '';
 data.forEach(function (w, idx) {
 html += '<div class="work-card" data-idx="' + w._idx + '">' +
@@ -978,6 +1082,14 @@ html += '<div class="work-card" data-idx="' + w._idx + '">' +
 '</div></div></div>';
 });
 grid.innerHTML = html;
+if (limit < all.length) {
+var more = document.createElement('button');
+more.type = 'button';
+more.className = 'works-more';
+more.innerHTML = '<i class="fas fa-chevron-down"></i> 展开全部 ' + all.length + ' 首';
+more.addEventListener('click', function () { worksExpanded = true; renderWorks(currentFilter); });
+grid.appendChild(more);
+}
 var cards = grid.querySelectorAll('.work-card');
 Array.prototype.forEach.call(cards, function (el) {
 el.addEventListener('click', function () {
@@ -1011,6 +1123,7 @@ tab.addEventListener('click', function () {
 Array.prototype.forEach.call(filterTabs.querySelectorAll('.filter-tab'), function (t) { t.classList.remove('active'); });
 this.classList.add('active');
 currentFilter = this.dataset.filter;
+worksExpanded = false;
 renderWorks(currentFilter);
 });
 });
@@ -1028,15 +1141,66 @@ if (parts.length === 2) totalSec += parseInt(parts[0]) * 60 + parseInt(parts[1])
 var m = Math.floor(totalSec / 60), s = totalSec % 60;
 document.getElementById('statsTotalDuration').textContent = m + ':' + (s < 10 ? '0' + s : s);
 }
+function paintDurations() {
+works.forEach(function (w) {
+if (!w.dur || w.dur === '0:00') return;
+var el = grid.querySelector('.work-card[data-idx="' + w._idx + '"] .card-dur');
+if (el) el.innerHTML = '<i class="far fa-clock"></i> ' + w.dur;
+});
+}
+/* 真实时长懒加载：官方曲库 128 首在 data/playlist.json 里只有文件名，没有
+   任何时长字段，所以卡片与「总时长」以前恒为 0:00（只有真正播放过一首之后
+   本文件才会把 audio.duration 写回 s.dur）。
+   卡片页首次打开后用隐藏 <audio preload=metadata> 逐个读真实时长：
+   · 并发 3，单个 12s 超时，失败即跳过（不阻塞任何交互）
+   · 结果按 path 缓存进 localStorage，第二次打开零请求
+   · 每补 4 首刷一次卡片与统计，数字可见地长出来 */
+var durLoading = false;
+function loadDurations() {
+if (durLoading) return;
+try { if (navigator.connection && navigator.connection.saveData) return; } catch (e) {}
+var map = durMap();
+var pending = works.filter(function (w) { return w.path && !map[w.path]; });
+if (!pending.length) return;
+durLoading = true;
+var i = 0, alive = 0, done = 0;
+function finish() { durLoading = false; durSave(map); paintDurations(); updateStats(); }
+function next() {
+if (i >= pending.length) { if (alive === 0) finish(); return; }
+var w = pending[i++];
+alive++;
+var el = new Audio();
+var settled = false;
+function settle(sec) {
+if (settled) return;
+settled = true;
+alive--; done++;
+if (sec > 0) { map[w.path] = Math.round(sec); w.dur = fmtSec(sec); }
+try { el.removeAttribute('src'); el.load(); } catch (e) {}
+if (done % 4 === 0) { durSave(map); paintDurations(); updateStats(); }
+next();
+}
+el.preload = 'metadata';
+el.addEventListener('loadedmetadata', function () { settle(el.duration); });
+el.addEventListener('error', function () { settle(0); });
+setTimeout(function () { settle(0); }, 12000);
+try { el.src = w.path; } catch (e) { settle(0); }
+}
+for (var c = 0; c < 3; c++) next();
+}
 function initWorks() {
 if (typeof playlist === 'undefined') return;
+var cachedMap = durMap();
 works = playlist.map(function (item, idx) {
-return { name: item.name, artist: item.artist, path: item.path, dur: item.dur || '0:00', _idx: idx };
+var cached = item.path ? cachedMap[item.path] : null;
+return { name: item.name, artist: item.artist, path: item.path, dur: item.dur || (cached ? fmtSec(cached) : '0:00'), _idx: idx };
 });
 currentFilter = 'all';
+worksExpanded = false;
 buildFilters();
 renderWorks('all');
 updateStats();
+setTimeout(loadDurations, 1200);
 }
 Array.prototype.forEach.call(document.querySelectorAll('.page-tab'), function (tab) {
 tab.addEventListener('click', function () {
@@ -1249,6 +1413,7 @@ audio.removeEventListener('error', onErr);
 tryNext();
 };
 audio.addEventListener('error', onErr, { once: true });
+stallRetry = 0;
 audio.src = u;
 var pr = audio.play();
 if (pr && pr.catch) pr.catch(function () {});
@@ -7389,6 +7554,7 @@ var isKgm = /\.kgm[a]?$/i.test(file.name);
 function bindItem(url, displayName, base, blobOrFile, isKgm) {
 item.querySelector('[data-url]').addEventListener('click', function () {
 if (typeof audio !== 'undefined' && audio) {
+stallRetry = 0;
 audio.src = this.dataset.url;
 audio.play().catch(function () {});
 if (typeof isPlaying !== 'undefined') isPlaying = true;
@@ -7403,7 +7569,10 @@ try {
 if (typeof addUploadedFile === 'function') {
 addUploadedFile(blobOrFile, base, isKgm ? '解锁音乐' : '上传音乐').then(function () {
 if (typeof playlist !== 'undefined' && typeof updateList === 'function') {
-playlist.push({ name: base, artist: isKgm ? '解锁音乐' : '上传音乐', path: URL.createObjectURL(blobOrFile), uploaded: true });
+/* 解锁/试听加入歌单：这里也要记 _objectUrl，
+   否则每次解锁一批文件都会永久占住一份内存（blob 大小 = 整首音频）。 */
+var _unlockUrl = URL.createObjectURL(blobOrFile);
+playlist.push({ name: base, artist: isKgm ? '解锁音乐' : '上传音乐', path: _unlockUrl, _objectUrl: _unlockUrl, durFixed: false, uploaded: true });
 updateList();
 }
 if (typeof showMsg === 'function') showMsg('已加入歌单喵～');

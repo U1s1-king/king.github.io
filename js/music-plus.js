@@ -709,18 +709,19 @@
       } catch (err) { toast('复制失败喵~'); }
     });
 
-    /* 点歌词面板、点唱片一样能进歌词页。处理函数挂在节点上，
-       视口切回手机端时要能摘掉，不残留。 */
+    /* 点歌词面板能进歌词页。处理函数挂在节点上，视口切回手机端时要能摘掉，不残留。 */
     panel.__mpClick = openLyricPage;
     panel.addEventListener('click', panel.__mpClick);
     panel.setAttribute('title', '点一下打开歌词页');
-    var disc = byId('coverInner');
-    if (disc) {
-      disc.__mpClick = openLyricPage;
-      disc.style.cursor = 'pointer';
-      disc.setAttribute('title', '点一下打开歌词页');
-      disc.addEventListener('click', disc.__mpClick);
-    }
+    /* 点唱片由 music-app.js 负责（进全屏播放页），这里**不再**绑定。
+       原来两边都往 #coverInner 挂 click：
+         music-app.js  → openFull()       （进全屏播放页）
+         music-plus.js → openLyricPage()  （进歌词页）
+       一次点击两个都会触发，而两边都带 if (AppShell.detailOpen()) return 守卫，
+       于是谁先执行谁赢、另一个被静默吞掉 —— 用户点封面时行为随机，
+       表现为「有时进播放页、有时进歌词页」，是最难查的一类失败。
+       已定：点封面 = 进全屏播放页；歌词页在播放页内由 fs-lyric 按钮切换
+       （music-plus.js:559-584 的 lyric-mode），不再需要第二个封面入口。 */
   }
 
     function initMobile() {
@@ -786,9 +787,11 @@
     var panel = q('.player-right .lyric-panel') || byId('lyricBox');
     dropClick(panel);
     if (panel) { panel.removeAttribute('title'); panel.style.cursor = ''; }
-    var disc = byId('coverInner');
-    dropClick(disc);
-    if (disc) { disc.removeAttribute('title'); disc.style.cursor = ''; }
+    /* #coverInner 归 music-app.js 管（点封面进全屏播放页），这里不再清理它。
+       原先这里会 removeAttribute('title') + cursor='' —— 那是为 music-plus 自己
+       挂的封面入口做收尾。既然本文件已不再绑定封面，继续清理就会去动
+       别的模块的节点：music-app 的 openFull 入口还在，title/cursor 被抹掉
+       属于越权修改，之后没有任何地方会补回来。 */
     var nameEl = byId('trackName');
     if (nameEl && nameEl.__mpFavObs) { nameEl.__mpFavObs.disconnect(); nameEl.__mpFavObs = null; }
   }

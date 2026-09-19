@@ -102,11 +102,16 @@
      音乐页自己还有一层更细的拆装（见 js/music-app.js / music-plus.js）。 */
   var NARROW_ONLY = [
     '.mgrid-wrap', '.mgrid-head', '.mgrid', '.mgrid-item',
+    /* 工具页一级页的分类折叠面板与二级页内容：窄屏注入，变宽必须拆掉 */
+    '.tcat-wrap', '.tcat-head', '.tcat', '.tcat-btn', '.tcat-body',
+    '.tcat-inner', '.tcat-item',
     '.gb-note', '.gb-compose',
     '.pc-foot', '.pc-teaser', '.pc-more',
     /* 日记页的工具卡入口：窄屏注入，变宽必须拆掉，否则网页端会多出一排
        没有样式的按钮（它们的样式写在 @media (max-width:768px) 里）。 */
     '.jrn-entry-row', '.jrn-entry', '.jrn-subentry',
+    /* 归档页的入口卡与二级列表行：同样只在窄屏注入 */
+    '.arc-entry-row', '.arc-entry', '.arc-row', '.arc-sep',
     '#fsOpenBtn', '#nsPlatformChips'
   ];
   function clearNarrowOnly() {
@@ -120,8 +125,10 @@
     r.classList.remove('gb-compose-mode');
     r.classList.remove('gb-degraded');
     r.classList.remove('tool-grid');
+    r.classList.remove('tool-cats');
     r.classList.remove('pc-list');
     r.classList.remove('jrn-app');
+    r.classList.remove('arc-app');
     r.classList.remove('kb-open');
     r.classList.remove('bar-hidden');
   }
@@ -154,11 +161,33 @@
   }
 
   /* 竖向拖拽关闭 + 横向滑动切换，只装一次手势逻辑，避免两个方向打架。
-     axis 在第一次移动超过 8px 时才锁定，之后不再改，滑动就不会「抖」。 */
+     axis 在第一次移动超过 8px 时才锁定，之后不再改，滑动就不会「抖」。
+
+     ── 控件豁免（手势不能抢走控件自己的拖动）──
+     实测问题：手势监听挂在**整个详情层**上，而它是 .progress-area（进度条）、
+     .volume-slider（音量）、以及以后的 slider 等控件的祖先。
+     手指在进度条上横向拖动时，位移一旦超过 8px 就被锁成 axis='x'，
+     整页跟着 translateX 平移；松手若超过 60px 还会**直接切歌**，
+     进度条反而没拖成。音量滑块同理（横向拖动 = 调音量，却被当成切歌）。
+
+     解法：起手点落在「自己会处理横向拖动」的控件里就整段放行 ——
+     不锁 axis、不写 transform、不切歌。用 closest() 判定，所以
+     手指从进度条内部任何位置起手都能命中。
+     这些控件都靠 pointer 事件自己 seek/改值（见 music-bundle.js:776-801），
+     这里让路即可，不需要知道它们是谁。 */
+  var GESTURE_EXEMPT = 'input[type="range"], .progress-bar-bg, .progress-area, [data-no-swipe]';
+  function isExempt(target) {
+    try {
+      return !!(target && target.closest && target.closest(GESTURE_EXEMPT));
+    } catch (e) { return false; }
+  }
+
   function bindGestures(el, opts) {
     var x0 = 0, y0 = 0, dx = 0, dy = 0, axis = '', dragging = false;
     el.addEventListener('touchstart', function (e) {
       if (e.touches.length !== 1) { dragging = false; return; }
+      /* 起手在豁免控件里：整段手势不参与，交给控件自己处理 */
+      if (isExempt(e.target)) { dragging = false; return; }
       dragging = true; axis = ''; dx = 0; dy = 0;
       x0 = e.touches[0].clientX; y0 = e.touches[0].clientY;
       el.style.transition = 'none';

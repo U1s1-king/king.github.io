@@ -7,9 +7,14 @@
         如果某条规则没法满足这一条，就说明它不该放这里。
      2. APP 专属的东西（刘海屏安全区、顶栏、迷你播放条、iframe 外壳）不放这，
         放 css/app.css，用 html.is-app 作用域隔离。
-     3. 加载顺序：style.css → sidebar.css → 各页 css → anim.css → mobile.css。
-        本文件最后加载，同权重下天然赢；只有盖行内样式或盖前面带 !important
-        的规则时才需要 !important，别滥用。
+     3. 加载顺序：style.css → sidebar.css → 各页 css → anim.css → mobile.css → app.css。
+        注意：**app.css 才是最后加载的那个**（校验于 music.html:26-29 的 <link> 顺序），
+        所以同权重平手时赢的是 app.css，不是本文件。
+        旧注释写「本文件最后加载」是错的 —— 这个差别是会咬人的：
+        app.css 里给 .pl-drawer/.pl-drawer-mask 提 z-index（10006/10005，把抽屉
+        抬到二级页之上）之所以生效，正是因为它在最后。若哪天有人调整 <link> 顺序，
+        那些提升会静默失效，抽屉又钻回全屏播放页背后。
+        本文件里想赢 app.css 的规则，要么提高特异性，要么带 !important。
 
    层级(z-index)一览，改之前先看这里，别再随手加 99999：
      99999  #offline-bar / .js-lb-mask / #page-progress / #sakura-loading-layer
