@@ -560,10 +560,12 @@
       false,
     );
     else if (!auto) loadingStart('正在加载更多…', true);
-    /* 搜索时不带 _src：带了会让网关把「只打支持搜索的源」这条过滤短路掉，
-       把用户没选的源排到搜索第一位（详见 detail() 里的同一处说明）。 */
+    /* ⚠ _src 必须照发：它是「这条记录来自哪个采集源」的唯一定位信息。
+       曾经想过搜索时不带 _src（以为能让网关多打源），结果详情请求的 ids 会打到
+       别的源上 —— vod_id 只在单个源内唯一，跨源同号是另一部片，表现就是
+       「有些片源点进去拿不到视频」。列表里的 _src 和详情请求的 _src 必须一致。 */
     var q = { ac: 'videolist', t: state.t, pg: state.pg, wd: state.kw, pick: state.pick ? 1 : '' };
-    if (!state.kw) q._src = state.src;
+    q._src = state.src;
     apiGet(q)
       .then(function (d) {
         /* 动画最少露 500ms：太快反而像闪一下，看不清发生了什么 */
@@ -640,13 +642,13 @@
     reqSeq++; /* 在飞的列表结果作废，别盖掉「正在打开…」 */
     /* 提示写在列表下方的提示行，别清空网格 —— 用户点进一部片还想看到刚才的列表 */
     noteWithLink('正在打开…', '');
-    /* 聚合列表里每条自带 _src：点哪条就问哪个源要详情，编号才对得上 */
+    /* 聚合列表里每条自带 _src：点哪条就问哪个源要详情，编号才对得上。
+       ⚠ 这里必须原样把 pin 发出去（包括搜索场景）：vod_id 只在单个源内唯一，
+       不带 _src 时网关会按 order 依次试源、命中即返回，很可能给你另一个源里
+       同号的另一部片 —— 播放器拿到的就是错的地址。 */
     var pin = typeof src === 'number' ? src : state.src;
-    /* 搜索时别把 _src 发出去：网关的 _src 分支会短路「只打支持搜索的源」这条过滤
-       （见 _worker.js 里 order 的三元），把用户没选的源排到第一位，白等一轮。
-       搜索本来就是多源聚合，不指定单个源才对。 */
     var params = { ac: 'videolist', ids: vodId };
-    if (!state.kw && typeof pin === 'number') params._src = pin;
+    if (typeof pin === 'number') params._src = pin;
     apiGet(params).then(function (d) {
       var it = (d && d.list && d.list[0]) || null;
       if (!it) throw new Error('没拿到该资源');

@@ -86,12 +86,7 @@ master / variant / TS 分片全部 200，浏览器直连即可；同时也避开
 
 ## 部署
 
-```powershell
-# 令牌从 CF.txt 读取；注意先清掉 *_proxy 环境变量，否则 wrangler 会走代理
-$env:CLOUDFLARE_API_TOKEN = '<API操作令牌>'
-$env:CLOUDFLARE_ACCOUNT_ID = '<账号ID>'
-npx wrangler@4 pages deploy cloudflare/music-api --project-name=sakura-music-api --branch=main --commit-dirty=true
-```
+部署方式与账号凭据见项目私有凭据文档（不入库）。
 
 > ⚠️ **不要**往 `sakura-music` 项目部署 —— 那个项目托管着全部 MP3，
 > 本地仓库已 `.gitignore` 掉 `music/`，直接上传式部署会把唯一的音频副本覆盖掉。

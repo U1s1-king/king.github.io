@@ -43,15 +43,10 @@
 
 ## 部署
 
-```powershell
-cd cloudflare/tv-gate
-npx wrangler deploy
-npx wrangler secret put TV_GATE_KEY      # 输入口令
-npx wrangler secret put TV_GATE_SECRET   # 输入随机串，两边要一致
-```
+部署方式与密钥设置见项目私有凭据文档（不入库）。
 
-然后去 `cloudflare/music-api` 那边，给 Pages 项目也设一个同名同值的
-`TV_GATE_SECRET` 并重新部署 —— 数据锁才会真正生效。
+设置完 `TV_GATE_SECRET` 后，`cloudflare/music-api` 那边的 Pages 项目也要配同名同值的它，
+数据锁才会真正生效。
 
 ## 路由注意
 
