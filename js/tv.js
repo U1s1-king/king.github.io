@@ -21,6 +21,26 @@
   var GATEWAY = (window.TV_GATEWAY || 'https://sakura-music-api.pages.dev').replace(/\/$/, '');
   /* 门卫回 401 时拿它做标记：不重试、不降级直连，直接回登录页 */
   var NEED_GATE = 'NEED_GATE';
+
+  /* 门卫会话过期时的统一提示：说清原因 + 给一个【用户自己点】的重新登录链接。
+     绝不在这里 location.replace —— 用户没要求刷新，页面就不该自己刷新。
+     用相对路径 'TV.html'：站点可能部署在子路径下，绝对根路径会 404
+     （仓库有 CNAME，但 server.js 也支持任意 ROOT）。 */
+  function gateExpired() {
+    var note = byId('tvNote');
+    if (note) {
+      note.textContent = '登录状态已过期，需要重新登录：';
+      var a = document.createElement('a');
+      a.href = 'TV.html';
+      a.textContent = '点这里重新登录 ›';
+      note.appendChild(a);
+    }
+    loadingFail('登录状态已过期（点上方的「重新登录」）');
+    /* 二级页/播放器开着的时候，列表后面的提示看不见，播放器里也喊一句 */
+    if (window.TVPlayer && typeof TVPlayer.showErr === 'function') {
+      try { TVPlayer.showErr('登录状态已过期，请重新登录后继续。'); } catch (e) {}
+    }
+  }
   /* 采集站常见成人向栏目，站点是公开页面，直接不展示 */
   var BLOCK = /伦理|福利|里番|情色|成人|无码|色情|自拍|偷拍|人妖|淫/;
   /* 可以直接塞进 <video> 的直链后缀 */
@@ -238,20 +258,13 @@
        本地联调时 GATEWAY 指向 pages.dev（跨域），same-origin 不会带凭据，正好。 */
     return fetch(url, Object.assign({ mode: 'cors', credentials: 'same-origin' }, timeoutOpt(ms || WAIT_MAX))).then(function (r) {
       if (r.status === 401) {
-        /* 会话过期（关过浏览器）或门卫不认这个 cookie：回本页重新走一遍，
-           门卫会把登录页发回来。
-           用相对路径而不是 '/TV.html' —— 站点可能部署在子路径下，
-           绝对根路径会 404（仓库有 CNAME，但 server.js 也支持任意 ROOT）。
-           ⚠ 加 5 秒节流：否则「拿不到有效 cookie」时每一次请求都触发一次
-           location.replace，页面会反复自我刷新（用户看到的就是「点一下就刷」）。
-           节流之后只重载一次，再失败就正常报错，把原因交给调用方显示。
-           视图状态存在 sessionStorage 里，重载后会回到原来的片子/搜索词。 */
-        var lastGate = 0;
-        try { lastGate = Number(sessionStorage.getItem('tv.gate.reload') || 0) || 0; } catch (e) {}
-        if (Date.now() - lastGate > 5000) {
-          try { sessionStorage.setItem('tv.gate.reload', String(Date.now())); } catch (e) {}
-          try { location.replace('TV.html'); } catch (e) {}
-        }
+        /* 会话过期（关过浏览器）或门卫不认这个 cookie。
+           ⚠ 这里【只报错，绝不自动刷新】。
+           以前是 location.replace('TV.html') 回本页重新登录，实测非常反人类：
+           用户只是点了个海报，页面就自己刷了 —— 既像 bug，又把当前的
+           搜索/列表/滚动位置全冲掉（加了节流也只是从「刷很多次」变成「刷一次」，
+           本质没变）。现在交给下面的 catch 显示一句「登录状态已过期」，
+           再给一个用户自己点的「重新登录」链接，要不要跳由用户决定。 */
         throw new Error(NEED_GATE);
       }
       if (!r.ok) throw new Error('HTTP ' + r.status);
@@ -357,6 +370,9 @@
       /* 分类是异步来的，记忆的偏好要等这一排画完才点得亮 */
       markCat();
     }).catch(function (e) {
+      /* 门卫过期时分类也是 401 —— 直接给「重新登录」，别让用户对着
+         一个「点这重试」白按（重试还是会 401） */
+      if (String(e.message || e) === NEED_GATE) { gateExpired(); return; }
       /* 只放一枚重试胶囊，不再把原因写在这里 ——
          片源和分类是一起挂的（同一个接口），下面那张失败卡已经把
          「没找到片源：…」说清楚了。两处各喊一次同样的话只是噪音，
@@ -612,6 +628,8 @@
         if (my !== reqSeq) return; /* 旧请求的报错别糊在新结果上 */
         var pager = byId('tvPager'); if (pager) pager.hidden = true;
         var m = String(e.message || e);
+        /* 门卫过期：单独给一句人话 + 重新登录链接，别混进「源站出错」里 */
+        if (m === NEED_GATE) { gateExpired(); return; }
         var why = /一分钟|timeout|abort/i.test(m)
           ? '这个源太慢了或者没响应'
           : /^HTTP 5/.test(m)
@@ -738,7 +756,10 @@
          放在 openPlayer 之后 —— 它内部会先关掉旧的二级页，
          早写会被那次关闭当成「用户离开片子」而抹掉。 */
       saveView({ vod: it.vod_id, vodSrc: it._src });
-    }).catch(function (e) { noteWithLink('打开失败：' + String(e.message || e), ''); });
+    }).catch(function (e) {
+      if (String(e.message || e) === NEED_GATE) { gateExpired(); return; }
+      noteWithLink('打开失败：' + String(e.message || e), '');
+    });
   }
 
   function lineName(raw, i) {
@@ -1184,9 +1205,10 @@
 
   /* ---------------- 会话内的「当前视图」----------------
      刷新之后要回到原来的位置，而不是被丢回最新片单首页。
-     什么时候会刷新：用户自己按 F5；门卫会话过期时 jget 会 location.replace
-     回本页重新登录（见上面 401 的处理）。两种情况都不该把用户正在看的
-     那部片、那个搜索词弄丢。
+     什么时候会刷新：用户自己按 F5（门卫过期不会自动刷新了 ——
+     只提示 + 给一个用户自己点的重新登录链接，见 gateExpired）。
+     用户真去重登、或自己按了 F5，都不该把正在看的那部片、
+     那个搜索词弄丢，所以这里要把位置存下来。
      用 sessionStorage 而不是 localStorage：同一个标签页内刷新要还原，
      但关掉标签页再进来应该回到「最新片单」—— 跨会话恢复关键词会把人
      困在上次搜的东西里（这正是 loadPref 不恢复 kw 的原因）。 */
