@@ -74,6 +74,22 @@
     .xt-row input[type="range"] { width: 150px; }
 }
 
+/* ============================================================
+   面板暂存容器（桌面 + 手机共用）
+   ------------------------------------------------------------
+   一级页上不该出现任何工具面板，所以两边都把 .tool-panel / .info-box
+   搬进这里；打开工具时再各按各的方式搬回去（桌面搬到返回条下面，
+   手机搬进 AppShell 的详情层）。
+   display:none 必须连子元素一起压：.tool-panel.active{display:block}
+   （Tools.css，(0,2,0)）的特异性不低于普通父级选择器，光藏父级的话
+   那个 .active 面板会照常渲染。这里用 [aria-hidden="true"] > * 把
+   特异性提到 (0,2,0) 并靠后加载，稳过它。
+   这条规则**不在媒体查询里**：桌面同样要藏。
+   ============================================================ */
+.tools-stash,
+.tools-stash[aria-hidden="true"],
+.tools-stash[aria-hidden="true"] > * { display: none !important; }
+
 /* 桌面「二级页」：点开工具后收起胶囊与网格，只留返回条 + 该工具面板 */
 .tool-back { display: none; }
 
@@ -115,15 +131,6 @@
        两个类都由脚本加 —— 脚本没跑到就退回原来的标签墙，不会白屏。 */
     html.tool-cats .tools-tabs { display: none !important; }
     html.tool-cats .mgrid-wrap { display: none !important; }
-
-    /* 面板与提示盒被搬到这个隐藏容器；一级页不再出现它们。
-       display:none 必须连子元素一起压：.tool-panel.active{display:block}
-       （Tools.css）的特异性高于父级的 display:none，光藏父级的话
-       当前 .active 的那个面板会照常渲染出来。方括号属性选择器把
-       特异性提到 (0,2,0)，稳过 .tool-panel.active (0,2,0) 且靠后。 */
-    .tools-stash,
-    .tools-stash[aria-hidden="true"],
-    .tools-stash[aria-hidden="true"] > * { display: none !important; }
 
     .tcat-wrap { margin: 0 0 6px; }
 

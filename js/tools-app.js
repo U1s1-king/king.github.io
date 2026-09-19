@@ -255,11 +255,11 @@
      删不到「被搬走的桌面节点」，面板就永远回不去 .main-card 了
      —— 桌面端会整个空掉。所以这里记下每块的原始父节点与后继兄弟，
      unStashPanels() 按原样放回去（顺序也一致）。 */
-  var STASHED = [];
-
-  function stashPanels(mainCard) {
-    if (STASHED.length) return;            /* 已经搬过了，别重复搬 */
-    var host = byId('toolsStash');
+  /* 暂存容器：手机端与桌面端共用同一个。谁在管，谁就负责它的存在；
+     切换视口时只转移所有权，绝不删容器 —— 里面还装着 60 个面板，
+     删容器＝删工具（60 个面板连同监听器一起没）。 */
+  function stashHost() {
+    var host = byId('toolsStash') || byId('toolsStashDesktop');
     if (!host) {
       host = document.createElement('div');
       host.id = 'toolsStash';
@@ -267,26 +267,25 @@
       host.setAttribute('aria-hidden', 'true');
       document.body.appendChild(host);
     }
-    ['tool-panel', 'info-box'].forEach(function (cls) {
-      Array.prototype.forEach.call(mainCard.querySelectorAll('.' + cls), function (el) {
-        STASHED.push({ n: el, p: el.parentNode, s: el.nextSibling });
-        host.appendChild(el);
-      });
+    return host;
+  }
+
+  /* 位置无关：不管面板此刻在 .main-card、桌面端的暂存容器、还是别处，
+     一律收进暂存容器。 */
+  function stashPanels() {
+    var host = stashHost();
+    Array.prototype.forEach.call(document.querySelectorAll('.tool-panel, .info-box'), function (el) {
+      if (el.parentNode !== host) host.appendChild(el);
     });
   }
 
-  /* 放回原位。变宽时调用，让桌面端拿到与改动前完全一样的 DOM。 */
-  function unStashPanels() {
-    for (var i = 0; i < STASHED.length; i++) {
-      var it = STASHED[i];
-      try {
-        if (it.s && it.s.parentNode === it.p) it.p.insertBefore(it.n, it.s);
-        else it.p.appendChild(it.n);
-      } catch (e) {}
-    }
-    STASHED = [];
-    var host = byId('toolsStash');
-    if (host && host.parentNode) host.parentNode.removeChild(host);
+  /* 变宽交给桌面端：只交出所有权，容器与面板留在原地。
+     桌面端的 ensureStash 会复用这个容器。 */
+  function releaseStash() {
+    var host = byId('toolsStashDesktop');
+    /* 把 id 归一化，免得两个入口各认一个 id */
+    var h = byId('toolsStash');
+    if (h && !host) h.id = 'toolsStashDesktop';
   }
 
   function init() {
@@ -302,9 +301,9 @@
     var groups = collect();
     if (!groups.length) return;
 
-    /* 面板移出：一级页只留分类入口。必须在 collect() 之后做 —— collect
-       要靠 .tool-tab 找面板，而 .tool-tab 不在 .main-card 之外。 */
-    stashPanels(main);
+    /* 面板移出：一级页只留分类入口。必须在 collect() 之前/之后就无所谓了
+       （collect 只读 .tool-tab），但搬走之后 .main-card 里就只剩分类了。 */
+    stashPanels();
 
     row.parentNode.insertBefore(buildAccordion(groups, readOpen()), row);
 
@@ -365,10 +364,10 @@
   if (window.AppShell && window.AppShell.onMode) {
     window.AppShell.onMode(function (isNarrow) {
       if (isNarrow) init();
-      /* 变宽：把搬走的面板原样放回 .main-card，否则桌面端会整页空掉。
-         必须在 clearNarrowOnly 之后跑（onMode 回调按注册顺序触发，
-         app-shell 内部先清再广播），此时 .tcat-* 已被删掉。 */
-      else unStashPanels();
+      /* 变宽：交给桌面端接管。只交出所有权，容器与 60 个面板原封不动 ——
+         以前这里把面板搬回 .main-card 再删容器，桌面端随即又建一个自己的
+         容器搬走它们；两侧各持一个 id、互相看不到，回来时必然丢面板。 */
+      else releaseStash();
     });
   }
 })();

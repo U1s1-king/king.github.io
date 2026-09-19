@@ -85,10 +85,19 @@
    两边各自管理，靠 desktop()/narrow() 互不重叠。
    ============================================================ */
   var STASH = null;      /* 隐藏容器 */
-  var MOVED = [];        /* 被搬走的面板原始位置，用于还原 */
+
+  /* 所有能被搬走的东西（面板 + 提示盒）。用全文档查询而不是
+     .main-card 之内：视口来回切换时它们可能正躺在**另一个**暂存容器里
+     （手机端的 #toolsStash），只查 .main-card 会一个都找不到，
+     于是桌面这边空建一个容器，而手机那边接着把自己的容器连同
+     里面的 60 个面板一起删掉 —— 工具就全没了。 */
+  var STASHABLE = '.tool-panel, .info-box';
 
   function ensureStash() {
     if (STASH && STASH.parentNode) return STASH;
+    /* 复用已有的暂存容器（手机端建的），避免两套容器互相搬来搬去 */
+    var prev = document.getElementById('toolsStash');
+    if (prev) { STASH = prev; return STASH; }
     STASH = document.createElement('div');
     STASH.id = 'toolsStashDesktop';
     STASH.className = 'tools-stash';
@@ -97,18 +106,12 @@
     return STASH;
   }
 
-  /* 把面板与提示盒搬走。只搬 .tool-panel / .info-box，.main-card 本身留着，
-     卡片网格与返回条都还在里面。 */
+  /* 把面板与提示盒搬进隐藏容器。位置无关：不管它们此刻在 .main-card、
+     在手机端的暂存容器、还是别处，一律收进来。 */
   function stashPanels() {
-    if (MOVED.length) return;
-    var main = document.querySelector('.main-card');
-    if (!main) return;
     var host = ensureStash();
-    ['tool-panel', 'info-box'].forEach(function (cls) {
-      Array.prototype.forEach.call(main.querySelectorAll('.' + cls), function (el) {
-        MOVED.push({ n: el, p: el.parentNode, s: el.nextSibling });
-        host.appendChild(el);
-      });
+    Array.prototype.forEach.call(document.querySelectorAll(STASHABLE), function (el) {
+      if (el.parentNode !== host) host.appendChild(el);
     });
   }
 
@@ -129,17 +132,13 @@
     if (panel.parentNode !== host) host.appendChild(panel);
   }
 
-  /* 全部还原回 .main-card 原位（离开桌面视口时用） */
-  function unstashPanels() {
-    for (var i = 0; i < MOVED.length; i++) {
-      var it = MOVED[i];
-      try {
-        if (it.s && it.s.parentNode === it.p) it.p.insertBefore(it.n, it.s);
-        else it.p.appendChild(it.n);
-      } catch (e) {}
-    }
-    MOVED = [];
-    if (STASH && STASH.parentNode) STASH.parentNode.removeChild(STASH);
+  /* 离开桌面视口：把容器拆掉。面板**不**搬回 .main-card ——
+     窄屏那边（tools-app.js）马上要按自己的方式重新收一遍，
+     先搬回去再被搬走纯属白折腾，而且中途会经过「面板暴露在一级页上」
+     那一帧。直接把容器连同面板交给手机端处置：
+     容器留下、只交出所有权，手机端的 ensureStash 会复用它。
+     关键是**不能删容器**：里面还装着 60 个面板。 */
+  function releaseStash() {
     STASH = null;
   }
 
@@ -260,10 +259,9 @@ function openTool(id, push) {
         /* 从桌面宽屏缩到手机时，桌面那套「二级页」状态要一并收掉，
            否则面板会以 .active 的身份挂在手机网格下面 */
         closeTool(true);
-        /* 面板还给 .main-card：窄屏那边（tools-app.js）要按自己的方式
-           重新搬一次，桌面必须先把自己搬走的放回原位，否则手机端
-           找不到面板，三级页会是空的。 */
-        unstashPanels();
+        /* 只交出容器所有权，不删容器、不搬回 .main-card：
+           手机端复用它，面板原封不动待在里面。 */
+        releaseStash();
       } else init();
     });
   }
