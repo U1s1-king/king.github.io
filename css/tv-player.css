@@ -28,6 +28,13 @@
 .tvp.is-web-full { position: fixed; inset: 0; z-index: 2147482000; border-radius: 0; aspect-ratio: auto; height: 100%; }
 .tvp.is-wide { width: 100vw; margin-left: calc(50% - 50vw); border-radius: 0; }
 .tvp.is-idle { cursor: none; }
+/* 全屏 + 鼠标设备：控制条可以收，但【光标必须留着】。
+   以前 is-idle 一律 cursor:none，全屏后鼠标一动指针就消失，
+   用户既看不到自己点哪儿、也判断不出按钮位置 —— 等于没法操作。
+   这条规则靠 JS 加的 is-immersive 触发，优先级高于 is-idle。 */
+.tvp.is-idle.is-immersive,
+.tvp.is-idle.is-immersive > video { cursor: default; }
+.tvp.is-idle.is-immersive .tvp-bar { cursor: default; }
 
 /* B 站的 video 铺满容器，背景纯黑 */
 .tvp > video {
@@ -309,6 +316,57 @@
     .tvp-right:hover .tvp-vol { width: 0; }
     .tvp-vol.is-drag { width: 48px; }
 }
+
+/* ---------- 手机竖屏：极简控制条（照 B 站） ----------
+   竖屏时屏幕上就那么点地方，一排图标挤在视频里既挡画面又难点中。
+   B 站的做法是：左边只留【进度】，右边只留【全屏】——
+   其余（倍速/线路/画中画/设置/宽屏…）等进了全屏/横屏再给。
+   只靠 CSS 做，全屏或转横屏后自动全部回来（见下面那段还原规则）。 */
+@media (max-width: 768px) and (orientation: portrait) {
+    /* 右侧只留全屏键：其余按钮、音量条、线路/倍速/设置全收起 */
+    .tvp-right > .tvp-btn:not(#tvpFull),
+    .tvp-right > .tvp-vol { display: none; }
+    /* 全屏键放大一点：它是竖屏下唯一的主操作，手指要给够面积 */
+    .tvp-btn#tvpFull { width: 42px; height: 32px; }
+    .tvp-btn#tvpFull svg { width: 24px; height: 24px; }
+    /* 左侧：播放/上下集收成一行小的 */
+    .tvp-left { gap: 2px; }
+    .tvp-time { font-size: 11px; padding-left: 0; }
+    /* 进度条手指要给够高度：4px 的轨道在手机上几乎点不中 */
+    .tvp-progress { height: 20px; }
+    .tvp-schedule, .tvp-buffer, .tvp-played { height: 3px; }
+    /* 悬停提示在触屏上没有意义，去掉免得挡住进度 */
+    .tvp-tip { display: none; }
+    /* 悬停气泡同理：触屏没有 hover，留着只会在按下去时闪一下 */
+    .tvp-btn::after { content: none; }
+}
+
+/* ---------- 还原：横屏 / 全屏 / 网页全屏 / 宽屏 → 全部控件回来 ----------
+   四条路径都要覆盖，漏一条就会出现「转横屏了但按钮还是不回来」。
+
+   ⚠ 特异性：竖屏的隐藏规则是 `.tvp-right > .tvp-btn:not(#tvpFull)` —— id 选择器
+   让它比一条普通的 `.tvp.is-web-full .tvp-right > .tvp-btn` 更「重」，
+   所以还原规则必须同样带上 :not(#tvpFull)，否则【改不动】、按钮回不来
+   （实测踩到过：横屏能回来，网页全屏/宽屏回不来）。 */
+@media (max-width: 768px) and (orientation: landscape) {
+    .tvp-right > .tvp-btn,
+    .tvp-right > .tvp-vol { display: flex; }
+}
+@media (max-width: 768px) {
+    .tvp.is-web-full .tvp-right > .tvp-btn:not(#tvpFull),
+    .tvp.is-web-full .tvp-right > .tvp-vol,
+    .tvp.is-wide .tvp-right > .tvp-btn:not(#tvpFull),
+    .tvp.is-wide .tvp-right > .tvp-vol { display: flex; }
+}
+/* 全屏：竖屏时也可能被强制全屏，所以这里不收 orientation 限制 */
+.tvp:fullscreen .tvp-right > .tvp-btn:not(#tvpFull),
+.tvp:-webkit-full-screen .tvp-right > .tvp-btn:not(#tvpFull),
+.tvp:fullscreen .tvp-right > .tvp-vol,
+.tvp:-webkit-full-screen .tvp-right > .tvp-vol { display: flex; }
+.tvp:fullscreen .tvp-time,
+.tvp:-webkit-full-screen .tvp-time { font-size: 13px; }
+.tvp:fullscreen .tvp-progress,
+.tvp:-webkit-full-screen .tvp-progress { height: 14px; }
 
 /* 播放器打开时把看板娘和飘落花瓣收起来：
    #waifu-fab（z-index 9999）会压住右侧按钮，#sakura-flurry（z-index 10）会飘在画面上，

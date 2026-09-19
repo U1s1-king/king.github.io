@@ -12,7 +12,7 @@
  * __DSH_VERSION 以及各 HTML 里的 ?v= 保持一致。
  * 统一更新请执行： python scripts/bump_version.py <新版本号>
  * ============================================================ */
-const VERSION = '20260925'
+const VERSION = '20261026'
 const CACHE = 'king-blog-' + VERSION;
 
 const CORE = [
@@ -77,12 +77,19 @@ const CORE = [
     /* TV.html 故意【不预缓存】：它现在挂在 Cloudflare Worker 门卫（cloudflare/tv-gate）
        后面，未登录时返回的是登录页。而 addAll() 只要碰到一个非 200 ——
        门卫 fail-closed 时正是 503 —— 就会让整个 Service Worker 安装失败，
-       把全站离线缓存一起拖下水。它按需走网络即可。 */
+       把全站离线缓存一起拖下水。它按需走网络即可。
+       但它依赖的静态资源要在这里列全：漏掉的三个（tv-store / tv-player /
+       tv-player.css）以前只能靠 stale-while-revalidate 按需缓存，于是版本升级时
+       HTML 的 ?v= 已经改写、播放器脚本还停在旧版，存在「新页面配旧播放器」的窗口。
+       scripts/check_links.py 现在会逐页核对这份清单，再漏就会报出来。 */
+    '/css/tv.css?v=' + VERSION,
+    '/css/tv-player.css?v=' + VERSION,
+    '/js/tv.js?v=' + VERSION,
+    '/js/tv-store.js?v=' + VERSION,
+    '/js/tv-player.js?v=' + VERSION,
     '/Games.html?v=' + VERSION,
     '/css/hub.css?v=' + VERSION,
     '/css/tools-plus.css?v=' + VERSION,
-    '/css/tv.css?v=' + VERSION,
-    '/js/tv.js?v=' + VERSION,
     '/js/games.js?v=' + VERSION,
     '/js/tools-hub.js?v=' + VERSION,
     '/js/tools-extra.js?v=' + VERSION,

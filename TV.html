@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <script src="js/version.js?v=20260925"></script>
-    <script src="js/app-shell.js?v=20260925"></script>
+    <script src="js/version.js?v=20261026"></script>
+    <script src="js/app-shell.js?v=20261026"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <link rel="stylesheet" href="css/style.css?v=20260925">
-    <link rel="stylesheet" href="css/sidebar.css?v=20260925">
+    <link rel="stylesheet" href="css/style.css?v=20261026">
+    <link rel="stylesheet" href="css/sidebar.css?v=20261026">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#ffb6c1">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -22,22 +22,22 @@
     <title>影视 · Tomo Ebizuka</title>
     <link rel="canonical" href="https://zhaokening.ccwu.cc/TV.html">
     
-    <link rel="stylesheet" href="css/all.min.css?v=20260925">
-    <link rel="stylesheet" href="css/Tools.css?v=20260925">
-    <link rel="stylesheet" href="css/hub.css?v=20260925">
-    <link rel="stylesheet" href="css/tv.css?v=20260925">
-    <link rel="stylesheet" href="css/tv-player.css?v=20260925">
-    <link rel="stylesheet" href="css/anim.css?v=20260925">
-    <link rel="stylesheet" href="css/mobile.css?v=20260925">
-    <link rel="stylesheet" href="css/app.css?v=20260925">
+    <link rel="stylesheet" href="css/all.min.css?v=20261026">
+    <link rel="stylesheet" href="css/Tools.css?v=20261026">
+    <link rel="stylesheet" href="css/hub.css?v=20261026">
+    <link rel="stylesheet" href="css/tv.css?v=20261026">
+    <link rel="stylesheet" href="css/tv-player.css?v=20261026">
+    <link rel="stylesheet" href="css/anim.css?v=20261026">
+    <link rel="stylesheet" href="css/mobile.css?v=20261026">
+    <link rel="stylesheet" href="css/app.css?v=20261026">
     <meta name="description" content="Tomo Ebizuka 的影视页：聚合公开采集接口，在线看电影、剧集、综艺与动漫，支持 HLS 播放。">
-    <meta name="keywords" content="(O_o)??,工具箱,工具,转换器,随机数,密码生成,翻译,OCR,天气">
+    <meta name="keywords" content="影视,在线看电影,电视剧,动漫,综艺,纪录片,短剧,HLS 播放">
     <meta name="author" content="king">
     <meta name="robots" content="index, follow">
     <meta property="og:title" content="影视 · Tomo Ebizuka">
     <meta property="og:description" content="聚合公开采集接口，在线看电影、剧集、综艺与动漫。">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://zhaokening.ccwu.cc/Tools.html">
+    <meta property="og:url" content="https://zhaokening.ccwu.cc/TV.html">
     <meta property="og:image" content="https://zhaokening.ccwu.cc/og-image.png">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
@@ -88,6 +88,8 @@
         <div class="tv-search">
             <input id="tvKw" type="search" placeholder="搜片名、演员…" autocomplete="off" aria-label="搜索影视">
             <button type="button" id="tvGo" class="hub-chip"><i class="fas fa-magnifying-glass"></i><span>搜索</span></button>
+            <!-- 搜索历史下拉：纯本地（localStorage），点聚焦才出现 -->
+            <div class="tv-hist" id="tvHist" hidden></div>
         </div>
 
         <div class="tv-srcbar">
@@ -178,14 +180,23 @@
             </div>
 
             <!-- 选集：线路做 tab，集数做网格（见 js/tv.js 的 openPlayer）。
-                 上面那块「本次搜索结果」只在带着关键词进来时出现：二级页里能直接
-                 横跳到这次搜索命中的其它片子，不用退回列表重搜。
+
+                 排版顺序：**选集在前，「本次搜索结果」在后**。
+                 选集是用户进这一页的正事（要挑第几集），必须第一眼看到、
+                 不用滚动；「换了关键词的其它片子」是顺手的横跳入口，属于次要信息，
+                 放下面。反过来排的话，搜索结果一多（十几条）就把选集整个顶出屏幕，
+                 手机上每次换集都要先划过一整列别的片子。
 
                  桌面端：这块 (.tv-aside) 就是右栏，吸顶常驻（见 tv.css 的 ≥993px）。
                  移动端：B 站是把选集收进**底部抽屉**，所以手机用下面 .tvmask/.tvsheet；
                  .tv-aside 在手机上 display:none，由 js/tv.js 在打开抽屉时把 #tvEps
                  搬进抽屉、关闭再搬回来。 -->
             <aside class="tv-aside">
+                <div class="tv-aside-head">
+                    <b>选集</b>
+                    <span id="tvEpCount"></span>
+                </div>
+                <div class="tv-episodes" id="tvEps"></div>
                 <div class="tv-sb-hits" id="tvSbHits" hidden>
                     <div class="tv-aside-head">
                         <b>「<span id="tvSbKw"></span>」的结果</b>
@@ -193,11 +204,6 @@
                     </div>
                     <div class="tv-sb-list" id="tvSbList"></div>
                 </div>
-                <div class="tv-aside-head">
-                    <b>选集</b>
-                    <span id="tvEpCount"></span>
-                </div>
-                <div class="tv-episodes" id="tvEps"></div>
             </aside>
         </section>
 
@@ -265,15 +271,15 @@
     <script>
       if (/^(www\.)?zhaokening\.ccwu\.cc$/.test(location.hostname)) window.TV_GATEWAY = location.origin;
     </script>
-    <script src="js/tv-store.js?v=20260925"></script>
-    <script src="js/tv-player.js?v=20260925"></script>
-    <script src="js/tv.js?v=20260925"></script>
-<script src="js/common.js?v=20260925"></script>
-<script src="js/anim.js?v=20260925"></script>
-<script src="js/sidebar.js?v=20260925"></script>
-<script src="js/particles-config.js?v=20260925"></script>
-<script src="js/live2d-fix.js?v=20260925" defer></script>
-<script src="https://sakura-live2d.pages.dev/live2d/waifu.js?v=20260925" defer></script>
-<script src="js/live2d-app.js?v=20260925" defer></script>
+    <script src="js/tv-store.js?v=20261026"></script>
+    <script src="js/tv-player.js?v=20261026"></script>
+    <script src="js/tv.js?v=20261026"></script>
+<script src="js/common.js?v=20261026"></script>
+<script src="js/anim.js?v=20261026"></script>
+<script src="js/sidebar.js?v=20261026"></script>
+<script src="js/particles-config.js?v=20261026"></script>
+<script src="js/live2d-fix.js?v=20261026" defer></script>
+<script src="https://sakura-live2d.pages.dev/live2d/waifu.js?v=20261026" defer></script>
+<script src="js/live2d-app.js?v=20261026" defer></script>
 </body>
 </html>

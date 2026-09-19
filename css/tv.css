@@ -48,6 +48,7 @@
 
 /* ---------- 搜索：B 站搜索框是圆角胶囊 + 独立的主题色按钮 ---------- */
 .tv-search {
+    position: relative;          /* 搜索历史下拉的定位基准 */
     display: flex;
     gap: 10px;
     margin-bottom: 18px;
@@ -442,10 +443,12 @@
 }
 
 /* ---- 侧栏里的「本次搜索结果」：带回列表页那批命中，在层里直接横跳 ---- */
+/* 「本次搜索结果」在选集【下面】：改成上分隔线（原来是下边线，
+   因为它以前排在选集之前）。 */
 .tv-sb-hits {
-    margin-bottom: 16px;
-    padding-bottom: 14px;
-    border-bottom: 1px solid var(--tv-line);
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--tv-line);
 }
 
 .tv-sb-hits[hidden] { display: none; }
@@ -1060,4 +1063,148 @@
     .tv-my { padding: 12px 12px; margin-bottom: 16px; }
     .tv-my-item { width: 96px; }
     .tv-my-name { font-size: .74rem; }
+}
+
+/* ============================================================
+ * 六、骨架屏 / 加载更多 / 搜索历史 / 续播角标
+ * ------------------------------------------------------------
+ * 这一节是「交互打磨」加的，都是列表页的反馈细节：
+ * 骨架屏替掉原来那句「已等 N 秒」——空灰块能立刻说明「内容是这个形状、正在来」，
+ * 而一句转圈文案看两秒就开始让人怀疑卡死了。
+ * ============================================================ */
+
+/* ---------- 骨架屏 ---------- */
+.tv-sk-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+    gap: 14px 12px;
+}
+.tv-sk { display: block; }
+.tv-sk-poster {
+    display: block;
+    aspect-ratio: 2 / 3;
+    border-radius: var(--tv-radius);
+    background: linear-gradient(100deg, #f7e9ee 30%, #fdf3f6 50%, #f7e9ee 70%);
+    background-size: 220% 100%;
+    animation: tv-sk-shine 1.4s ease-in-out infinite;
+}
+.tv-sk-line {
+    display: block;
+    height: 12px;
+    margin-top: 8px;
+    border-radius: 3px;
+    background: #f3e6eb;
+}
+@keyframes tv-sk-shine {
+    from { background-position: 120% 0; }
+    to { background-position: -120% 0; }
+}
+.tv-sk-hint { margin-top: 14px; text-align: center; }
+.tv-sk-hint span { margin: 0 3px; }
+
+/* 尊重「减少动效」偏好：骨架屏的流光关掉，只留静态灰块 */
+@media (prefers-reduced-motion: reduce) {
+    .tv-sk-poster { animation: none; }
+}
+
+/* ---------- 「加载更多」（聚合模式专用，替掉假分页） ---------- */
+.tv-more {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 18px 0 4px;
+    color: var(--tv-sub);
+    font-size: .86rem;
+}
+.tv-more-sec { font-size: .78rem; opacity: .8; }
+.tv-more-btn { min-width: 140px; }
+/* 追加成功后底部那颗按钮闪一下，让用户确认「确实是新加了一批」 */
+.tv-more-btn.is-done { animation: tv-more-pop .5s ease; }
+@keyframes tv-more-pop {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.06); }
+    100% { transform: scale(1); }
+}
+
+/* ---------- 搜索历史下拉 ---------- */
+.tv-hist {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    z-index: 30;
+    padding: 6px;
+    border: 1px solid var(--tv-border);
+    border-radius: 12px;
+    background: var(--tv-card);
+    box-shadow: 0 10px 28px rgba(244, 93, 138, .16);
+    max-height: 320px;
+    overflow-y: auto;
+}
+.tv-hist[hidden] { display: none; }
+.tv-hist-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 8px 8px;
+    color: var(--tv-sub);
+    font-size: .78rem;
+}
+.tv-hist-head button {
+    border: 0;
+    background: none;
+    color: var(--tv-sub);
+    font: inherit;
+    font-size: .78rem;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 6px;
+}
+.tv-hist-head button:hover { color: var(--tv-accent-ink); background: var(--tv-accent-soft); }
+.tv-hist-row { display: flex; align-items: center; gap: 2px; }
+.tv-hist-word {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    border-radius: 8px;
+    background: none;
+    color: var(--tv-text);
+    font: inherit;
+    font-size: .88rem;
+    text-align: left;
+    padding: 9px 10px;
+    cursor: pointer;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.tv-hist-word:hover, .tv-hist-word.is-cur { background: var(--tv-accent-soft); color: var(--tv-accent-ink); }
+.tv-hist-del {
+    flex: 0 0 auto;
+    width: 28px; height: 28px;
+    border: 0;
+    border-radius: 8px;
+    background: none;
+    color: var(--tv-sub);
+    font-size: .8rem;
+    cursor: pointer;
+}
+.tv-hist-del:hover { background: var(--tv-accent-soft); color: var(--tv-accent-ink); }
+
+/* ---------- 续播角标：卡在海报上，一眼看出这部看过 ---------- */
+.tv-resume {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    padding: 4px 6px;
+    background: linear-gradient(0deg, rgba(0, 0, 0, .78), transparent);
+    color: #fff;
+    font-size: .68rem;
+    line-height: 1.2;
+    text-align: left;
+}
+
+@media (max-width: 768px) {
+    .tv-sk-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 8px; }
+    .tv-hist { max-height: 46vh; }
 }

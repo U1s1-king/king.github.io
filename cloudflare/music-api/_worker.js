@@ -1201,10 +1201,16 @@ async function tvAggregate(params, origin, bases, ac) {
       page: Number(pg) || 1,
       pagecount: Math.max(pagecount, 1),
       limit: list.length,
-      /* 前端是按 total/limit 算总页数的：聚合后各源 total 相加是上百万，
-         照直给会显示成两万多页。改成「每页条数 × 最深那个源的页数」，并封顶 2000 页。
-         真实相加值放 _total 备查。 */
-      total: Math.max(list.length, 1) * Math.min(Math.max(pagecount, 1), 2000),
+      /* 聚合结果的 total 没有意义，别再编一个出来。
+         以前这里是「每页条数 × 最深那个源的页数」（封顶 2000）：实测首页
+         list=37、total=74000 → 前端算出 2000 页，用户翻到第 2 页看到的
+         其实是各采集源自己的第 2 页，和首页完全不连续、去重后大片重复 ——
+         一个永远翻不到底、每翻一页都换一批片的假分页。
+         现在如实标记成聚合：total = 本页条数（于是前端算出的页数恒为 1），
+         再给一个 _agg: true 让前端明确知道「这一批不能按页翻，只能用加载更多」。
+         真实相加值仍然放 _total 备查。 */
+      total: list.length,
+      _agg: true,
       _total: total,
       list: list,
       _src: got[0].i,

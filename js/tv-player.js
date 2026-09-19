@@ -76,13 +76,28 @@
   function syncPlayIcon() { if (D.play) D.play.classList.toggle('is-pause', playing()); if (D.big) D.big.hidden = playing(); }
 
   function showUI() { if (D.stage) { D.stage.classList.add('show-ui'); D.stage.classList.remove('is-idle'); } }
+  /* 鼠标是否真的停在画面上：全屏时它是判断「该不该藏控制条」的唯一依据。
+     用 hover 媒体查询是因为触屏设备根本没有鼠标，这时候不该走这套逻辑。 */
+  function hasMouse() {
+    try { return window.matchMedia('(hover: hover) and (pointer: fine)').matches; } catch (e) { return true; }
+  }
+  /* 全屏/宽屏时：鼠标一动就把控制条叫回来，并且【不显示光标】这件事
+     只在不全屏时才做 —— 全屏下藏光标会让用户找不到自己在哪，也很难点中按钮。 */
+  function immersive() {
+    return !!(isFull() || webFullOn() || wideOn());
+  }
   function scheduleHide() {
     clearTimeout(hideTimer);
     showUI();
     hideTimer = setTimeout(function () {
       if (!D.stage || !playing() || dragging || openMenu()) return;
+      /* 鼠标设备在全屏下：仍然收控制条（让画面干净），但保留光标。
+         这是「鼠标可正常显示并操作」的关键 —— 以前 is-idle 会 cursor:none，
+         全屏后鼠标一动看不见指针，等于没法操作。 */
       D.stage.classList.remove('show-ui');
       if (!D.err || D.err.hidden) D.stage.classList.add('is-idle');
+      /* 全屏 + 鼠标设备：补一个 is-immersive，CSS 靠它把 cursor 还原成 default */
+      D.stage.classList.toggle('is-immersive', immersive() && hasMouse());
     }, 3000);
   }
 
@@ -237,6 +252,14 @@
     if (D.next) D.next.disabled = !hasNext;
   }
 
+  /* 全屏/宽屏状态一变就同步一次：is-immersive 决定「隐藏控制条时要不要留光标」。
+     所有会改变沉浸状态的入口（全屏按钮、宽屏、网页全屏、系统手势退出全屏）
+     都要叫它，否则光标策略会停在旧状态。 */
+  function syncImmersive() {
+    if (!D.stage) return;
+    D.stage.classList.toggle('is-immersive', immersive() && hasMouse());
+  }
+
   function wideOn() { return D.stage && D.stage.classList.contains('is-wide'); }
   function webFullOn() { return D.stage && D.stage.classList.contains('is-web-full'); }
   function toggleWide() {
@@ -244,6 +267,7 @@
     var on = D.stage.classList.toggle('is-wide');
     document.documentElement.style.overflow = on || webFullOn() ? 'hidden' : '';
     if (D.wide) D.wide.classList.toggle('is-on', on);
+    syncImmersive();
     toast(on ? '宽屏' : '退出宽屏');
   }
   function toggleWebFull() {
@@ -251,6 +275,7 @@
     var on = D.stage.classList.toggle('is-web-full');
     document.documentElement.style.overflow = on || wideOn() ? 'hidden' : '';
     if (D.web) D.web.classList.toggle('is-on', on);
+    syncImmersive();
     toast(on ? '网页全屏' : '退出网页全屏');
   }
   function isFull() { return !!(document.fullscreenElement || document.webkitFullscreenElement); }
@@ -541,10 +566,16 @@
 
   /* 播放器是否「正在被使用」——用它替代原来的 offsetParent 判断。
      条件：stage 存在、且它的盒子里有实际尺寸（display:none 或未插入时为 0），
-     同时没有别的输入控件抢焦点。 */
+     同时没有别的输入控件抢焦点。
+
+     ⚠ 全屏时不能只看 getBoundingClientRect：全屏元素在部分浏览器里
+     祖先被改写渲染方式，rect 可能返回 0（这正是原来 offsetParent 那个坑的变体），
+     于是「全屏后快捷键失灵」—— 而全屏恰恰是最需要键盘的场景。
+     所以先把全屏/网页全屏/宽屏三种「确定在被使用」的状态直接放行。 */
   function playerActive() {
     var st = D.stage;
     if (!st) return false;
+    if (immersive()) return true;
     var r = st.getBoundingClientRect();
     return r.width > 0 && r.height > 0;
   }
@@ -621,8 +652,15 @@
       clearTimeout(clickTimer);
       clickTimer = setTimeout(toggle, 220);
     });
-    st.addEventListener('pointermove', scheduleHide);
+    st.addEventListener('pointermove', function (e) {
+      /* 触屏的 pointermove 是拖拽产生的，不该触发「鼠标动了」这套 */
+      if (e.pointerType !== 'touch') scheduleHide();
+    });
     st.addEventListener('pointerdown', scheduleHide);
+    /* 全屏后鼠标可能停在画面上不动：这时候控制条应该【保持显示】而不是
+       3 秒后自己收掉（收掉了用户还得再晃一下鼠标才找得到按钮）。
+       靠 hover 状态判断，比监听 mousemove 可靠。 */
+    st.addEventListener('mouseenter', function () { if (immersive() && hasMouse()) showUI(); });
 
     if (D.play) D.play.addEventListener('click', toggle);
     if (D.big) D.big.addEventListener('click', toggle);
@@ -679,6 +717,79 @@
       D.volWrap.addEventListener(ev, function () { D.volWrap.classList.remove('is-drag'); });
     });
 
+    /* ---------- 手势控制（手机/平板） ----------
+       B 站那套：横向滑 = 快进快退，纵向滑（左半边）= 亮度、（右半边）= 音量，
+       双击 = 播放/暂停，单击 = 显示/隐藏控制条。
+       全部用 touch 事件而不是 pointer：pointer 在移动端会和进度条的拖拽抢事件。
+       判断阈值 12px —— 小于它当点击，避免轻微滑动被当成手势。 */
+    var g = { on: false, x0: 0, y0: 0, t0: 0, axis: '', moved: false, baseVol: 0, baseSeek: 0 };
+    var GEST = 12;
+    function gestTip(txt) { toast(txt, 700); }
+    st.addEventListener('touchstart', function (e) {
+      if (e.touches.length !== 1) { g.on = false; return; }
+      var t = e.touches[0];
+      /* 从控制条/菜单上起手的滑动不算手势（那是进度条拖拽和点按钮） */
+      var el = e.target;
+      if (el && el.closest && el.closest('.tvp-bar, .tvp-menu, .tvp-err')) { g.on = false; return; }
+      g.on = true; g.moved = false; g.axis = '';
+      g.x0 = t.clientX; g.y0 = t.clientY; g.t0 = Date.now();
+      g.baseVol = D.video.volume;
+      g.baseSeek = D.video.currentTime;
+    }, { passive: true });
+
+    st.addEventListener('touchmove', function (e) {
+      if (!g.on || e.touches.length !== 1) return;
+      var t = e.touches[0];
+      var dx = t.clientX - g.x0, dy = t.clientY - g.y0;
+      if (!g.axis) {
+        if (Math.abs(dx) < GEST && Math.abs(dy) < GEST) return;
+        g.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+      }
+      g.moved = true;
+      var r = st.getBoundingClientRect();
+      if (g.axis === 'x') {
+        /* 横向：整屏宽 ≈ 120 秒，滑多少给多少，实时预览但不立刻 seek
+           （立刻 seek 会让 HLS 反复重载分片，滑完再落点更顺） */
+        var span = r.width || 320;
+        var dt = (dx / span) * 120;
+        var to = Math.max(0, Math.min((D.video.duration || 0) - 1, g.baseSeek + dt));
+        g.pending = to;
+        gestTip((dt >= 0 ? '快进 ' : '快退 ') + fmt(Math.abs(dt)) + ' / ' + fmt(to));
+      } else {
+        var left = (g.x0 - r.left) < r.width / 2;
+        if (left) {
+          /* 左半边上下滑 = 音量（不做亮度：网页改不了系统亮度，
+             盖一层黑幕模拟只会让画面发灰，反而更差） */
+          var dv = -dy / (r.height || 240);
+          setVolume(g.baseVol + dv, true);
+          gestTip('音量 ' + Math.round(D.video.volume * 100) + '%');
+        } else {
+          /* 右半边上下滑 = 音量（左右都给音量，手机上比亮度实用） */
+          var dv2 = -dy / (r.height || 240);
+          setVolume(g.baseVol + dv2, true);
+          gestTip('音量 ' + Math.round(D.video.volume * 100) + '%');
+        }
+      }
+    }, { passive: true });
+
+    st.addEventListener('touchend', function (e) {
+      if (!g.on) return;
+      g.on = false;
+      var dt = Date.now() - g.t0;
+      if (!g.moved) {
+        /* 没滑动：当点击。短按 = 播放/暂停，双击 = 播放/暂停（同一个动作，
+           因为移动端单击已经被「显示控制条」占了，B 站也是这么处理的） */
+        if (dt < 250) { clearTimeout(clickTimer); clickTimer = setTimeout(toggle, 220); }
+        return;
+      }
+      if (g.axis === 'x' && typeof g.pending === 'number') {
+        seekTo(g.pending);   /* 手势结束才真正落点 */
+        toast('已跳到 ' + fmt(g.pending));
+        g.pending = undefined;
+      }
+      scheduleHide();
+    });
+
     document.addEventListener('keydown', onKey);
     document.addEventListener('fullscreenchange', function () {
       if (D.full) D.full.classList.toggle('is-on', isFull());
@@ -687,6 +798,7 @@
          toggleFull，锁就没人解 —— 整个页面会一直横着，
          用户只能退出页面重进。这里兜底，任何途径退出全屏都会解。 */
       if (!isFull()) unlockOrientation();
+      syncImmersive();
       scheduleHide();
     });
     document.addEventListener('visibilitychange', function () { scheduleHide(); });
@@ -739,6 +851,7 @@
     if (D.rateMenu) Array.prototype.forEach.call(D.rateMenu.querySelectorAll('button'), function (b, i) { b.classList.toggle('is-on', RATES[i] === S.rate); });
     bind();
     syncPlayIcon();
+    syncImmersive();
     setTime();
     return true;
   }
