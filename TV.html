@@ -162,7 +162,12 @@
 
             <!-- 选集：线路做 tab，集数做网格（见 js/tv.js 的 openPlayer）。
                  上面那块「本次搜索结果」只在带着关键词进来时出现：二级页里能直接
-                 横跳到这次搜索命中的其它片子，不用退回列表重搜。 -->
+                 横跳到这次搜索命中的其它片子，不用退回列表重搜。
+
+                 桌面端：这块 (.tv-aside) 就是右栏，吸顶常驻（见 tv.css 的 ≥993px）。
+                 移动端：B 站是把选集收进**底部抽屉**，所以手机用下面 .tvmask/.tvsheet；
+                 .tv-aside 在手机上 display:none，由 js/tv.js 在打开抽屉时把 #tvEps
+                 搬进抽屉、关闭再搬回来。 -->
             <aside class="tv-aside">
                 <div class="tv-sb-hits" id="tvSbHits" hidden>
                     <div class="tv-aside-head">
@@ -203,6 +208,39 @@
     </nav>
     <!-- nav:bot-tab:end -->
 </main>
+
+    <!-- ============================================================
+         移动端底部操作栏 + 选集抽屉
+         ------------------------------------------------------------
+         必须是 <body> 的直接子节点，不能放进 .main-card：
+         .main-card 带了 transform（入场动画残留的 matrix(1,0,0,1,0,0)），
+         而 transform 非 none 会新建层叠上下文，把这里的 z-index 锁死在
+         那几个祖先里面；外层 MAIN.toolbox-container 只有 z-index:20，
+         于是整个子树都在二级页 .detail-view(9999) 之下、被它整层盖住。
+         放到 body 下才是真正跟 .detail-view 同级比大小。
+         ============================================================ -->
+    <!-- B 站「发弹幕…」那一行的位置：主按钮拉起选集抽屉，右边是返回列表 -->
+    <div class="tvbar" id="tvBar" hidden>
+        <button type="button" class="tvbar-btn tvbar-main" id="tvBarEps">
+            <i class="fas fa-list-ul"></i> <span id="tvBarEpsTxt">选集</span>
+        </button>
+        <button type="button" class="tvbar-btn" id="tvBarBack" aria-label="返回列表">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+    </div>
+
+    <div class="tvmask" id="tvMask" hidden></div>
+    <div class="tvsheet" id="tvSheet" hidden role="dialog" aria-modal="true" aria-label="选集">
+        <div class="tvsheet-grip" id="tvGrip"></div>
+        <div class="tvsheet-head">
+            <b>选集</b>
+            <span id="tvSheetCount"></span>
+            <button type="button" class="tvsheet-close" id="tvSheetClose" aria-label="关闭">
+                <i class="fas fa-xmark"></i>
+            </button>
+        </div>
+        <div class="tvsheet-body" id="tvSheetBody"></div>
+    </div>
 
     <!-- 生产域名走【同源】门卫：Cloudflare Worker tv-gate 挂在 /api/tv* 上，
          验完 cookie 再转发给 sakura-music-api.pages.dev。

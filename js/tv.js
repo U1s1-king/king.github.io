@@ -476,6 +476,16 @@
       onClose: function () {
         tvDetail = null;
         var p = byId('tvPlayer'); if (p) p.hidden = true;
+        var bar = byId('tvBar'); if (bar) bar.hidden = true;
+        /* 层关掉时抽屉也得跟着收，并把选集搬回右栏，
+           否则下次在桌面端打开会发现选集不在侧栏里 */
+        var sh = byId('tvSheet'), mk = byId('tvMask'), eps = byId('tvEps'), home = epsHome();
+        if (sh) sh.classList.remove('is-open');
+        if (mk) mk.classList.remove('is-open');
+        if (sh) sh.hidden = true;
+        if (mk) mk.hidden = true;
+        document.documentElement.classList.remove('tvsheet-open');
+        if (eps && home && eps.parentNode !== home) home.appendChild(eps);
         stopPlayer();
       },
     });
@@ -532,10 +542,64 @@
     box.hidden = false;
   }
 
+  /* ---------------- 移动端选集抽屉（B 站那套） ----------------
+     桌面端选集是常驻右栏；手机上 B 站把它收进底部抽屉。这里不复制 DOM，
+     而是把 #tvEps 整块搬进抽屉、关闭时搬回 .tv-aside —— 和 AppShell.adopt
+     同一个思路：节点身份不变，已经绑好的事件、已经点亮的「当前集」都不会丢。 */
+  function isNarrowTv() { return window.matchMedia('(max-width: 992px)').matches; }
+
+  var sheetHome = null;   /* #tvEps 原来的爸爸（.tv-aside），搬回来用 */
+
+  function epsHome() {
+    if (!sheetHome) {
+      var a = document.querySelector('.tv-aside');
+      if (a) sheetHome = a;
+    }
+    return sheetHome;
+  }
+
+  function sheetOpen() {
+    var sh = byId('tvSheet'), mk = byId('tvMask'), body = byId('tvSheetBody'), eps = byId('tvEps');
+    if (!sh || !eps) return;
+    if (!isNarrowTv()) return;
+    if (body && eps.parentNode !== body) body.appendChild(eps);
+    if (mk) mk.hidden = false;
+    if (sh) sh.hidden = false;
+    /* 下一帧再加 is-open，否则 hidden 撤掉和 transform 升起挤在同一帧，
+       浏览器会把两者合成一次、动画不播（抽屉直接「跳」出来）。 */
+    requestAnimationFrame(function () {
+      if (mk) mk.classList.add('is-open');
+      if (sh) sh.classList.add('is-open');
+    });
+    document.documentElement.classList.add('tvsheet-open');
+  }
+
+  function sheetClose() {
+    var sh = byId('tvSheet'), mk = byId('tvMask'), eps = byId('tvEps'), home = epsHome();
+    if (mk) mk.classList.remove('is-open');
+    if (sh) sh.classList.remove('is-open');
+    document.documentElement.classList.remove('tvsheet-open');
+    /* 等过渡走完再真正隐藏，否则抽屉会「啪」地消失、看不到下滑动画 */
+    setTimeout(function () {
+      if (mk && !mk.classList.contains('is-open')) mk.hidden = true;
+      if (sh && !sh.classList.contains('is-open')) sh.hidden = true;
+      if (eps && home && eps.parentNode !== home) home.appendChild(eps);
+    }, 300);
+  }
+
+  /* 底部操作栏上显示当前集数，让用户不用开抽屉也知道自己在第几集 */
+  function setBarEp(txt) {
+    var el = byId('tvBarEpsTxt');
+    if (!el) return;
+    el.textContent = txt ? ('选集 · ' + txt) : '选集';
+  }
+
   function openPlayer(it) {
     var p = byId('tvPlayer');
     var eps = byId('tvEps');
     if (!p || !eps) return;
+    /* 关掉上一次可能还开着的抽屉，并把选集搬回右栏，重开一部片时状态才是干净的 */
+    sheetClose();
     setText('tvTitle', it.vod_name || '');
     setText('tvRemark', it.vod_remarks || '');
     /* 数据栏第二格：这条详情是从哪个片源来的（B 站那个位置是播放量） */
@@ -577,6 +641,9 @@
         x.pane.hidden = i !== k;
       });
       if (countEl) countEl.textContent = PANES[k].count + ' 集';
+      /* 抽屉标题里那份集数也得跟着换线路走，否则切了线路数字还是旧的 */
+      var sc2 = byId('tvSheetCount');
+      if (sc2) sc2.textContent = PANES[k].count + ' 集';
     }
 
     groups.forEach(function (g, gi) {
@@ -611,6 +678,9 @@
           for (var k = 0; k < EP.list.length; k++) { if (EP.list[k].btn === b) { idx = k; break; } }
           EP.i = idx;
           if (window.TVPlayer) { TVPlayer.setNav(idx > 0, idx >= 0 && idx < EP.list.length - 1); TVPlayer.setEpisode(b.textContent || ''); }
+          /* 底部栏跟着显示当前集；手机上选完就收起抽屉，把画面还给用户 */
+          setBarEp(b.textContent || '');
+          if (isNarrowTv()) sheetClose();
           play(urls[pi] || '');
         });
         EP.list.push({ btn: b, url: urls[pi] || '' });
@@ -637,6 +707,13 @@
       );
     }
     p.hidden = false;
+    /* 移动端底部操作栏：只在窄屏出现（宽屏选集就在右栏，不需要它） */
+    var bar = byId('tvBar');
+    if (bar) bar.hidden = !isNarrowTv();
+    /* 抽屉标题里的集数，和右栏那个 #tvEpCount 是同一个数 */
+    var sc = byId('tvSheetCount');
+    if (sc) sc.textContent = (byId('tvEpCount') || {}).textContent || '';
+    setBarEp('');
     /* 手机端把播放器整块搬进二级页：整屏只留「标题 + 视频 + 选集」，
        比在长页面里往下滚着找播放器舒服得多；关闭时自动搬回原位。 */
     var det = openTvDetail(it.vod_name || '');
@@ -702,6 +779,68 @@
     if (rot) rot.addEventListener('click', function () {
       if (window.TVPlayer && TVPlayer.enterLandscape) TVPlayer.enterLandscape();
     });
+
+    /* ---------- 移动端底部栏 + 选集抽屉 ---------- */
+    var barEps = byId('tvBarEps'), barBack = byId('tvBarBack'), mask = byId('tvMask'),
+        sheet = byId('tvSheet'), sheetClose = byId('tvSheetClose'), grip = byId('tvGrip');
+    if (barEps) barEps.addEventListener('click', sheetOpen);
+    if (mask) mask.addEventListener('click', sheetClose);
+    if (sheetClose) sheetClose.addEventListener('click', sheetClose);
+    /* 底部栏的返回 = 原来的「返回列表」，复用同一个按钮，逻辑不重写两遍 */
+    if (barBack && back) barBack.addEventListener('click', function () { back.click(); });
+
+    /* 抓手下拉关闭：B 站那个小横条是可以往下甩的。
+       只认纵向位移，横向滑动不误触。 */
+    if (grip && sheet) {
+      var gy = 0, gdown = false;
+      grip.addEventListener('touchstart', function (e2) {
+        var t = e2.touches[0];
+        gy = t.clientY; gdown = true;
+        sheet.style.transition = 'none';
+      }, { passive: true });
+      grip.addEventListener('touchmove', function (e2) {
+        if (!gdown) return;
+        var dy = e2.touches[0].clientY - gy;
+        if (dy > 0) sheet.style.transform = 'translateY(' + dy + 'px)';
+      }, { passive: true });
+      grip.addEventListener('touchend', function (e2) {
+        if (!gdown) return;
+        gdown = false;
+        sheet.style.transition = '';
+        sheet.style.transform = '';
+        /* 甩过 70px 就当「要关」 */
+        var dy = (e2.changedTouches[0] || {}).clientY - gy;
+        if (dy > 70) sheetClose();
+      });
+    }
+
+    /* Esc 关抽屉（桌面端窄窗口调试时也用得上） */
+    document.addEventListener('keydown', function (e2) {
+      if (e2.key === 'Escape' && sheet && sheet.classList.contains('is-open')) sheetClose();
+    });
+
+    /* 窗口从窄变宽时收掉抽屉和底部栏：宽屏选集在右栏，
+       留着抽屉会浮在没有侧栏的布局上。 */
+    if (window.matchMedia) {
+      var mq = window.matchMedia('(max-width: 992px)');
+      var onMq = function () {
+        if (!mq.matches) {
+          var sh = byId('tvSheet'), mk = byId('tvMask'), eps = byId('tvEps'), home = epsHome();
+          if (sh) { sh.classList.remove('is-open'); sh.hidden = true; }
+          if (mk) { mk.classList.remove('is-open'); mk.hidden = true; }
+          document.documentElement.classList.remove('tvsheet-open');
+          if (eps && home && eps.parentNode !== home) home.appendChild(eps);
+          var bar = byId('tvBar'); if (bar) bar.hidden = true;
+        } else {
+          /* 变窄：如果播放器正开着，底部栏要补上 */
+          var pr = byId('tvPlayer');
+          var bar2 = byId('tvBar');
+          if (bar2 && pr && !pr.hidden) bar2.hidden = false;
+        }
+      };
+      if (mq.addEventListener) mq.addEventListener('change', onMq);
+      else if (mq.addListener) mq.addListener(onMq);
+    }
     /* 这里原来会在视口变宽时收掉二级页 —— 因为那套样式只在窄屏生效，留在宽屏
        就是一层没有样式的浮层。现在桌面端有自己的样式了，窄屏宽屏来回切都该留着
        这个层，没有理由再关。 */

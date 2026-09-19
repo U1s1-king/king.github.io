@@ -561,7 +561,164 @@
     .detail-view.tv-detail .tv-episodes { max-height: none; overflow: visible; }
 }
 
-/* ---------- 移动：单栏铺满 ---------- */
+/* ============================================================
+ * 三、移动端（照 B 站 App / 手机网页端）
+ * ------------------------------------------------------------
+ * B 站手机播放页的骨架，从上到下：
+ *   播放器（16:9 贴顶、方角、纯黑）
+ *   片名（16px 粗体，两行截断）
+ *   数据栏（灰字小图标：播放量 · 弹幕 · 日期）
+ *   操作条（一排可横滑的胶囊：点赞/投币/收藏/分享）
+ *   简介卡（默认收两行，点「展开」）
+ *   —— 选集不是常驻的一块，而是**底部抽屉**，由底部「选集」按钮拉起
+ *
+ * 我们这里逐个对应：
+ *   · 播放器 / 片名 / 数据栏 / 操作条 —— 一一照做
+ *   · 选集：B 站是抽屉，抽屉里还能切线路。这里同样做成抽屉，
+ *     并在底部常驻一条操作栏（选集 + 返回列表），
+ *     这样手机上不用滚到底才能换集。
+ *   · B 站底部是「发弹幕…」输入框，本站没有弹幕，
+ *     那一格换成「选集（第 N 集）」，位置和手势一致。
+ * ============================================================ */
+
+/* 选集抽屉的遮罩与面板：默认不占位，只在移动端由 JS 切 open 类 */
+.tvmask {
+    position: fixed;
+    inset: 0;
+    /* 二级页 .detail-view 是 z-index:9999，抽屉和底部栏必须比它高，
+       否则会被整层盖住（同权重时后出现的 .detail-view 也会赢）。 */
+    z-index: 10000;
+    background: rgba(0, 0, 0, .45);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .24s ease, visibility .24s;
+}
+/* 必须显式关掉：下面 .tvbar/.tvsheet 都写了 display:flex，
+   权重高于浏览器给 [hidden] 的 display:none —— 不给这条，
+   JS 里设了 hidden=true 抽屉和底栏照样显示（.tv-pager 踩过同一个坑）。 */
+.tvmask[hidden] { display: none; }
+
+.tvmask.is-open { opacity: 1; visibility: visible; }
+
+.tvsheet {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10001;
+    display: flex;
+    flex-direction: column;
+    max-height: 68vh;
+    padding: 0 0 calc(env(safe-area-inset-bottom, 0px));
+    border-radius: 16px 16px 0 0;
+    background: var(--tv-card);
+    box-shadow: 0 -8px 32px rgba(58, 37, 48, .22);
+    transform: translateY(100%);
+    transition: transform .28s cubic-bezier(.22, .61, .36, 1);
+    will-change: transform;
+}
+.tvsheet[hidden] { display: none; }
+
+.tvsheet.is-open { transform: none; }
+
+/* 抽屉顶部的抓手：B 站那个小横条，同时也是「可下拉关闭」的视觉暗示 */
+.tvsheet-grip {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 22px;
+    cursor: grab;
+}
+.tvsheet-grip::before {
+    content: '';
+    width: 36px;
+    height: 4px;
+    border-radius: 2px;
+    background: #e6d3db;
+}
+
+.tvsheet-head {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 2px 16px 12px;
+    border-bottom: 1px solid var(--tv-line);
+}
+.tvsheet-head b { font-size: .95rem; font-weight: 600; color: var(--tv-text); }
+.tvsheet-head span { font-size: .78rem; color: var(--tv-sub); }
+.tvsheet-close {
+    flex: 0 0 auto;
+    width: 32px;
+    height: 32px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--tv-accent-soft);
+    color: var(--tv-accent-ink);
+    font-size: .9rem;
+    cursor: pointer;
+}
+
+.tvsheet-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    padding: 14px 16px 18px;
+}
+
+/* ---------- 底部常驻操作栏（B 站「发弹幕…」那一行） ---------- */
+.tvbar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10000;  /* 高于 .detail-view(9999)，否则被整层盖住 */
+    display: none;   /* 只在移动端由下面的媒体查询打开 */
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px));
+    background: rgba(255, 255, 255, .96);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid var(--tv-line);
+}
+.tvbar[hidden] { display: none; }
+.tvbar-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 40px;
+    padding: 0 16px;
+    border: 1px solid var(--tv-border);
+    border-radius: 999px;
+    background: var(--tv-card);
+    color: var(--tv-text);
+    font: inherit;
+    font-size: .86rem;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.tvbar-btn:active { background: var(--tv-accent-soft); }
+/* 主按钮：占满剩余宽度，像 B 站那个长条输入框 */
+.tvbar-main {
+    flex: 1 1 auto;
+    min-width: 0;
+    justify-content: flex-start;
+    padding-left: 14px;
+    background: var(--tv-accent-soft);
+    border-color: transparent;
+    color: var(--tv-accent-ink);
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ---------- 移动端：单栏铺满 ---------- */
 @media (max-width: 992px) {
     .tv-rotate { display: inline-flex; align-items: center; gap: 6px; }
 
@@ -569,7 +726,9 @@
         display: flex;
         flex-direction: column;
         margin: 0;
+        /* 给底部操作栏让出位置，否则最后一排集数会被压住 */
         min-height: 100%;
+        padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
         background: var(--tv-page);
     }
 
@@ -577,33 +736,72 @@
     .detail-view .tvp,
     .detail-view .tv-info { flex: 0 0 auto; }
 
-    /* 二级页里视频贴边拉满，圆角只会让它看着像嵌在卡片里 */
+    /* B 站手机端播放器贴顶、方角、纯黑，不留圆角边框 */
     .detail-view .tvp,
     .detail-view #tvVideo { border-radius: 0; }
 
-    .detail-view .tv-info { padding: 14px 14px 0; }
+    /* B 站手机端片名是 16px 粗体、左右 12px 内边距 */
+    .detail-view .tv-info { padding: 12px 12px 0; }
+    .detail-view .tv-title { font-size: 1rem; line-height: 1.45; margin-bottom: 8px; }
 
-    /* 选集吃掉剩下的高度，自己滚 */
-    .detail-view .tv-aside {
-        flex: 1 1 auto;
-        min-height: 0;
-        margin: 12px 12px 0;
-        padding: 14px 14px calc(14px + env(safe-area-inset-bottom, 0px));
-        overflow-y: auto;
+    /* 数据栏：B 站是一行灰字，字号 12px 左右 */
+    .detail-view .tv-meta { font-size: .78rem; gap: 4px 12px; margin-bottom: 12px; }
+    .detail-view .tv-meta .tv-remark { font-size: .78rem; }
+
+    /* 操作条：B 站那排胶囊在手机上允许横滑，不折行 */
+    .detail-view .tv-acts {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+        overscroll-behavior-x: contain;
+        scrollbar-width: none;
+        margin: 0 -12px 14px;
+        padding: 0 12px 2px;
         -webkit-overflow-scrolling: touch;
+        /* 右侧渐隐，暗示还能往右划 */
+        -webkit-mask-image: linear-gradient(to right, #000 0%, #000 94%, transparent 100%);
+        mask-image: linear-gradient(to right, #000 0%, #000 94%, transparent 100%);
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-size: 100% 100%;
+        mask-size: 100% 100%;
     }
-    .detail-view .tv-episodes { max-height: none; overflow: visible; }
+    .detail-view .tv-acts::-webkit-scrollbar { display: none; }
+    .detail-view .tv-acts .tv-act { flex: 0 0 auto; scroll-snap-align: start; }
+
+    /* 选集在抽屉里，正文里不再常驻 —— 收起成「选集 (N 集)」一个入口 */
+    .detail-view .tv-aside { display: none; }
 
     /* 进度条别被 iPhone 底部那条横杠压住 */
     .detail-view .tvp-bar { padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px)); }
+
+    /* 底部操作栏打开 */
+    .tvbar { display: flex; }
 }
 
 /* ============================================================
- * 三、移动端列表页
+ * 四、移动端列表页
  * ============================================================ */
 @media (max-width: 768px) {
-    .tv-grid { grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 12px 10px; }
+    /* B 站手机端首页是两列大卡片，间距很小 */
+    .tv-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 8px; }
     .tv-search { flex-wrap: wrap; }
+
+    /* ---------- 搜索栏吸顶 ----------
+       B 站手机端搜索框是常驻顶部的。这里让它吸住，
+       向下翻片单时随时能改关键词，不用先滚回顶部。 */
+    .tv-search {
+        position: sticky;
+        top: calc(var(--sat, 0px));
+        z-index: 5;
+        margin: 0 -2px 10px;
+        padding: 8px 2px;
+        background: rgba(255, 255, 255, .94);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    }
+    /* 有 App Bar 时让开它的高度（顶栏是 fixed 的） */
+    html.has-appbar .tv-search { top: calc(var(--appbar-h, 48px) + var(--sat, 0px)); }
 
     /* ---------- 筛选区改成横向滚动 ----------
        实测（390px 宽、10 个片源 8 个分类）：片源行折成多行能占 300px+，
@@ -647,9 +845,20 @@
     }
     #tvSrcs.hub-chips .hub-chip i { font-size: .78rem; }
 
-    #tvCats.hub-chips { margin-bottom: 16px; }
+    #tvCats.hub-chips { margin-bottom: 14px; }
 
-    /* 手指按得准：选集方块比桌面大一圈 */
+    /* B 站手机端卡片：海报铺满、片名在下方两行 */
+    .tv-card { border-radius: 8px; }
+    .tv-name {
+        height: auto;
+        min-height: 40px;
+        padding: 7px 2px 8px;
+        font-size: .82rem;
+        line-height: 20px;
+        -webkit-line-clamp: 2;
+    }
+
+    /* 手指按得准：抽屉里的选集方块 44px 高 */
     .tv-ep-grid { grid-template-columns: repeat(auto-fill, minmax(62px, 1fr)); gap: 9px; }
     /* 纵向内边距撑出 44px 的触控高度；横向只留 1px —— 格子只有 66px 宽。
        !important 是为了压住 style.css 里给全站按钮定的 1.1rem 横向内边距。 */
@@ -660,11 +869,20 @@
     }
     .tv-ep-tab { padding: 7px 14px; font-size: .82rem; }
 
-    .tv-title { font-size: 1.02rem; }
+    /* 抽屉里的选集列表：手机上别再套一层滚动，抽屉自己滚 */
+    .tvsheet .tv-episodes { max-height: none; overflow: visible; }
+
+    /* 抽屉里的「本次搜索结果」也收窄一点 */
+    .tvsheet .tv-sb-poster { width: 44px; height: 62px; }
+
+    /* 列表页底部留白：底部 tab 是 fixed 的，别盖住最后一行卡片 */
+    .main-card { padding-bottom: calc(var(--tab-h, 56px) + 16px) !important; }
 }
 
 /* 已经转成横屏（但还没进全屏）时纵向空间紧张，把留白收掉 */
 @media (max-width: 992px) and (orientation: landscape) {
     .detail-view .tv-info { padding-top: 8px; }
     .detail-view .tv-aside { padding-top: 10px; }
+    /* 横屏时抽屉别占满，留出画面 */
+    .tvsheet { max-height: 86vh; }
 }
