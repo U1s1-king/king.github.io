@@ -1186,9 +1186,30 @@ async function tvAggregate(params, origin, bases, ac) {
       if (!it) continue
       const nm = String(it.vod_name || '')
       const tn = String(it.type_name || '')
-      if (!nm || seen[nm] || TV_ADULT.test(nm) || TV_ADULT.test(tn)) continue
-      seen[nm] = 1
+      if (!nm || TV_ADULT.test(nm) || TV_ADULT.test(tn)) continue
       it._src = got[k].i
+      const first = seen[nm]
+      if (first) {
+        /* 同名：别的源也有这部。以前这里直接 continue 把它丢掉，用户只能看到
+           碰巧排在最前面的那个源 —— 而那个源可能正好是慢的、画质差的、
+           或者根本放不出来，用户既不知道还有别的源，也没得选。
+           现在把这些「同名片」记在首条上（只记源号和 id，几十字节），
+           前端在详情页给一排「换源」，用户自己挑能放的那条。
+           去重仍然生效：列表里一部片只出现一次，不会变长。 */
+        if (!first._alts) first._alts = []
+        const dup =
+          first._src === it._src && String(first.vod_id) === String(it.vod_id)
+        if (!dup && first._alts.length < 12) {
+          first._alts.push({
+            _src: it._src,
+            vod_id: it.vod_id,
+            remarks: it.vod_remarks || '',
+          })
+        }
+        continue
+      }
+      seen[nm] = it
+      it._alts = []
       list.push(it)
     }
   }

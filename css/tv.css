@@ -1208,3 +1208,41 @@
     .tv-sk-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 8px; }
     .tv-hist { max-height: 46vh; }
 }
+
+/* ---------------- 详情页「换源」一排 ----------------
+   同一部片在多个采集源都有时（网关聚合时记在条目的 _alts 上），
+   让用户自己挑一条能放的 —— 各源画质/速度/是否放得出来差别很大。 */
+.tv-alt-srcs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 10px;
+}
+.tv-alt-label {
+    color: var(--tv-sub);
+    font-size: .78rem;
+    margin-right: 2px;
+}
+.tv-alt-btn {
+    border: 1px solid var(--tv-line, rgba(255, 255, 255, .14));
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: .78rem;
+    padding: 4px 10px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background .18s, border-color .18s, color .18s;
+}
+.tv-alt-btn:hover { border-color: var(--tv-accent, #6cf); }
+.tv-alt-btn.is-on {
+    background: var(--tv-accent, #6cf);
+    border-color: var(--tv-accent, #6cf);
+    color: #08121c;
+    font-weight: 600;
+    cursor: default;
+}
+@media (max-width: 768px) {
+    .tv-alt-btn { padding: 6px 12px; }
+}

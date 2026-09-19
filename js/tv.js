@@ -42,6 +42,9 @@
   var reqSeq = 0;
   /* 「片源」那排的源清单（由网关下发），以及这次每个源的耗时 */
   var SRCS = [];
+  /* 当前打开的这部片在各源的候选（含正在看的那个）。换源那排按钮用它，
+     切换时沿用同一份集合，所以切完还能继续切回来。 */
+  var ALT_LIST = [];
   /* 扁平化的选集列表，给播放器的上一集/下一集/自动连播用 */
   var EP = { list: [], i: -1 };
   var LINE_NAMES = { liangzi: '量子线路', lzm3u8: '量子 M3U8', lz: '量子' };
@@ -425,7 +428,7 @@
     var remark = String(it.vod_remarks || '');
     if (remark) badge.textContent = remark; else badge.remove();
     a.querySelector('.tv-name').textContent = it.vod_name || '未命名';
-    a.addEventListener('click', function () { detail(it.vod_id, it._src, a); });
+    a.addEventListener('click', function () { detail(it.vod_id, it._src, a, it._alts); });
     return a;
   }
 
@@ -651,7 +654,47 @@
   }
 
   /* ---------------- 详情与线路 ---------------- */
-  function detail(vodId, src, cardEl) {
+  /* 源编号 -> 显示名（SRCS 来自网关的 tvSourceList） */
+  function srcName(id) {
+    for (var i = 0; i < SRCS.length; i++) { if (SRCS[i].id === id) return SRCS[i].name; }
+    return (typeof id === 'number') ? ('源 ' + (id + 1)) : '未知源';
+  }
+
+  /* 详情页的「换源」一排：同一部片别的源也有时，用户可以换一个能放的。
+     网关聚合时会把同名片记在首条的 _alts 上（见 tvAggregate），
+     没有候选项就整排不渲染，不占位。 */
+  function renderAltSrcs(cur) {
+    var eps = byId('tvEps');
+    if (!eps) return;
+    var old = byId('tvAltSrcs');
+    if (old && old.parentNode) old.parentNode.removeChild(old);
+    if (!ALT_LIST.length || ALT_LIST.length < 2) return;
+    var box = document.createElement('div');
+    box.className = 'tv-alt-srcs';
+    box.id = 'tvAltSrcs';
+    var lab = document.createElement('span');
+    lab.className = 'tv-alt-label';
+    lab.textContent = '换源';
+    box.appendChild(lab);
+    ALT_LIST.forEach(function (a) {
+      var isCur = (a._src === cur);
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'tv-alt-btn' + (isCur ? ' is-on' : '');
+      b.textContent = srcName(a._src);
+      b.title = isCur ? (srcName(a._src) + '（正在看）') : ('切到 ' + srcName(a._src) + (a.remarks ? ' · ' + a.remarks : ''));
+      if (!isCur) {
+        b.addEventListener('click', function () {
+          /* 不带 alts：沿用现有候选集合，切完这排还在 */
+          detail(a.vod_id, a._src);
+        });
+      }
+      box.appendChild(b);
+    });
+    eps.insertBefore(box, eps.firstChild);
+  }
+
+  function detail(vodId, src, cardEl, alts) {
     reqSeq++; /* 在飞的列表结果作废，别盖掉「正在打开…」 */
     /* 提示写在列表下方的提示行，别清空网格 —— 用户点进一部片还想看到刚才的列表 */
     noteWithLink('正在打开…', '');
@@ -660,6 +703,18 @@
        不带 _src 时网关会按 order 依次试源、命中即返回，很可能给你另一个源里
        同号的另一部片 —— 播放器拿到的就是错的地址。 */
     var pin = typeof src === 'number' ? src : state.src;
+    /* 这部片在别的源也有 —— 网关聚合时把同名片挂在列表条目的 _alts 上。
+       带数组 = 新打开一部片，重建候选（含当前源）；不带 = 源内切换，
+       沿用现有候选，别把它清掉，否则切一次「换源」那排就没了。 */
+    if (Object.prototype.toString.call(alts) === '[object Array]') {
+      ALT_LIST = [{ _src: pin, vod_id: vodId, cur: true }];
+      for (var ai = 0; ai < alts.length; ai++) {
+        var av = alts[ai];
+        if (!av) continue;
+        if (av._src === pin && String(av.vod_id) === String(vodId)) continue;
+        ALT_LIST.push({ _src: av._src, vod_id: av.vod_id, remarks: av.remarks || '' });
+      }
+    }
     var params = { ac: 'videolist', ids: vodId };
     if (typeof pin === 'number') params._src = pin;
     apiGet(params).then(function (d) {
@@ -957,6 +1012,8 @@
         function (i) { if (LINES[i] && LINES[i].btn) LINES[i].btn.click(); },
       );
     }
+    /* 这部片别的源也有的话，在选集上方给一排「换源」 */
+    renderAltSrcs(it._src);
     p.hidden = false;
     /* 移动端底部操作栏：只在窄屏出现（宽屏选集就在右栏，不需要它） */
     var bar = byId('tvBar');
