@@ -1251,8 +1251,17 @@ async function tvList(params, origin) {
   /* 各站 type_id 编号不一样（同一部「电影」在 A 站是 1、在 B 站可能是 27），
      所以前端会带上上次分类列表来自哪号源 _src。搜索时只打支持 wd 的源
      （不支持的那些会回「暂不支持搜索」，白等一轮）。 */
-  const order =
-    !isNaN(pin) && TV_SOURCES[pin]
+  /* ⚠ 详情（ids=）必须【只问指定的那一个源】，不能像分类那样换源重试。
+     vod_id 只在单个源内唯一，跨源同号往往是另一部片：一旦指定的源没返回
+     （超时/空 list），接力到下一个源就会拿「同号的另一部片」当结果返回，
+     用户看到的就是「点这部海报，打开的却是完全不同的东西」；
+     若都没命中，则返回空 list，前端报「没拿到该资源」—— 就是「点不进去」。
+     分类/列表可以换源（t 是各站自己的编号，换了要删掉重拉），
+     详情不行：宁可明确报错，也不能给错片。 */
+  const onlyIds = !!params.get('ids') && !isNaN(pin) && TV_SOURCES[pin]
+  const order = onlyIds
+    ? [TV_SOURCES[pin]]
+    : !isNaN(pin) && TV_SOURCES[pin]
       ? [TV_SOURCES[pin]].concat(
           TV_SOURCES.filter(function (b) {
             return b !== TV_SOURCES[pin]
