@@ -183,6 +183,8 @@
     renderSrcs(SRCS, []);
     hideHist();
     savePref();
+    /* 换源 = 换一批片，正在看的那部不再适用，视图里把它清掉 */
+    saveView({ vod: null, vodSrc: null });
     /* 分类现在是固定档（电影/动漫/体育…），跨源通用，换源不用清掉重选；
        网关会按新源把这一档翻译成它自己的 type_id */
     load(1);
@@ -236,8 +238,17 @@
         /* 会话过期（关过浏览器）或门卫不认这个 cookie：回本页重新走一遍，
            门卫会把登录页发回来。
            用相对路径而不是 '/TV.html' —— 站点可能部署在子路径下，
-           绝对根路径会 404（仓库有 CNAME，但 server.js 也支持任意 ROOT）。 */
-        try { location.replace('TV.html'); } catch (e) {}
+           绝对根路径会 404（仓库有 CNAME，但 server.js 也支持任意 ROOT）。
+           ⚠ 加 5 秒节流：否则「拿不到有效 cookie」时每一次请求都触发一次
+           location.replace，页面会反复自我刷新（用户看到的就是「点一下就刷」）。
+           节流之后只重载一次，再失败就正常报错，把原因交给调用方显示。
+           视图状态存在 sessionStorage 里，重载后会回到原来的片子/搜索词。 */
+        var lastGate = 0;
+        try { lastGate = Number(sessionStorage.getItem('tv.gate.reload') || 0) || 0; } catch (e) {}
+        if (Date.now() - lastGate > 5000) {
+          try { sessionStorage.setItem('tv.gate.reload', String(Date.now())); } catch (e) {}
+          try { location.replace('TV.html'); } catch (e) {}
+        }
         throw new Error(NEED_GATE);
       }
       if (!r.ok) throw new Error('HTTP ' + r.status);
@@ -372,6 +383,8 @@
     var kwEl = byId('tvKw'); if (kwEl) kwEl.value = '';
     hideHist();
     savePref();
+    /* 换分类同样是换一批片，清掉正在看的那部 */
+    saveView({ vod: null, vodSrc: null });
     load(pg);
   }
 
@@ -666,6 +679,10 @@
         if (nmEl && nmEl.textContent !== nm) nmEl.textContent = nm;
       }
       openPlayer(it);
+      /* 记下「正在看这部」：刷新（含门卫 401 触发的重载）后自动回到这里。
+         放在 openPlayer 之后 —— 它内部会先关掉旧的二级页，
+         早写会被那次关闭当成「用户离开片子」而抹掉。 */
+      saveView({ vod: it.vod_id, vodSrc: it._src });
     }).catch(function (e) { noteWithLink('打开失败：' + String(e.message || e), ''); });
   }
 
@@ -685,6 +702,9 @@
     var h = tvDetail;
     tvDetail = null;   /* 先置空：close() 会回调 onClose，不置空会绕回来 */
     h.close();
+    /* 用户这次是真的离开了片子（openPlayer 里那次关闭是「先关旧的再开新的」，
+       紧接着 detail() 会把新的写回去，所以这里清掉不影响打开流程） */
+    saveView({ vod: null, vodSrc: null });
     return true;
   }
 
@@ -1105,6 +1125,37 @@
     if (p.pick && typeof p.src === 'number') { state.pick = true; state.src = p.src; }
   }
 
+  /* ---------------- 会话内的「当前视图」----------------
+     刷新之后要回到原来的位置，而不是被丢回最新片单首页。
+     什么时候会刷新：用户自己按 F5；门卫会话过期时 jget 会 location.replace
+     回本页重新登录（见上面 401 的处理）。两种情况都不该把用户正在看的
+     那部片、那个搜索词弄丢。
+     用 sessionStorage 而不是 localStorage：同一个标签页内刷新要还原，
+     但关掉标签页再进来应该回到「最新片单」—— 跨会话恢复关键词会把人
+     困在上次搜的东西里（这正是 loadPref 不恢复 kw 的原因）。 */
+  var K_VIEW = 'tv.view.v1';
+  function ssGet(k, d) { try { var v = sessionStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
+  function ssSet(k, v) { try { sessionStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function saveView(extra) {
+    var v = ssGet(K_VIEW, null);
+    if (!v || typeof v !== 'object') v = {};
+    v.kw = state.kw || '';
+    v.t = state.t || '';
+    v.src = (typeof state.src === 'number') ? state.src : null;
+    v.pick = !!state.pick;
+    /* extra 里带 vod 才动「正在看哪部」；不带就原样保留，
+       免得随便一次 saveView 把已经打开的片子抹掉 */
+    if (extra && Object.prototype.hasOwnProperty.call(extra, 'vod')) {
+      v.vod = extra.vod || '';
+      v.vodSrc = (typeof extra.vodSrc === 'number') ? extra.vodSrc : null;
+    }
+    ssSet(K_VIEW, v);
+  }
+  function loadView() {
+    var v = ssGet(K_VIEW, null);
+    return (v && typeof v === 'object') ? v : null;
+  }
+
   /* ---------------- 搜索历史下拉 ----------------
      自己画一个：<input list=datalist> 那种原生建议框在移动端表现很差
      （iOS 上根本不弹），而且没法做「点 × 删掉这一条」。
@@ -1240,6 +1291,8 @@
       if (kw && kw.value !== state.kw) kw.value = state.kw;
       if (state.kw) pushHistory(state.kw);
       hideHist();
+      /* 新搜索 = 换一批结果，清掉「正在看哪部」 */
+      saveView({ vod: null, vodSrc: null });
       load(1);
     }
     doSearch = runSearch;
@@ -1406,7 +1459,29 @@
     renderMy();
     /* 恢复上次的分类/片源偏好，再拉数据 */
     loadPref();
-    if (byId('tvGrid')) loadCats().then(function () { load(1); });
+    /* 再把「本标签页刷新前的位置」接上：同一个搜索词、同一个分类/片源，
+       而且如果刷新前正在看某部片，等列表回来后自动把它打开 ——
+       这样门卫 401 触发的重载（或用户按 F5）之后，页面看起来没变。 */
+    var vw = loadView();
+    if (vw) {
+      if (typeof vw.kw === 'string' && vw.kw) {
+        state.kw = vw.kw;
+        var kwEl = byId('tvKw');
+        if (kwEl) kwEl.value = vw.kw;
+      }
+      if (typeof vw.t === 'string' && vw.t) state.t = vw.t;
+      if (typeof vw.src === 'number') { state.src = vw.src; state.pick = !!vw.pick; }
+    }
+    if (byId('tvGrid')) {
+      loadCats().then(function () {
+        load(1);
+        /* 恢复「正在看的那部」。detail() 自己会开二级页+播放器，
+           不需要列表先到位，所以并行发起即可。 */
+        if (vw && vw.vod) {
+          detail(vw.vod, (typeof vw.vodSrc === 'number') ? vw.vodSrc : undefined);
+        }
+      });
+    }
   }
 
   /* 本地联调/版式验证用的钩子：不走网关，直接拿一份详情数据开播放器。
