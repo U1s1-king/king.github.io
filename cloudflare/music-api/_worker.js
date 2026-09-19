@@ -1335,6 +1335,23 @@ async function tvList(params, origin) {
       let out = tvClean(text)
       try {
         const o = JSON.parse(out)
+        /* ⚠ 详情请求必须校验命中，不能「有 list 就算成功」：
+           上游找不到该 id 时返回的是 {"list":[]}，照直返回会让前端报
+           「没拿到该资源」= 用户点不进去；而继续换源又会撞上跨源同号的
+           另一部片 = 打开完全不同的东西。所以这里要求 list 非空且 id 对得上，
+           对不上就当这个源没命中，继续找（或最终明确报错）。 */
+        const wantIds = String(params.get('ids') || '')
+        if (wantIds) {
+          const want = wantIds.split(',')[0].trim()
+          const hit = (o.list || []).filter(function (x) {
+            return String(x && x.vod_id) === want
+          })
+          if (!hit.length) {
+            errors.push(base + ': 没有该 id')
+            continue
+          }
+          o.list = hit
+        }
         o._src = TV_SOURCES.indexOf(base)
         o.sources = tvSourceList()
         out = JSON.stringify(o)
