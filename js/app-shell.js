@@ -322,7 +322,7 @@
     if (!stack.length) return;
     var d = stack.pop();          /* 只弹栈顶：下面的层原样留着 */
     d.el.classList.remove('in');
-    if (d.onClose) { try { d.onClose(); } catch (e) {} }
+    if (d.onClose) { try { d.onClose(opts); } catch (e) {} }
     releaseAdopted(d);            /* 只归还这一层搬进来的节点，别动下面各层 */
     setTimeout(function () { if (d.el.parentNode) d.el.parentNode.removeChild(d.el); }, 260);
 

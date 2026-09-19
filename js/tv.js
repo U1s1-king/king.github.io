@@ -801,10 +801,17 @@
          sticky 的「标题 + 关闭」头（手机端用 App Bar，不重复加）。 */
       allowDesktop: true,
       swipeClose: true,
-      onClose: function () {
+      onClose: function (o) {
         tvDetail = null;
-        var p = byId('tvPlayer'); if (p) p.hidden = true;
-        var bar = byId('tvBar'); if (bar) bar.hidden = true;
+        /* ⚠ 静默替换（换源）时不能把播放器藏掉：openPlayer 里
+           `p.hidden = false` 在 openTvDetail 之前就执行了，而这里会把它
+           重新藏起来 —— 结果就是「换完源画面不见了，得再点一集」。
+           要藏只在用户真离开时藏；其它清理（收抽屉、选集归位、停播）照做。 */
+        var silent = !!(o && o.silent);
+        if (!silent) {
+          var p = byId('tvPlayer'); if (p) p.hidden = true;
+          var bar = byId('tvBar'); if (bar) bar.hidden = true;
+        }
         /* 层关掉时抽屉也得跟着收，并把选集搬回右栏，
            否则下次在桌面端打开会发现选集不在侧栏里 */
         var sh = byId('tvSheet'), mk = byId('tvMask'), eps = byId('tvEps'), home = epsHome();
