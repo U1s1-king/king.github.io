@@ -120,6 +120,16 @@
 }
 .tvp-toast[hidden] { display: none; }
 .tvp-toast.on { opacity: 1; }
+/* 长文本（快捷键说明、错误提示那种）：单行会撑出播放器外，
+   这里限宽换行、行距放宽，仍然居中。 */
+.tvp-toast.is-long {
+    max-width: min(560px, 86%);
+    white-space: normal;
+    line-height: 1.7;
+    text-align: center;
+    padding: 12px 18px;
+    font-size: 12.5px;
+}
 
 /* ---------- 底栏 ---------- */
 .tvp-bar {

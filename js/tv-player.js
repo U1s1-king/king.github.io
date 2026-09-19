@@ -14,6 +14,9 @@
   var HLS_SRC = 'https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js';
   var MEDIA_EXT = ['.mp4', '.m4v', '.mkv', '.flv', '.avi', '.mov', '.webm', '.mp3', '.m4a'];
   var RATES = [2, 1.5, 1.25, 1, 0.75, 0.5];
+  /* 快捷键说明（设置菜单里那一项弹出它）。写成一行，toast 里换行靠 CSS 的 white-space。 */
+  var KEYHELP = '空格/k 播放暂停 · ←/→ 5秒 · j/l 10秒 · ↑/↓ 音量 · m 静音 · ' +
+    'f 全屏 · w 网页全屏 · t 宽屏 · 0-9 跳到N0% · Shift+,/. 减速加速 · Shift+1~4 倍速 · p/n 上下集';
   var FITS = [
     { k: 'contain', n: '适应' },
     { k: 'cover', n: '填充' },
@@ -54,13 +57,17 @@
     return 'hls';
   }
 
-  function toast(msg) {
+  /* ms 可选：一般提示 1.2 秒就够，但「快捷键说明」那种长文本
+     一秒多根本读不完，所以给个自定义时长的口子。 */
+  function toast(msg, ms) {
     if (!D.toast) return;
     D.toast.textContent = msg;
     D.toast.hidden = false;
+    /* 长文本加个类：让它换行、放宽一点，别撑出播放器外面 */
+    D.toast.classList.toggle('is-long', String(msg).length > 40);
     D.toast.classList.add('on');
     clearTimeout(D.toast._t);
-    D.toast._t = setTimeout(function () { D.toast.classList.remove('on'); }, 1200);
+    D.toast._t = setTimeout(function () { D.toast.classList.remove('on'); }, ms || 1200);
   }
   function showErr(msg) { if (!D.err) return; if (D.errMsg) D.errMsg.textContent = msg; D.err.hidden = false; setSpin(false); }
   function hideErr() { if (D.err) D.err.hidden = true; }
@@ -152,6 +159,11 @@
       b.addEventListener('click', function () { setFit(f.k); buildSetMenu(); toast('画面比例：' + f.n); });
       D.setMenu.appendChild(b);
     });
+    /* 快捷键说明：B 站没有这一项，但我们的键位比 B 站多，
+       不给个地方写出来用户不会知道（尤其 j/l 和 Shift+数字）。 */
+    var help = menuBtn(0, '快捷键说明', false);
+    help.addEventListener('click', function () { closeMenus(); toast(KEYHELP, 6000); });
+    D.setMenu.appendChild(help);
   }
   /* 线路菜单：tv.js 把各条线路传进来（B 站那个位置是清晰度，我们换成线路） */
   function setQualities(list, active, onPick) {
@@ -479,22 +491,114 @@
     setTime();
   }
 
+  /* ============================================================
+   * 快捷键（照 bilibili 播放器那一套）
+   * ------------------------------------------------------------
+   * 实测 B 站网页端播放器的键位，逐条对应：
+   *   空格 / k        播放、暂停
+   *   ← / →           快退、快进 5 秒
+   *   j / l           快退、快进 10 秒（B 站的 J/L 是 10 秒，和方向键不同）
+   *   ↑ / ↓           音量 ±5%
+   *   m               静音开关
+   *   f               全屏（进入/退出）
+   *   w               网页全屏
+   *   t               宽屏
+   *   Esc             退出全屏（浏览器自己处理，这里只同步按钮态）
+   *   0-9             跳到总时长的 N0%
+   *   Shift+, / .     减速 / 加速
+   *   Shift+1..4      1.0x / 2.0x / 3.0x / 4.0x（B 站番剧页这套）
+   *   p / n           上一集 / 下一集（Shift 与否都认）
+   *
+   * 三个「踩过的坑」写在这里，改的时候别踩回去：
+   *
+   *  1) 数字键必须先排除修饰键。原来只判断 '0' <= k <= '9'，
+   *     于是 Shift+2（想切 2 倍速）被当成「跳到 20%」，
+   *     实测 currentTime 从 300 直接跳到 120 —— 快捷键互相打架。
+   *  2) 全屏后必须仍然生效。document 上的监听本来就能收到全屏里的按键，
+   *     真正的坑是那个 offsetParent 守卫：全屏时祖先被浏览器改了渲染方式，
+   *     offsetParent 可能变成 null，于是整个键盘在最重要的场景下失灵。
+   *     现在改成「看播放器是否真的在页面上可见」，不再依赖 offsetParent。
+   *  3) effectAllowed 之类的手势限制不影响键盘，但输入框必须放行：
+   *     用户在搜索框里打字时，f/j/k 都得是普通字符。
+   * ============================================================ */
+  /* 按 B 站的档位顺序排列，Shift+N 的 N 就是这里的下标 + 1 */
+  var KEY_RATES = [1, 2, 3, 4];
+  /* 倍速增减用的完整档位表（和倍速菜单一致，只是方向反过来用） */
+  function stepRate(dir) {
+    /* RATES 是从快到慢排的：[2, 1.5, 1.25, 1, 0.75, 0.5]
+       「加速」= 往数组前面走。找不到当前位置就退回 1x 再走一步。 */
+    var i = RATES.indexOf(S.rate);
+    if (i < 0) {
+      /* 当前倍速不在档位表里（比如手改过），先归到 1x */
+      i = RATES.indexOf(1);
+    }
+    var j = i - dir; /* dir=+1 加速 -> 下标减小 */
+    if (j < 0) j = 0;
+    if (j > RATES.length - 1) j = RATES.length - 1;
+    if (j === i) { toast(dir > 0 ? '已是最快' : '已是最慢'); return; }
+    setRate(RATES[j]);
+  }
+
+  /* 播放器是否「正在被使用」——用它替代原来的 offsetParent 判断。
+     条件：stage 存在、且它的盒子里有实际尺寸（display:none 或未插入时为 0），
+     同时没有别的输入控件抢焦点。 */
+  function playerActive() {
+    var st = D.stage;
+    if (!st) return false;
+    var r = st.getBoundingClientRect();
+    return r.width > 0 && r.height > 0;
+  }
+
   function onKey(e) {
-    if (!D.stage || D.stage.offsetParent === null) return;
+    if (!playerActive()) return;
     var t = e.target || {};
     var tag = (t.tagName || '').toLowerCase();
-    if (tag === 'input' || tag === 'textarea' || t.isContentEditable) return;
+    /* 输入框、可编辑区域里一律放行，别把用户打的字吃掉 */
+    if (tag === 'input' || tag === 'textarea' || tag === 'select' || t.isContentEditable) return;
+    /* 带 Ctrl/Alt/Meta 的组合键交给浏览器（Ctrl+F 找内容、Alt+← 后退…） */
+    if (e.ctrlKey || e.altKey || e.metaKey) return;
+
     var k = e.key;
+    var shift = e.shiftKey;
+
+    /* ---------- 带 Shift 的：倍速 ---------- */
+    if (shift) {
+      /* Shift+1..4 → 1x/2x/3x/4x。注意这里必须先于下面的数字键处理 */
+      if (k >= '1' && k <= '4' && KEY_RATES.length >= Number(k)) {
+        e.preventDefault();
+        setRate(KEY_RATES[Number(k) - 1]);
+        return;
+      }
+      /* Shift+. / Shift+, → 加速 / 减速（和 B 站一致） */
+      if (k === '>' || k === '.') { e.preventDefault(); stepRate(1); return; }
+      if (k === '<' || k === ',') { e.preventDefault(); stepRate(-1); return; }
+      /* Shift+p / Shift+n → 上一集 / 下一集 */
+      if (k === 'P') { e.preventDefault(); if (cfg.onPrev) cfg.onPrev(); return; }
+      if (k === 'N') { e.preventDefault(); if (cfg.onNext) cfg.onNext(); return; }
+      /* 其它带 Shift 的键不拦，避免吃掉浏览器的快捷键 */
+      return;
+    }
+
+    /* ---------- 不带 Shift ---------- */
     if (k === ' ' || k === 'Spacebar' || k === 'k') { e.preventDefault(); toggle(); }
     else if (k === 'ArrowLeft') { e.preventDefault(); seekBy(-5); toast('-5 秒'); }
     else if (k === 'ArrowRight') { e.preventDefault(); seekBy(5); toast('+5 秒'); }
+    else if (k === 'j' || k === 'J') { e.preventDefault(); seekBy(-10); toast('-10 秒'); }
+    else if (k === 'l' || k === 'L') { e.preventDefault(); seekBy(10); toast('+10 秒'); }
     else if (k === 'ArrowUp') { e.preventDefault(); setVolume(D.video.volume + 0.05, true); toast('音量 ' + Math.round(D.video.volume * 100) + '%'); }
     else if (k === 'ArrowDown') { e.preventDefault(); setVolume(D.video.volume - 0.05, true); toast('音量 ' + Math.round(D.video.volume * 100) + '%'); }
     else if (k === 'f' || k === 'F') { e.preventDefault(); toggleFull(); }
     else if (k === 'w' || k === 'W') { e.preventDefault(); toggleWebFull(); }
     else if (k === 't' || k === 'T') { e.preventDefault(); toggleWide(); }
     else if (k === 'm' || k === 'M') { e.preventDefault(); setVolume(D.video.muted ? (volBeforeMute || 1) : 0, true); toast(D.video.muted ? '已静音' : '取消静音'); }
-    else if (k >= '0' && k <= '9' && D.video.duration) { D.video.currentTime = D.video.duration * (Number(k) / 10); }
+    else if (k === 'p') { e.preventDefault(); if (cfg.onPrev) cfg.onPrev(); }
+    else if (k === 'n') { e.preventDefault(); if (cfg.onNext) cfg.onNext(); }
+    /* 数字键：跳到总时长的 N0%。放在最后，且已经排除了 Shift */
+    else if (k >= '0' && k <= '9' && D.video.duration && isFinite(D.video.duration)) {
+      e.preventDefault();
+      D.video.currentTime = D.video.duration * (Number(k) / 10);
+      toast('跳到 ' + (Number(k) * 10) + '%');
+    }
   }
 
   function bind() {
@@ -651,6 +755,11 @@
     setNav: setNav,
     setQualities: setQualities,
     seekBy: seekBy,
+    /* 对外暴露倍速与设置：页面上别的地方（以及自动化测试）
+       需要一个能同时改 video.playbackRate 和内部 S.rate 的入口，
+       直接改 video 会让内部状态和实际值不同步。 */
+    setRate: setRate,
+    getRate: function () { return S.rate; },
     enterLandscape: enterLandscape,
     toggleFull: toggleFull,
     isFull: isFull,
