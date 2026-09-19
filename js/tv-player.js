@@ -288,13 +288,39 @@
       enterLandscape();
     }
   }
+  /* 画中画。以前只写了 try/catch，会有三个问题：
+       1. 不支持 PiP 的浏览器（iOS Safari、部分 Firefox）点了完全没反应，
+          用户以为按钮坏了 —— 现在明确提示「这个浏览器不支持」；
+       2. 进入/退出后按钮没有选中态，看不出当前是不是 PiP；
+       3. requestPictureInPicture 返回 Promise，被浏览器拒绝时
+          （比如没播放、或用户手势不足）会静默失败，这里接住并提示。 */
+  function syncPipBtn() {
+    if (!D.pip) return;
+    var d = document;
+    var on = !!(d.pictureInPictureElement && d.pictureInPictureElement === D.video);
+    D.pip.classList.toggle('is-on', on);
+  }
   function togglePip() {
     if (!D.video) return;
     var d = document;
+    if (!d.pictureInPictureEnabled && !d.pictureInPictureElement) {
+      toast('这个浏览器不支持画中画');
+      return;
+    }
     try {
-      if (d.pictureInPictureElement) d.exitPictureInPicture();
-      else if (D.video.requestPictureInPicture) D.video.requestPictureInPicture();
-    } catch (e) {}
+      if (d.pictureInPictureElement) {
+        d.exitPictureInPicture().then(syncPipBtn).catch(function () {});
+      } else if (D.video.requestPictureInPicture) {
+        D.video.requestPictureInPicture().then(syncPipBtn).catch(function (err) {
+          /* 最常见的原因是「视频还没开始播」—— PiP 需要有一帧画面 */
+          toast(err && err.name === 'NotAllowedError' ? '先播放一下再开画中画' : '画中画打不开');
+        });
+      } else {
+        toast('这个浏览器不支持画中画');
+      }
+    } catch (e) {
+      toast('画中画打不开');
+    }
   }
   function clearFS() {
     if (D.stage && D.stage.classList.contains('is-web-full')) toggleWebFull();
@@ -482,6 +508,10 @@
     v.addEventListener('canplay', function () { setSpin(false); });
     /* 播放出错一律交给重试器（attempt 里的 onerror），这里不再弹卡片 */
     v.addEventListener('ended', function () { if (S.autonext && cfg.onEnded) cfg.onEnded(); });
+    /* 画中画状态同步：用户也可能在系统画中画窗口上点关闭，
+       不能只在我们自己的按钮点击时更新，得监听这两个事件。 */
+    v.addEventListener('enterpictureinpicture', syncPipBtn);
+    v.addEventListener('leavepictureinpicture', syncPipBtn);
     v.addEventListener('dblclick', function () { clearTimeout(clickTimer); toggleFull(); });
     v.addEventListener('click', function () {
       clearTimeout(clickTimer);

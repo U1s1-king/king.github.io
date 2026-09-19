@@ -681,6 +681,11 @@
           /* 底部栏跟着显示当前集；手机上选完就收起抽屉，把画面还给用户 */
           setBarEp(b.textContent || '');
           if (isNarrowTv()) sheetClose();
+          /* 记下「现在在看哪部片的哪一集」——进度和直链都按这个键存 */
+          CUR.it = it;
+          CUR.ep = b.textContent || '';
+          if (window.TVStore) TVStore.saveUrl(it, CUR.ep, urls[pi] || '');
+          updateFavBtn();
           play(urls[pi] || '');
         });
         EP.list.push({ btn: b, url: urls[pi] || '' });
@@ -736,6 +741,104 @@
     if (!det && p.scrollIntoView) p.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
+  /* ---------------- 继续观看 / 我的追剧（本地数据） ----------------
+     这两块只读 localStorage，不碰网络。没有内容时整块隐藏，不占位。 */
+  function myCard(rec, kind) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'tv-my-item';
+    b.title = rec.name || '';
+    var pos = (rec.d && rec.t) ? Math.min(100, Math.max(2, Math.round(rec.t / rec.d * 100))) : 0;
+    b.innerHTML = '<span class="tv-my-poster"><span class="tv-my-bar"' + (pos ? '' : ' hidden') +
+      '><i style="width:' + pos + '%"></i></span></span>' +
+      '<span class="tv-my-name"></span><span class="tv-my-sub"></span>';
+    var pic = String(rec.pic || '');
+    var poster = b.querySelector('.tv-my-poster');
+    if (pic) {
+      var im = document.createElement('img');
+      im.loading = 'lazy';
+      im.referrerPolicy = 'no-referrer';
+      im.alt = '';
+      im.src = picUrl(pic);
+      im.addEventListener('error', function () {
+        if (im.parentNode) im.parentNode.removeChild(im);
+        poster.classList.add('is-empty');
+      });
+      poster.insertBefore(im, poster.firstChild);
+    } else {
+      poster.classList.add('is-empty');
+    }
+    b.querySelector('.tv-my-name').textContent = rec.name || '未命名';
+
+    /* 副标题：续播显示「看到 12:34 · 第3集」，追剧显示备注 */
+    var sub = b.querySelector('.tv-my-sub');
+    if (kind === 'prog') {
+      var parts = [];
+      if (rec.t) parts.push('看到 ' + fmtTime(rec.t));
+      if (rec.ep) parts.push(rec.ep);
+      sub.textContent = parts.join(' · ');
+    } else {
+      sub.textContent = rec.remark || '';
+      if (!rec.remark) sub.remove();
+    }
+
+    /* 追剧卡片右上角给个删除叉 */
+    if (kind === 'fav') {
+      var del = document.createElement('span');
+      del.className = 'tv-my-del';
+      del.setAttribute('role', 'button');
+      del.setAttribute('aria-label', '取消追剧');
+      del.innerHTML = '<i class="fas fa-xmark"></i>';
+      del.addEventListener('click', function (ev) {
+        ev.stopPropagation();
+        if (window.TVStore) TVStore.removeFav(rec.key);
+        renderMy();
+      });
+      b.appendChild(del);
+    }
+
+    /* 点卡片：有 vod_id 就照常打开详情；只有名字（进度记录被清了）就不响应 */
+    b.addEventListener('click', function () {
+      if (!rec.id) return;
+      detail(rec.id, typeof rec.src === 'number' ? rec.src : undefined);
+    });
+    return b;
+  }
+
+  function renderMy() {
+    var box = byId('tvMy'), row = byId('tvMyRow'), favRow = byId('tvFavRow'),
+        favHead = byId('tvFavHead'), favCount = byId('tvFavCount');
+    if (!box || !row || !favRow || !window.TVStore) return;
+
+    var prog = TVStore.recent(12);
+    var favs = TVStore.favList();
+
+    row.innerHTML = '';
+    prog.forEach(function (r) { row.appendChild(myCard(r, 'prog')); });
+
+    favRow.innerHTML = '';
+    favs.forEach(function (f) {
+      /* 追剧记录用的是列表页那套字段，补一个 vod_id 让 myCard 能打开详情 */
+      favRow.appendChild(myCard({ id: f.id, name: f.name, pic: f.pic, remark: f.remark, src: f.src, key: f.key }, 'fav'));
+    });
+
+    if (favHead) favHead.hidden = !favs.length;
+    if (favCount) favCount.textContent = favs.length ? favs.length + ' 部' : '';
+    /* 两块都空 → 整块不显示 */
+    box.hidden = !prog.length && !favs.length;
+  }
+
+  /* 播放页上「追剧」按钮的选中态 */
+  function updateFavBtn() {
+    var b = byId('tvFav'), t = byId('tvFavTxt');
+    if (!b || !window.TVStore) return;
+    var on = CUR.it ? TVStore.isFav(CUR.it) : false;
+    b.classList.toggle('is-on', on);
+    var ic = b.querySelector('i');
+    if (ic) ic.className = on ? 'fas fa-star' : 'far fa-star';
+    if (t) t.textContent = on ? '已追剧' : '追剧';
+  }
+
   /* ---------------- 播放（B 站风格那套在 js/tv-player.js） ---------------- */
   function stopPlayer() { if (window.TVPlayer) TVPlayer.stop(); }
 
@@ -748,6 +851,39 @@
       return;
     }
     TVPlayer.play(url);
+  }
+
+  /* ---------------- 观看进度（本地续播） ----------------
+     片子打开、进度条一有变化就往 localStorage 写；
+     下次点同一集，等 metadata 到了再跳回去。
+     为什么等 metadata：HLS 刚建的时候 duration 还是 NaN，
+     这时设 currentTime 会被浏览器丢掉，看起来就是「续播没生效」。 */
+  var CUR = { it: null, ep: '' };
+
+  function onTimeUpdate() {
+    if (!window.TVStore || !CUR.it) return;
+    var v = TVPlayer.getVideo && TVPlayer.getVideo();
+    if (!v || !v.duration || !isFinite(v.duration)) return;
+    TVStore.saveProgress(CUR.it, CUR.ep, v.currentTime, v.duration);
+  }
+
+  function resumeIfAny() {
+    if (!window.TVStore || !CUR.it) return;
+    var v = TVPlayer.getVideo && TVPlayer.getVideo();
+    if (!v || !v.duration || !isFinite(v.duration)) return;
+    var p = TVStore.getProgress(CUR.it, CUR.ep);
+    if (!p || !p.t) return;
+    /* 已经接近上次那个位置就别再跳了（可能是重试引起的第二次 metadata） */
+    if (Math.abs(v.currentTime - p.t) < 3) return;
+    v.currentTime = Math.max(0, Math.min(v.duration - 1, p.t));
+    TVPlayer.toast('已续播到 ' + fmtTime(p.t));
+  }
+
+  function fmtTime(s) {
+    s = Math.max(0, Math.floor(s || 0));
+    var h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60;
+    function p2(n) { return (n < 10 ? '0' : '') + n; }
+    return (h > 0 ? h + ':' : '') + p2(m) + ':' + p2(x);
   }
 
   /* ---------------- 绑定 ---------------- */
@@ -779,6 +915,55 @@
     if (rot) rot.addEventListener('click', function () {
       if (window.TVPlayer && TVPlayer.enterLandscape) TVPlayer.enterLandscape();
     });
+
+    /* ---------- 追剧 / 原站打开 / 清空记录 ---------- */
+    var favBtn = byId('tvFav');
+    if (favBtn) favBtn.addEventListener('click', function () {
+      if (!window.TVStore || !CUR.it) return;
+      var on = TVStore.toggleFav(CUR.it);
+      updateFavBtn();
+      renderMy();
+      if (window.TVPlayer && TVPlayer.toast) TVPlayer.toast(on ? '已加入追剧' : '已取消追剧');
+    });
+
+    /* 原站打开：把这一集的真实地址甩给浏览器。
+       这是「暴露直链」不是「下载」——本站不托管、不转存任何文件。 */
+    var srcOpen = byId('tvSrcOpen');
+    if (srcOpen) srcOpen.addEventListener('click', function () {
+      if (!CUR.it || !CUR.ep) { noteWithLink('还没选集，先点一集再打开原站。', ''); return; }
+      var u = window.TVStore ? TVStore.getUrl(CUR.it, CUR.ep) : '';
+      if (!u) { noteWithLink('这一集还没有地址记录，先播放一次再试。', ''); return; }
+      /* 网页线路（/share/ 那种）本来就要在新标签页看，一并走这里 */
+      window.open(u, '_blank', 'noopener,noreferrer');
+      noteWithLink('已在原站打开：' + CUR.ep + '（本站不托管该视频，直链来自采集接口）', '');
+    });
+
+    var myClear = byId('tvMyClear');
+    if (myClear) myClear.addEventListener('click', function () {
+      if (!window.TVStore) return;
+      /* 只清进度，不动追剧列表 —— 用户主动收藏的东西不该被「清空记录」带走 */
+      TVStore.clearAllProgress();
+      renderMy();
+      noteWithLink('观看记录已清空（追剧列表保留）。', '');
+    });
+
+    /* ---------- 观看进度：接在 <video> 上 ----------
+       等 loadedmetadata 再跳（那时 duration 才是真的），
+       timeupdate 负责回写。两个都在 TVPlayer.init 之后绑。 */
+    if (window.TVPlayer && TVPlayer.getVideo) {
+      var vv = TVPlayer.getVideo();
+      if (vv) {
+        vv.addEventListener('loadedmetadata', function () { setTimeout(resumeIfAny, 120); });
+        vv.addEventListener('timeupdate', onTimeUpdate);
+        /* 关页面/切后台时补存一次，别把最后几秒丢了 */
+        vv.addEventListener('pause', function () { onTimeUpdate(); });
+      }
+      window.addEventListener('pagehide', function () { if (CUR.it) onTimeUpdate(); });
+      /* 切到后台（手机切 App）也存一次 */
+      document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'hidden' && CUR.it) onTimeUpdate();
+      });
+    }
 
     /* ---------- 移动端底部栏 + 选集抽屉 ---------- */
     var barEps = byId('tvBarEps'), barBack = byId('tvBarBack'), mask = byId('tvMask'),
@@ -845,6 +1030,7 @@
        就是一层没有样式的浮层。现在桌面端有自己的样式了，窄屏宽屏来回切都该留着
        这个层，没有理由再关。 */
     if (window.AppShell && AppShell.onMode) AppShell.onMode(function () { /* 保持打开 */ });
+    renderMy();
     if (byId('tvGrid')) loadCats().then(function () { load(1); });
   }
 

@@ -96,6 +96,20 @@
         </div>
         <div class="hub-chips" id="tvCats"></div>
 
+        <!-- 继续观看 / 我的追剧：纯本地数据（localStorage），没有内容时整块不显示 -->
+        <section class="tv-my" id="tvMy" hidden>
+            <div class="tv-my-head">
+                <b><i class="fas fa-clock-rotate-left"></i> 继续观看</b>
+                <button type="button" class="tv-my-clear" id="tvMyClear">清空记录</button>
+            </div>
+            <div class="tv-my-row" id="tvMyRow"></div>
+            <div class="tv-my-head" id="tvFavHead" hidden>
+                <b><i class="fas fa-star"></i> 我的追剧</b>
+                <span id="tvFavCount"></span>
+            </div>
+            <div class="tv-my-row" id="tvFavRow"></div>
+        </section>
+
         <div class="tv-grid" id="tvGrid"></div>
         <div class="tv-pager" id="tvPager" hidden>
             <button type="button" class="tv-ep" id="tvPrev"><i class="fas fa-chevron-left"></i> 上一页</button>
@@ -153,9 +167,12 @@
                     <span class="tv-remark" id="tvRemark"></span>
                     <span class="tv-remark" id="tvSrcLine" hidden><i class="fas fa-tower-broadcast"></i><span id="tvSrcName"></span></span>
                 </div>
-                <!-- 操作条：B 站「点赞/投币/收藏」那一排的位置 -->
+                <!-- 操作条：B 站「点赞/投币/收藏/分享」那一排的位置。
+                     收藏 = 追剧列表；原站打开 = 把这一集的直链暴露出来（不托管、不下载）。 -->
                 <div class="tv-acts">
                     <button type="button" class="tv-act" id="tvBack"><i class="fas fa-arrow-left"></i> 返回列表</button>
+                    <button type="button" class="tv-act" id="tvFav"><i class="far fa-star"></i> <span id="tvFavTxt">追剧</span></button>
+                    <button type="button" class="tv-act" id="tvSrcOpen"><i class="fas fa-up-right-from-square"></i> 原站打开</button>
                     <button type="button" class="tv-act tv-rotate" id="tvRotate"><i class="fas fa-expand"></i> 横屏观看</button>
                 </div>
             </div>
@@ -248,6 +265,7 @@
     <script>
       if (/^(www\.)?zhaokening\.ccwu\.cc$/.test(location.hostname)) window.TV_GATEWAY = location.origin;
     </script>
+    <script src="js/tv-store.js?v=20260925"></script>
     <script src="js/tv-player.js?v=20260925"></script>
     <script src="js/tv.js?v=20260925"></script>
 <script src="js/common.js?v=20260925"></script>

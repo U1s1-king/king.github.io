@@ -886,3 +886,178 @@
     /* 横屏时抽屉别占满，留出画面 */
     .tvsheet { max-height: 86vh; }
 }
+
+/* ============================================================
+ * 五、本地功能：继续观看 / 追剧 / 收藏按钮
+ * ------------------------------------------------------------
+ * 全部数据只在 localStorage 里，没有服务端。配色沿用上面的色板。
+ * ============================================================ */
+
+/* ---------- 列表页的「继续观看 / 我的追剧」 ---------- */
+.tv-my {
+    margin: 0 0 22px;
+    padding: 14px 16px;
+    border: 1px solid var(--tv-line);
+    border-radius: var(--tv-radius);
+    background: var(--tv-card);
+}
+
+.tv-my[hidden] { display: none; }
+
+.tv-my-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.tv-my-head b {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--tv-text);
+    font-size: .92rem;
+    font-weight: 600;
+}
+
+.tv-my-head b i { color: var(--tv-accent); font-size: .86rem; }
+.tv-my-head span { color: var(--tv-sub); font-size: .78rem; }
+
+.tv-my-clear {
+    padding: 4px 10px;
+    border: 1px solid var(--tv-border);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--tv-sub);
+    font: inherit;
+    font-size: .74rem;
+    cursor: pointer;
+    transition: background .18s, color .18s, border-color .18s;
+}
+.tv-my-clear:hover { background: var(--tv-accent-soft); color: var(--tv-accent-ink); border-color: var(--tv-accent); }
+
+/* 横滑一排卡片：B 站首页那种「继续观看」也是横着划的 */
+.tv-my-row {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    /* 右侧渐隐，暗示还能往右划 */
+    -webkit-mask-image: linear-gradient(to right, #000 0%, #000 95%, transparent 100%);
+    mask-image: linear-gradient(to right, #000 0%, #000 95%, transparent 100%);
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+}
+.tv-my-row::-webkit-scrollbar { display: none; }
+.tv-my-row:empty { display: none; }
+
+/* 第二块（追剧）的标题要跟上面那排卡片拉开距离。
+   实测不加这条 gap=0，「我的追剧」会紧贴在片名底下、看着像它的副标题。 */
+#tvFavHead { margin-top: 20px; }
+/* 第一块为空时（只有追剧），标题不该再顶出 20px 的空 */
+#tvMyRow:empty + #tvFavHead { margin-top: 0; }
+
+.tv-my-item {
+    position: relative;
+    flex: 0 0 auto;
+    width: 108px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+    scroll-snap-align: start;
+}
+
+.tv-my-poster {
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    overflow: hidden;
+    border-radius: var(--tv-radius);
+    background: var(--tv-accent-soft);
+}
+.tv-my-poster img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.tv-my-poster.is-empty::after {
+    content: '🎬';
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    opacity: .7;
+}
+
+/* 进度条压在缩略图底部：一眼看出看到哪了 */
+.tv-my-bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 3px;
+    background: rgba(0, 0, 0, .45);
+}
+.tv-my-bar i {
+    display: block;
+    height: 100%;
+    background: var(--tv-accent);
+}
+
+/* 追剧列表上的删除叉 */
+.tv-my-del {
+    position: absolute;
+    right: 4px;
+    top: 4px;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, .55);
+    color: #fff;
+    font-size: .68rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.tv-my-del:hover { background: var(--tv-accent); }
+
+.tv-my-name {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-top: 6px;
+    color: var(--tv-text);
+    font-size: .78rem;
+    line-height: 1.35;
+    word-break: break-all;
+}
+.tv-my-sub { display: block; margin-top: 3px; color: var(--tv-sub); font-size: .7rem; }
+
+/* ---------- 播放页操作条上的「追剧」已收藏态 ---------- */
+.tv-act.is-on {
+    background: var(--tv-accent);
+    border-color: var(--tv-accent);
+    color: #fff;
+}
+.tv-act.is-on:hover { background: var(--tv-accent-ink); border-color: var(--tv-accent-ink); color: #fff; }
+
+/* ---------- 移动端 ---------- */
+@media (max-width: 768px) {
+    .tv-my { padding: 12px 12px; margin-bottom: 16px; }
+    .tv-my-item { width: 96px; }
+    .tv-my-name { font-size: .74rem; }
+}
