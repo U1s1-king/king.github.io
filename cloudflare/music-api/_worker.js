@@ -870,8 +870,10 @@ const TV_NAMES_RAW = ['光速', 'uku', '量子', '非凡', '百度', '电影天�
    只动这一行：写上源名＝彻底不调用它的接口，删掉＝立刻恢复。
    暂停做法是「从列表里摘掉」而不是打个标记跳过，所以 id 会自动重排成新的连续下标，
    前端「片源」那排按钮、_src 参数、详情页的线路都跟着新列表走，不会串位。
-   2026-11-11 用户要求先停 光速、uku，随后追加 同源、索尼。 */
-const TV_OFF = ['光速', 'uku', '同源', '索尼']
+   2026-11-11 用户要求先停 光速、uku，随后追加 同源、索尼。
+   2026-11-11 稍后用户要求四个源全部恢复，故清空本列表：TV_OFF = []。
+   想再停某个源，往下面的方括号里写源名即可（源名见 TV_NAMES_RAW）。 */
+const TV_OFF = []
 const TV_ALL_RAW = TV_SEARCH_SOURCES_RAW.concat(TV_LIST_ONLY_RAW)
 const TV_KEEP = TV_NAMES_RAW.map(function (n, i) { return TV_OFF.indexOf(n) < 0 ? i : -1 })
   .filter(function (i) { return i >= 0 })
