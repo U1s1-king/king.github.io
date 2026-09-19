@@ -1,151 +1,619 @@
 /* ============================================================
- * 影视页 (css/tv.css)
+ * 影视页 (css/tv.css) —— B 站网页端版式
  * ------------------------------------------------------------
- * 与 game/tools 的 hub.css 同一套视觉语言：同样的边框色 #ffcdda、
- * 卡片底 #fff4f7、圆角与投影。海报卡是视频站特有的组件，单独放这里。
+ * 2026-11-11 按用户要求，照 bilibili 网页端（www.bilibili.com/video/…）
+ * 重新设计。B 站那套视觉语言的要点，逐条对应到下面：
+ *
+ *  1) 页面底色不是纯白，是一层很浅的灰（B 站 #f1f2f3 / #f6f7f8），
+ *     内容卡片浮在上面。站点是粉色主题，所以这里取粉调冷灰 --tv-page，
+ *     而不是照抄 B 站的冷灰 —— 抄版式，不抄配色。
+ *  2) 卡片：圆角 6px（B 站视频卡就是 6px，不是现在流行的 16px）、
+ *     无边框、悬停只做轻微上浮 + 阴影，不描边。
+ *  3) 海报比例 16:10 → B 站用 16:9 横图。但采集源给的是竖版海报
+ *     （2:3），硬切成 16:9 会把人物脸裁掉，所以这一条**故意不抄**，
+ *     仍用 2:3 并保留「已看/备注」角标。
+ *  4) 二级页是 B 站经典的「左播放器 + 右选集」两栏：
+ *     左列 = 播放器 → 标题 → 数据栏（播放量/弹幕那种灰字小图标行）
+ *            → 操作条（返回列表/横屏）→ 简介卡
+ *     右列 = 选集卡（吸顶、自己滚），线路做 tab、集数做网格。
+ *  5) 播放器与页面之间不留白：B 站播放器是贴着内容区左上角的，
+ *     所以二级页去掉原来的居中大留白和圆角外框。
+ *  6) 交互色统一走 --tv-accent（站点粉 #fb7299 系），悬停反白。
  * ============================================================ */
 
+/* 色板定义在 :root 上，不是 .tv 上。
+   影视二级页的选集/线路按钮是 AppShell 建好层之后才 append 进去的，
+   它们挂在 body 下、并不在任何一个 .tv 元素里面 —— 变量定义在 .tv 上时
+   这几个按钮取不到值，background: var(--tv-accent) 整条失效变透明，
+   而 color:#fff 照样生效，于是「当前集」白字白底、整块看不见。
+   放 :root 就没有这个作用域问题。 */
+:root {
+    /* B 站的结构 + 站点的粉。B 站正文色 #18191c、次要文字 #9499a0，
+       这里换成同明度的暖色版，免得在粉色页面上出现一片冷灰的字。 */
+    --tv-page: #fdf4f7;        /* 页面浅底（B 站是 #f1f2f3） */
+    --tv-card: #ffffff;
+    --tv-line: #f6e3ea;        /* 分隔线，比边框弱 */
+    --tv-border: #ffd9e4;      /* 需要描边时用 */
+    --tv-text: #3a2530;        /* 正文（B 站 #18191c） */
+    --tv-sub: #9c8390;         /* 次要文字（B 站 #9499a0） */
+    --tv-accent: #fb7299;      /* B 站 #00AEEC 的位置换成站点粉 */
+    --tv-accent-ink: #e35d85;
+    --tv-accent-soft: #ffe8f0;
+    --tv-radius: 6px;          /* B 站卡片圆角 */
+}
+
+/* ============================================================
+ * 一、列表页
+ * ============================================================ */
+
+/* ---------- 搜索：B 站搜索框是圆角胶囊 + 独立的主题色按钮 ---------- */
 .tv-search {
     display: flex;
     gap: 10px;
-    margin-bottom: 16px;
+    margin-bottom: 18px;
 }
 
 .tv-search input {
     flex: 1;
-    padding: 11px 16px;
-    border: 1px solid #ffcdda;
-    border-radius: 12px;
-    background: #fff;
-    color: #a14563;
+    min-width: 0;
+    padding: 10px 16px;
+    border: 1px solid var(--tv-border);
+    border-radius: 999px;
+    background: var(--tv-card);
+    color: var(--tv-text);
     font: inherit;
     font-size: .95rem;
 }
 
-.tv-search input:focus { outline: none; border-color: #ffb6c1; box-shadow: 0 0 0 3px #ffe3ea; }
+.tv-search input::placeholder { color: var(--tv-sub); }
 
+.tv-search input:focus {
+    outline: none;
+    border-color: var(--tv-accent);
+    box-shadow: 0 0 0 3px var(--tv-accent-soft);
+}
+
+/* 搜索按钮沿用 .hub-chip，但它是主操作，描边去掉、填色 */
+.tv-search .hub-chip {
+    border-color: var(--tv-accent);
+    background: var(--tv-accent);
+    color: #fff;
+    padding-inline: 22px;
+}
+.tv-search .hub-chip:hover { background: var(--tv-accent-ink); border-color: var(--tv-accent-ink); }
+
+/* ---------- 筛选区：片源 + 分类，两行胶囊 ---------- */
+.tv-srcbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 10px;
+}
+
+.tv-srclabel {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--tv-sub);
+    font-size: .8rem;
+    white-space: nowrap;
+}
+
+.tv-srcbar .hub-chip.is-slow { opacity: .6; }
+
+/* 分类是主筛选，和片源拉开一点距离 */
+#tvCats.hub-chips { margin-bottom: 20px; }
+
+/* ---------- 卡片网格 ----------
+   B 站首页/搜索页的卡片是固定宽度、间距 20px 的网格；这里用
+   auto-fill 让它自适应，但把最小宽度和间距对齐到 B 站的手感。 */
 .tv-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 16px;
-    margin: 18px 0;
+    grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+    gap: 20px 16px;
+    margin: 16px 0 22px;
 }
 
 .tv-card {
-    /* 海报在上、片名在下：这里必须是 flex 才排得稳。
-       之前 .tv-poster/.tv-name 都是 inline span，全靠 <img> 撑高，
-       片名被挤到行外又被 overflow:hidden 裁掉，卡片上就只剩一张海报了 */
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    border: 1px solid #ffcdda;
-    border-radius: 12px;
-    background: #fff4f7;
+    border: 0;
+    border-radius: var(--tv-radius);
+    background: var(--tv-card);
     text-decoration: none;
-    transition: transform .25s, box-shadow .25s;
+    /* B 站卡片悬停：整体轻微上浮 + 阴影，颜色不动 */
+    transition: transform .2s ease, box-shadow .2s ease;
 }
 
-.tv-card:hover { transform: translateY(-3px); box-shadow: 0 8px 22px rgba(255, 182, 193, .35); }
+.tv-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(251, 114, 153, .22);
+}
 
+/* 海报仍用 2:3：采集源给的是竖版海报，切成 16:9 会裁掉人脸 */
 .tv-poster {
     display: block;
     position: relative;
     flex: 0 0 auto;
     aspect-ratio: 2 / 3;
-    background: #ffe3ea;
+    background: var(--tv-accent-soft);
+    overflow: hidden;
 }
 
-.tv-poster img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.tv-poster img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform .3s ease;
+}
 
+.tv-card:hover .tv-poster img { transform: scale(1.04); }
+
+/* B 站角标是左下角半透明黑底白字，不是现在的粉色实底 */
 .tv-poster .tv-badge {
     position: absolute;
-    right: 6px;
-    bottom: 6px;
-    padding: 2px 8px;
-    border-radius: 8px;
-    background: rgba(161, 69, 99, .82);
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 22px 8px 6px;
+    background: linear-gradient(180deg, transparent, rgba(0, 0, 0, .72));
     color: #fff;
     font-size: .72rem;
+    line-height: 1.3;
+    text-align: right;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .tv-name {
     /* 定死 40px = 两行（20px×2）硬裁。原来写的是 min-height + -webkit-line-clamp，
        但 .tv-name 的 display 被别处的样式覆盖成 flow-root，clamp 就不生效了，
-       长标题（体育那种「9月15日25-26赛季亚冠…」）会溢出第三行、被卡片裁成半个字。 */
+       长标题（体育那种「9月15日25-26赛季亚冠…」）会溢出第三行、被卡片裁成半个字。
+       58px = 上内边距 8 + 正文两行 40 + 下内边距 10（border-box）。 */
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
-    /* 58px = 上内边距 8 + 正文两行 40 + 下内边距 10。
-       站点全局是 box-sizing:border-box，height 里含内边距，写 40 会把第二行切掉 */
     height: 58px;
     overflow: hidden;
-    padding: 8px 10px 10px;
-    color: #a14563;
+    padding: 8px 6px 10px;
+    color: var(--tv-text);
     font-size: .88rem;
     line-height: 20px;
     font-weight: 500;
     word-break: break-all;
 }
 
-.tv-tip { padding: 24px 4px; color: #8d6b78; text-align: center; }
+.tv-card:hover .tv-name { color: var(--tv-accent-ink); }
 
-.tv-pager { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 6px 0 20px; color: #a14563; }
+.tv-tip { padding: 24px 4px; color: var(--tv-sub); text-align: center; }
+
+/* 海报拉不动时的降级占位 */
+.tv-poster.is-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(145deg, var(--tv-accent-soft) 0%, #ffdae7 100%);
+}
+.tv-poster.is-empty::after {
+    content: '🎬';
+    font-size: 1.6rem;
+    opacity: .75;
+}
+
+/* ---------- 分页：B 站是居中一排方块按钮 ---------- */
+.tv-pager {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin: 4px 0 22px;
+    color: var(--tv-text);
+}
 /* 必须显式写：上面那条的 display:flex 权重高于浏览器给 [hidden] 的
    display:none，于是 JS 里设了 pager.hidden = true 也照样显示出来。
    结果就是「加载失败、一个结果都没有」的页面上，还摆着
-   「上一页 / 1 / 1 / 下一页」，看着像加载完了只是内容空。
-   同一个文件里 .tv-sb-hits / .tv-ep-grid 都写了，唯独这条漏了。 */
+   「上一页 / 1 / 1 / 下一页」，看着像加载完了只是内容空。 */
 .tv-pager[hidden] { display: none; }
 
-.tv-player { margin-top: 12px; }
+/* ---------- 加载中 / 加载失败 ----------
+   有下限也有上限，不让空屏也不让一直转。 */
+.tv-loading {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 46px 12px 42px;
+    color: var(--tv-text);
+    text-align: center;
+}
+.tv-loading p { margin: 0; font-size: .9rem; color: var(--tv-sub); }
+.tv-loading .tv-spin {
+    width: 34px;
+    height: 34px;
+    border: 3px solid var(--tv-accent-soft);
+    border-top-color: var(--tv-accent);
+    border-radius: 50%;
+    animation: tv-spin .8s linear infinite;
+}
+@keyframes tv-spin { to { transform: rotate(360deg); } }
+.tv-loading.is-fail i { font-size: 1.5rem; color: var(--tv-accent); }
+/* 失败态没有转圈，上下的 46px 就变成两片空白，收紧一点 */
+.tv-loading.is-fail { padding: 30px 12px 26px; gap: 10px; }
+.tv-loading.is-fail p { max-width: 30ch; line-height: 1.6; }
 
-.tv-remark { color: #c98ba1; font-size: .85rem; }
-
-.tv-episodes { max-height: 210px; overflow-y: auto; margin-bottom: 12px; }
-
-.tv-ep {
-    padding: 6px 12px;
-    border: 1px solid #ffcdda;
-    border-radius: 9px;
-    background: #fff;
-    color: #a14563;
-    font-size: .84rem;
-    cursor: pointer;
-    transition: background .2s, color .2s;
+.tv-grid > .tv-tip {
+    grid-column: 1 / -1;
+    margin: 0;
+    padding: 30px 12px 26px;
+    text-align: center;
 }
 
-.tv-ep:hover { background: #ffe3ea; }
+.tv-retry {
+    padding: 8px 18px;
+    border: 1px solid var(--tv-border);
+    border-radius: var(--tv-radius);
+    background: var(--tv-card);
+    color: var(--tv-text);
+    font: inherit;
+    font-size: .88rem;
+    cursor: pointer;
+    transition: background .2s, border-color .2s;
+}
+.tv-retry:hover { background: var(--tv-accent-soft); border-color: var(--tv-accent); }
+.tv-loading-hint { font-size: .78rem !important; color: var(--tv-sub) !important; }
 
-.tv-ep.is-on { background: #ffb6c1; border-color: #ffb6c1; color: #fff; }
+/* 看板娘（右下角 live2d）会压住失败卡上的重试按钮和提示文字 ——
+   它是 position:fixed 的，不占布局，只能把这块内容整体往上往左收。 */
+@media (max-width: 768px) {
+  .tv-loading.is-fail {
+    align-items: flex-start;
+    text-align: left;
+    padding: 26px 12px 64px;
+    max-width: 82%;
+  }
+  .tv-loading.is-fail p { max-width: 26ch; }
+}
+
+/* ============================================================
+ * 二、播放页（二级页）：B 站「左播放器 + 右选集」两栏
+ * ------------------------------------------------------------
+ * #tvPlayer 的三个孩子，DOM 顺序就是 B 站的阅读顺序：
+ *   .tvp      播放器（自带 js/tv-player.js 那套皮肤）
+ *   .tv-info  标题 → 数据栏 → 操作条 → 简介
+ *   .tv-aside 选集（线路 tab + 集数网格）
+ *
+ * 桌面 ≥993px：两栏 grid，左列自适应、右列 360px（B 站是 350~400px）。
+ * 移动 ≤992px：单栏，靠 DOM 顺序天然成立。
+ * ============================================================ */
+
+.tv-player { margin-top: 0; }
+
+.tv-info { padding: 14px 2px 2px; }
+
+/* 片名：B 站是 18px/600，行高 1.5 */
+.tv-title {
+    margin: 0 0 10px;
+    font-size: 1.12rem;
+    font-weight: 600;
+    line-height: 1.5;
+    color: var(--tv-text);
+    word-break: break-word;
+}
+
+/* 数据栏：B 站那排「▶ 12.3万 · 💬 456 · 🕐 2024-01-01」的灰字小图标行 */
+.tv-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    align-items: center;
+    margin-bottom: 12px;
+    color: var(--tv-sub);
+    font-size: .82rem;
+}
+
+.tv-meta .tv-remark {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--tv-sub);
+    font-size: .82rem;
+}
+
+/* 操作条：B 站的「点赞/投币/收藏/分享」那一排圆角图标按钮 */
+.tv-acts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 0 0 14px;
+}
+
+.tv-act {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 16px;
+    border: 1px solid var(--tv-border);
+    border-radius: 999px;
+    background: var(--tv-card);
+    color: var(--tv-text);
+    font: inherit;
+    font-size: .84rem;
+    cursor: pointer;
+    transition: background .18s, color .18s, border-color .18s;
+}
+
+.tv-act:hover {
+    background: var(--tv-accent-soft);
+    border-color: var(--tv-accent);
+    color: var(--tv-accent-ink);
+}
+
+/* 「横屏观看」只在手机出现 */
+.tv-rotate { display: none; }
+
+/* ---------- 右栏：选集卡 ---------- */
+.tv-aside {
+    margin-top: 16px;
+    padding: 14px 16px;
+    border: 1px solid var(--tv-line);
+    border-radius: var(--tv-radius);
+    background: var(--tv-card);
+}
+
+.tv-aside-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--tv-line);
+}
+
+.tv-aside-head b { font-size: .95rem; font-weight: 600; color: var(--tv-text); }
+
+.tv-aside-head span { font-size: .78rem; color: var(--tv-sub); }
+
+.tv-episodes { max-height: 240px; overflow-y: auto; margin-bottom: 0; }
+
+/* ---- 线路 tab ---- */
+.tv-ep-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+
+.tv-ep-tab {
+    padding: 5px 12px;
+    border: 1px solid var(--tv-border);
+    border-radius: var(--tv-radius);
+    background: var(--tv-card);
+    color: var(--tv-sub);
+    font: inherit;
+    font-size: .78rem;
+    cursor: pointer;
+    transition: background .18s, color .18s, border-color .18s;
+}
+
+.tv-ep-tab:hover { background: var(--tv-accent-soft); color: var(--tv-accent-ink); }
+
+.tv-ep-tab.is-on {
+    background: var(--tv-accent);
+    border-color: var(--tv-accent);
+    color: #fff;
+}
+
+.tv-ep-tab.is-html { color: var(--tv-sub); opacity: .8; }
+.tv-ep-tab.is-html.is-on { color: #fff; opacity: 1; }
+
+/* ---- 集数网格：B 站那种一排排数字方块 ---- */
+.tv-ep-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(58px, 1fr));
+    gap: 8px;
+}
+
+.tv-ep-grid[hidden] { display: none; }
+
+.tv-ep {
+    padding: 8px 4px;
+    border: 1px solid var(--tv-line);
+    border-radius: var(--tv-radius);
+    background: var(--tv-accent-soft);
+    color: var(--tv-text);
+    font: inherit;
+    font-size: .84rem;
+    font-weight: 600;
+    text-align: center;
+    cursor: pointer;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: background .18s, color .18s, border-color .18s;
+}
+
+.tv-ep:hover { background: #ffd9e7; border-color: var(--tv-accent); }
+
+.tv-ep.is-on {
+    background: var(--tv-accent);
+    border-color: var(--tv-accent);
+    color: #fff;
+}
+
+/* ---- 侧栏里的「本次搜索结果」：带回列表页那批命中，在层里直接横跳 ---- */
+.tv-sb-hits {
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--tv-line);
+}
+
+.tv-sb-hits[hidden] { display: none; }
+
+.tv-sb-list { display: flex; flex-direction: column; gap: 8px; }
+
+.tv-sb-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 6px;
+    border: 1px solid transparent;
+    border-radius: var(--tv-radius);
+    background: transparent;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background .18s;
+}
+
+.tv-sb-item:hover { background: var(--tv-accent-soft); }
+.tv-sb-item.is-on { background: var(--tv-accent-soft); border-color: var(--tv-accent); }
+
+.tv-sb-poster {
+    flex: 0 0 auto;
+    width: 40px;
+    height: 56px;
+    overflow: hidden;
+    border-radius: 4px;
+    background: var(--tv-accent-soft);
+}
+
+.tv-sb-poster img { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+.tv-sb-body { display: flex; min-width: 0; flex-direction: column; gap: 4px; }
+
+.tv-sb-name {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    color: var(--tv-text);
+    font-size: .84rem;
+    font-weight: 500;
+    line-height: 1.35;
+}
+
+.tv-sb-remark { color: var(--tv-sub); font-size: .74rem; }
 
 #tvVideo {
     width: 100%;
     aspect-ratio: 16 / 9;
-    border-radius: 12px;
-    background: #2b2024;
+    border-radius: 0;
+    background: #000;
 }
 
-.tv-note { margin-top: 8px; color: #8d6b78; font-size: .82rem; word-break: break-all; }
+.tv-note { margin-top: 10px; color: var(--tv-sub); font-size: .82rem; word-break: break-all; }
+.tv-note a { color: var(--tv-accent-ink); }
 
+/* ---------- 桌面：两栏（左播放器 + 右选集） ---------- */
+@media (min-width: 993px) {
+    /* 影视二级页铺满整屏：盖住底下的列表页，而不是在中间留一张窄卡片。
+       AppShell 给桌面端加的 .detail-head 正好就是顶部返回栏。 */
+    .detail-view.tv-detail {
+        max-width: none;
+        width: 100%;
+        margin: 0;
+        padding: 0 0 40px;
+        border-left: 0;
+        border-right: 0;
+        box-shadow: none;
+        background: var(--tv-page);
+    }
+
+    .detail-view.tv-detail .detail-head {
+        margin: 0 0 20px;
+        padding: 12px 40px;
+        border-bottom: 1px solid var(--tv-line);
+        background: var(--tv-card);
+    }
+
+    /* 正文居中限一档：B 站播放页内容区是 1140~1400px，这里取 1400px */
+    .detail-view.tv-detail .tv-player {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 360px;
+        gap: 16px 24px;
+        align-items: start;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 40px;
+    }
+
+    .detail-view.tv-detail .tvp { grid-column: 1; grid-row: 1; }
+
+    /* B 站播放器是方角贴边的，桌面端也把圆角收掉 */
+    .detail-view.tv-detail .tvp { border-radius: var(--tv-radius); }
+
+    .detail-view.tv-detail .tv-info { grid-column: 1; grid-row: 2; padding-top: 0; }
+
+    /* 选集常驻右栏，自己滚；页面滚到哪它都在（B 站也是这个行为） */
+    .detail-view.tv-detail .tv-aside {
+        grid-column: 2;
+        grid-row: 1 / span 2;
+        position: sticky;
+        top: 16px;
+        margin-top: 0;
+        max-height: calc(100vh - 40px);
+        overflow-y: auto;
+    }
+
+    /* 滚动交给 .tv-aside，选集自己别再滚一层 */
+    .detail-view.tv-detail .tv-episodes { max-height: none; overflow: visible; }
+}
+
+/* ---------- 移动：单栏铺满 ---------- */
+@media (max-width: 992px) {
+    .tv-rotate { display: inline-flex; align-items: center; gap: 6px; }
+
+    .detail-view .tv-player {
+        display: flex;
+        flex-direction: column;
+        margin: 0;
+        min-height: 100%;
+        background: var(--tv-page);
+    }
+
+    /* 视频和信息按原样占高，剩下全给选集 */
+    .detail-view .tvp,
+    .detail-view .tv-info { flex: 0 0 auto; }
+
+    /* 二级页里视频贴边拉满，圆角只会让它看着像嵌在卡片里 */
+    .detail-view .tvp,
+    .detail-view #tvVideo { border-radius: 0; }
+
+    .detail-view .tv-info { padding: 14px 14px 0; }
+
+    /* 选集吃掉剩下的高度，自己滚 */
+    .detail-view .tv-aside {
+        flex: 1 1 auto;
+        min-height: 0;
+        margin: 12px 12px 0;
+        padding: 14px 14px calc(14px + env(safe-area-inset-bottom, 0px));
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .detail-view .tv-episodes { max-height: none; overflow: visible; }
+
+    /* 进度条别被 iPhone 底部那条横杠压住 */
+    .detail-view .tvp-bar { padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px)); }
+}
+
+/* ============================================================
+ * 三、移动端列表页
+ * ============================================================ */
 @media (max-width: 768px) {
-    .tv-grid { grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 12px; }
+    .tv-grid { grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 12px 10px; }
     .tv-search { flex-wrap: wrap; }
-    .tv-episodes { max-height: 150px; }
 
     /* ---------- 筛选区改成横向滚动 ----------
-       实测（390px 宽、7 个片源 9 个分类）：片源行折成 6 行占 304px，
-       分类行 148px，两行合计 452px —— 超过 844px 视口的一半，
-       用户还没看到任何一部片子，首屏就被筛选区吃光了。
+       实测（390px 宽、10 个片源 8 个分类）：片源行折成多行能占 300px+，
+       分类行再占一截 —— 超过视口的一半，用户还没看到任何一部片子，
+       首屏就被筛选区吃光了。所以两行都改成「一行 + 横滑」。
 
-       片源那一行尤其不值：它平时只用得到最左边那一两个，
-       其余是低频切换项，却和分类一样平铺在首屏。
-
-       所以：两行都改成「一行 + 横滑」，高度立刻从 452px 降到 88px 左右。
-       横滑时右侧刻意留 14px 渐隐，暗示「还能往右划」——
+       横滑时右侧刻意留 8% 渐隐，暗示「还能往右划」——
        否则用户看到一排胶囊整整齐齐收在屏幕边，会以为就这么多了。 */
     /* 注意 #tvSrcs 是 .tv-srcbar 的子元素（.tv-srcbar 里还有一枚「片源」
-       静态标签），横滑要加在真正装胶囊的那个盒子上，
-       加在外层只会得到一个 302px 的空壳。 */
+       静态标签），横滑要加在真正装胶囊的那个盒子上。 */
     #tvSrcs.hub-chips,
     #tvCats.hub-chips {
         flex-wrap: nowrap;
@@ -156,11 +624,8 @@
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
         padding-bottom: 2px;
-        /* 渐隐用 mask 而不是盖一层渐变：盖层要么挡点击，要么就得 pointer-events:none
-           再加一堆 z-index 去凑，反而容易出问题。 */
-        /* mask 的渐变色标用 calc 在部分内核里不解析，改用百分比：
-           右侧 8% 是渐隐区（302px 上约 24px，够看出「还有」）。
-           mask-size/-repeat 一并写死，免得被 background 的简写带偏。 */
+        /* 渐隐用 mask 而不是盖一层渐变：盖层要么挡点击，要么就得
+           pointer-events:none 再加一堆 z-index 去凑，反而容易出问题。 */
         -webkit-mask-image: linear-gradient(to right, #000 0%, #000 92%, transparent 100%);
         mask-image: linear-gradient(to right, #000 0%, #000 92%, transparent 100%);
         -webkit-mask-size: 100% 100%;
@@ -174,316 +639,18 @@
     #tvSrcs.hub-chips > *,
     #tvCats.hub-chips > * { flex: 0 0 auto; scroll-snap-align: start; }
 
-    /* 片源胶囊收一号：它比分类更次要，字号和左右内边距都压掉一点，
-       一行能露出更多个，横滑的距离也就更短。
-       这里必须 !important —— hub.css 的 .hub-chip 也吃了 style.css 那条
-       给全站按钮定的 padding:0.5rem 1.1rem !important（35.2px 横向内边距）。 */
+    /* 片源胶囊收一号：它比分类更次要。这里必须 !important —— hub.css 的
+       .hub-chip 也吃了 style.css 那条给全站按钮定的 padding !important。 */
     #tvSrcs.hub-chips .hub-chip {
         padding: 7px 11px !important;
         font-size: .8rem !important;
     }
     #tvSrcs.hub-chips .hub-chip i { font-size: .78rem; }
 
-    /* 分类是主筛选，保持原尺寸不变，但同样只占一行 */
-    #tvCats.hub-chips { margin-bottom: 14px; }
-}
-/* 海报拉不动时的降级占位（图床经代理偶尔会失败，AI 图床热链也拦直连） */
-.tv-poster.is-empty {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(145deg, #fff3f6 0%, #ffe3ea 100%);
-    border: 1px dashed #ffcdda;
-}
-.tv-poster.is-empty::after {
-    content: '🎬';
-    font-size: 1.6rem;
-    opacity: .75;
-}
+    #tvCats.hub-chips { margin-bottom: 16px; }
 
-/* ---------- 片源切换（点一个就只问它，慢了随时换） ---------- */
-.tv-srcbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 10px; }
-.tv-srclabel { color: #c98ba1; font-size: .8rem; }
-.tv-srcbar .hub-chip.is-slow { opacity: .62; }
-
-/* ---------- 加载中 / 加载失败（有下限也有上限，不让空屏也不让一直转） ---------- */
-.tv-loading {
-    grid-column: 1 / -1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    padding: 46px 12px 42px;
-    color: #a14563;
-    text-align: center;
-}
-.tv-loading p { margin: 0; font-size: .9rem; color: #8d6b78; }
-.tv-loading .tv-spin {
-    width: 34px;
-    height: 34px;
-    border: 3px solid #ffe3ea;
-    border-top-color: #ffb6c1;
-    border-radius: 50%;
-    animation: tv-spin .8s linear infinite;
-}
-@keyframes tv-spin { to { transform: rotate(360deg); } }
-.tv-loading.is-fail i { font-size: 1.5rem; color: #ffb6c1; }
-/* 失败/无结果时别留那么高的空档：这段本来是按「加载中」那个转圈定的高度，
-   但失败态没有转圈，上下的 46px 就变成两片空白。 */
-.tv-loading.is-fail { padding: 30px 12px 26px; gap: 10px; }
-.tv-loading.is-fail p { max-width: 30ch; line-height: 1.6; }
-
-/* 看板娘（右下角 live2d）会压住失败卡上的重试按钮和提示文字 ——
-   它是 position:fixed 的，不占布局，所以这里没法用「绕开」的办法，
-   只能把这块内容整体往上、往左收，让出它常驻的右下角区域。 */
-@media (max-width: 768px) {
-  .tv-loading.is-fail {
-    align-items: flex-start;
-    text-align: left;
-    padding: 26px 12px 64px;
-    /* 左侧留白 + 上限宽度：文字行不会伸到看板娘底下去 */
-    max-width: 82%;
-  }
-  .tv-loading.is-fail p { max-width: 26ch; }
-}
-/* 无结果提示（render 里 list 为空时走 say()，那是 .tv-tip 不是 .tv-loading） */
-.tv-grid > .tv-tip {
-    grid-column: 1 / -1;
-    margin: 0;
-    padding: 30px 12px 26px;
-    text-align: center;
-}
-.tv-retry {
-    padding: 8px 18px;
-    border: 1px solid #ffcdda;
-    border-radius: 10px;
-    background: #fff;
-    color: #a14563;
-    font: inherit;
-    font-size: .88rem;
-    cursor: pointer;
-    transition: background .2s;
-}
-.tv-retry:hover { background: #ffe3ea; }
-.tv-loading-hint { font-size: .78rem !important; color: #bda6ae !important; }
-
-/* ============================================================
-   影视二级页：B 站式布局（站点粉色主题）
-   ------------------------------------------------------------
-   #tvPlayer 的三个孩子，DOM 顺序就是 B 站的阅读顺序：
-     .tvp      播放器
-     .tv-info  片名 / 备注 / 操作
-     .tv-aside 选集（线路 tab + 集数网格）
-
-   桌面 ≥769px：两栏 grid —— 左列「播放器 + 信息」，右列选集常驻 sticky。
-   移动 ≤768px：单栏，靠 DOM 顺序天然成立，层由 AppShell 的 .detail-view 铺满。
-   ============================================================ */
-
-.tv-info { padding: 12px 2px 2px; }
-
-.tv-title {
-    margin: 0 0 6px;
-    font-size: 1.05rem;
-    font-weight: 700;
-    line-height: 1.45;
-    color: #a14563;
-}
-
-.tv-meta { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; }
-
-.tv-acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-
-.tv-act {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 7px 14px;
-    border: 1px solid #ffcdda;
-    border-radius: 999px;
-    background: #fff;
-    color: #a14563;
-    font-size: .84rem;
-    cursor: pointer;
-    transition: background .2s, color .2s, border-color .2s;
-}
-
-.tv-act:hover { background: #ffe3ea; }
-
-.tv-aside { margin-top: 14px; }
-
-/* ---- 侧栏里的「本次搜索结果」：带回列表页那批命中，在层里直接横跳 ---- */
-.tv-sb-hits { margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid #ffeaf1; }
-
-.tv-sb-hits[hidden] { display: none; }
-
-.tv-sb-list { display: flex; flex-direction: column; gap: 8px; }
-
-.tv-sb-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    width: 100%;
-    padding: 6px;
-    border: 1px solid transparent;
-    border-radius: 10px;
-    background: #fff8fb;
-    font-family: inherit;
-    text-align: left;
-    cursor: pointer;
-    transition: background .2s, border-color .2s;
-}
-
-.tv-sb-item:hover { background: #ffeaf1; }
-
-.tv-sb-item.is-on { border-color: #ffb6c1; background: #fff0f5; }
-
-.tv-sb-poster {
-    flex: 0 0 auto;
-    width: 40px;
-    height: 56px;
-    overflow: hidden;
-    border-radius: 6px;
-    background: #ffeaf1;
-}
-
-.tv-sb-poster img { display: block; width: 100%; height: 100%; object-fit: cover; }
-
-.tv-sb-body { display: flex; min-width: 0; flex-direction: column; gap: 4px; }
-
-.tv-sb-name {
-    display: -webkit-box;
-    overflow: hidden;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    color: #a14563;
-    font-size: .84rem;
-    font-weight: 600;
-    line-height: 1.35;
-}
-
-.tv-sb-remark { color: #bda6ae; font-size: .74rem; }
-
-.tv-aside-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; }
-
-.tv-aside-head b { font-size: .95rem; color: #a14563; }
-
-.tv-aside-head span { font-size: .78rem; color: #bda6ae; }
-
-/* ---- 线路 tab ---- */
-.tv-ep-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
-
-.tv-ep-tab {
-    padding: 5px 12px;
-    border: 1px solid #ffe0ea;
-    border-radius: 999px;
-    background: #fff;
-    color: #c06b8a;
-    font-size: .78rem;
-    cursor: pointer;
-    transition: background .2s, color .2s, border-color .2s;
-}
-
-.tv-ep-tab:hover { background: #ffe8f1; }
-
-.tv-ep-tab.is-on { background: #ffb6c1; border-color: #ffb6c1; color: #fff; }
-
-.tv-ep-tab.is-html { color: #bda6ae; }
-
-.tv-ep-tab.is-html.is-on { color: #fff; }
-
-/* ---- 集数网格：B 站那种一排排数字方块 ---- */
-.tv-ep-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
-    gap: 8px;
-}
-
-.tv-ep-grid[hidden] { display: none; }
-
-.tv-ep-grid .tv-ep {
-    /* 内边距只给纵向：横向一给，66px 的格子就被吃掉大半。
-       文字加粗是因为小字号下粉色底上的常规字重发虚。 */
-    padding: 8px 2px;
-    font-weight: 600;
-    text-align: center;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-/* 「横屏观看」只在手机出现（桌面直接点全屏按钮 / 按 F 就行） */
-.tv-rotate { display: none; }
-
-/* ---------- 桌面：两栏（左播放器 + 右选集） ---------- */
-@media (min-width: 769px) {
-    /* 影视二级页铺满整屏：盖住底下的列表页，而不是在中间留一张 1280px 卡片。
-       AppShell 给桌面端加的 .detail-head 正好就是顶部返回栏（标题 + 关闭），
-       这里只把它从「卡片的内边距」改成「横贯整宽的条」。
-       铺满之后 body.detail-open::after 那层调暗遮罩会被完全盖住，正是想要的效果。 */
-    .detail-view.tv-detail {
-        max-width: none;
-        width: 100%;
-        margin: 0;
-        padding: 0 0 40px;
-        border-left: 0;
-        border-right: 0;
-        box-shadow: none;
-    }
-
-    .detail-view.tv-detail .detail-head {
-        margin: 0 0 18px;
-        padding: 12px 32px;
-        border-bottom: 1px solid #ffe0ea;
-        background: #fff9f7;
-    }
-
-    /* 层铺满了，但正文不必跟着拉到 2000px 宽：居中限一档，宽屏下仍是一屏的观感 */
-    .detail-view.tv-detail .tv-player {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) 360px;
-        gap: 16px 28px;
-        align-items: start;
-        max-width: 1560px;
-        margin: 0 auto;
-        padding: 0 32px;
-    }
-
-    .detail-view.tv-detail .tvp { grid-column: 1; grid-row: 1; }
-
-    .detail-view.tv-detail .tv-info { grid-column: 1; grid-row: 2; padding-top: 0; }
-
-    /* 选集常驻右栏，自己滚；页面滚到哪它都在 */
-    .detail-view.tv-detail .tv-aside {
-        grid-column: 2;
-        grid-row: 1 / span 2;
-        position: sticky;
-        top: 12px;
-        margin-top: 0;
-        max-height: calc(100vh - 32px);
-        overflow-y: auto;
-        padding: 14px;
-        border: 1px solid #ffe0ea;
-        border-radius: 14px;
-        background: #fff;
-    }
-
-    /* 滚动交给 .tv-aside，选集自己别再滚一层 */
-    .detail-view.tv-detail .tv-episodes { max-height: none; overflow: visible; margin: 0; }
-
-    /* 右栏只有 320px，按钮排密一点才放得下几列 */
-    .detail-view.tv-detail .tv-ep-grid {
-        grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
-        gap: 7px;
-    }
-    .detail-view.tv-detail .tv-ep-grid .tv-ep { padding: 7px 1px; font-size: .8rem; }
-}
-
-/* ---------- 移动：单栏铺满 ---------- */
-@media (max-width: 768px) {
-    .tv-rotate { display: inline-flex; align-items: center; gap: 6px; }
-
-    /* 手指按得准：按钮比桌面大一圈 */
-    .tv-ep-grid { grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 9px; }
+    /* 手指按得准：选集方块比桌面大一圈 */
+    .tv-ep-grid { grid-template-columns: repeat(auto-fill, minmax(62px, 1fr)); gap: 9px; }
     /* 纵向内边距撑出 44px 的触控高度；横向只留 1px —— 格子只有 66px 宽。
        !important 是为了压住 style.css 里给全站按钮定的 1.1rem 横向内边距。 */
     .tv-ep-grid .tv-ep {
@@ -493,40 +660,11 @@
     }
     .tv-ep-tab { padding: 7px 14px; font-size: .82rem; }
 
-    .detail-view .tv-player {
-        display: flex;
-        flex-direction: column;
-        margin: 0;
-        min-height: 100%;
-        background: #fff9f7;
-    }
-    /* 视频和信息按原样占高，剩下全给选集 */
-    .detail-view .tvp,
-    .detail-view .tv-info { flex: 0 0 auto; }
-
-    /* 二级页里视频贴边拉满，圆角只会让它看着像嵌在卡片里 */
-    .detail-view .tvp,
-    .detail-view #tvVideo { border-radius: 0; }
-
-    .detail-view .tv-info { padding: 12px 12px 0; }
-
-    /* 选集吃掉剩下的高度，自己滚 */
-    .detail-view .tv-aside {
-        flex: 1 1 auto;
-        min-height: 0;
-        margin-top: 0;
-        padding: 14px 12px calc(14px + env(safe-area-inset-bottom, 0px));
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-    .detail-view .tv-episodes { max-height: none; overflow: visible; margin: 0; }
-
-    /* 进度条别被 iPhone 底部那条横杠压住 */
-    .detail-view .tvp-bar { padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px)); }
+    .tv-title { font-size: 1.02rem; }
 }
 
 /* 已经转成横屏（但还没进全屏）时纵向空间紧张，把留白收掉 */
-@media (max-width: 768px) and (orientation: landscape) {
-    .detail-view .tv-info { padding-top: 6px; }
-    .detail-view .tv-aside { padding-top: 8px; }
+@media (max-width: 992px) and (orientation: landscape) {
+    .detail-view .tv-info { padding-top: 8px; }
+    .detail-view .tv-aside { padding-top: 10px; }
 }

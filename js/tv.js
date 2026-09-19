@@ -538,6 +538,15 @@
     if (!p || !eps) return;
     setText('tvTitle', it.vod_name || '');
     setText('tvRemark', it.vod_remarks || '');
+    /* 数据栏第二格：这条详情是从哪个片源来的（B 站那个位置是播放量） */
+    var srcLine = byId('tvSrcLine');
+    var pin = typeof it._src === 'number' ? it._src : (typeof state.src === 'number' ? state.src : -1);
+    var srcName = '';
+    for (var si = 0; si < SRCS.length; si++) { if (SRCS[si].id === pin) { srcName = SRCS[si].name; break; } }
+    if (srcLine) {
+      if (srcName) { setText('tvSrcName', srcName); srcLine.hidden = false; }
+      else { srcLine.hidden = true; }
+    }
     renderSbHits(it);
     if (window.TVPlayer) { TVPlayer.setTitle(it.vod_name || ''); TVPlayer.setEpisode(it.vod_remarks || ''); TVPlayer.setNav(false, false); }
     EP.list = [];
@@ -699,6 +708,10 @@
     if (window.AppShell && AppShell.onMode) AppShell.onMode(function () { /* 保持打开 */ });
     if (byId('tvGrid')) loadCats().then(function () { load(1); });
   }
+
+  /* 本地联调/版式验证用的钩子：不走网关，直接拿一份详情数据开播放器。
+     生产环境没人会调它（要显式 window.__TV_DEBUG 才会挂上去）。 */
+  if (window.__TV_DEBUG) window.__open = function (it) { openPlayer(it); };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();

@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <script src="js/version.js?v=20260923"></script>
-    <script src="js/app-shell.js?v=20260923"></script>
+    <script src="js/version.js?v=20260925"></script>
+    <script src="js/app-shell.js?v=20260925"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <link rel="stylesheet" href="css/style.css?v=20260923">
-    <link rel="stylesheet" href="css/sidebar.css?v=20260923">
+    <link rel="stylesheet" href="css/style.css?v=20260925">
+    <link rel="stylesheet" href="css/sidebar.css?v=20260925">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#ffb6c1">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -22,14 +22,14 @@
     <title>影视 · Tomo Ebizuka</title>
     <link rel="canonical" href="https://zhaokening.ccwu.cc/TV.html">
     
-    <link rel="stylesheet" href="css/all.min.css?v=20260923">
-    <link rel="stylesheet" href="css/Tools.css?v=20260923">
-    <link rel="stylesheet" href="css/hub.css?v=20260923">
-    <link rel="stylesheet" href="css/tv.css?v=20260923">
-    <link rel="stylesheet" href="css/tv-player.css?v=20260923">
-    <link rel="stylesheet" href="css/anim.css?v=20260923">
-    <link rel="stylesheet" href="css/mobile.css?v=20260923">
-    <link rel="stylesheet" href="css/app.css?v=20260923">
+    <link rel="stylesheet" href="css/all.min.css?v=20260925">
+    <link rel="stylesheet" href="css/Tools.css?v=20260925">
+    <link rel="stylesheet" href="css/hub.css?v=20260925">
+    <link rel="stylesheet" href="css/tv.css?v=20260925">
+    <link rel="stylesheet" href="css/tv-player.css?v=20260925">
+    <link rel="stylesheet" href="css/anim.css?v=20260925">
+    <link rel="stylesheet" href="css/mobile.css?v=20260925">
+    <link rel="stylesheet" href="css/app.css?v=20260925">
     <meta name="description" content="Tomo Ebizuka 的影视页：聚合公开采集接口，在线看电影、剧集、综艺与动漫，支持 HLS 播放。">
     <meta name="keywords" content="(O_o)??,工具箱,工具,转换器,随机数,密码生成,翻译,OCR,天气">
     <meta name="author" content="king">
@@ -84,9 +84,10 @@
     </header>
 
     <div class="main-card">
+        <!-- B 站式：胶囊搜索框 + 主题色实心搜索按钮 -->
         <div class="tv-search">
             <input id="tvKw" type="search" placeholder="搜片名、演员…" autocomplete="off" aria-label="搜索影视">
-            <button type="button" id="tvGo" class="hub-chip is-on"><i class="fas fa-magnifying-glass"></i><span>搜索</span></button>
+            <button type="button" id="tvGo" class="hub-chip"><i class="fas fa-magnifying-glass"></i><span>搜索</span></button>
         </div>
 
         <div class="tv-srcbar">
@@ -147,9 +148,12 @@
                  这样手机单栏天然就是对的，桌面靠 grid 把选集挪到右栏。 -->
             <div class="tv-info">
                 <h1 class="tv-title" id="tvTitle"></h1>
+                <!-- 数据栏：B 站片名下面那排灰色小图标信息 -->
                 <div class="tv-meta">
                     <span class="tv-remark" id="tvRemark"></span>
+                    <span class="tv-remark" id="tvSrcLine" hidden><i class="fas fa-tower-broadcast"></i><span id="tvSrcName"></span></span>
                 </div>
+                <!-- 操作条：B 站「点赞/投币/收藏」那一排的位置 -->
                 <div class="tv-acts">
                     <button type="button" class="tv-act" id="tvBack"><i class="fas fa-arrow-left"></i> 返回列表</button>
                     <button type="button" class="tv-act tv-rotate" id="tvRotate"><i class="fas fa-expand"></i> 横屏观看</button>
@@ -206,14 +210,14 @@
     <script>
       if (/^(www\.)?zhaokening\.ccwu\.cc$/.test(location.hostname)) window.TV_GATEWAY = location.origin;
     </script>
-    <script src="js/tv-player.js?v=20260923"></script>
-    <script src="js/tv.js?v=20260923"></script>
-<script src="js/common.js?v=20260923"></script>
-<script src="js/anim.js?v=20260923"></script>
-<script src="js/sidebar.js?v=20260923"></script>
-<script src="js/particles-config.js?v=20260923"></script>
-<script src="js/live2d-fix.js?v=20260923" defer></script>
-<script src="https://sakura-live2d.pages.dev/live2d/waifu.js?v=20260923" defer></script>
-<script src="js/live2d-app.js?v=20260923" defer></script>
+    <script src="js/tv-player.js?v=20260925"></script>
+    <script src="js/tv.js?v=20260925"></script>
+<script src="js/common.js?v=20260925"></script>
+<script src="js/anim.js?v=20260925"></script>
+<script src="js/sidebar.js?v=20260925"></script>
+<script src="js/particles-config.js?v=20260925"></script>
+<script src="js/live2d-fix.js?v=20260925" defer></script>
+<script src="https://sakura-live2d.pages.dev/live2d/waifu.js?v=20260925" defer></script>
+<script src="js/live2d-app.js?v=20260925" defer></script>
 </body>
 </html>

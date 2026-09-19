@@ -26,7 +26,11 @@
    移动端由媒体查询内等特异性的 !important 规则重新显示（在后面，赢）。
    ============================================================ */
 html.has-appbar .app-bar {
-  display: none !important;
+  /* 桌面端兜底：网页端不要出现「没样式的顶栏」。
+     这里不需要强压标记 —— 窄屏由下面 max-width 块里的 display:flex 重新显示，
+     宽屏由文末 html.is-app / html.has-appbar 那组（min-width:769px）重新显示，
+     两者都带强压标记，恒胜出。实测：摘掉后计算值不变。 */
+  display: none;
 }
 
 @media (max-width: 768px) {
@@ -1328,7 +1332,7 @@ html.has-appbar .app-bar {
   /* ---------- 7. 第三方音乐页：卡片 / 筛选 / 解锁 / 统计 ---------- */
   html.has-appbar #worksGrid,
   html.has-appbar .works-grid {
-    display: grid !important;
+    /* display 不必再压：根作用域的 .works-grid 本来就是 grid */
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
   }
@@ -1355,7 +1359,7 @@ html.has-appbar .app-bar {
     font-size: 0.86rem;
   }
   html.has-appbar .filter-tabs {
-    display: flex !important;
+    /* display 不必再压：根作用域的 .filter-tabs 本来就是 flex */
     gap: 8px;
     padding: 2px 2px 10px;
     overflow-x: auto;
@@ -2322,7 +2326,7 @@ html.shell #app-mini-player .mp-btn:active { background: #ffeaf1; }
     height: 100vh;
     height: 100dvh;
   }
-  html.shell .bot-tab { display: none !important; }
+  /* .bot-tab 在网页端本来就是 display:none（根作用域那条），这里不必再压一次。 */
   html.shell #app-mini-player {
     left: auto;
     right: 12px;
@@ -2418,8 +2422,10 @@ html.gb-view .blog-container > *:not(.blog-header) { display: none !important; }
    影响（不带开关时顶栏根本不会建，也就没有可显示的东西）。
    ============================================================ */
 @media (min-width: 769px) {
+  /* 下面的 html.has-appbar .app-bar（同在 min-width:769px，且带强压标记）
+     已经把宽屏顶栏显示出来了，这一条不必再带。 */
   html.is-app.has-appbar .app-bar {
-    display: flex !important;
+    display: flex;
   }
   html.has-appbar .app-bar {
     position: fixed;
