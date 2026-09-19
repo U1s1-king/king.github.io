@@ -289,12 +289,20 @@
     if (opts.swipeClose || opts.onHorizontal) bindGestures(el, opts);
 
     /* 历史哨兵：硬件返回键 / 浏览器后退只弹栈顶一层，栈空才离开本页。
-       每层各压一个，和层栈一一对应。 */
-    try { history.pushState({ apDetail: stack.length }, '', location.href); } catch (e) {}
+       每层各压一个，和层栈一一对应。
+       ⚠ replace: true 用在「换掉一层」的场景（例如影视页换源：
+       先关旧层再开新层）。这时必须 replaceState 占住同一个历史位：
+       若照常 pushState，而关旧层那边又异步 history.back() 了一次，
+       那个 back 会落到刚 push 的新哨兵上，把历史搞乱 ——
+       最后「返回」会多退一步，直接退出本页。 */
+    try {
+      if (opts.replace) history.replaceState({ apDetail: stack.length }, '', location.href);
+      else history.pushState({ apDetail: stack.length }, '', location.href);
+    } catch (e) {}
 
     return {
       el: el,
-      close: function () { closeDetail(); },
+      close: function (o) { closeDetail(o); },
       setTitle: function (t) {
         /* 这一层可能已经被弹掉了（setTitle 常常在异步回调里调用），
            所以按 el 现查而不是比对某个全局变量。 */

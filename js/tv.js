@@ -772,23 +772,29 @@
      被重建、播放不中断；这也正是它比「克隆一份 DOM」强的地方。 */
   var tvDetail = null;
 
-  /* 返回 true 表示「本来就有二级页，已经关掉了」 */
-  function closeTvDetail() {
+  /* 返回 true 表示「本来就有二级页，已经关掉了」。
+     silent=true 表示「只是要换一层，不是真的离开」：这时不能让 AppShell
+     去 history.back() —— 那个 back 是异步的，会落到紧接着 pushState 出来的
+     新哨兵上，把历史搞乱，最后「返回列表」会多退一步直接退出 TV 页。 */
+  function closeTvDetail(silent) {
     if (!tvDetail) return false;
     var h = tvDetail;
     tvDetail = null;   /* 先置空：close() 会回调 onClose，不置空会绕回来 */
-    h.close();
-    /* 用户这次是真的离开了片子（openPlayer 里那次关闭是「先关旧的再开新的」，
-       紧接着 detail() 会把新的写回去，所以这里清掉不影响打开流程） */
-    saveView({ vod: null, vodSrc: null });
+    h.close(silent ? { silent: true } : undefined);
+    /* 静默关闭是「换一层」，紧接着 detail() 会把新的写回去；
+       只有真的关闭（用户点了返回）才该把「正在看哪部」清掉 */
+    if (!silent) saveView({ vod: null, vodSrc: null });
     return true;
   }
 
   function openTvDetail(title) {
     if (!window.AppShell || !AppShell.openDetail) return null;
-    closeTvDetail();
+    /* 本来有层 = 这是一次「换掉」而不是「新开」（换源走的就是这条路）。
+       静默关旧的 + replaceState 开新的，历史位不变，后退才不会多退一步。 */
+    var replacing = closeTvDetail(true);
     tvDetail = AppShell.openDetail({
       title: title || '播放',
+      replace: replacing,
       /* 桌面端也走二级页。以前这里卡了 tvNarrow()，只有 ≤768px 才建层，
          桌面端点卡片是把播放器就地展开在长页面里 —— 还得往下滚才看得见画面。
          allowDesktop 正是 AppShell 为这种情况留的开关：桌面端会自动补一条
