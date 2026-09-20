@@ -174,6 +174,23 @@
             }
             if (!hit) continue;
             var svg = make(hit);
+            /* make() 只给 SVG 带上 svgico 这一个类。原元素上除图标名以外的类
+               必须一起搬过来 —— 否则靠类定位/排序的写法会静默失效。
+               实例：音乐页「本地音乐解锁」的
+                 <i class="fas fa-chevron-down unlock-caret">
+               被替换后丢掉 unlock-caret，summary 上的 margin-left:auto 与
+               order 全部不命中，折叠箭头从右端跑到左端。 */
+            var extra = [];
+            for (var e = 0; e < cls.length; e++) {
+                var c = cls[e];
+                if (!c || P[c]) continue;
+                if (c === 'fas' || c === 'far' || c === 'fab' || c === 'fa') continue;
+                extra.push(c);
+            }
+            if (extra.length) svg.setAttribute('class', 'svgico ' + extra.join(' '));
+            var st = it.getAttribute('style'); if (st) svg.setAttribute('style', st);
+            var ti = it.getAttribute('title'); if (ti) svg.setAttribute('title', ti);
+            var al = it.getAttribute('aria-label'); if (al) svg.setAttribute('aria-label', al);
             if (it.parentNode) { it.parentNode.replaceChild(svg, it); n++; }
         }
         return n;

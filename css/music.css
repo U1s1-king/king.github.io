@@ -525,14 +525,16 @@ hr.sakura-divider{
     font-size:0.88rem !important
   }
   .playlist-scroll{
-    max-height:42vh !important
+    /* 阶段四 T4.2：max-height / padding / white-space 三处 !important 已摘除，
+       改由 css/music-mobile.css 接管（歌单已从抽屉搬到内容页首屏，行版式整套重做）。 */
+    max-height:42vh
   }
   .track-item{
-    padding:0.65rem 0.7rem !important
+    padding:0.65rem 0.7rem
   }
   .track-info{
-    white-space:normal !important;
-    line-height:1.4 !important
+    white-space:normal;
+    line-height:1.4
   }
   .glass-icon{
     font-size:1rem !important

@@ -339,12 +339,16 @@
     gap: 6px;
     font-size: 12.5px;
   }
-  /* 列表在内容页里不再自己滚动 —— 整页一起滚，避免嵌套滚动抢手势 */
+  /* 列表在内容页里不再跟着整页无限拉长 —— 128 首 × 71px = 9081px，
+     整页会变成一条长龙，页脚等于消失。这里给它一个有界高度 + 自己的滚动。
+     嵌套滚动是刻意接受的：手势落在列表上时由列表接管，落在别处就是整页滚。 */
   .mm-list-host .playlist-scroll {
     flex: none;
-    max-height: none;
-    overflow: visible;
-    padding-right: 0;
+    max-height: 62vh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding-right: 2px;
   }
   /* 搬出抽屉后 .pl-drawer 的后代选择器全部失效，这里把行版式补回来 */
   .mm-list-host .track-item {
@@ -520,6 +524,25 @@
     flex: 1 1 auto;
     padding: 10px 12px;
   }
+  /* 没有歌词时（js/music-mobile.js 挂的 mm-no-lyric）：
+     歌词区收成一条居中的提示，省下的高度全部让给封面 ——
+     否则就是 300 多像素的大色块中间飘着一行字。 */
+  .fs-wrap.mm-no-lyric .fs-lyrics {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 58px;
+    text-align: center;
+  }
+  .fs-wrap.mm-no-lyric .fs-cover .vinyl {
+    width: min(68vw, 264px);
+    height: min(68vw, 264px);
+  }
+  .fs-wrap.mm-no-lyric .fs-cover .cover-inner {
+    width: min(58vw, 224px);
+    height: min(58vw, 224px);
+  }
 
   /* ---- 7f. 进度条：7px 视觉高度不变，加一个可见把手 + 44px 触控区 ---- */
   .fs-progress .progress-bar-bg {
@@ -593,6 +616,243 @@
   .fs-modes .extra-actions .pl-drawer-trigger b {
     font-size: 11px;
     white-space: nowrap;
+  }
+
+  /* ============================================================
+     8. 第三方音乐页（T3.1–T3.4）
+     ------------------------------------------------------------
+     实测 390×844：
+       #nsPlatformChips  w=362  scrollWidth=662   → 可横滑，但没有任何"右边还有"的提示
+       .filter-tabs      w=362  scrollWidth=6626  → 128 个分类 chip
+       .unlock-sub       w=229  scrollWidth=232，overflow-x:hidden → 格式列表被截断
+       .stats-bar        h=77，.stat-item 106×56，"作品总数""总时长"折成两行
+     ============================================================ */
+
+  /* ---- 8a. 横向 chip 条：右端渐隐，提示可横滑 ----
+     只做右端。两端都做的话，未滚动时左边第一个 chip 会被吃掉一截。
+     用 mask 而不是盖一层渐变 div：这些容器本身就是滚动容器，
+     没有额外的定位父节点可以挂伪元素。 */
+  .ns-chips,
+  .filter-tabs {
+    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 26px), transparent 100%);
+    mask-image: linear-gradient(90deg, #000 calc(100% - 26px), transparent 100%);
+  }
+
+  /* ---- 8b. 「本地音乐解锁」折叠头：标题与格式说明分两行 ----
+     选择器必须写到 `.unlock-section > summary.unlock-summary` 这一级：
+     music.css:2012 用的就是这个（0,2,1），比单类选择器更具体，
+     光靠"本文件后加载"是压不过去的。 */
+  .unlock-section > summary.unlock-summary {
+    flex-wrap: wrap;
+    row-gap: 2px;
+    min-height: 56px;
+    padding: 8px 10px;
+    box-sizing: border-box;
+  }
+  .unlock-summary .unlock-title {
+    flex: 0 0 auto;
+    order: 1;
+  }
+  /* 折叠箭头必须留在第一行右侧：DOM 顺序是 标题 → 格式说明 → 箭头，
+     而格式说明被撑成整行（flex-basis 100%），不重排的话箭头会被挤到第三行。 */
+  .unlock-summary .unlock-caret {
+    order: 2;
+    margin-left: auto;
+  }
+  .unlock-summary .unlock-sub {
+    order: 3;
+    flex: 1 1 100%;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    font-size: 11px;
+    line-height: 1.35;
+  }
+
+  /* ---- 8c. 统计栏：三个指标各自不折行 ---- */
+  .stats-bar .stat-item {
+    white-space: nowrap;
+    font-size: 11px;
+    gap: 3px;
+    padding: 8px 4px;
+  }
+  .stats-bar .stat-item > i {
+    font-size: 12px;
+  }
+  .stats-bar .stat-number {
+    font-size: 15px;
+  }
+
+  /* ---- 8d. 子页签（在线搜歌 / 作品卡片）视觉降一档 ----
+     页面里已经有一层 .page-tabs（音乐盒 / 第三方音乐），再叠一层同尺寸的
+     分段控件会让人分不清层级。这里把子页签做轻：去掉实心底，只留文字与下划线。
+     选择器必须带 html.has-appbar —— app.css:1427-1445 那一组就是这个前缀
+     （0,2,1），比单类选择器更具体，靠"后加载"压不过去。 */
+  html.has-appbar .ns-subtabs {
+    gap: 4px;
+    padding: 0 2px;
+    margin-bottom: 12px;
+    border: 0;
+    border-bottom: 1px solid #ffe2ec;
+    border-radius: 0;
+    background: none;
+  }
+  html.has-appbar .ns-subtab {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 44px;
+    padding: 0 8px;
+    border-radius: 0;
+    background: none;
+    color: #b5768c;
+    font-size: 13.5px;
+    position: relative;
+  }
+  html.has-appbar .ns-subtab.active {
+    background: none;
+    color: #c4567a;
+    font-weight: 700;
+    box-shadow: none;
+  }
+  .ns-subtab.active::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: 6px;
+    width: 28px;
+    height: 3px;
+    margin-left: -14px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, #ff8fab, #e85d86);
+  }
+
+  /* ============================================================
+     9. 作品卡片（T3.3）
+     ------------------------------------------------------------
+     实测 .work-card 176×270（阶段一已恢复两列）：
+       .card-cover 174×174（自带渐变底 + 唱片图标，不是坏图）
+       .card-body  174×94  ← 偏高，收紧
+     ============================================================ */
+  .work-card .card-body {
+    padding: 8px 9px 9px;
+  }
+  .work-card .card-title {
+    font-size: 13px;
+    line-height: 1.3;
+    margin-bottom: 2px;
+  }
+  .work-card .card-artist {
+    font-size: 11px;
+    line-height: 1.3;
+  }
+  /* 卡片在等数据/等图时不至于是"一块纯色"：给封面一个不刺眼的骨架底 */
+  .work-card .card-cover {
+    background-color: #fff2f7;
+  }
+
+  /* ============================================================
+     10. 歌单行（T4.2 / T4.3）
+     ------------------------------------------------------------
+     阶段二把 #plViews 与 .playlist-scroll 搬进了内容页首屏，所以：
+       · 移动端抽屉已经空掉（658px 里只剩头部与提示）→ 整块退场
+       · 列表行不再受 .pl-drawer 后代选择器影响，可以在内容页里重做
+     实测行高 67px（pill 圆角、无封面缩略图）。
+     ============================================================ */
+
+  /* 移动端不再需要抽屉：歌单就在首屏，「上传」入口也搬到了区块标题行。
+     全屏播放页里那颗「歌单」chip 改由 js/music-mobile.js 拦下来变成
+     「收起播放页 · 回到歌单」，不再打开这个抽屉。 */
+  .pl-drawer,
+  .pl-drawer-mask {
+    display: none;
+  }
+
+  .mm-list-host .track-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 64px;
+    padding: 8px 10px;
+    margin-bottom: 7px;
+    border: 1px solid #ffe6ee;
+    border-radius: 14px;
+    background: rgba(255, 250, 252, 0.94);
+    box-sizing: border-box;
+  }
+  /* 行首那颗音符图标撑成 40px 圆角方块，当作没有真封面时的封面位。
+     注意：保持 .track-info 为块级 + 图标 inline-flex —— 行名是裸文本节点，
+     一旦把 .track-info 变成 flex，文本会变成匿名 flex 项，ellipsis 就失效了。 */
+  .mm-list-host .track-info {
+    flex: 1 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 13.5px;
+    line-height: 1.3;
+    color: #8a5567;
+  }
+  .mm-list-host .track-info > i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    margin-right: 10px;
+    vertical-align: middle;
+    border-radius: 10px;
+    background: linear-gradient(140deg, #ffd9e6, #ffb0ca);
+    color: #fff;
+    font-size: 15px;
+  }
+  .mm-list-host .track-duration {
+    flex: 0 0 auto;
+    font-size: 11.5px;
+    color: #b5768c;
+    font-variant-numeric: tabular-nums;
+  }
+  .mm-list-host .track-fav,
+  .mm-list-host .track-del {
+    flex: 0 0 auto;
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: #d8a2b6;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .mm-list-host .track-fav.on {
+    color: #e85d86;
+  }
+  .mm-list-host .track-del {
+    color: #e0b6c4;
+    font-size: 12px;
+  }
+
+  /* ---- T4.3 当前播放：左侧粉色条 + 底色 + 文字加粗 ---- */
+  .mm-list-host .track-item.active {
+    background: linear-gradient(100deg, #fff0f5, #ffe6ee);
+    border-color: #ffc2d4;
+  }
+  .mm-list-host .track-item.active .track-info {
+    color: #a14563;
+    font-weight: 700;
+  }
+  .mm-list-host .track-item.active .track-info > i {
+    background: linear-gradient(140deg, #ff8fab, #e85d86);
+  }
+  .mm-list-host .track-item.active::before {
+    content: '';
+    flex: 0 0 auto;
+    width: 3px;
+    height: 28px;
+    margin-right: -4px;
+    border-radius: 2px;
+    background: linear-gradient(180deg, #ff8fab, #e85d86);
   }
 }
 

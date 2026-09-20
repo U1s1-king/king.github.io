@@ -214,18 +214,81 @@
   }
 
   /* ============================================================
-     4. 启动
+     4. 「最近播放」上移（阶段二收尾）
+     ------------------------------------------------------------
+     music-plus.js 把 #mpRecentStrip 插在 .player-card **之后**。
+     移动端 .player-card 已经隐藏（退出首屏），于是那条横向行会落到
+     「我的歌单」列表下面 —— 那是页面最底部，等于没有。
+     这里在移动端把它搬到「官方推荐」之前，形成
+       [最近播放] [官方推荐] [我的歌单]
+     与 Spotify 首页的区块顺序一致。桌面端保持 music-plus.js 的原位。
+     ============================================================ */
+  function liftRecentStrip() {
+    if (!MQ.matches || !home) return;
+    var strip = byId('mpRecentStrip');
+    if (!strip || strip.parentNode === home) return;
+    var anchor = byId('mmRecommendSection');
+    if (anchor && anchor.parentNode === home) home.insertBefore(strip, anchor);
+    else home.insertBefore(strip, home.firstChild);
+  }
+
+  /* ============================================================
+     5. 全屏播放页里的「歌单」chip 改成「收起播放页 · 回到歌单」
+     ------------------------------------------------------------
+     阶段二把歌单搬上首屏后，移动端的抽屉已经空掉，整块 display:none。
+     而 music-app.js 的 .fs-list 与这条 chip 都还是去点 #plDrawerOpen
+     （那个内联脚本会打开抽屉）—— 不拦的话用户点了一颗没有任何反应的按钮。
+     这里在捕获阶段截住：收起二级页，然后滚到「我的歌单」区块。
+     ============================================================ */
+  document.addEventListener('click', function (e) {
+    if (!MQ.matches) return;
+    var t = e.target && e.target.closest ? e.target.closest('#plDrawerOpen') : null;
+    if (!t) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (window.AppShell && window.AppShell.closeDetail) window.AppShell.closeDetail();
+    setTimeout(function () {
+      var host = byId('mmMineSection');
+      if (host) host.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 280);
+  }, true);
+
+  /* ============================================================
+     6. 歌词空状态
+     ------------------------------------------------------------
+     没有歌词时 LyricHelper 只往 #lyricBox 里写一句话，而 .fs-lyrics 是
+     flex:1 —— 结果是 300 多像素的大色块中央飘着一行字。
+     这里给 .fs-wrap 挂一个 mm-no-lyric：没有 .lyr-line 子节点就算空。
+     空的时候把歌词区收成一条提示，省下的高度全部让给封面。
+     ============================================================ */
+  function syncLyricState() {
+    var wrap = document.querySelector('.fs-wrap');
+    if (!wrap) return;
+    var box = byId('lyricBox');
+    var empty = !box || !box.querySelector('.lyr-line');
+    wrap.classList.toggle('mm-no-lyric', empty);
+  }
+
+  /* ============================================================
+     7. 启动
      ============================================================ */
   function boot() {
     syncLayout();
     buildRecommendRow();
     syncMini();
+    liftRecentStrip();
+    syncLyricState();
   }
   if (document.readyState === 'complete' || document.readyState === 'interactive') setTimeout(boot, 300);
   else window.addEventListener('DOMContentLoaded', function () { setTimeout(boot, 300); });
 
-  /* 播放状态与视图都可能被别处改动，低频兜底同步 */
-  setInterval(function () { syncMini(); buildRecommendRow(); }, 1000);
+  /* 播放状态、视图、最近播放行都可能被别处改动，低频兜底同步 */
+  setInterval(function () {
+    syncMini();
+    buildRecommendRow();
+    liftRecentStrip();
+    syncLyricState();
+  }, 1000);
 
   /* 全屏播放页开关时，迷你条要跟着让位 */
   if (window.MutationObserver) {
