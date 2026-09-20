@@ -1,0 +1,210 @@
+/* ============================================================
+   音乐页移动端（≤768px）  css/music-mobile.css
+   ------------------------------------------------------------
+   为什么单独一个文件、为什么排在 app.css 之后：
+     1. music.html 的 <link> 顺序是
+          style → sidebar → all.min → music.css → anim → mobile.css → app.css
+        本文件排在 app.css 之后，成为 music.html 的最后一个样式表。
+        因此同特异性下本文件的规则恒胜 —— 不需要靠 !important 取胜。
+        （mobile.css 文件头那句「app.css 才是最后加载的那个」是全站的说法；
+          就 music.html 而言，最后一个现在是本文件，那边的注释已同步更新。）
+     2. 本文件只被 music.html 引用，改它不可能波及其它页面。
+     3. 全部规则都包在 @media (max-width:768px) 里 —— 桌面端（>768px）
+        一行都不命中。这是本仓库 mobile.css 文件头立下的硬约定。
+
+   阶段一 T1.2 配套改动（都在 css/music.css 里，同一次提交）：
+     摘掉了 .blog-title / .subhead 的字号、.player-card 的内边距、
+     .vinyl 的尺寸、.controls-row 的外边距这几处的 !important，
+     交给本文件接管。本文件**没有新增任何 !important**。
+
+   390×844 实测纵向预算（本文件的所有数字都来自这张表）：
+     .music-container  padding-top 12
+     .music-header     60 → 136.5   (76.5)  = h1 37.2 + 间距 8 + subhead 31.3
+     .page-tabs        168.5 → 224.5 (56)   margin-bottom 16
+     .po-searchbar     240.5 → 286.5 (46)   margin-bottom 16（与卡片 margin-top 8 折叠）
+     .player-card      302.5 → 812.4 (509.9)
+       ├ .player-left   317.9 → 465.1 (147.2) = disc-zone 108 + 间距 13.2 + spectrum 38(含 -14 负边距)
+       └ .player-right  476.3 → 797   (320.8)
+                        = song-details 50.2 + lyric 106 + progress 16.3
+                          + controls 78.8 + extra 27.1
+   ============================================================ */
+
+@media (max-width: 768px) {
+
+  /* ============================================================
+     1. 首屏纵向预算（T1.4）
+     ------------------------------------------------------------
+     问题：屏幕短于约 800px 时，用户进页面第一眼看不到播放键。
+     实测「bot-tab 顶边 − 播放键底边」：
+       320×568 −233 | 360×740 −61 | 375×667 −134 | 390×844 +43 | 430×932 +171
+     做法分两档：
+       · 1a 所有 ≤768 生效：收紧标题区与各处间距，约省 80px。高屏手机上
+         观感基本不变（留白本来就有富余）。
+       · 1b 仅短屏（≤800px 高）生效：再压封面与歌词，把播放键抬进首屏。
+         375×667 / 360×740 必须通过；320×568 做不到（见文件末尾说明）。
+     注意：H1 一律保留，只压间距 —— mobile.css:584 写明手机网页必须保住
+     H1（搜索引擎是移动优先索引），这里不能 display:none。
+     ============================================================ */
+
+  /* ---- 1a. 基础收紧 ---- */
+  .music-header {
+    margin: 0 0 14px;   /* 原 32 */
+    padding: 0;
+  }
+  .music-header .blog-title {
+    margin: 0;
+    font-size: 22px;    /* 原 24.8（1.55rem） */
+    line-height: 1.15;  /* 原 37.2px 行高 */
+  }
+  .music-header .subhead {
+    margin: 4px 0 0;    /* 原 8 */
+    padding: 2px 6px;   /* 原 4.8 */
+    font-size: 12.5px;  /* 原 13.6（0.85rem） */
+    line-height: 1.35;
+  }
+  .page-tabs {
+    margin-bottom: 10px;    /* 原 16 */
+  }
+  .po-searchbar {
+    margin-bottom: 10px;    /* 原 16，与 .player-card 的 margin-top 8 折叠后取 10 */
+  }
+  .player-card {
+    padding: 10px;          /* 原 14.4（0.9rem）。左右同为 10px，横向反而更宽松 */
+  }
+  .player-right .song-details {
+    margin-bottom: 2px;     /* 原 5.6 */
+  }
+  .player-right .track-title {
+    font-size: 19px;        /* 原 21.6（1.35rem） */
+    line-height: 1.25;
+  }
+  .player-right .progress-area {
+    margin: 2px 0;          /* 原 3.2 */
+  }
+  .player-right .controls-row {
+    margin: 8px 0 4px;      /* 原 14.4 / 8 */
+    padding: 6px 0 4px;     /* 原 9.6 / 7.2 */
+  }
+
+  /* ---- 1b. 短屏加码（≤800px 高）---- */
+  @media (max-height: 800px) {
+    .music-header {
+      margin-bottom: 8px;   /* 基础档 14 → 8 */
+    }
+    .music-header .blog-title {
+      font-size: 20.5px;
+    }
+    /* 封面：108 → 92。整块 .player-left 是首屏里最"可压"的部分 ——
+       桌面端那块留白是唱片机构图需要，手机上不值这个高度。 */
+    .player-left .vinyl {
+      width: 92px;
+      height: 92px;
+    }
+    .player-left .cover-inner {
+      width: 80px;          /* 原 96 */
+      height: 80px;
+    }
+    .disc-zone {
+      margin-top: 4px;      /* 原 8 */
+      margin-bottom: 2px;   /* 原 5.6 */
+    }
+    /* 频谱条：38 → 28。它是纯装饰，压掉的 10px 直接还给播放键。 */
+    .spectrum-line .spectrum-bars {
+      height: 28px;
+    }
+    .player-left .spectrum-line {
+      margin-top: 0.1rem;
+      margin-bottom: -10px; /* 原 -14，抵消条形容器下方的固有空白 */
+    }
+    /* 歌词面板：106 → 72。短屏上它是唯一可以牺牲的区块；
+       阶段二会把它并进全屏播放页，这里先保证播放键可见。 */
+    .player-right .lyric-panel {
+      height: 72px;
+      max-height: 72px;
+      min-height: 0;
+      margin-bottom: 2px;
+    }
+  }
+
+  /* ============================================================
+     2. 触控目标（T1.5）
+     ------------------------------------------------------------
+     实测不达标的控件（44×44 是下限）：
+       .mode-chip          30×27 / 61×27      （≤420 时 .mc-txt 被隐藏，只剩图标）
+       .progress-bar-bg    239×7              （app.css 已给 ::before 28px 命中区，仍不够）
+       .glass-icon（抽屉）  32×32
+       .filter-tab         ×40
+     ============================================================ */
+
+  /* mode-chip：补齐到 44。视觉上只是更疏朗，不影响一行排布，
+     因为高度不会撑宽这一行（没有改 padding/字号）。 */
+  .player-right .extra-actions .mode-chip {
+    min-height: 44px;
+    min-width: 44px;
+    /* min-width 撑开图标型 chip 之后，"歌单 128 首" 里的数字会被挤成两行
+       （实测 390 宽下 "128" / "首" 分家）。禁止换行，溢出交给 3 节的换行规则兜。 */
+    white-space: nowrap;
+  }
+
+  /* 进度条：7px 的视觉高度保持不变，把 app.css 那条 28px 的透明命中区
+     提到 44px。命中区是绝对定位的 ::before，不占布局，不会把控制行顶下去。
+     （与下方 .controls-row 有不到 1px 的重叠，控制行在 DOM 里靠后、
+       绘制在其之上，点击不会被这条透明层截走。） */
+  .progress-area .progress-bar-bg {
+    position: relative;
+  }
+  .progress-area .progress-bar-bg::before {
+    height: 44px;
+    margin-top: -22px;
+  }
+
+  /* 歌单抽屉右上角三颗图标（只看收藏 / 上传 / 关闭） */
+  .pl-drawer-tools .glass-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 22px;
+  }
+
+  /* 作品分类 chip。app.css:1371 用的是 `html.has-appbar .filter-tab`
+     （0,2,1），比单纯的 .filter-tab 更具体，所以这里必须把选择器写到同一级，
+     靠"本文件最后加载"取胜 —— 而不是靠 !important。 */
+  .filter-tab,
+  html.has-appbar .filter-tab {
+    min-height: 44px;
+  }
+
+  /* ============================================================
+     3. 极窄屏：控制行不再横向溢出（T1.6）
+     ------------------------------------------------------------
+     实测 320px 宽下 .extra-actions 溢出到 R=331（视口 320）：
+     该行是 flex + 不换行，6 个控件（循环 / 随机 / 倍速 / 音量 / 歌单）
+     的最小内容宽之和超过了卡片内宽。T1.5 把 chip 撑到 44px 后会更容易溢出。
+     做法：≤360 时允许换行，把音量条整条挪到第二行。
+     换行发生在 .controls-row **之后**，所以不会影响播放键的首屏位置。
+     ============================================================ */
+  @media (max-width: 360px) {
+    .player-right .extra-actions {
+      flex-wrap: wrap;
+      row-gap: 8px;
+    }
+    .player-right .extra-actions .mixer {
+      flex: 1 1 100%;
+      margin-left: 0;
+      justify-content: flex-start;
+    }
+  }
+}
+
+/* ============================================================
+   已知未解决 / 留给阶段二
+   ------------------------------------------------------------
+   · 320×568（iPhone SE 1 代）首屏仍放不下播放键：需要再省约 90px，
+     而那只能靠"把播放器从内容页移走"来解决 —— 正是阶段二的
+     迷你播放条 + 全屏播放页方案。阶段一不为此牺牲正常机型的版式。
+   · 375×667（iPhone SE 2/3）在短屏档下播放键余量仅约 20px；
+     同机型的 .extra-actions（模式/音量/歌单）仍在首屏之外，需下滑一次。
+     这部分同样交给阶段二：它会被收进全屏播放页。
+   · .mode-chip 的 min-height 与 music.css 里三条 padding/字号 !important
+     并存（1762/1771 等）。阶段一不动它们，因为改的是高度不是内边距；
+     阶段二重做控件层级时应一并清理。
+   ============================================================ */

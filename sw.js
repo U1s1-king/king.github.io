@@ -12,7 +12,7 @@
  * __DSH_VERSION 以及各 HTML 里的 ?v= 保持一致。
  * 统一更新请执行： python scripts/bump_version.py <新版本号>
  * ============================================================ */
-const VERSION = '20261034'
+const VERSION = '20260920'
 const CACHE = 'king-blog-' + VERSION;
 
 const CORE = [
@@ -31,6 +31,9 @@ const CORE = [
   '/css/Tools.css?v=' + VERSION,
   '/css/mobile.css?v=' + VERSION,
   '/css/app.css?v=' + VERSION,
+  /* 音乐页移动端专用层。必须在这里，否则 bump_version 改写了 HTML 的 ?v= 之后
+     本文件仍可能停留在旧版（check_links.py 会逐页核对这份清单）。 */
+  '/css/music-mobile.css?v=' + VERSION,
   '/css/home-app.css?v=' + VERSION,
   '/js/version.js?v=' + VERSION,
   '/js/app-shell.js?v=' + VERSION,

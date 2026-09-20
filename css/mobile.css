@@ -15,6 +15,9 @@
         抬到二级页之上）之所以生效，正是因为它在最后。若哪天有人调整 <link> 顺序，
         那些提升会静默失效，抽屉又钻回全屏播放页背后。
         本文件里想赢 app.css 的规则，要么提高特异性，要么带 !important。
+        唯一的例外是 music.html：它在 app.css 之后还挂了 css/music-mobile.css
+        （阶段一新增，只收音乐页专属的移动端规则），所以那一页的"最后一名"
+        是 music-mobile.css 而不是 app.css。其余 8 页不受影响。
 
    层级(z-index)一览，改之前先看这里，别再随手加 99999：
      99999  #offline-bar / .js-lb-mask / #page-progress / #sakura-loading-layer
@@ -156,9 +159,16 @@
     width: 100% !important;
     height: 100% !important;
   }
-  .works-grid,
+  /* .works-grid / .filter-tabs 已从这里摘除（阶段一 T1.2）
+     ------------------------------------------------------------
+     · .works-grid 是音乐页的作品网格，music.css:854-857 早就给它写了
+       「≤768 两列 repeat(2,1fr) !important」。本行同特异性、同为 !important，
+       但 mobile.css 后加载 —— 于是静默把两列压成一列。实测 390 宽下
+       .work-card 362×456，128 个作品变成长龙；把 .works-grid 摘掉后
+       恢复成 176×270 两列。网格选择器混进这条通用批量规则里本身就是错的。
+     · .filter-tabs 是 flex 容器（music.css:594 display:flex），在它身上写
+       grid-template-columns 是死代码，留着只会误导后来人。 */
   .grid,
-  .filter-tabs,
   .format-grid {
     grid-template-columns: 1fr !important;
   }

@@ -422,11 +422,14 @@ hr.sakura-divider{
     padding:0.8rem 0.9rem 2rem !important;
     margin:0.5rem 0.4rem !important
   }
+  /* 阶段一 T1.2：去掉 !important，让 css/music-mobile.css（本页最后一个
+     <link>）能接管这两个字号并做「短屏压缩」。本文件只在 music.html 加载，
+     去掉强压不会波及其它页面。 */
   .blog-title{
-    font-size:1.55rem !important
+    font-size:1.55rem
   }
   .subhead{
-    font-size:0.85rem !important
+    font-size:0.85rem
   }
   .intro-name{
     font-size:1.35rem !important
@@ -462,7 +465,9 @@ hr.sakura-divider{
     margin:0.4rem !important
   }
   .player-card{
-    padding:0.9rem !important;
+    /* 阶段一 T1.2：padding / vinyl 尺寸的 !important 已摘除，
+       改由 css/music-mobile.css 接管（它在本页最后加载，同特异性即可胜出）。 */
+    padding:0.9rem;
     margin:0.5rem 0 !important;
     border-radius:16px !important
   }
@@ -471,8 +476,8 @@ hr.sakura-divider{
     width:100% !important
   }
   .vinyl{
-    width:108px !important;
-    height:108px !important
+    width:108px;
+    height:108px
   }
   .track-artist{
     font-size:0.8rem !important
@@ -481,8 +486,9 @@ hr.sakura-divider{
     height:7px !important
   }
   .controls-row{
+    /* 阶段一 T1.2：margin 的 !important 已摘除（music-mobile.css 接管纵向预算） */
     gap:0.9rem !important;
-    margin:0.9rem 0 0.5rem !important
+    margin:0.9rem 0 0.5rem
   }
   .ctrl-btn{
     width:48px !important;
@@ -806,11 +812,14 @@ hr.sakura-divider{
     padding:0.8rem 0.9rem 2rem !important;
     margin:0.5rem 0.4rem !important
   }
+  /* 阶段一 T1.2：去掉 !important，让 css/music-mobile.css（本页最后一个
+     <link>）能接管这两个字号并做「短屏压缩」。本文件只在 music.html 加载，
+     去掉强压不会波及其它页面。 */
   .blog-title{
-    font-size:1.55rem !important
+    font-size:1.55rem
   }
   .subhead{
-    font-size:0.85rem !important
+    font-size:0.85rem
   }
   .intro-name{
     font-size:1.35rem !important
