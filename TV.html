@@ -26,6 +26,7 @@
     <link rel="stylesheet" href="css/Tools.css?v=20260920">
     <link rel="stylesheet" href="css/hub.css?v=20260920">
     <link rel="stylesheet" href="css/tv.css?v=20260920">
+    <link rel="stylesheet" href="css/tv-v2.css?v=20260920">
     <link rel="stylesheet" href="css/tv-player.css?v=20260920">
     <link rel="stylesheet" href="css/anim.css?v=20260920">
     <link rel="stylesheet" href="css/mobile.css?v=20260920">
@@ -96,7 +97,46 @@
             <span class="tv-srclabel"><i class="fas fa-tower-broadcast"></i> 片源</span>
             <div class="hub-chips" id="tvSrcs"></div>
         </div>
-        <div class="hub-chips" id="tvCats"></div>
+
+        <!-- ============================================================
+             v2 影院式版式。这两块由 js/tv.js 的 renderHero()/renderRank() 填充。
+             ⚠ 删掉这两个 <section> 就等于回滚到旧版：那两个函数都先 byId()
+             查容器，查不到就整段不跑。不需要 git revert。
+             ============================================================ -->
+        <section class="tv-hero" id="tvHero" hidden>
+            <div class="tvh-bg" aria-hidden="true"></div>
+            <div class="tv-hero-scrim" aria-hidden="true"></div>
+            <div class="tvh-body">
+                <span class="tvh-tag" hidden></span>
+                <h2 class="tvh-title"></h2>
+                <div class="tvh-meta"></div>
+                <p class="tvh-blurb" hidden></p>
+                <div class="tvh-acts">
+                    <button type="button" class="tvh-btn tvh-btn-main" id="tvHeroPlay">
+                        <i class="fas fa-play"></i><span>立即播放</span>
+                    </button>
+                    <button type="button" class="tvh-btn" id="tvHeroFav">
+                        <i class="far fa-star"></i><span id="tvHeroFavTxt">追剧</span>
+                    </button>
+                </div>
+            </div>
+            <div class="tvh-poster is-empty"><img alt="" decoding="async"></div>
+            <div class="tvh-dots" hidden></div>
+        </section>
+
+        <section class="tv-rank" id="tvRank" hidden>
+            <div class="tvr-head"><b>本周热门</b><span>按当前片源热度</span></div>
+            <div class="tvr-row" id="tvRankRow"></div>
+        </section>
+
+        <!-- 吸顶筛选条：分类胶囊 + 排序。排序是纯本地重排，不发请求 -->
+        <div class="tv-filter" id="tvFilter">
+            <div class="hub-chips tvf-chips" id="tvCats"></div>
+            <div class="tvf-sort" id="tvSort" hidden>
+                <button type="button" class="tvf-sort-btn" id="tvSortBtn" aria-haspopup="true" aria-expanded="false">推荐 <i class="fas fa-chevron-down"></i></button>
+                <div class="tvf-menu" id="tvSortMenu" hidden></div>
+            </div>
+        </div>
 
         <!-- 继续观看 / 我的追剧：纯本地数据（localStorage），没有内容时整块不显示 -->
         <section class="tv-my" id="tvMy" hidden>

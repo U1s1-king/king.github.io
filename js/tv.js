@@ -47,7 +47,7 @@
   var MEDIA_EXT = ['.mp4', '.m4v', '.mkv', '.flv', '.avi', '.mov', '.webm', '.mp3', '.m4a'];
 
   /* src：分类列表来自哪号源。各站 type_id 编号不同，翻页/点分类必须带上它 */
-  var state = { t: '', pg: 1, kw: '', src: null, pick: false, hits: [] };
+  var state = { t: '', pg: 1, kw: '', src: null, pick: false, hits: [], sort: 'def', acc: [] };
   /* 聚合模式（无关键词、且用户没手动指定片源）不能翻页，只能「加载更多」。
      原因在网关：聚合时它把各采集源的第 N 页并起来去重，total 是「本页条数 ×
      最深那个源的页数」估出来的（_worker.js 的 tvAggregate），实测首页 total=74000
@@ -417,6 +417,441 @@
     });
   }
 
+  /* ============================================================
+   * v2：影院式版式（新增，全部是增量）
+   * ------------------------------------------------------------
+   * 这一段每个渲染函数都先看容器在不在（byId('tvHero') / byId('tvRank')）：
+   * TV.html 里把那两个 <section> 删掉，对应函数立刻不跑，页面回到旧版。
+   * 所以回滚不需要 git revert，删容器即可。
+   *
+   * 【为什么 hero 不用额外发请求】
+   * 网关 tvAggregate 是 `list.push(it)` 原样透传上游条目
+   * （cloudflare/music-api/_worker.js），只有去重和 _src/_alts 是它加的，
+   * 字段一个都没裁。所以 vod_score / vod_year / type_name / vod_area /
+   * vod_blurb / vod_content / vod_actor 在**列表响应里就已经有了**，
+   * hero 直接取用即可，不需要再 ac=videolist&ids= 补一次。
+   * ============================================================ */
+
+  /* 第三方字符串一律走这里：剥标签 + 解实体 + 压空白。
+     采集源的 vod_blurb / vod_content 是带 HTML 的（实测是 <p>…</p>），
+     直接拼进 innerHTML 就是 XSS —— 本站的片源全是第三方内容，不能信。 */
+  function plain(s) {
+    if (!s) return '';
+    var t = String(s);
+    t = t.replace(/<br\s*\/?>/gi, ' ').replace(/<\/(p|div|li|h[1-6])>/gi, ' ');
+    t = t.replace(/<[^>]*>/g, '');
+    t = t.replace(/&nbsp;/gi, ' ')
+         .replace(/&amp;/gi, '&')
+         .replace(/&lt;/gi, '<')
+         .replace(/&gt;/gi, '>')
+         .replace(/&quot;/gi, '"')
+         .replace(/&#0?39;/g, "'")
+         .replace(/&apos;/gi, "'")
+         .replace(/&hellip;/gi, '…')
+         .replace(/&mdash;/gi, '—')
+         .replace(/&ldquo;|&rdquo;/gi, '"');
+    return t.replace(/\s+/g, ' ').trim();
+  }
+  function clip(s, n) {
+    s = plain(s);
+    return s.length > n ? s.slice(0, n - 1) + '…' : s;
+  }
+
+  /* 评分。⚠ vod_score 在不少采集源上恒为 "0.0"（实测 cj.lziapi 就是），
+     为 0 时**必须整项丢掉** —— 满屏 ★0.0 比压根不显示更难看。
+     豆瓣分作为次选，同样是 0 就丢。 */
+  function scoreOf(it) {
+    var v = parseFloat(it && it.vod_score);
+    if (isFinite(v) && v > 0) return v.toFixed(1);
+    var d = parseFloat(it && it.vod_douban_score);
+    if (isFinite(d) && d > 0) return d.toFixed(1);
+    return '';
+  }
+
+  /* 卡片副信息：★评分 · 年份 · 类型 · 地区
+     刻意【不含 vod_remarks】—— 它已经是海报左下角的角标了，再来一遍是噪音。
+     缺哪项就少哪项，全缺就整行不渲染（回到旧版卡片的样子）。 */
+  function metaArr(it) {
+    var out = [];
+    var sc = scoreOf(it);
+    if (sc) out.push({ t: '★ ' + sc, star: true });
+    var y = String((it && it.vod_year) || '').trim();
+    if (y && y !== '0' && y !== '0000') out.push({ t: y });
+    var ty = String((it && (it.type_name || it.vod_class)) || '').trim();
+    if (ty) out.push({ t: ty });
+    var ar = String((it && it.vod_area) || '').trim();
+    if (ar) out.push({ t: ar });
+    return out;
+  }
+
+  /* 用 DOM 拼，不拼 HTML —— 上面几个字段全是第三方字符串 */
+  function metaEl(it) {
+    var arr = metaArr(it);
+    if (!arr.length) return null;
+    var box = document.createElement('span');
+    box.className = 'tvc-meta';
+    arr.forEach(function (m) {
+      var s = document.createElement('span');
+      if (m.star) s.className = 'tvc-star';
+      s.textContent = m.t;
+      box.appendChild(s);
+    });
+    return box;
+  }
+
+  /* ---------------- 排序（本地排，不发请求） ----------------
+     默认那档【不排】：网关聚合时是「各源轮转着取」，本身就是混着的最新，
+     硬排反而更差。所以叫「推荐」而不是「热门」—— 站里没有真实热度数据
+     （vod_hits 实测全是 0），叫热门是撒谎。 */
+  var SORTS = [
+    { k: 'def', n: '推荐', tip: '按片源返回顺序' },
+    { k: 'new', n: '最近更新', tip: '按片源更新时间' },
+    { k: 'score', n: '评分最高', tip: '没有评分的排在最后' },
+    { k: 'az', n: 'A - Z', tip: '按片名' },
+  ];
+  function sortList(list, mode) {
+    if (!mode || mode === 'def' || !list || list.length < 2) return list;
+    var a = list.slice();
+    if (mode === 'new') {
+      a.sort(function (x, y) {
+        return String(y.vod_time || '').localeCompare(String(x.vod_time || ''));
+      });
+    } else if (mode === 'score') {
+      a.sort(function (x, y) {
+        return (parseFloat(y.vod_score) || 0) - (parseFloat(x.vod_score) || 0);
+      });
+    } else if (mode === 'az') {
+      a.sort(function (x, y) {
+        return String(x.vod_name || '').localeCompare(String(y.vod_name || ''), 'zh-Hans-CN');
+      });
+    }
+    return a;
+  }
+
+  /* ---------------- Hero 影厅 ---------------- */
+  var HERO_MAX = 5;
+  var HERO_MS = 8000;
+  var hero = { list: [], i: 0, timer: 0 };
+  var REDUCE = false;
+  try { REDUCE = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); } catch (e) {}
+
+  function heroStop() { if (hero.timer) { clearInterval(hero.timer); hero.timer = 0; } }
+
+  function heroPaint() {
+    var box = byId('tvHero');
+    if (!box || !hero.list.length) return;
+    var it = hero.list[hero.i];
+    if (!it) return;
+    var pic = picUrl(String(it.vod_pic || ''));
+
+    /* 背板：海报放大虚化，css 里已经 filter:blur() */
+    var bg = box.querySelector('.tvh-bg');
+    if (bg) {
+      /* 进 url() 之前把可能截断声明的字符剔掉，避免拼出坏样式 */
+      bg.style.backgroundImage = pic ? 'url("' + pic.replace(/["()\\\s]/g, '') + '")' : 'none';
+    }
+    var pbox = box.querySelector('.tvh-poster');
+    var pimg = pbox && pbox.querySelector('img');
+    if (pbox && pimg) {
+      if (pic) {
+        pbox.classList.remove('is-empty');
+        pimg.style.display = '';
+        pimg.src = pic;
+      } else {
+        pbox.classList.add('is-empty');
+        pimg.style.display = 'none';
+        pimg.removeAttribute('src');
+      }
+    }
+
+    var tag = box.querySelector('.tvh-tag');
+    var rm = String(it.vod_remarks || '').trim();
+    if (tag) {
+      if (rm) { tag.hidden = false; tag.textContent = rm; } else { tag.hidden = true; }
+    }
+
+    var ti = box.querySelector('.tvh-title');
+    if (ti) ti.textContent = String(it.vod_name || '未命名');
+
+    var me = box.querySelector('.tvh-meta');
+    if (me) {
+      me.textContent = '';
+      metaArr(it).forEach(function (m) {
+        var s = document.createElement('span');
+        if (m.star) { var b = document.createElement('b'); b.textContent = m.t; s.appendChild(b); }
+        else s.textContent = m.t;
+        me.appendChild(s);
+      });
+      /* 评分/年份/类型全缺的源上，meta 会空 —— 干脆整行不占位 */
+      me.hidden = !me.children.length;
+    }
+
+    var bl = box.querySelector('.tvh-blurb');
+    if (bl) {
+      var txt = clip(it.vod_blurb || it.vod_content || '', 160);
+      bl.textContent = txt;
+      bl.hidden = !txt;
+    }
+
+    /* 追剧按钮要反映当前状态，否则点了没反馈、再进来又是「追剧」 */
+    var favTxt = byId('tvHeroFavTxt');
+    var favBtn = byId('tvHeroFav');
+    if (favBtn && window.TVStore) {
+      var on = TVStore.isFav(it);
+      favBtn.classList.toggle('is-on', !!on);
+      if (favTxt) favTxt.textContent = on ? '已追剧' : '追剧';
+    }
+
+    /* 圆点 */
+    var dots = box.querySelector('.tvh-dots');
+    if (dots) {
+      dots.textContent = '';
+      if (hero.list.length < 2) { dots.hidden = true; }
+      else {
+        dots.hidden = false;
+        hero.list.forEach(function (_, i) {
+          var d = document.createElement('button');
+          d.type = 'button';
+          d.className = 'tvh-dot' + (i === hero.i ? ' is-on' : '');
+          d.setAttribute('aria-label', '第 ' + (i + 1) + ' 部');
+          d.addEventListener('click', function () { heroGo(i); });
+          dots.appendChild(d);
+        });
+      }
+    }
+  }
+
+  function heroGo(i) {
+    if (!hero.list.length) return;
+    hero.i = (i + hero.list.length) % hero.list.length;
+    heroPaint();
+  }
+
+  function heroPlay() {
+    var it = hero.list[hero.i];
+    if (it) detail(it.vod_id, it._src);
+  }
+
+  /* 自动轮播。鼠标移上去 / 键盘聚焦进来就停 —— 用户正在看的时候画面自己跳走很烦。
+     尊重 prefers-reduced-motion：开了就不自动轮播，圆点仍然可点。 */
+  function heroAuto(on) {
+    heroStop();
+    if (!on || REDUCE || hero.list.length < 2) return;
+    hero.timer = setInterval(function () { heroGo(hero.i + 1); }, HERO_MS);
+  }
+
+  function renderHero(list) {
+    var box = byId('tvHero');
+    if (!box) return;
+    /* 优先挑有海报的：hero 全靠图撑，没图的那条放上去是一片深色，很空 */
+    var picks = (list || []).filter(function (it) { return it && it.vod_name; });
+    var withPic = picks.filter(function (it) { return it.vod_pic; });
+    picks = (withPic.length ? withPic : picks).slice(0, HERO_MAX);
+    if (!picks.length) { box.hidden = true; heroStop(); hero.list = []; return; }
+    hero.list = picks;
+    if (hero.i >= picks.length) hero.i = 0;
+    heroPaint();
+    box.hidden = false;
+    heroAuto(true);
+  }
+
+  /* ---------------- 排行榜 ---------------- */
+  function renderRank(list) {
+    var box = byId('tvRank');
+    var row = box && byId('tvRankRow');
+    if (!box || !row) return;
+    var picks = (list || []).filter(function (it) { return it && it.vod_name; }).slice(0, 4);
+    if (picks.length < 2) { box.hidden = true; return; }
+    row.textContent = '';
+    picks.forEach(function (it, i) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'tvr-item';
+
+      var no = document.createElement('span');
+      no.className = 'tvr-no';
+      no.textContent = String(i + 1);
+
+      var po = document.createElement('span');
+      po.className = 'tvr-poster';
+      var pic = picUrl(String(it.vod_pic || ''));
+      if (pic) {
+        var im = document.createElement('img');
+        im.loading = 'lazy';
+        im.referrerPolicy = 'no-referrer';
+        im.alt = '';
+        im.src = pic;
+        po.appendChild(im);
+      } else {
+        po.classList.add('is-empty');
+      }
+
+      var bd = document.createElement('span');
+      bd.className = 'tvr-body';
+      var nm = document.createElement('span');
+      nm.className = 'tvr-name';
+      nm.textContent = String(it.vod_name || '未命名');
+      var mt = document.createElement('span');
+      mt.className = 'tvr-meta';
+      var parts = metaArr(it);
+      parts.forEach(function (m, k) {
+        if (k) mt.appendChild(document.createTextNode(' · '));
+        if (m.star) { var s = document.createElement('b'); s.textContent = m.t; mt.appendChild(s); }
+        else mt.appendChild(document.createTextNode(m.t));
+      });
+      if (!parts.length) {
+        var rm = String(it.vod_remarks || '').trim();
+        mt.textContent = rm || '—';
+      }
+      bd.appendChild(nm);
+      bd.appendChild(mt);
+
+      b.appendChild(no);
+      b.appendChild(po);
+      b.appendChild(bd);
+      b.addEventListener('click', function () { detail(it.vod_id, it._src); });
+      row.appendChild(b);
+    });
+    box.hidden = false;
+  }
+
+  /* ---------------- 筛选条吸顶偏移 ----------------
+     移动端 tv.css:796 已经让 .tv-search 吸顶了（z-index:5）。筛选条要叠在它
+     正下方，否则 top:0 会被它（以及有 App Bar 时的 fixed 顶栏）盖住，
+     等于白吸。
+
+     偏移【必须在运行时量】，一个数字都不能写死：
+       · .tv-search 的 top 是 calc(var(--appbar-h,48px) + var(--sat,0px))，
+         而 html.has-appbar 是页面外壳后加的 —— 有没有它差 48px+；
+       · 它是 flex-wrap:wrap，窄屏折行后高度会变；
+       · 同一份代码，file:// 联调量到 top=0，线上量到 top=48+，
+         写死必然在其中一个环境错位。
+     所以：offset = 搜索栏的 top + 搜索栏自己的高度。桌面搜索栏不吸顶，
+     直接把这个变量撤掉，回落到 CSS 里的 0。 */
+  function syncFilterTop() {
+    var f = byId('tvFilter');
+    if (!f) return;
+    var s = document.querySelector('.tv-search');
+    if (!s) { f.style.removeProperty('--tvf-top'); return; }
+    var cs = window.getComputedStyle(s);
+    if (cs.position !== 'sticky' && cs.position !== 'fixed') {
+      f.style.removeProperty('--tvf-top');
+      return;
+    }
+    var t = parseFloat(cs.top);
+    if (!isFinite(t)) t = 0; /* top:auto 之类，当 0 处理 */
+    f.style.setProperty('--tvf-top', Math.round(t + s.offsetHeight) + 'px');
+  }
+
+  function initFilterTop() {
+    var f = byId('tvFilter');
+    var s = document.querySelector('.tv-search');
+    if (!f || !s) return;
+    syncFilterTop();
+    /* 搜索栏自身高度变化（折行/字号/安全区） */
+    if (window.ResizeObserver) {
+      try { new ResizeObserver(syncFilterTop).observe(s); } catch (e) {}
+    }
+    window.addEventListener('resize', syncFilterTop);
+    window.addEventListener('orientationchange', syncFilterTop);
+    /* html.has-appbar 一变，搜索栏的 top 就变，跟着重量一次 */
+    if (window.MutationObserver) {
+      try {
+        new MutationObserver(syncFilterTop).observe(document.documentElement, {
+          attributes: true,
+          attributeFilter: ['class'],
+        });
+      } catch (e) {}
+    }
+  }
+
+  /* ---------------- 排序 UI ---------------- */
+  function initSort() {
+    var wrap = byId('tvSort');
+    var btn = byId('tvSortBtn');
+    var menu = byId('tvSortMenu');
+    if (!wrap || !btn || !menu) return;
+    /* HTML 里默认是 hidden 的：老缓存的 tv.js 不会跑到这里，
+       排序控件就整块不出现，而不是留一个点不动的空胶囊。
+       能跑到这里说明脚本是新的，这时才把它放出来。 */
+    wrap.hidden = false;
+
+    var cur = SORTS.filter(function (s) { return s.k === state.sort; })[0] || SORTS[0];
+    btn.textContent = cur.n;
+    btn.title = cur.tip;
+    var caret = document.createElement('i');
+    caret.className = 'fas fa-chevron-down';
+    btn.appendChild(document.createTextNode(' '));
+    btn.appendChild(caret);
+
+    function close() { wrap.classList.remove('is-open'); menu.hidden = true; }
+    function open() { wrap.classList.add('is-open'); menu.hidden = false; }
+
+    menu.textContent = '';
+    SORTS.forEach(function (s) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = s.k === state.sort ? 'is-on' : '';
+      b.title = s.tip;
+      var t = document.createElement('span');
+      t.textContent = s.n;
+      var ck = document.createElement('i');
+      ck.className = 'fas fa-check';
+      b.appendChild(t);
+      b.appendChild(ck);
+      b.addEventListener('click', function () {
+        state.sort = s.k;
+        btn.textContent = s.n;
+        btn.title = s.tip;
+        btn.appendChild(document.createTextNode(' '));
+        btn.appendChild(caret);
+        Array.prototype.forEach.call(menu.children, function (x) { x.classList.remove('is-on'); });
+        b.classList.add('is-on');
+        close();
+        /* 只重排【已经拿到的】结果，不重新请求 —— 换排序不该再等一次源站 */
+        if (state.acc.length) {
+          fillGrid(sortList(state.acc, state.sort), false);
+          markResume();
+          setText('tvPage', '已加载 ' + state.acc.length + ' 部');
+        }
+      });
+      menu.appendChild(b);
+    });
+
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (menu.hidden) open(); else close();
+    });
+    document.addEventListener('click', function (e) {
+      if (!menu.hidden && !wrap.contains(e.target)) close();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && !menu.hidden) close();
+    });
+  }
+
+  /* Hero 上的按钮只在容器存在时才绑 */
+  function initHero() {
+    var box = byId('tvHero');
+    if (!box) return;
+    var play = byId('tvHeroPlay');
+    if (play) play.addEventListener('click', heroPlay);
+    var fav = byId('tvHeroFav');
+    if (fav) fav.addEventListener('click', function () {
+      var it = hero.list[hero.i];
+      if (!it || !window.TVStore) return;
+      var on = TVStore.toggleFav(it);
+      heroPaint();
+      renderMy();
+      if (window.TVPlayer && TVPlayer.toast) TVPlayer.toast(on ? '已加入追剧' : '已取消追剧');
+    });
+    /* 鼠标/键盘进来就停轮播，离开再续上 */
+    box.addEventListener('mouseenter', function () { heroAuto(false); });
+    box.addEventListener('mouseleave', function () { heroAuto(true); });
+    box.addEventListener('focusin', function () { heroAuto(false); });
+    box.addEventListener('focusout', function () { heroAuto(true); });
+  }
+
   /* ---------------- 列表 ---------------- */
   function card(it) {
     var a = document.createElement('a');
@@ -444,6 +879,10 @@
     var remark = String(it.vod_remarks || '');
     if (remark) badge.textContent = remark; else badge.remove();
     a.querySelector('.tv-name').textContent = it.vod_name || '未命名';
+    /* v2：片名下的副信息行（★评分 · 年份 · 类型 · 地区）。
+       全缺就整行不加，卡片自动退回旧样子 —— 不是所有源都给这些字段。 */
+    var mEl = metaEl(it);
+    if (mEl) a.appendChild(mEl);
     a.addEventListener('click', function () { detail(it.vod_id, it._src, a, it._alts); });
     return a;
   }
@@ -506,7 +945,15 @@
         return;
       }
     }
-    fillGrid(list, append);
+    /* v2：累计本次视图拿到的全部条目，供「换排序」本地重排（不重新请求）。
+       排序只在首屏/换关键词/换分类这一批上做；「加载更多」是往后接，
+       接完再整体重排会把用户已经看过的顺序打乱，所以追加时不动顺序。 */
+    if (!append) state.acc = [];
+    state.acc = state.acc.concat(list);
+    var view = append ? list : sortList(list, state.sort);
+    fillGrid(view, append);
+    /* v2：hero 与排行榜。容器不在（byId 返回 null）就整段不跑 */
+    if (!append) { renderHero(view); renderRank(view); }
 
     var total = parseInt(d.total, 10) || 0;
     var limit = parseInt(d.limit, 10) || list.length || 1;
@@ -1367,6 +1814,10 @@
   function boot() {
     var n0 = byId('tvNote');
     if (n0) NOTE0 = n0.textContent;
+    /* v2：hero 与排序条。两个函数都自己判断容器在不在，删了容器就自动跳过 */
+    initHero();
+    initSort();
+    initFilterTop();
     if (window.TVPlayer) {
       TVPlayer.init({
         gateway: GATEWAY,
