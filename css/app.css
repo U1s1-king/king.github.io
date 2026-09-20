@@ -371,17 +371,18 @@ html.has-appbar .app-bar {
        · .volume-slider 失去固定宽度，flex:1 撑满整行
      这里按同样语义补一份，并显式借用 .detail-view 前缀压过主页面里
      可能残留的同名规则（搬回原位时这些选择器自然不再命中）。 */
-  .detail-view .fs-modes .extra-actions,
-  .detail-view .fs-modes .extra-actions .mode-strip,
-  .detail-view .fs-modes .extra-actions .mode-chip,
-  .detail-view .fs-modes .extra-actions .mode-chip i,
-  /* 音量条：主页面靠 .player-right 给的 margin-left:auto 靠右，
-     搬过来必须补回，否则它会贴着左边的循环/随机按钮。 */
-  .detail-view .fs-modes .extra-actions .mixer,
-  .detail-view .fs-modes .extra-actions .mixer .volume-slider,
-  .detail-view .fs-modes .extra-actions .pl-drawer-trigger b,
-  /* 全屏页比主页面宽裕一点：音量条给到 88px，歌单胶囊保持一行 */
-
+  /* 这里原本挂着一串「把搬走的节点版式补回来」的选择器列表：
+       .detail-view .fs-modes .extra-actions,
+       .detail-view .fs-modes .extra-actions .mode-strip,
+       … .mixer, … .mixer .volume-slider, … .pl-drawer-trigger b,
+     但它的 { … } 声明块缺失（注释还写着「音量条给到 88px，歌单胶囊保持一行」，
+     声明却不在），于是 CSS 解析器一路吃到下一个 { —— 也就是下面的 .disc-zone，
+     把两者并成一条规则。后果有两个：
+       · 全屏播放页的那三条版式声明从来没生效过（实测 .fs-modes 折成三行）
+       · .disc-zone 靠着被误并才拿到 position:relative
+     现在把悬空的列表删掉：.disc-zone 在自己那条规则里本来就有
+     position:relative，删掉零行为变化；真正的补版式写在 css/music-mobile.css
+     的全屏播放页一节（那边是本页最后一个样式表，不需要 !important）。 */
   /* ---- 封面上的「全屏播放页」入口 ---- */
   .disc-zone {
     position: relative;

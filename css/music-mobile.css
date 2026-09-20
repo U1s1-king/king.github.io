@@ -447,23 +447,172 @@
     width: 0;
     background: linear-gradient(90deg, #ff8fab, #e85d86);
   }
+
+  /* ============================================================
+     7. 全屏播放页（T2.4）
+     ------------------------------------------------------------
+     这块补的是 app.css 里一段**悬空选择器**本该做的事：那边 374-382 行挂着
+       .detail-view .fs-modes .extra-actions / .mode-strip / .mixer /
+       .mixer .volume-slider / .pl-drawer-trigger b
+     一串选择器，注释写着「音量条给到 88px，歌单胶囊保持一行」，
+     但 { … } 声明块缺失 —— CSS 解析器一路吃到下一个 {（.disc-zone），
+     三条版式声明从来没生效过。所以 .fs-modes 在 390 宽下折成三行，
+     「歌单 128 首」被压成「歌 128 / 单 首」。那段悬空列表已在 app.css 里删除。
+
+     实测改前 390×844：.fs-cover 236 / .fs-lyrics 174 / .fs-controls 93 /
+     .fs-modes 101（三行，底边 830，视口 844，几乎没有余量）。
+     ============================================================ */
+
+  /* ---- 7a. 顶栏：收起 / 提示 / 歌词 / 更多 / 歌单 排成一行 ---- */
+  .fs-top {
+    gap: 6px;
+  }
+  .fs-hint {
+    flex: 1 1 auto;
+    min-width: 0;
+    text-align: center;
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .fs-icon {
+    flex: 0 0 auto;
+  }
+
+  /* ---- 7b. 纵向节奏：省出余量，别让 .fs-modes 贴到视口底边 ---- */
+  .fs-wrap {
+    gap: 6px;
+    padding: 6px 16px calc(10px + var(--sab, 0px));
+  }
+
+  /* ---- 7c. 封面：圆形黑胶，按屏宽自适应 ---- */
+  .fs-cover {
+    padding: 2px 0;
+  }
+  .fs-cover .vinyl {
+    width: min(60vw, 236px);
+    height: min(60vw, 236px);
+  }
+  .fs-cover .cover-inner {
+    width: min(50vw, 196px);
+    height: min(50vw, 196px);
+  }
+
+  /* ---- 7d. 曲目信息 ---- */
+  .fs-meta #trackName {
+    font-size: 19px;
+    font-weight: 700;
+    color: #a14563;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .fs-meta #trackArtist {
+    margin-top: 2px;
+    font-size: 13px;
+    color: #b5768c;
+  }
+
+  /* ---- 7e. 歌词区：封面/歌词二选一，歌词模式独占剩余高度 ---- */
+  .fs-lyrics {
+    min-height: 0;
+    flex: 1 1 auto;
+    padding: 10px 12px;
+  }
+
+  /* ---- 7f. 进度条：7px 视觉高度不变，加一个可见把手 + 44px 触控区 ---- */
+  .fs-progress .progress-bar-bg {
+    position: relative;
+    overflow: visible;
+  }
+  .fs-progress .progress-fill {
+    position: relative;
+  }
+  .fs-progress .progress-fill::after {
+    content: '';
+    position: absolute;
+    right: -7px;
+    top: 50%;
+    width: 14px;
+    height: 14px;
+    margin-top: -7px;
+    border-radius: 50%;
+    background: #ff8fab;
+    box-shadow: 0 1px 5px rgba(200, 90, 130, 0.42);
+    pointer-events: none;
+  }
+  .fs-progress .progress-bar-bg::before {
+    height: 44px;
+    margin-top: -22px;
+  }
+
+  /* ---- 7g. 次级控制：三行收到一行 ---- */
+  .fs-modes {
+    padding-bottom: 0;
+  }
+  .fs-modes .extra-actions {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    width: 100%;
+    margin: 0;
+  }
+  .fs-modes .extra-actions .mode-strip {
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    gap: 6px;
+    margin: 0;
+  }
+  .fs-modes .extra-actions .mode-chip {
+    flex: 0 0 auto;
+    padding: 0 10px;
+    white-space: nowrap;
+  }
+  /* 图标 + 数值就够；文字标签挤掉的是音量条的位置 */
+  .fs-modes .extra-actions .mc-txt {
+    display: none;
+  }
+  .fs-modes .extra-actions .mixer {
+    flex: 0 1 auto;
+    min-width: 0;
+    margin-left: 0;
+    padding: 0;
+    gap: 4px;
+  }
+  /* 主页面里 .volume-slider 的宽度是 `.player-right …` 前缀的 !important，
+     节点搬进 .fs-modes 后那几条自然不再命中，这里用普通声明就够。 */
+  .fs-modes .extra-actions .mixer .volume-slider {
+    flex: 0 1 auto;
+    width: 64px;
+    min-width: 40px;
+  }
+  .fs-modes .extra-actions .pl-drawer-trigger b {
+    font-size: 11px;
+    white-space: nowrap;
+  }
 }
 
 /* ============================================================
-   已知未解决 / 留给阶段二后续
+   已知未解决 / 后续
    ------------------------------------------------------------
-   · 320×568（iPhone SE 1 代）首屏仍放不下播放键：需要再省约 90px，
-     而那只能靠"把播放器从内容页移走"来解决 —— 正是阶段二的
-     迷你播放条 + 全屏播放页方案。阶段一不为此牺牲正常机型的版式。
-   · 375×667（iPhone SE 2/3）在短屏档下播放键余量仅约 20px；
-     同机型的 .extra-actions（模式/音量/歌单）仍在首屏之外，需下滑一次。
-     这部分同样交给阶段二：它会被收进全屏播放页。
+   · 阶段一遗留的「320×568 与 375×667 首屏放不下播放键」在阶段二自动消失 ——
+     播放器已经不在内容页首屏了，控制入口是迷你条 + 全屏播放页。
    · .mode-chip 的 min-height 与 music.css 里三条 padding/字号 !important
-     并存（1762/1771 等）。阶段一不动它们，因为改的是高度不是内边距；
-     阶段二重做控件层级时应一并清理。
-   · 首屏「官方推荐」横向卡片暂时用渐变色块 + 音符图标代替真实封面 ——
-     歌单数据封在 music-bundle.js 的闭包里，DOM 上的 .track-item 不带封面。
-     要真封面需要让 bundle 暴露数据，列入后续。
+     并存（1692/1762/1771 等）。本文件改的是高度不是内边距，暂时不冲突；
+     但那是三处历史补丁叠出来的，清理它属于另一件事。
+   · 首屏「官方推荐」横向卡片用渐变色块 + 音符图标代替真实封面 ——
+     实测 data/playlist.json 里官方曲库只有 name/artist/file，**没有封面字段**，
+     所以就算改 music-bundle.js 也拿不到官方封面。真封面只存在于用户自己
+     通过「在线搜歌 / 上传」加进来的歌（localStorage sakuraUserPlaylist 的
+     cover 字段）。要做「有封面就显示、没有就用渐变」需要让 bundle 暴露
+     已加载的 playlist 数组，列入后续。
    · music-plus.js 的 #mpRecentStrip（最近播放）是插在 .player-card 之后的，
      卡片隐藏后它会落到「我的歌单」列表下面。有播放历史时才出现。
+   · 全屏播放页的歌词空状态（无歌词时）仍是一个大色块，只显示一句
+     「正在播放: …」。文案来自 music-bundle.js 的 LyricHelper，要做得更好
+     需要动那个打包产物。
    ============================================================ */

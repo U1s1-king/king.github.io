@@ -29,6 +29,14 @@
         'fa-search': '<circle cx="11" cy="11" r="6.5"/><path d="M15.8 15.8L20.5 20.5"/>',
         'fa-chevron-left': '<path d="M15 4.5L7.5 12l7.5 7.5"/>',
         'fa-chevron-right': '<path d="M9 4.5L16.5 12 9 19.5"/>',
+        /* 音乐页全屏播放页顶栏用到的两个。它们不在图标字体子集里 ——
+           CSS 里 .fa-chevron-down:before / .fa-align-left:before 的 content
+           是有的，但字体文件没有那个码位，页面上就是两个空白圆。
+           实测：.fs-collapse（收起）与 .fs-lyric（切歌词）都是空白，
+           .fs-more（fa-ellipsis-h 已在本表里）反而正常。 */
+        'fa-chevron-down': '<path d="M5 9l7 7 7-7"/>',
+        'fa-align-left': '<path d="M4 6.5h16M4 12h10M4 17.5h13"/>',
+        'fa-chevron-up': '<path d="M5 15l7-7 7 7"/>',
         'fa-arrow-left': '<path d="M20.5 12H4M11 5L4 12l7 7"/>',
         'fa-arrow-up-right-from-square': '<path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v4.5A2.5 2.5 0 0115.5 21h-9A2.5 2.5 0 014 18.5v-9A2.5 2.5 0 016.5 7H11"/>',
         'fa-calculator': '<rect x="4.5" y="2.5" width="15" height="19" rx="2.5"/><path d="M8 6.5h8"/><path d="M8.6 11h.01M12 11h.01M15.4 11h.01M8.6 15h.01M12 15h.01M15.4 15h.01M8.6 18.4h.01M12 18.4h.01M15.4 18.4h.01"/>',
