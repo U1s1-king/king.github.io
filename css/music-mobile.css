@@ -196,7 +196,261 @@
 }
 
 /* ============================================================
-   已知未解决 / 留给阶段二
+   阶段二 · 首屏三态：内容页 + 迷你条 + 全屏播放页
+   ------------------------------------------------------------
+   参照 Spotify Mobile UI Kit 的首页：区块标题 +「全部」入口 + 横向卡片行，
+   下面接纵向列表。桌面端这些类名一个都不存在（HTML 里的 .mm-* 由本文件的
+   媒体查询整块隐藏），所以 >768px 零影响。
+   ============================================================ */
+
+/* 桌面端必须先把这两块藏掉 —— 它们的样式全部写在下面的媒体查询里，
+   不藏的话 .mm-home 会以「无样式 div」的形态出现在桌面版首屏。
+   （.mm-mini 自带 hidden 属性兜底，这里一并写明白。） */
+.mm-home,
+.mm-mini {
+  display: none;
+}
+
+@media (max-width: 768px) {
+
+  /* ============================================================
+     4. 播放器大卡片退出首屏（T2.1）
+     ------------------------------------------------------------
+     卡片仍然留在 DOM 里 —— 全屏播放页靠 AppShell.adopt() 把
+     #coverInner / #trackName / #trackArtist / #lyricBox / .progress-area /
+     .controls-row / .extra-actions 这些**真实节点**搬进 .fs-* 层。
+       · display:none 不影响 adopt：节点被搬走后就脱离了本卡片，在别处正常渲染
+       · display:none 也不影响 element.click()：迷你条正是靠它触发 openFull()
+     首屏的控制入口改为：点迷你条 → 全屏播放页。
+     ============================================================ */
+  .player-card {
+    display: none;
+  }
+
+  /* ============================================================
+     5. 首屏内容区（T2.1）
+     ============================================================ */
+  .mm-home {
+    display: block;
+    /* 给固定在底部的迷你条 + 底部 tab 让出空间。
+       不直接改 .music-container 的 padding —— 它在 mobile.css 里带 !important
+       （html.has-appbar 那条），跟它较劲不如把留白加在新元素上。 */
+    padding-bottom: 84px;
+  }
+
+  .mm-section {
+    margin: 0 0 22px;
+  }
+  .mm-sec-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 0 2px 10px;
+  }
+  .mm-sec-title {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+    color: #a14563;
+    letter-spacing: 0.01em;
+  }
+  .mm-sec-more {
+    flex: 0 0 auto;
+    min-height: 44px;
+    padding: 0 6px;
+    border: 0;
+    background: none;
+    color: #c4567a;
+    font-size: 12.5px;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .mm-sec-more i {
+    font-size: 10px;
+  }
+
+  /* ---- 5a. 横向卡片行 ---- */
+  .mm-row {
+    display: flex;
+    gap: 12px;
+    /* 横向滚动条隐藏（和 UI Kit 一样只靠手势），两端各留 2px 呼吸位 */
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 2px 2px 6px;
+  }
+  .mm-row::-webkit-scrollbar {
+    display: none;
+  }
+  .mm-card {
+    flex: 0 0 auto;
+    width: 116px;
+    padding: 0;
+    border: 0;
+    background: none;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+    scroll-snap-align: start;
+  }
+  .mm-card-art {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 116px;
+    height: 116px;
+    border-radius: 14px;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 30px;
+    box-shadow: 0 4px 14px rgba(203, 106, 128, 0.16);
+  }
+  .mm-card-name {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-top: 7px;
+    font-size: 12.5px;
+    line-height: 1.3;
+    color: #8a5567;
+    word-break: break-word;
+  }
+  .mm-card:active .mm-card-art {
+    transform: scale(0.96);
+  }
+
+  /* ---- 5b. 我的歌单：从抽屉搬来的真实节点 ---- */
+  .mm-list-host .pl-views {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 12px;
+  }
+  .mm-list-host .pl-views .pl-view {
+    flex: 0 0 auto;
+    min-height: 44px;
+    padding: 0 14px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+  }
+  /* 列表在内容页里不再自己滚动 —— 整页一起滚，避免嵌套滚动抢手势 */
+  .mm-list-host .playlist-scroll {
+    flex: none;
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
+  }
+  /* 搬出抽屉后 .pl-drawer 的后代选择器全部失效，这里把行版式补回来 */
+  .mm-list-host .track-item {
+    border-radius: 14px;
+    margin-bottom: 8px;
+  }
+
+  /* ============================================================
+     6. 页内迷你播放条（T2.1）
+     ------------------------------------------------------------
+     z-index 取 9970：在 .bot-tab(9998) 之下、正文之上；
+     抽屉 mask(10005)/抽屉(10006)/二级页(9999) 打开时它自然被盖住。
+     ============================================================ */
+  .mm-mini {
+    position: fixed;
+    left: 10px;
+    right: 10px;
+    bottom: calc(var(--tab-h, 56px) + var(--sab, 0px) + 8px);
+    z-index: 9970;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 56px;
+    padding: 0 10px;
+    box-sizing: border-box;
+    border: 1px solid #ffd6e0;
+    border-radius: 14px;
+    background: rgba(255, 250, 252, 0.97);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 6px 22px rgba(200, 120, 150, 0.24);
+    cursor: pointer;
+    overflow: hidden;
+  }
+  .mm-mini[hidden] {
+    display: none;
+  }
+  /* 在 shell（index.html）里运行时，本页自己的 .bot-tab 被
+     html.in-shell 隐藏（app.css:2514），迷你条要跟着落到底部，
+     否则会在底栏原来的位置留一条空白。 */
+  html.in-shell .mm-mini {
+    bottom: calc(var(--sab, 0px) + 8px);
+  }
+  .mm-mini-cover {
+    flex: 0 0 auto;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    object-fit: cover;
+    background: #ffe9ef;
+  }
+  .mm-mini-meta {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .mm-mini-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #a14563;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .mm-mini-artist {
+    font-size: 11px;
+    color: #b5768c;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .mm-mini-btn {
+    flex: 0 0 auto;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    color: #e85d86;
+    font-size: 1.05rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .mm-mini-btn:active {
+    background: #ffeaf1;
+  }
+  /* 进度条贴在迷你条底边，2px 高，纯指示不接收点击 */
+  .mm-mini-bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 2px;
+    background: rgba(255, 182, 193, 0.35);
+    pointer-events: none;
+  }
+  .mm-mini-bar-fill {
+    height: 100%;
+    width: 0;
+    background: linear-gradient(90deg, #ff8fab, #e85d86);
+  }
+}
+
+/* ============================================================
+   已知未解决 / 留给阶段二后续
    ------------------------------------------------------------
    · 320×568（iPhone SE 1 代）首屏仍放不下播放键：需要再省约 90px，
      而那只能靠"把播放器从内容页移走"来解决 —— 正是阶段二的
@@ -207,4 +461,9 @@
    · .mode-chip 的 min-height 与 music.css 里三条 padding/字号 !important
      并存（1762/1771 等）。阶段一不动它们，因为改的是高度不是内边距；
      阶段二重做控件层级时应一并清理。
+   · 首屏「官方推荐」横向卡片暂时用渐变色块 + 音符图标代替真实封面 ——
+     歌单数据封在 music-bundle.js 的闭包里，DOM 上的 .track-item 不带封面。
+     要真封面需要让 bundle 暴露数据，列入后续。
+   · music-plus.js 的 #mpRecentStrip（最近播放）是插在 .player-card 之后的，
+     卡片隐藏后它会落到「我的歌单」列表下面。有播放历史时才出现。
    ============================================================ */

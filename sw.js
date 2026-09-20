@@ -59,6 +59,7 @@ const CORE = [
   '/js/live2d-app.js?v=' + VERSION,
   '/js/home-app.js?v=' + VERSION,
   '/js/music-plus.js?v=' + VERSION,
+  '/js/music-mobile.js?v=' + VERSION,
   '/js/vendor/canvas-confetti.browser.min.js?v=' + VERSION,
   '/js/anim-lib.js?v=' + VERSION,
   '/css/giscus-theme.css?v=' + VERSION,

@@ -95,6 +95,30 @@
     </div>
     <div id="po-results"></div>
 
+    <!-- ===== 首屏内容区（阶段二 T2.1）=====
+         参照 Spotify Mobile UI Kit 的首页：区块标题 +「全部」入口 + 横向卡片行，
+         下面接一个纵向列表。桌面端由 css/music-mobile.css 整块隐藏，版式不变。
+         「我的歌单」区块自己不带内容：#mmListHost 由 js/music-mobile.js 在移动端
+         把抽屉里的 #plViews 与 .playlist-scroll **真实节点**搬进来 ——
+         播放引擎、视图过滤、点击播歌的事件绑定全部原样保留，不重新渲染。 -->
+    <div class="mm-home" id="mmHome">
+        <section class="mm-section" id="mmRecommendSection">
+            <div class="mm-sec-head">
+                <h2 class="mm-sec-title">官方推荐</h2>
+                <button class="mm-sec-more" type="button" id="mmRecommendMore">全部 <i class="fas fa-chevron-right"></i></button>
+            </div>
+            <div class="mm-row" id="mmRecommendRow"></div>
+        </section>
+
+        <section class="mm-section" id="mmMineSection">
+            <div class="mm-sec-head">
+                <h2 class="mm-sec-title">我的歌单</h2>
+                <button class="mm-sec-more" type="button" id="mmUploadBtn"><i class="fas fa-plus-circle"></i> 上传</button>
+            </div>
+            <div class="mm-list-host" id="mmListHost"></div>
+        </section>
+    </div>
+
     <div class="player-card">
         <div class="player-dual">
             <div class="player-left">
@@ -159,6 +183,22 @@
 
 
     </div><!-- /tab-player -->
+
+    <!-- ===== 页内迷你播放条（阶段二 T2.1）=====
+         移动端：底部 tab 之上常驻，点它打开全屏播放页（复用已有的 .fs-wrap 路径）。
+         桌面端由 css/music-mobile.css 隐藏。
+         在外壳（index.html）里时，本页自己的 .bot-tab 被 html.in-shell 隐藏，
+         迷你条会自动落到底部（见 css 内的 in-shell 分支）。 -->
+    <div class="mm-mini" id="mmMini" hidden>
+        <img class="mm-mini-cover" id="mmMiniCover" src="img/mortis.webp" alt="">
+        <div class="mm-mini-meta">
+            <div class="mm-mini-title" id="mmMiniTitle">未在播放</div>
+            <div class="mm-mini-artist" id="mmMiniArtist"></div>
+        </div>
+        <button class="mm-mini-btn" id="mmMiniPlay" type="button" aria-label="播放或暂停"><i class="fas fa-play"></i></button>
+        <button class="mm-mini-btn" id="mmMiniNext" type="button" aria-label="下一首"><i class="fas fa-forward-step"></i></button>
+        <div class="mm-mini-bar"><div class="mm-mini-bar-fill" id="mmMiniProgress"></div></div>
+    </div>
 
     <!-- nav:bot-tab:start - 由 scripts/sync_nav.py 生成，勿手改 -->
     <nav class="bot-tab" aria-label="移动端导航">
@@ -297,6 +337,9 @@
         <script src="js/music-bundle.js?v=20260920"></script>
     <script src="js/music-app.js?v=20260920"></script>
     <script src="js/music-plus.js?v=20260920"></script>
+    <!-- 阶段二：音乐页移动端布局层。只被本页引用；在 js/music-app.js 之后加载，
+         这样 AppShell 与播放引擎都已就绪。桌面端不执行任何搬运动作。 -->
+    <script src="js/music-mobile.js?v=20260920"></script>
     <script src="js/sidebar.js?v=20260920"></script>
     <script src="js/particles-config.js?v=20260920"></script>
     <script src="js/live2d-fix.js?v=20260920" defer></script>
