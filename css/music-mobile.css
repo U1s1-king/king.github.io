@@ -854,6 +854,278 @@
     border-radius: 2px;
     background: linear-gradient(180deg, #ff8fab, #e85d86);
   }
+
+  /* ============================================================
+     11. 二级页集合（阶段五）
+     ------------------------------------------------------------
+     全部由 js/music-pages.js 经 AppShell.openDetail() 开层，
+     所以这里的 .detail-view 就是它们的容器。
+     行版式尽量复用 app.css 已有的 .mp-item / .mp-row，只补缺失的部分。
+     ============================================================ */
+
+  /* ---- 11a. 区块标题行右侧的多个动作（设置 / 上传） ---- */
+  .mm-sec-actions {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  /* ---- 11b. 列表行的渐变封面位（替代没有真封面的 img） ---- */
+  .mp-art {
+    flex: 0 0 auto;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 17px;
+    box-shadow: 0 3px 10px rgba(203, 106, 128, 0.18);
+  }
+  .mp-art-round {
+    border-radius: 50%;
+    font-size: 20px;
+    font-weight: 700;
+  }
+  .mp-arrow {
+    flex: 0 0 auto;
+    color: #d3a3b4;
+    font-size: 13px;
+    padding: 0 4px;
+  }
+  .detail-view .mp-list {
+    padding: 2px 0 12px;
+  }
+  .detail-view .mp-item {
+    min-height: 64px;
+    border-radius: 14px;
+    margin-bottom: 7px;
+    padding: 8px 10px;
+    box-sizing: border-box;
+    background: rgba(255, 250, 252, 0.94);
+    border: 1px solid #ffe6ee;
+  }
+
+  /* ---- 11c. 艺人详情：英雄区 ---- */
+  .mp-artist {
+    padding-bottom: 12px;
+  }
+  .mp-hero {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 18px 16px;
+    margin-bottom: 14px;
+    border-radius: 20px;
+    box-shadow: 0 6px 22px rgba(203, 106, 128, 0.22);
+  }
+  .mp-hero-art {
+    flex: 0 0 auto;
+    width: 88px;
+    height: 88px;
+    border-radius: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 34px;
+    color: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 0.26);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+  }
+  .mp-hero-meta {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .mp-hero-name {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: #7a3f52;
+    line-height: 1.25;
+    word-break: break-word;
+  }
+  .mp-hero-sub {
+    margin: 4px 0 10px;
+    font-size: 12px;
+    color: rgba(122, 63, 82, 0.72);
+  }
+  .mp-hero-play {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: 999px;
+    background: #fff;
+    color: #d9547d;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 3px 12px rgba(160, 70, 100, 0.2);
+  }
+  .mp-hero-play:active {
+    transform: scale(0.96);
+  }
+
+  /* ---- 11d. 设置页 ---- */
+  .mp-settings {
+    padding-bottom: 16px;
+  }
+  .mp-group {
+    margin-bottom: 18px;
+  }
+  .mp-group-title {
+    margin: 0 0 8px 4px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: #c4567a;
+  }
+  .detail-view .mp-settings .mp-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 52px;
+    padding: 6px 12px;
+    margin-bottom: 6px;
+    border-radius: 14px;
+    background: rgba(255, 250, 252, 0.94);
+    border: 1px solid #ffe6ee;
+    box-sizing: border-box;
+  }
+  .detail-view .mp-settings .mp-row-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 14px;
+    color: #7a3f52;
+  }
+  .detail-view .mp-settings .mp-row-note {
+    flex: 0 0 auto;
+    font-size: 11px;
+    color: #b5768c;
+  }
+  .detail-view .mp-settings .mp-row-btn {
+    cursor: pointer;
+    position: relative;
+    padding-right: 34px;
+  }
+  .detail-view .mp-settings .mp-row-btn::after {
+    content: '\f054';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    position: absolute;
+    right: 14px;
+    font-size: 11px;
+    color: #d3a3b4;
+  }
+  .detail-view .mp-settings .mp-row-btn.on {
+    background: linear-gradient(100deg, #fff0f5, #ffe6ee);
+    border-color: #ffc2d4;
+  }
+  .detail-view .mp-settings .mp-row-btn.on .mp-row-name {
+    color: #a14563;
+    font-weight: 700;
+  }
+  .detail-view .mp-settings .mp-row-btn.danger .mp-row-name {
+    color: #c4567a;
+  }
+  .mp-slider {
+    flex: 0 0 128px;
+    accent-color: #e85d86;
+  }
+  .mp-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 2px 4px 6px;
+  }
+  .mp-chip {
+    min-width: 56px;
+    min-height: 44px;
+    padding: 0 14px;
+    border: 1px solid #ffe2ec;
+    border-radius: 999px;
+    background: rgba(255, 250, 252, 0.94);
+    color: #b1627d;
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .mp-chip.on {
+    background: linear-gradient(145deg, #f4a9c1, #e06a8f);
+    border-color: transparent;
+    color: #fff;
+    font-weight: 700;
+  }
+
+  /* ---- 11e. 分享卡片 ---- */
+  .mp-share {
+    padding: 4px 0 16px;
+    text-align: center;
+  }
+  .mp-share-canvas {
+    width: 100%;
+    max-width: 340px;
+    height: auto;
+    border-radius: 18px;
+    box-shadow: 0 8px 26px rgba(203, 106, 128, 0.26);
+  }
+  .mp-share-bar {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 16px;
+  }
+  .mp-share-btn {
+    flex: 0 1 auto;
+    min-height: 48px;
+    padding: 0 20px;
+    border: 0;
+    border-radius: 999px;
+    background: linear-gradient(145deg, #f4a9c1, #e06a8f);
+    color: #fff;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(203, 106, 128, 0.28);
+  }
+  .mp-share-btn.ghost {
+    background: rgba(255, 250, 252, 0.94);
+    color: #c4567a;
+    border: 1px solid #ffc2d4;
+    box-shadow: none;
+  }
+  .mp-share-btn:active {
+    transform: scale(0.96);
+  }
+  .mp-share-tip {
+    margin: 12px 0 0;
+    font-size: 11.5px;
+    color: #b5768c;
+  }
+
+  /* ---- 11f. 歌词页：把搬进来的歌词面板铺满这一层 ---- */
+  .detail-lyric {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    padding: 4px 0 12px;
+    box-sizing: border-box;
+  }
+  .detail-lyric .lyric-panel {
+    flex: 1 1 auto;
+    min-height: 60vh;
+    height: auto;
+    max-height: none;
+    margin: 0;
+    background: rgba(255, 250, 252, 0.72);
+    border-radius: 20px;
+  }
 }
 
 /* ============================================================

@@ -105,7 +105,7 @@
         <section class="mm-section" id="mmRecommendSection">
             <div class="mm-sec-head">
                 <h2 class="mm-sec-title">官方推荐</h2>
-                <button class="mm-sec-more" type="button" id="mmRecommendMore">全部 <i class="fas fa-chevron-right"></i></button>
+                <button class="mm-sec-more" type="button" id="mmRecommendMore">艺人 <i class="fas fa-chevron-right"></i></button>
             </div>
             <div class="mm-row" id="mmRecommendRow"></div>
         </section>
@@ -113,7 +113,10 @@
         <section class="mm-section" id="mmMineSection">
             <div class="mm-sec-head">
                 <h2 class="mm-sec-title">我的歌单</h2>
-                <button class="mm-sec-more" type="button" id="mmUploadBtn"><i class="fas fa-plus-circle"></i> 上传</button>
+                <span class="mm-sec-actions">
+                    <button class="mm-sec-more" type="button" id="mmSettingsBtn"><i class="fas fa-sliders"></i> 设置</button>
+                    <button class="mm-sec-more" type="button" id="mmUploadBtn"><i class="fas fa-plus-circle"></i> 上传</button>
+                </span>
             </div>
             <div class="mm-list-host" id="mmListHost"></div>
         </section>
@@ -340,6 +343,9 @@
     <!-- 阶段二：音乐页移动端布局层。只被本页引用；在 js/music-app.js 之后加载，
          这样 AppShell 与播放引擎都已就绪。桌面端不执行任何搬运动作。 -->
     <script src="js/music-mobile.js?v=20260920"></script>
+    <!-- 阶段五：二级页集合（艺人/专辑详情、设置、分享卡片、歌词页）。
+         全部走 AppShell.openDetail()，与 TV / 日记 / 归档同一套机制。 -->
+    <script src="js/music-pages.js?v=20260920"></script>
     <script src="js/sidebar.js?v=20260920"></script>
     <script src="js/particles-config.js?v=20260920"></script>
     <script src="js/live2d-fix.js?v=20260920" defer></script>

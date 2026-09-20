@@ -137,13 +137,16 @@
       .observe(plBox, { childList: true });
   }
 
-  /* 「全部」→ 切回官方推荐视图并把列表滚进视野 */
+  /* 「艺人」→ 按艺人浏览（阶段五的艺人列表页） */
   var more = byId('mmRecommendMore');
   if (more) more.addEventListener('click', function () {
-    var btn = document.querySelector('#plViews .pl-view[data-view="official"]');
-    if (btn) btn.click();
-    var host = byId('mmMineSection');
-    if (host) host.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (window.MusicPages && window.MusicPages.artists) window.MusicPages.artists();
+  });
+
+  /* 「设置」→ 设置页 */
+  var setBtn = byId('mmSettingsBtn');
+  if (setBtn) setBtn.addEventListener('click', function () {
+    if (window.MusicPages && window.MusicPages.settings) window.MusicPages.settings();
   });
 
   /* 「上传」→ 复用抽屉里的上传入口（它绑着打开上传弹窗的逻辑） */
@@ -270,7 +273,50 @@
   }
 
   /* ============================================================
-     7. 启动
+     8. 全屏播放页「更多」菜单补三项（阶段五）
+     ------------------------------------------------------------
+     MusicPlus.menu() 是一份固定表（收藏/睡眠定时/播放历史/我的收藏/分享/收起）。
+     这里包一层，把新做的二级页挂上去 —— 不改 music-plus.js 里的表，
+     两边的入口各自独立，谁挂了都不影响对方。
+     ============================================================ */
+  function patchMenu() {
+    if (!window.MusicPlus || window.MusicPlus.__pagesPatched) return;
+    var orig = window.MusicPlus.menu;
+    if (typeof orig !== 'function') return;
+    window.MusicPlus.menu = function () {
+      var extra = [];
+      if (window.MusicPages) {
+        if (window.MusicPages.artist) {
+          var s = currentSongForMenu();
+          if (s && s.artist) {
+            extra.push({ icon: 'fa-compact-disc', label: '查看「' + s.artist + '」', run: function () { window.MusicPages.artist(s.artist); } });
+          }
+        }
+        if (window.MusicPages.share) extra.push({ icon: 'fa-image', label: '分享卡片', run: window.MusicPages.share });
+        if (window.MusicPages.lyrics) extra.push({ icon: 'fa-align-left', label: '歌词页', run: window.MusicPages.lyrics });
+      }
+      if (!extra.length) return orig.apply(this, arguments);
+      /* 借用 MusicPlus.sheet() 自己渲染，宿主逻辑与原生菜单完全一致；
+         先收起播放页，再把菜单弹出来（sheet 是底部面板，盖在二级页之上会打架）。 */
+      if (window.AppShell && window.AppShell.closeDetail && window.AppShell.detailOpen && window.AppShell.detailOpen()) {
+        window.AppShell.closeDetail();
+        setTimeout(function () { window.MusicPlus.sheet('更多', extra); }, 320);
+      } else {
+        window.MusicPlus.sheet('更多', extra);
+      }
+    };
+    window.MusicPlus.__pagesPatched = true;
+  }
+  function currentSongForMenu() {
+    var nameEl = byId('trackName'), artistEl = byId('trackArtist');
+    var artist = artistEl ? (artistEl.textContent || '').replace(/^\s+/, '').trim() : '';
+    var name = nameEl ? (nameEl.textContent || '').trim() : '';
+    if (!name) return null;
+    return { name: name, artist: artist };
+  }
+
+  /* ============================================================
+     9. 启动
      ============================================================ */
   function boot() {
     syncLayout();
@@ -278,6 +324,7 @@
     syncMini();
     liftRecentStrip();
     syncLyricState();
+    patchMenu();
   }
   if (document.readyState === 'complete' || document.readyState === 'interactive') setTimeout(boot, 300);
   else window.addEventListener('DOMContentLoaded', function () { setTimeout(boot, 300); });

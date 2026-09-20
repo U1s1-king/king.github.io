@@ -60,6 +60,7 @@ const CORE = [
   '/js/home-app.js?v=' + VERSION,
   '/js/music-plus.js?v=' + VERSION,
   '/js/music-mobile.js?v=' + VERSION,
+  '/js/music-pages.js?v=' + VERSION,
   '/js/vendor/canvas-confetti.browser.min.js?v=' + VERSION,
   '/js/anim-lib.js?v=' + VERSION,
   '/css/giscus-theme.css?v=' + VERSION,

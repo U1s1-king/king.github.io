@@ -624,7 +624,14 @@
         } }
     ]);
   }
-  window.MusicPlus = { menu: menu, sheet: sheet, sleepSheet: sleepSheet, record: record, toast: toast };
+  /* 阶段五：把 listPage / 播放历史收藏的存储键 / playEntry 也导出去 ——
+     js/music-pages.js 要用同一套列表页与同一条播放入口，不另造一份。
+     REC_KEY='dsh-music-rec'（播放历史）、FAV_KEY='dsh-music-fav'（收藏）。 */
+  window.MusicPlus = {
+    menu: menu, sheet: sheet, sleepSheet: sleepSheet, record: record, toast: toast,
+    listPage: listPage, playEntry: playEntry, curSong: curSong,
+    REC_KEY: REC_KEY, FAV_KEY: FAV_KEY
+  };
 
   /* ---------- 初始化 ---------- */
   /* ---------- 桌面端：同一套功能，复用站点的 .mode-strip / .mode-chip ---------- */
