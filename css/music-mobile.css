@@ -1142,8 +1142,9 @@
      通过「在线搜歌 / 上传」加进来的歌（localStorage sakuraUserPlaylist 的
      cover 字段）。要做「有封面就显示、没有就用渐变」需要让 bundle 暴露
      已加载的 playlist 数组，列入后续。
-   · music-plus.js 的 #mpRecentStrip（最近播放）是插在 .player-card 之后的，
-     卡片隐藏后它会落到「我的歌单」列表下面。有播放历史时才出现。
+   · 「最近播放」横条已在阶段六整体移除（用户决定不要这个功能）：
+     music-plus.js 的 buildRecentStrip() / record() / REC_KEY 与 app.css 的
+     .mp-strip* 全部删除，本文件也不再搬运它。
    · 全屏播放页的歌词空状态（无歌词时）仍是一个大色块，只显示一句
      「正在播放: …」。文案来自 music-bundle.js 的 LyricHelper，要做得更好
      需要动那个打包产物。

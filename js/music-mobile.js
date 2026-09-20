@@ -217,23 +217,13 @@
   }
 
   /* ============================================================
-     4. 「最近播放」上移（阶段二收尾）
+     4. （已移除）「最近播放」上移
      ------------------------------------------------------------
-     music-plus.js 把 #mpRecentStrip 插在 .player-card **之后**。
-     移动端 .player-card 已经隐藏（退出首屏），于是那条横向行会落到
-     「我的歌单」列表下面 —— 那是页面最底部，等于没有。
-     这里在移动端把它搬到「官方推荐」之前，形成
-       [最近播放] [官方推荐] [我的歌单]
-     与 Spotify 首页的区块顺序一致。桌面端保持 music-plus.js 的原位。
+     阶段二这里曾把 music-plus.js 的 #mpRecentStrip 搬到「官方推荐」之前。
+     阶段六用户决定不要这个功能，整条链已经在 music-plus.js 里删干净
+     （REC_KEY / record() / buildRecentStrip() 及全部调用点），
+     本文件不再需要任何搬运逻辑。
      ============================================================ */
-  function liftRecentStrip() {
-    if (!MQ.matches || !home) return;
-    var strip = byId('mpRecentStrip');
-    if (!strip || strip.parentNode === home) return;
-    var anchor = byId('mmRecommendSection');
-    if (anchor && anchor.parentNode === home) home.insertBefore(strip, anchor);
-    else home.insertBefore(strip, home.firstChild);
-  }
 
   /* ============================================================
      5. 全屏播放页里的「歌单」chip 改成「收起播放页 · 回到歌单」
@@ -322,18 +312,16 @@
     syncLayout();
     buildRecommendRow();
     syncMini();
-    liftRecentStrip();
     syncLyricState();
     patchMenu();
   }
   if (document.readyState === 'complete' || document.readyState === 'interactive') setTimeout(boot, 300);
   else window.addEventListener('DOMContentLoaded', function () { setTimeout(boot, 300); });
 
-  /* 播放状态、视图、最近播放行都可能被别处改动，低频兜底同步 */
+  /* 播放状态与视图都可能被别处改动，低频兜底同步 */
   setInterval(function () {
     syncMini();
     buildRecommendRow();
-    liftRecentStrip();
     syncLyricState();
   }, 1000);
 

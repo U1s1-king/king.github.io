@@ -21,9 +21,11 @@
      看板娘盖住。将来要修就【抬高 toast】，不要压低看板娘 —— 按既定决定未动看板娘。
 
    【隔离兜底】手机端注入的节点（#fsOpenBtn / .fs-open-btn / #fsStage /
-     #mpRecentStrip / .mp-strip / #nsPlatformChips）在 >=769px 一律
+     #nsPlatformChips）在 >=769px 一律
      display:none !important，规则位于 css/app.css 的「隔离兜底」块。
-     实测结论：6 条全部保留，一条都不可删。
+     #mpRecentStrip / .mp-strip 原在本清单里，阶段六随「最近播放」功能
+     整体移除，已从两条规则里一并删掉。
+     实测结论：剩余几条全部保留，一条都不可删。
        · 逐个强制注入同名节点，若没有兜底它们都会渲染出来
          （裸 button 变 inline-block 51x19；类选择器变 block 1210x24）
          —— 每条都是承载性的；

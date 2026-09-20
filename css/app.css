@@ -1443,64 +1443,9 @@ html.has-appbar .app-bar {
     background: linear-gradient(145deg, #f4a9c1, #e06a8f);
     color: #fff;
   }
-  /* ---------- 8. 页面上的「最近播放」横向条 ---------- */
-  .mp-strip {
-    margin: 14px 0 6px;
-  }
-  .mp-strip-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 8px;
-    color: #b5768c;
-    font-size: 0.8rem;
-  }
-  .mp-strip-more {
-    min-height: 34px;
-    padding: 0 14px;
-    border: 0;
-    border-radius: 999px;
-    background: #fff0f5;
-    color: #c4567a;
-    font-size: 0.74rem;
-  }
-  .mp-strip-row {
-    display: flex;
-    gap: 10px;
-    overflow-x: auto;
-    padding: 2px 2px 8px;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-  }
-  .mp-strip-row::-webkit-scrollbar {
-    display: none;
-  }
-  .mp-strip-item {
-    flex: 0 0 auto;
-    width: 78px;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    text-align: center;
-  }
-  .mp-strip-item img {
-    display: block;
-    width: 78px;
-    height: 78px;
-    border-radius: 16px;
-    object-fit: cover;
-    background: linear-gradient(145deg, #ffe1ec, #ffc9dd);
-    box-shadow: 0 4px 10px rgba(214, 122, 156, 0.2);
-  }
-  .mp-strip-name {
-    display: block;
-    margin-top: 6px;
-    overflow: hidden;
-    color: #8a6b76;
-    font-size: 0.7rem;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
+  /* ---------- 8. （已移除）「最近播放」横向条 ----------
+     阶段六用户决定不要这个功能：.mp-strip* 这一整套样式已随
+     music-plus.js 里的 buildRecentStrip() / record() / REC_KEY 一起删除。 */
   @keyframes mp-fade {
     from { opacity: 0; }
     to { opacity: 1; }
@@ -2154,8 +2099,6 @@ html.has-appbar .app-bar {
   .fs-open-btn,
   #fsStage,
   /* .fs-wrap 已在阶段 B1 里补了桌面版式，不再隐藏 */
-  #mpRecentStrip,
-  .mp-strip,
   #nsPlatformChips {
     display: none !important;
   }

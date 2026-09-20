@@ -9,7 +9,7 @@
  *   Album View  → 艺人 / 专辑详情（数据来自 data/playlist.json）
  *   Settings    → 设置页（把散落各处的开关收成一页）
  *   Song Share  → 分享卡片（canvas 生成可保存的图）
- *   Library     → 播放历史 / 我的收藏（复用 music-plus.js 的 listPage）
+ *   Library     → 我的收藏（复用 music-plus.js 的 listPage）
  *   歌词页       → 把真实歌词面板搬进独立一层
  * 没有对应功能的屏（Start / Signup / Choose Artists / Listening on /
  * Scanning for Spotify codes / Album Radio）**刻意不做** —— 照抄只会得到空壳。
@@ -351,19 +351,6 @@
 
     /* --- 内容 --- */
     var g4 = rowGroup('内容');
-    var hist = row('播放历史');
-    hist.classList.add('mp-row-btn');
-    hist.addEventListener('click', function () {
-      if (!window.MusicPlus || !window.MusicPlus.listPage) return;
-      var items = [];
-      try { items = JSON.parse(readLS('dsh-music-rec', '[]')) || []; } catch (e) {}
-      window.AppShell.closeDetail();
-      setTimeout(function () {
-        window.MusicPlus.listPage('播放历史', items, {
-          emptyIcon: 'fa-clock-rotate-left', emptyText: '还没有播放记录喵~'
-        });
-      }, 320);
-    });
     var favs = row('我的收藏');
     favs.classList.add('mp-row-btn');
     favs.addEventListener('click', function () {
@@ -377,7 +364,6 @@
         });
       }, 320);
     });
-    g4.appendChild(hist);
     g4.appendChild(favs);
     var browse = row('按艺人浏览', '官方推荐 ' + '的全部曲目');
     browse.classList.add('mp-row-btn');
@@ -389,12 +375,6 @@
 
     /* --- 存储 --- */
     var g5 = rowGroup('存储');
-    var clrHis = row('清空播放历史');
-    clrHis.classList.add('mp-row-btn', 'danger');
-    clrHis.addEventListener('click', function () {
-      try { localStorage.removeItem('dsh-music-rec'); } catch (e) {}
-      toast('播放历史已清空');
-    });
     var clrCache = row('清空上传缓存', '本地音乐记录');
     clrCache.classList.add('mp-row-btn', 'danger');
     clrCache.addEventListener('click', function () {
@@ -403,7 +383,6 @@
       try { localStorage.removeItem('sakuraUserPlaylist'); } catch (e) {}
       toast('缓存已清空');
     });
-    g5.appendChild(clrHis);
     g5.appendChild(clrCache);
 
     [g1, g2, g3, g4, g5].forEach(function (g) { wrap.appendChild(g); });

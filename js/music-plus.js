@@ -18,7 +18,10 @@
   if (window.__MUSIC_PLUS__) return;
   window.__MUSIC_PLUS__ = true;
 
-  var REC_KEY = 'dsh-music-rec';
+  /* 阶段六：「最近播放 / 播放历史」整个功能已移除（用户决定不要）。
+     REC_KEY、record()、buildRecentStrip() 及其全部调用点都已删除，
+     连同 app.css 里的 .mp-strip* 样式与 menu/settings 里的入口。
+     收藏（FAV_KEY）不受影响。 */
   var FAV_KEY = 'dsh-music-fav';
   var SLEEP_KEY = 'dsh-music-sleep';
 
@@ -68,15 +71,6 @@
       }
     } catch (e) {}
     return s;
-  }
-
-  /* ---------- 历史 ---------- */
-  function record() {
-    var s = curSong();
-    if (!s || !s.name) return;
-    var list = load(REC_KEY).filter(function (x) { return !(x.name === s.name && x.artist === s.artist); });
-    list.unshift({ name: s.name, artist: s.artist, cover: s.cover, url: s.url, id: s.id, platform: s.platform, at: Date.now() });
-    store(REC_KEY, list.slice(0, 60));
   }
 
   /* ---------- 收藏 ---------- */
@@ -148,7 +142,6 @@
       if (seq !== playSeq) return;
       if (typeof window.addToPlaylist !== 'function') { toast('播放器还没就绪喵~'); return; }
       window.addToPlaylist(song);
-      setTimeout(record, 700);   /* 等 bundle 写完封面/歌名，再把这条记进历史 */
       if (window.AppShell && window.AppShell.detailOpen && window.AppShell.detailOpen()) {
         window.AppShell.closeDetail();
       }
@@ -158,7 +151,6 @@
       if (s.url) {
         try {
           window.addToPlaylist({ name: s.name, artist: s.artist || '', url: s.url, id: s.id || '', platform: s.platform || '', cover: s.cover || '' });
-          setTimeout(record, 700);
           if (window.AppShell && window.AppShell.detailOpen && window.AppShell.detailOpen()) window.AppShell.closeDetail();
           return;
         } catch (e) { /* 落到下面的提示 */ }
@@ -454,66 +446,6 @@
     window.AppShell.openDetail({ title: title, content: wrap, swipeClose: true, allowDesktop: true });
   }
 
-  /* ---------- 页面上的「最近播放」横向条（手机端才有位置放） ---------- */
-  function buildRecentStrip() {
-    var items = load(REC_KEY).slice(0, 10);
-    var old = byId('mpRecentStrip');
-    /* 桌面端不注入这条横条（样式只在 max-width:768px 里）。视口拉宽之后
-       audio 的 play 事件仍会调到这里 —— 必须挡住，否则网页端会自己长出
-       一条没样式的横条，这就是「移动端残留」。 */
-    if (!narrow()) {
-      if (old && old.parentNode) old.parentNode.removeChild(old);
-      return;
-    }
-    if (!items.length) { if (old && old.parentNode) old.parentNode.removeChild(old); return; }
-    if (old && old.getAttribute('data-first') === items[0].name) return;
-    var card = q('.player-card');
-    if (!card || !card.parentNode) return;
-    if (old && old.parentNode) old.parentNode.removeChild(old);
-
-    var box = document.createElement('section');
-    box.id = 'mpRecentStrip';
-    box.className = 'mp-strip';
-    box.setAttribute('data-first', items[0].name);
-    var head = document.createElement('div');
-    head.className = 'mp-strip-head';
-    var ttl = document.createElement('span');
-    ttl.textContent = '最近播放';
-    var more = document.createElement('button');
-    more.type = 'button';
-    more.className = 'mp-strip-more';
-    more.textContent = '全部';
-    more.addEventListener('click', function () {
-      listPage('播放历史', load(REC_KEY), { emptyIcon: 'fa-clock-rotate-left', emptyText: '还没有播放记录喵~' });
-    });
-    head.appendChild(ttl);
-    head.appendChild(more);
-
-    var row = document.createElement('div');
-    row.className = 'mp-strip-row';
-    items.forEach(function (s) {
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'mp-strip-item';
-      var im = document.createElement('img');
-      im.alt = '';
-      im.loading = 'lazy';
-      if (s.cover) im.src = s.cover;
-      var nm = document.createElement('span');
-      nm.className = 'mp-strip-name';
-      nm.textContent = s.name || '';
-      b.appendChild(im);
-      b.appendChild(nm);
-      b.addEventListener('click', function () {
-        playEntry(s);
-      });
-      row.appendChild(b);
-    });
-    box.appendChild(head);
-    box.appendChild(row);
-    card.parentNode.insertBefore(box, card.nextSibling);
-  }
-
   /* ---------- 播放页主题：跟随封面 + 按曲名取一组固定配色 ---------- */
   var THEMES = [
     ['#ffd9e6', '#ffb0ca'], ['#dbe9ff', '#b6d2ff'], ['#e8dcff', '#c9b6ff'],
@@ -601,9 +533,6 @@
           toast(now ? '已收藏喵~' : '已取消收藏');
         } },
       { icon: 'fa-clock', label: '睡眠定时', note: sleepActive() ? '已开启' : '', run: sleepSheet },
-      { icon: 'fa-clock-rotate-left', label: '播放历史', run: function () {
-          listPage('播放历史', load(REC_KEY), { emptyIcon: 'fa-clock-rotate-left', emptyText: '还没有播放记录喵~' });
-        } },
       { icon: 'fa-heart', label: '我的收藏', run: function () {
           listPage('我的收藏', load(FAV_KEY), {
             emptyIcon: 'fa-heart', emptyText: '还没有收藏的歌喵~', removeIcon: 'fa-heart-crack',
@@ -624,13 +553,13 @@
         } }
     ]);
   }
-  /* 阶段五：把 listPage / 播放历史收藏的存储键 / playEntry 也导出去 ——
+  /* 阶段五：把 listPage / 收藏存储键 / playEntry 也导出去 ——
      js/music-pages.js 要用同一套列表页与同一条播放入口，不另造一份。
-     REC_KEY='dsh-music-rec'（播放历史）、FAV_KEY='dsh-music-fav'（收藏）。 */
+     （REC_KEY 随「最近播放」功能一起在阶段六移除。） */
   window.MusicPlus = {
-    menu: menu, sheet: sheet, sleepSheet: sleepSheet, record: record, toast: toast,
+    menu: menu, sheet: sheet, sleepSheet: sleepSheet, toast: toast,
     listPage: listPage, playEntry: playEntry, curSong: curSong,
-    REC_KEY: REC_KEY, FAV_KEY: FAV_KEY
+    FAV_KEY: FAV_KEY
   };
 
   /* ---------- 初始化 ---------- */
@@ -697,9 +626,6 @@
     }
 
     chip('fa-clock', '睡眠定时', function () { sleepSheet(); });
-    chip('fa-clock-rotate-left', '播放历史', function () {
-      listPage('播放历史', load(REC_KEY), { emptyIcon: 'fa-clock-rotate-left', emptyText: '还没有播放记录喵~' });
-    });
     chip('fa-heart', '我的收藏', function () {
       listPage('我的收藏', load(FAV_KEY), {
         emptyIcon: 'fa-heart', emptyText: '还没有收藏的歌喵~', removeIcon: 'fa-heart-crack',
@@ -739,8 +665,8 @@
 
     var audio = byId('nativeAudio');
     if (audio) {
-      audio.addEventListener('loadedmetadata', function () { record(); paintStage(); buildRecentStrip(); });
-      audio.addEventListener('play', function () { record(); paintStage(); buildRecentStrip(); });
+      audio.addEventListener('loadedmetadata', function () { paintStage(); });
+      audio.addEventListener('play', function () { paintStage(); });
       audio.addEventListener('ended', function () {
         if (sleepAfterTrack) fireSleep();
       });
@@ -769,7 +695,6 @@
       mo.observe(document.body, { childList: true, subtree: true });
     }
     bindStage(q('.fs-wrap'));
-    buildRecentStrip();
   }
 
   function init() {
@@ -808,10 +733,8 @@
     if (isNarrow) {
       clearDesktopEntry();   /* 拆掉网页端的入口 */
       initMobile();          /* 已绑过监听就只补 DOM */
-      buildRecentStrip();
       paintStage();
     } else {
-      dropNode('mpRecentStrip');   /* 拆掉手机端的横条 */
       initDesktop();
     }
   }
