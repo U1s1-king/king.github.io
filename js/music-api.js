@@ -54,6 +54,15 @@
 
   // ---------------------------------------------------------- 小工具
 
+  /* 网易云有些接口（新歌速递）返回的封面是 http:// 开头，
+     浏览器同样会拦截混合内容 —— 表现就是「没封面」。统一升成 https。 */
+  function fixUrl(u) {
+    if (!u) return '';
+    if (u.indexOf('http://') === 0) return 'https://' + u.slice(7);
+    if (u.indexOf('//') === 0) return 'https:' + u;
+    return u;
+  }
+
   function stripHtml(s) {
     if (!s) return '';
     return String(s)
@@ -114,7 +123,7 @@
       name: name,
       artist: artist,
       album: stripHtml(o.album || ''),
-      cover: o.cover || o.pic || '',
+      cover: fixUrl(o.cover || o.pic || ''),
       duration: toSeconds(o.duration),
       url: o.url || '',
       lrc: o.lrc || o.lyric || '',
@@ -135,7 +144,7 @@
       name: s.name,
       artist: s.artist,
       album: s.album,
-      cover: s.cover,
+      cover: fixUrl(s.cover),
       duration: s.duration, // 毫秒，toSeconds 会处理
       fee: s.fee,
       lrc: s.lrc || ''
@@ -150,7 +159,7 @@
       name: s.name || s.title,
       artist: s.artist || s.author,
       album: s.album || '',
-      cover: s.pic || s.cover,
+      cover: fixUrl(s.pic || s.cover),
       duration: s.duration || s.length,
       url: s.url,
       lrc: s.lrc || s.lyric
@@ -165,7 +174,7 @@
       name: s.trackName,
       artist: s.artistName,
       album: s.collectionName,
-      cover: (s.artworkUrl100 || '').replace('100x100', '300x300'),
+      cover: fixUrl((s.artworkUrl100 || '').replace('100x100', '300x300')),
       duration: Math.round((s.trackTimeMillis || 0) / 1000),
       url: s.previewUrl || '',
       isTrial: true
@@ -182,7 +191,7 @@
       name: s.song || '',
       artist: s.singer || '',
       album: s.album || '',
-      cover: s.picture || '',
+      cover: fixUrl(s.picture || ''),
       url: s.url || '',
       lrc: s.lyric || s.lrc || ''
     });
@@ -261,7 +270,13 @@
     var qs = new URLSearchParams(params || {}).toString();
     return getJSON(GATEWAY + path + (qs ? '?' + qs : '')).then(function (j) {
       if (!j || j.ok === false) throw new Error((j && j.error) || '网关返回失败');
-      return j.data;
+      var d = j.data;
+      /* 有些接口把数组包在 {ok,total,songs} 里（/api/playlist/tracks 就是），
+         而 /api/recommend/* 直接给数组。这里统一拆开 ——
+         否则调用方对对象调 .map 会抛 TypeError，
+         表现就是「排行榜/歌单点进去啥都没有」。 */
+      if (d && !Array.isArray(d) && Array.isArray(d.songs)) return d.songs;
+      return d;
     });
   }
 
