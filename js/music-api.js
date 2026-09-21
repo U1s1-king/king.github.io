@@ -558,7 +558,7 @@ if (platform === 'kuwo') {
    */
   function lyric(song) {
     if (!song) return Promise.resolve('');
-    if (song.lrc) return Promise.resolve(song.lrc);
+    if (song.lrc) return Promise.resolve({ lrc: song.lrc, trans: '', roma: '' });
     var platform = song.platform || 'netease';
     var key = cacheKey(['lyric2', platform, song.id || song.name, song.artist]);
     return cached(key, 86400, function () {
@@ -575,7 +575,10 @@ if (platform === 'kuwo') {
         if (id && platform === 'netease') {
           tries.push(function () {
             return gateway('/api/lyric', { id: id }).then(function (d) {
-              return d && d.lyric ? d.lyric : null;
+              if (!d || !d.lyric) return null;
+              /* 网关其实同时给了翻译和罗马音，以前只取 lyric 把它们丢掉了。
+                 一起带回去，交给 LyricHelper 按时间戳合并成副行。 */
+              return { lrc: d.lyric, trans: d.translated || '', roma: d.roma || '' };
             }).catch(function () { return null; });
           });
         }
@@ -583,7 +586,7 @@ if (platform === 'kuwo') {
           tries.push(function () {
             return meting({ server: platform, type: 'lrc', id: id }).then(function (r) {
               var t = unwrapLrcText(r.text);
-              return t || null;
+              return t ? { lrc: t, trans: '', roma: '' } : null;
             }).catch(function () { return null; });
           });
         }

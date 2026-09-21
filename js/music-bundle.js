@@ -1558,9 +1558,12 @@ window.loadLyrics = function (song) {
   var left = 3;
   var attempt = function () {
     if (token !== lyricToken) return;
-    window.MusicAPI.lyric({ id: song.id, platform: song.platform, name: name, artist: artist }).then(function (txt) {
+    window.MusicAPI.lyric({ id: song.id, platform: song.platform, name: name, artist: artist }).then(function (res) {
       if (token !== lyricToken) return;
-      if (txt) { window.LyricHelper.showText(txt, audioEl, box); return; }
+      /* lyric() 现在返回 {lrc, trans, roma}（翻译和罗马音以前被丢掉了），
+         但旧调用方传字符串也照样能用，所以两种都认 */
+      var has = res && (typeof res === 'string' ? res : res.lrc);
+      if (has) { window.LyricHelper.showText(res, audioEl, box); return; }
       if (--left > 0) { paint(); setTimeout(attempt, 1500); return; }
       paint('<br>暂无歌词喵～');
       if (typeof showMsg === 'function') showMsg('暂无歌词喵～');
@@ -1575,7 +1578,7 @@ window.loadLyrics = function (song) {
 window.LyricHelper = {
 timer: null,
 lines: [],
-parse: function (txt) {
+parse: function (txt, transLrc, romaLrc) {
 if (!txt) return [];
 var lines = [];
 /* 注意 [^\S\r\n]* 而不是 \s*：\s 会把行尾换行也吃掉，于是「只有时间戳、后面没内容」的
@@ -1594,6 +1597,31 @@ var sec = parseInt(m[1], 10) * 60 + parseInt(m[2], 10) + ms;
 var t = (m[4] || '').trim();
 if (t && !(sec < 20 && credit.test(t))) lines.push({ time: sec, text: t });
 }
+/* 翻译 / 罗马音各自是**独立的一份 LRC**，时间戳不一定和主歌词逐字对齐
+   （1.080 与 1.08，或差几十毫秒），所以按最近邻（±400ms）挂到主行上。 */
+var attach = function (raw, field) {
+if (!raw) return;
+var map = [], re2 = /\[(\d{1,2}):(\d{1,2})(?:[.:](\d{1,3}))?\][^\S\r\n]*(.*)/g, m2;
+while ((m2 = re2.exec(raw)) !== null) {
+var fr2 = m2[3] || '';
+var ms2 = fr2 ? parseInt(fr2, 10) / Math.pow(10, fr2.length) : 0;
+var sec2 = parseInt(m2[1], 10) * 60 + parseInt(m2[2], 10) + ms2;
+var t2 = (m2[4] || '').trim();
+if (t2) map.push({ time: sec2, text: t2 });
+}
+if (!map.length) return;
+map.sort(function (a, b) { return a.time - b.time; });
+for (var i = 0; i < lines.length; i++) {
+var best = -1, bd = 0.401;
+for (var j = 0; j < map.length; j++) {
+var d = Math.abs(map[j].time - lines[i].time);
+if (d < bd) { bd = d; best = j; }
+}
+if (best >= 0 && map[best].text !== lines[i].text) lines[i][field] = map[best].text;
+}
+};
+attach(transLrc, 'trans');
+attach(romaLrc, 'roma');
 return lines;
 },
 /* 直接渲染已经到手的歌词文本（网关给的就是带时间轴的 LRC） */
@@ -1605,7 +1633,11 @@ if (!this.lines.length) { box.innerHTML = '<div class="lyr-line">暂无歌词喵
 var self = this;
 var esc = function (t) { return String(t == null ? '' : t).replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; }); };
 box.innerHTML = this.lines.map(function (l, i) {
-return '<div class="lyr-line" data-i="' + i + '">' + esc(l.text) + '</div>';
+var sub = '';
+/* 翻译在上、罗马音在下（更小更淡）—— 有哪个显示哪个 */
+if (l.trans) sub += '<span class="lrc-sub">' + esc(l.trans) + '</span>';
+if (l.roma && l.roma !== l.trans) sub += '<span class="lrc-sub roma">' + esc(l.roma) + '</span>';
+return '<div class="lyr-line" data-i="' + i + '"><span class="lrc-main">' + esc(l.text) + '</span>' + sub + '</div>';
 }).join('');
 /* lastIdx 从 -2 起手，保证第一拍一定刷新一遍高亮 */
 var lastIdx = -2;
@@ -1647,7 +1679,14 @@ needScroll = false;
 tick();
 self.timer = setInterval(tick, 300);
 },
-showText: function (txt, audio, box) { this.render(this.parse(txt), audio, box); },
+showText: function (txt, audio, box) {
+var lrc = txt, trans = '', roma = '';
+/* lyric() 现在返回 {lrc, trans, roma}；传字符串的老用法也照样认 */
+if (txt && typeof txt === 'object') {
+lrc = txt.lrc || ''; trans = txt.trans || ''; roma = txt.roma || '';
+}
+this.render(this.parse(lrc, trans, roma), audio, box);
+},
 show: function (url, audio, box) {
 this.stop();
 if (!url || !box) return;

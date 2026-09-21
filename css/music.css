@@ -2096,3 +2096,18 @@ body.mc-playing #progressFill::after{
   .stat-number { font-size: 0.95rem; }
   .filter-tabs { margin-bottom: 0.9rem; }
 }
+
+/* ---------- 歌词副行：翻译 / 罗马音 ----------
+   网关的 /api/lyric 同时返回 translated 和 roma，
+   LyricHelper 按最近邻时间戳把它们挂到主歌词行上。 */
+.lyr-line .lrc-main { display: block; }
+.lyr-line .lrc-sub {
+  display: block;
+  font-size: .78em;
+  line-height: 1.45;
+  opacity: .72;
+  margin-top: 2px;
+}
+.lyr-line .lrc-sub.roma { font-size: .72em; opacity: .58; letter-spacing: .01em; }
+.lyr-line.active .lrc-sub { opacity: .92; }
+.lyr-line.active .lrc-sub.roma { opacity: .8; }

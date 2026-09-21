@@ -466,7 +466,9 @@ const api = {
     if (!id) return fail('缺少 id', 400, origin)
     const key = 'lyric:' + id
     const body = await withCache(key, CACHE_TTL.lyric, async function () {
-      const res = await weapiPost('/song/lyric', { id: Number(id), lv: -1, kv: -1, tv: -1, csrf_token: '' })
+      /* rv: -1 才会返回 romalrc（罗马音）—— 少了它 roma 永远是空字符串。
+   实测对比：lv/kv/tv 只给 lrc+klyric+tlyric；加上 rv 才多出 romalrc。 */
+    const res = await weapiPost('/song/lyric', { id: Number(id), lv: -1, kv: -1, tv: -1, rv: -1, csrf_token: '' })
       return assertUpstream(await readJson(res), "netease")
     })
     return ok(
