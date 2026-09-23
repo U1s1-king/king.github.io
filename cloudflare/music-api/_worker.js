@@ -638,6 +638,9 @@ const api = {
 /** 依次尝试镜像，返回第一个可用的地址；type=url 时只取重定向目标，不转发音频流 */
 async function resolveMeting(params) {
   const errors = []
+  /* 含糊响应（读不到跳转目标的 opaque / 空 body）的兜底候选。
+     不立刻返回，先继续试后面的镜像 —— 能拿到真实直链就优先要真实直链。 */
+  let ambiguous = null
   for (let i = 0; i < METING_MIRRORS.length; i++) {
     const mirror = METING_MIRRORS[i]
     const qs = new URLSearchParams(params).toString()
@@ -659,14 +662,16 @@ async function resolveMeting(params) {
          跟随跳转。所以只要拿不到明确的「另一个地址」，就把镜像地址原样交出去，
          而不是报错。 */
       if (res.status === 0 || res.type === 'opaqueredirect') {
-        return { ok: true, mirror, data: { url: target }, opaque: true }
+        if (!ambiguous) ambiguous = { ok: true, mirror, data: { url: target }, opaque: true }
+        continue
       }
       // 302 -> 真实的音频 CDN 地址
       if (res.status >= 300 && res.status < 400) {
         const loc = res.headers.get('Location')
         if (loc) return { ok: true, mirror, data: { url: loc } }
-        // 有跳转但读不到 Location：退化成让客户端自己跟
-        return { ok: true, mirror, data: { url: target }, opaque: true }
+        // 有跳转但读不到 Location：先记下，继续试后面的镜像
+        if (!ambiguous) ambiguous = { ok: true, mirror, data: { url: target }, opaque: true }
+        continue
       }
       if (res.status !== 200) {
         errors.push(mirror + ': HTTP ' + res.status)
@@ -686,15 +691,20 @@ async function resolveMeting(params) {
           errors.push(mirror + ': 返回 HTML 错误页')
           continue
         }
-        /* 其它情况（空 body / 非地址文本）：大概率还是那个读不到 Location 的
-           隐形跳转。把镜像地址交出去让客户端自己跟。 */
-        return { ok: true, mirror, data: { url: target }, opaque: true }
+        /* 其它情况（空 body / 非地址文本）：大概率是那个读不到 Location 的
+           隐形跳转，但也可能是这个源真的没版权（实测 qijieya 的 netease
+           就这样时好时坏，而 injahow 同一时刻是好的）。
+           所以**只记下来当兜底**，继续试后面的镜像。 */
+        if (!ambiguous) ambiguous = { ok: true, mirror, data: { url: target }, opaque: true }
+        continue
       }
       return { ok: true, mirror, data: text }
     } catch (e) {
       errors.push(mirror + ': ' + (e && e.message ? e.message : 'error'))
     }
   }
+  /* 所有镜像都含糊 -> 交出一条镜像地址让客户端自己跟随跳转（总比 502 强） */
+  if (ambiguous) return ambiguous
   return { ok: false, errors }
 }
 
