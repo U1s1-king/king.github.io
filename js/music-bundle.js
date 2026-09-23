@@ -1259,9 +1259,10 @@ var ALL_PLATFORMS = [
   ["bilibili", "B站"],
   ["itunes", "iTunes"]
 ];
-/* 音源展示优先级：数字越小越靠前，B站固定置顶。
-   注意：这里只管「渲染顺序」，不改并发发起搜索的顺序，也不改任何音源的实现。
-   以后接入真正的 B站 音源时，只要替换掉 bilibili 的搜索实现，这里的置顶行为会自动生效。 */
+/* 音源展示优先级：数字越小越靠前，**网易云置顶**。
+   （2026-09 改：原来是 B站 置顶，搜索结果里 B站 的视频会压在网易云的歌前面。
+     理由是我们要主推网易云；B站 依然保留，只是排在网易云后面。）
+   注意：这里只管「渲染顺序」，不改并发发起搜索的顺序，也不改任何音源的实现。 */
 var PLATFORM_RANK = { netease: 0, bilibili: 1, tencent: 2, kugou: 3, kuwo: 4, migu: 5, itunes: 6 };
 function platformRank(id) {
 var r = PLATFORM_RANK[id];
@@ -7680,7 +7681,8 @@ area.classList.toggle('over', ev === 'dragover');
 ;
 (function () {
 var PO_API = 'https://api.qijieya.cn/meting/';
-var PO_BACKUP = 'https://musicapi.qijieya.cn/meting/';
+/* 备份镜像：musicapi.qijieya.cn 已经 521 了，换成实测还通的 injahow */
+var PO_BACKUP = 'https://api.injahow.cn/meting/';
 function esc4(s) {
 if (!s) return '';
 return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -7726,10 +7728,12 @@ step(n + 1);
 });
 })(i);
 }
-/* 音源优先级：B站最高。
+/* 音源优先级：**网易云最高**，B站其次。
    原来这里是从五个平台里随机挑一个，同一个关键词每次搜出来的来源都不一样；
-   现在固定按优先级顺序取，B站搜不到才依次回落到其它平台，既不丢覆盖率又保证B站优先。 */
-var PO_PLATFORM_ORDER = ['bilibili', 'netease', 'tencent', 'kugou', 'kuwo', 'migu'];
+   后来固定成 B站 优先 —— 但我们要主推网易云，B站 的搜索结果多是视频、
+   翻唱和搬运，压在网易云前面很难用。现在网易云搜不到才依次回落到其它平台，
+   既不丢覆盖率又保证网易云优先。 */
+var PO_PLATFORM_ORDER = ['netease', 'bilibili', 'tencent', 'kugou', 'kuwo', 'migu'];
 function searchByPriority(kw, cb) {
 var i = 0;
 var netFail = false;

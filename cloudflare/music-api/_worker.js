@@ -23,12 +23,18 @@ const PUB_EXP = 65537n
 const UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
 
-// 可播放 URL 的镜像池（按优先级）。qijieya 的两个是站点原有镜像，后面几个是补充。
+/* 可播放 URL 的镜像池（按优先级）。
+   2026-09 实测（server=netease&type=url&id=…）：
+     ✅ api.qijieya.cn     302 -> m8xx.music.126.net
+     ✅ api.injahow.cn     302 -> m7xx.music.126.net
+     ❌ music.xianqiao.wang 200 + 一页 HTML（不是音频也不是地址）
+     ❌ meting.qjqq.cn     522
+   所以把两个能用的排在前面，坏的分母留在后面兜底（将来复活也能自动用上）。 */
 const METING_MIRRORS = [
   'https://api.qijieya.cn/meting/',
-  'https://music.xianqiao.wang/netease/',
   'https://api.injahow.cn/meting/',
   'https://meting.qjqq.cn/',
+  'https://music.xianqiao.wang/netease/',
 ]
 
 const SITE_ORIGINS = [
@@ -641,12 +647,26 @@ async function resolveMeting(params) {
         redirect: 'manual',
         headers: { 'User-Agent': UA, Referer: 'https://zhaokening.ccwu.cc/' },
       })
+
+      /* ⚠️ Cloudflare Workers 上 redirect:'manual' 并不总能拿到 3xx ——
+         跨域跳转会变成 **opaque 响应**（status 0、headers 读不到 Location），
+         有时甚至表现为 status 200 + 空 body。这正是以前 /api/url 全盘 502、
+         报「所有镜像都拿不到播放地址」的真正原因：镜像其实都是好的，
+         只是我们读不到那个跳转目标，就把它们一律判死了。
+
+         关键认识：**Meting 镜像的 type=url 地址本身就是一条可以播的地址**。
+         它 302 到真实 CDN，客户端（<audio> / ExoPlayer / 下载器）都会自己
+         跟随跳转。所以只要拿不到明确的「另一个地址」，就把镜像地址原样交出去，
+         而不是报错。 */
+      if (res.status === 0 || res.type === 'opaqueredirect') {
+        return { ok: true, mirror, data: { url: target }, opaque: true }
+      }
       // 302 -> 真实的音频 CDN 地址
       if (res.status >= 300 && res.status < 400) {
         const loc = res.headers.get('Location')
         if (loc) return { ok: true, mirror, data: { url: loc } }
-        errors.push(mirror + ': 重定向缺少 Location')
-        continue
+        // 有跳转但读不到 Location：退化成让客户端自己跟
+        return { ok: true, mirror, data: { url: target }, opaque: true }
       }
       if (res.status !== 200) {
         errors.push(mirror + ': HTTP ' + res.status)
@@ -661,8 +681,14 @@ async function resolveMeting(params) {
       if (params.type === 'url') {
         const trimmed = text.trim()
         if (/^https?:\/\//.test(trimmed)) return { ok: true, mirror, data: { url: trimmed } }
-        errors.push(mirror + ': 返回内容不是地址')
-        continue
+        /* 明显是 HTML 错误页 -> 这个镜像确实不能播，换下一个 */
+        if (/^<\s*(!doctype|html)/i.test(trimmed)) {
+          errors.push(mirror + ': 返回 HTML 错误页')
+          continue
+        }
+        /* 其它情况（空 body / 非地址文本）：大概率还是那个读不到 Location 的
+           隐形跳转。把镜像地址交出去让客户端自己跟。 */
+        return { ok: true, mirror, data: { url: target }, opaque: true }
       }
       return { ok: true, mirror, data: text }
     } catch (e) {

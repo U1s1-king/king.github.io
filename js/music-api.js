@@ -108,8 +108,29 @@
       .replace(/\s/g, '')
       .slice(0, 20);
   }
-
   // ---------------------------------------------------------- 统一歌曲模型
+
+  /* ============================================================
+     网易云为什么放不出来：搜索结果里根本没有 url
+     ------------------------------------------------------------
+     网站在「网易云」这条路上一共有三个取链来源，全是死的：
+       • 网关 /api/search  -> url 字段就是空串
+       • 网关 /api/url     -> 期望镜像「返回一个地址字符串」，但 Meting 系
+                              镜像的 type=url 是 **302 跳转**，网关解析不出来，
+                              于是判定「所有镜像都拿不到播放地址」直接 502
+       • GDStudio          -> 网易云也返回空
+     唯一活着的路，是 **把 Meting 镜像的 type=url 当成播放地址本身**：
+     它是一条会 302 跳到 m8xx.music.126.net 真实 CDN 的代理链，
+     <audio> 和下载器都会自动跟随跳转，不需要我们去解析出最终直链。
+     所以这里按 id 就地拼出来 —— makeSong 是所有来源的必经之路，
+     搜索结果 / 排行榜 / 歌单曲目一次性全覆盖。
+     ============================================================ */
+  var PROXY_MIRROR = 'https://api.qijieya.cn/meting/';
+  function proxyUrl(server, id) {
+    if (!id) return '';
+    return PROXY_MIRROR + '?server=' + encodeURIComponent(server) +
+           '&type=url&id=' + encodeURIComponent(id);
+  }
 
   function makeSong(o) {
     o = o || {};
@@ -132,6 +153,11 @@
       isTrial: !!o.isTrial,
       isLocal: !!o.isLocal
     };
+    /* 只有网易云需要补：其余平台走 Meting 搜索，url 本来就有。
+       没有 id 就补不了（个别老接口只回歌名），交给下面的 songUrlCandidates 兜底。 */
+    if (!song.url && !song.isLocal && song.id && platform === 'netease') {
+      song.url = proxyUrl('netease', song.id);
+    }
     song.uid = platform + ':' + (id || fingerprint(name, artist));
     return song;
   }
@@ -147,6 +173,9 @@
       cover: fixUrl(s.cover),
       duration: s.duration, // 毫秒，toSeconds 会处理
       fee: s.fee,
+      /* 网关偶尔也会给 url —— 以前这里**根本没往下传**，白丢一个候选。
+         为空时 makeSong 会按 id 补代理链。 */
+      url: s.url || '',
       lrc: s.lrc || ''
     });
   }
@@ -377,7 +406,12 @@
     return cached(key, 300, function () {
       if (platform === 'netease') {
         return gateway('/api/search', { keywords: keywords, limit: limit, offset: offset }).then(function (d) {
-          return (d.songs || []).map(fromGateway);
+          /* ⚠️ gateway() 内部**已经**把 {ok,total,songs} 拆成 songs 数组返回了，
+             以前这里又取了一次 .songs —— 双重解包，对数组取 .songs 得到 undefined，
+             于是网易云搜索**永远返回 0 条**，搜索页看着像「没搜到」。
+             这里两种形状都认，网关以后改解包规则也不会再崩。 */
+          var arr = Array.isArray(d) ? d : ((d && d.songs) || []);
+          return arr.map(fromGateway);
         });
       }
       if (platform === 'itunes') {
@@ -448,9 +482,11 @@ if (platform === 'kuwo') {
      它是「返回地址」型；下面的 STREAM_MIRRORS 是「直接吐音频」型，两者不能混。 */
   var GD_API = 'https://music-api.gdstudio.xyz/api.php';
 
-  /* 流式镜像：这些镜像的 type=url 不返回地址，而是直接把音频流吐回来，
+  /* 流式镜像：这些镜像的 type=url 不返回 JSON 地址，而是 **302 跳转**到真实 CDN，
      所以要把「镜像地址本身」当成播放地址交给 <audio>（不要 fetch，顺带绕开 CORS）。
-     实测 qijieya / injahow 返回 200 + ID3 真音频；qjqq 已 521，仅保留在 Worker 侧镜像池。 */
+     实测 qijieya / injahow 都会 302 到 m8xx.music.126.net 并给出 audio/mpeg。
+     （2026-09 复测：musicapi.qijieya.cn 已 521，meting.qjqq.cn 522，
+        music.xianqiao.wang 只会返回一页 HTML —— 都不要再放进来了。） */
   var STREAM_MIRRORS = [
     'https://api.qijieya.cn/meting/',
     'https://api.injahow.cn/meting/'
