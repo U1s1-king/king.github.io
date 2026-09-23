@@ -1262,7 +1262,7 @@ var ALL_PLATFORMS = [
 /* 音源展示优先级：数字越小越靠前，B站固定置顶。
    注意：这里只管「渲染顺序」，不改并发发起搜索的顺序，也不改任何音源的实现。
    以后接入真正的 B站 音源时，只要替换掉 bilibili 的搜索实现，这里的置顶行为会自动生效。 */
-var PLATFORM_RANK = { bilibili: 0, netease: 1, tencent: 2, kugou: 3, kuwo: 4, migu: 5, itunes: 6 };
+var PLATFORM_RANK = { netease: 0, bilibili: 1, tencent: 2, kugou: 3, kuwo: 4, migu: 5, itunes: 6 };
 function platformRank(id) {
 var r = PLATFORM_RANK[id];
 return r === undefined ? 99 : r;
