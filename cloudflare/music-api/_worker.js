@@ -33,6 +33,11 @@ const UA =
 const METING_MIRRORS = [
   'https://api.qijieya.cn/meting/',
   'https://api.injahow.cn/meting/',
+  /* 2026-09-23 复测新发现的可用镜像（302 -> 真实 CDN）。
+     调研报告说它「已死」，实测是好的 —— 所以镜像存活一定要自己测。 */
+  'https://api.msls1441.com/',
+  /* 下面两个目前是坏的（qjqq 522 / xianqiao 只回 HTML），留着当分母，
+     将来复活能自动用上；不会拖慢请求，因为拿到 HTML 错误页会立刻换下一个。 */
   'https://meting.qjqq.cn/',
   'https://music.xianqiao.wang/netease/',
 ]

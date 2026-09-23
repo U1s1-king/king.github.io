@@ -97,8 +97,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     ok(/audio|octet/i.test(r.ct), 'content-type 是音频');
   }
 
-  /* ---------- 喜马拉雅必须是 https（否则混合内容被拦） ---------- */
-  console.log('\n【喜马拉雅】地址协议 + 付费过滤');
+  /* ---------- 喜马拉雅必须是 https（否则混合内容被拦） ---------- */  console.log('\n【喜马拉雅】地址协议 + 付费过滤');
   const x = await p.evaluate(async () => {
     const r = await window.MusicAPI.searchOne('ximalaya', '周杰伦', { limit: 10 });
     return (r || []).map(s => s.url);

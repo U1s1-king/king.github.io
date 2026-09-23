@@ -157,7 +157,8 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   ok(!/musicapi\.qijieya\.cn/.test(codeSrc), 'music-bundle 代码里已无 521 的 musicapi.qijieya.cn');
 
   const sm = (/var STREAM_MIRRORS = \[([^\]]+)\]/.exec(apiSrc) || [])[1] || '';
-  const mirrors = sm.split(',').map(x => x.trim().replace(/['"]/g, '')).filter(Boolean);
+  const mirrors = sm.replace(/\/\*[\s\S]*?\*\//g, '')
+    .split(',').map(x => x.trim().replace(/['"]/g, '')).filter(Boolean);
   console.log('  STREAM_MIRRORS = ' + JSON.stringify(mirrors));
   ok(mirrors.indexOf('https://api.qijieya.cn/meting/') >= 0, 'qijieya 在池中');
   ok(mirrors.indexOf('https://api.injahow.cn/meting/') >= 0, 'injahow 在池中');
@@ -170,7 +171,11 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   ok(/data: \{ url: target \}/.test(workerSrc), '退化时交出镜像地址本身（客户端自己跟随跳转）');
   ok(/返回 HTML 错误页/.test(workerSrc), 'HTML 错误页仍会被判死、换下一个镜像');
   const wm = (/const METING_MIRRORS = \[([^\]]+)\]/.exec(workerSrc) || [])[1] || '';
-  const wlist = wm.split(',').map(x => x.trim().replace(/['"]/g, '')).filter(Boolean);
+  /* ⚠️ 解析前必须先剥掉数组里的注释 —— 否则注释会被当成一个「元素」，
+     导致 indexOf('https://meting.qjqq.cn/') 匹配不到（元素里混了注释文本），
+     断言就变成了和 -1 比较。写死链的说明是好事，但不能把测试带跑偏。 */
+  const wlist = wm.replace(/\/\*[\s\S]*?\*\//g, '')
+    .split(',').map(x => x.trim().replace(/['"]/g, '')).filter(Boolean);
   console.log('  METING_MIRRORS = ' + JSON.stringify(wlist));
   ok(wlist[0] === 'https://api.qijieya.cn/meting/', 'qijieya 排第一');
   ok(wlist.indexOf('https://api.injahow.cn/meting/') < wlist.indexOf('https://meting.qjqq.cn/'),

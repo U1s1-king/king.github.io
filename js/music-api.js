@@ -566,7 +566,9 @@ if (platform === 'kuwo') {
         music.xianqiao.wang 只会返回一页 HTML —— 都不要再放进来了。） */
   var STREAM_MIRRORS = [
     'https://api.qijieya.cn/meting/',
-    'https://api.injahow.cn/meting/'
+    'https://api.injahow.cn/meting/',
+    /* 2026-09-23 自己复测出来的可用镜像（302 到真实 CDN） */
+    'https://api.msls1441.com/'
   ];
 
   function gdUrl(server, id) {
