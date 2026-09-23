@@ -28,7 +28,7 @@
 
   var D = {};
   var cfg = {};
-  var S = { rate: 1, fit: 'contain', loop: false, autonext: true };
+  var S = { rate: 1, fit: 'contain', loop: false, autonext: true, bright: 1 };
   var hls = null;
   var hlsLoading = false;
   var cur = '';
@@ -76,6 +76,25 @@
   function syncPlayIcon() { if (D.play) D.play.classList.toggle('is-pause', playing()); if (D.big) D.big.hidden = playing(); }
 
   function showUI() { if (D.stage) { D.stage.classList.add('show-ui'); D.stage.classList.remove('is-idle'); } }
+
+  /**
+   * 单击画面：控制条显着就收起来，收着就显出来。
+   *
+   * ⚠ 这是**触摸**路径专用的（桌面端鼠标仍然是「单击暂停、双击全屏」）。
+   * ⚠ 收起来时也要清掉 hideTimer，否则 3 秒后那次定时器还会再跑一遍
+   *   并把 is-idle 加上，状态就对不上了。
+   */
+  function toggleUI() {
+    if (!D.stage) return;
+    if (D.stage.classList.contains('show-ui')) {
+      clearTimeout(hideTimer);
+      D.stage.classList.remove('show-ui');
+      if (!D.err || D.err.hidden) D.stage.classList.add('is-idle');
+      closeMenus();
+    } else {
+      scheduleHide();
+    }
+  }
   /* 鼠标是否真的停在画面上：全屏时它是判断「该不该藏控制条」的唯一依据。
      用 hover 媒体查询是因为触屏设备根本没有鼠标，这时候不该走这套逻辑。 */
   function hasMouse() {
@@ -722,19 +741,49 @@
        双击 = 播放/暂停，单击 = 显示/隐藏控制条。
        全部用 touch 事件而不是 pointer：pointer 在移动端会和进度条的拖拽抢事件。
        判断阈值 12px —— 小于它当点击，避免轻微滑动被当成手势。 */
-    var g = { on: false, x0: 0, y0: 0, t0: 0, axis: '', moved: false, baseVol: 0, baseSeek: 0 };
+    var g = { on: false, x0: 0, y0: 0, t0: 0, axis: '', moved: false, baseVol: 0, baseSeek: 0, kind: '', baseBright: 0 };
     var GEST = 12;
     function gestTip(txt) { toast(txt, 700); }
+
+    /* ---------------- 亮度蒙层 ----------------
+       ⚠ 网页没有调屏幕亮度的权限，只能盖一层纯黑幕模拟压暗。
+         用 #000 + opacity（不是灰幕/白幕，那才会让画面发灰）。
+         蒙层在 CSS 里 z-index 卡在视频之上、控件之下，
+         所以调暗时播放键和进度条依然看得见。 */
+    var dimEl = null;
+    function ensureDim() {
+      if (dimEl && dimEl.parentNode === st) return dimEl;
+      dimEl = document.createElement('div');
+      dimEl.className = 'tvp-dim';
+      st.insertBefore(dimEl, st.firstChild);
+      return dimEl;
+    }
+    /* 整屏高 = 100% 行程；0 = 最亮，0.75 = 最暗（留一点，全黑就没法操作了） */
+    function setBright(mul, save) {
+      var x = Math.max(0, Math.min(1, mul));
+      D.bright = x;
+      /* mul=1（最亮）时蒙层完全不遮；mul 越小遮得越狠 */
+      var dim = (1 - x) * 0.75;
+      var el = ensureDim();
+      if (el) el.style.setProperty('--tvp-dim', String(dim));
+      if (save) S.bright = x;
+    }
+
     st.addEventListener('touchstart', function (e) {
       if (e.touches.length !== 1) { g.on = false; return; }
       var t = e.touches[0];
       /* 从控制条/菜单上起手的滑动不算手势（那是进度条拖拽和点按钮） */
       var el = e.target;
       if (el && el.closest && el.closest('.tvp-bar, .tvp-menu, .tvp-err')) { g.on = false; return; }
-      g.on = true; g.moved = false; g.axis = '';
+      g.on = true; g.moved = false; g.axis = ''; g.kind = '';
       g.x0 = t.clientX; g.y0 = t.clientY; g.t0 = Date.now();
       g.baseVol = D.video.volume;
       g.baseSeek = D.video.currentTime;
+      g.baseBright = typeof D.bright === 'number' ? D.bright : 1;
+      /* 按**起手位置**定左右。中途横移过去也不改 ——
+         手指按下之后再「换边」会让用户莫名其妙。 */
+      var r0 = st.getBoundingClientRect();
+      g.kind = (g.x0 - r0.left) < r0.width / 2 ? 'bright' : 'vol';
     }, { passive: true });
 
     st.addEventListener('touchmove', function (e) {
@@ -744,31 +793,32 @@
       if (!g.axis) {
         if (Math.abs(dx) < GEST && Math.abs(dy) < GEST) return;
         g.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+        /* 认定是滑动 → 把等着触发的单击取消掉 */
+        if (clickTimer) { clearTimeout(clickTimer); clickTimer = 0; }
       }
       g.moved = true;
       var r = st.getBoundingClientRect();
       if (g.axis === 'x') {
         /* 横向：整屏宽 ≈ 120 秒，滑多少给多少，实时预览但不立刻 seek
-           （立刻 seek 会让 HLS 反复重载分片，滑完再落点更顺） */
+           （立刻 seek 会让 HLS 反复重载分片，滑完再落点更顺）
+           只保留横屏 —— 竖屏下屏幕窄，而且竖屏横滑往往被当成切页面。 */
+        if (!(window.innerWidth > window.innerHeight || wideOn() || webFullOn())) return;
         var span = r.width || 320;
         var dt = (dx / span) * 120;
         var to = Math.max(0, Math.min((D.video.duration || 0) - 1, g.baseSeek + dt));
         g.pending = to;
         gestTip((dt >= 0 ? '快进 ' : '快退 ') + fmt(Math.abs(dt)) + ' / ' + fmt(to));
+      } else if (g.kind === 'bright') {
+        /* 向上拖 = 变亮 */
+        var nb = Math.max(0, Math.min(1, g.baseBright - dy / (r.height || 240)));
+        setBright(nb, true);
+        /* 边拖边更新基准，避免拖到顶后拉不回来 */
+        g.baseBright = nb; g.y0 = t.clientY;
+        gestTip('亮度 ' + Math.round(nb * 100) + '%');
       } else {
-        var left = (g.x0 - r.left) < r.width / 2;
-        if (left) {
-          /* 左半边上下滑 = 音量（不做亮度：网页改不了系统亮度，
-             盖一层黑幕模拟只会让画面发灰，反而更差） */
-          var dv = -dy / (r.height || 240);
-          setVolume(g.baseVol + dv, true);
-          gestTip('音量 ' + Math.round(D.video.volume * 100) + '%');
-        } else {
-          /* 右半边上下滑 = 音量（左右都给音量，手机上比亮度实用） */
-          var dv2 = -dy / (r.height || 240);
-          setVolume(g.baseVol + dv2, true);
-          gestTip('音量 ' + Math.round(D.video.volume * 100) + '%');
-        }
+        var dv = -dy / (r.height || 240);
+        setVolume(g.baseVol + dv, true);
+        gestTip('音量 ' + Math.round(D.video.volume * 100) + '%');
       }
     }, { passive: true });
 
@@ -777,9 +827,23 @@
       g.on = false;
       var dt = Date.now() - g.t0;
       if (!g.moved) {
-        /* 没滑动：当点击。短按 = 播放/暂停，双击 = 播放/暂停（同一个动作，
-           因为移动端单击已经被「显示控制条」占了，B 站也是这么处理的） */
-        if (dt < 250) { clearTimeout(clickTimer); clickTimer = setTimeout(toggle, 220); }
+        /* 没滑动：当点击。
+           ⚠ 单击 / 双击在这里是**两件事**，和桌面端不一样：
+             桌面端保留「单击暂停、双击全屏」的键鼠习惯；
+             手指这边单击 = 显隐控制条、双击 = 播放/暂停，
+             和 App / B 站 / 爱奇艺一致。
+           ⚠ 单击必须等过双击窗口才能执行，否则双击的第一下会先
+             把控制条切出来、再暂停，屏幕上闪一下。 */
+        if (dt < 250) {
+          if (clickTimer) {
+            /* 第二下到了 → 双击 */
+            clearTimeout(clickTimer);
+            clickTimer = 0;
+            toggle();
+          } else {
+            clickTimer = setTimeout(toggleUI, 260);
+          }
+        }
         return;
       }
       if (g.axis === 'x' && typeof g.pending === 'number') {
@@ -787,6 +851,7 @@
         toast('已跳到 ' + fmt(g.pending));
         g.pending = undefined;
       }
+      g.kind = '';
       scheduleHide();
     });
 

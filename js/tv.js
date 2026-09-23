@@ -1066,6 +1066,17 @@
                 (d && d._srcs ? '，来自 ' + d._srcs + ' 个片源' : ''),
               '',
             );
+            /* 二级页自己的页头。grid 搬进层之后，主页面那条 note 用户看不见了，
+               所以「搜的什么、多少条」要写进层里 —— 否则用户在一个没有标题的
+               结果列表里，不知道自己在看什么。 */
+            if (tvSearch) {
+              if (tvSearch.head) tvSearch.head.textContent = '「' + state.kw + '」';
+              if (tvSearch.count) {
+                var n = ((d && d.list) || []).length;
+                tvSearch.count.textContent = n + ' 条' +
+                  (d && d._srcs ? ' · ' + d._srcs + ' 个片源' : '');
+              }
+            }
           } else if (NOTE0) {
             noteWithLink(NOTE0, '');
           }
@@ -1231,6 +1242,83 @@
     /* 静默关闭是「换一层」，紧接着 detail() 会把新的写回去；
        只有真的关闭（用户点了返回）才该把「正在看哪部」清掉 */
     if (!silent) saveView({ vod: null, vodSrc: null });
+    return true;
+  }
+
+  /* ============================================================
+     搜索结果 = 伪二级页
+     ------------------------------------------------------------
+     原来搜索是把结果渲染进主滚动的 #tvGrid —— 而那一屏上面
+     还压着 hero 大图、榜单、分类筛选、继续观看，用户搜完之后
+     得往下翻好久才看见第一条结果。这体验是错的。
+
+     ⚠ 全站别的模块（archives / journal / guestbook / music / tools）
+       早就统一用 AppShell.openDetail 把结果开在二级页里了，
+       只有影视这边是例外。这里改成和它们一致的做法。
+
+     ⚠ 做法是「把 #tvGrid 搬进层里」而不是「重新渲染一份」：
+       结果条数是分页追加的（load 会往网格后面接），
+       渲染两份会立刻不同步。搬 DOM 的好处是无论怎么翻页都对。
+       关层时必须搬回原位，否则下次从导航栏进影视页会是一片空白。
+     ============================================================ */
+  var searchDetail = null;      /* AppShell 给的层句柄 */
+  var searchHome = null;        /* #tvGrid 原来的父节点，关层时搬回去 */
+  var tvSearch = null;          /* {head, count} —— 结果回来后往这里写「多少条」 */
+
+  function openTvSearch(kw) {
+    if (!window.AppShell || !AppShell.openDetail) return null;
+    closeTvSearch(true);
+
+    var grid = byId('tvGrid');
+    if (!grid) return null;
+
+    var wrap = document.createElement('div');
+    wrap.className = 'tv-sv';
+    var head = document.createElement('div');
+    head.className = 'tv-sv-head';
+    var k = document.createElement('b');
+    var c = document.createElement('span');
+    head.appendChild(k); head.appendChild(c);
+    var box = document.createElement('div');
+    box.className = 'tv-sv-body';
+    wrap.appendChild(head); wrap.appendChild(box);
+
+    searchHome = grid.parentNode;
+    searchDetail = AppShell.openDetail({
+      title: '搜索结果',
+      content: wrap,
+      allowDesktop: true,
+      swipeClose: true,
+      onClose: function () {
+        searchDetail = null;
+        /* 把网格搬回原来的位置。不搬回去的话，
+           退出搜索后影视页就只剩一个空壳了。 */
+        if (searchHome && grid && grid.parentNode !== searchHome) {
+          searchHome.appendChild(grid);
+          /* 分页条也跟着回去 */
+          var pg = byId('tvPager');
+          if (pg && pg.parentNode !== searchHome) {
+            var note = byId('tvNote');
+            if (note) searchHome.insertBefore(pg, note);
+            else searchHome.appendChild(pg);
+          }
+        }
+        searchHome = null;
+      },
+    });
+    if (!searchDetail) return null;
+    AppShell.adopt(grid, box);
+    /* 分页条一起搬 —— 搜索结果也是分页的，留在原页面就点不到了 */
+    var pager = byId('tvPager');
+    if (pager) box.appendChild(pager);
+    return { head: k, count: c, box: box };
+  }
+
+  function closeTvSearch(silent) {
+    if (!searchDetail) return false;
+    var h = searchDetail;
+    searchDetail = null;
+    try { h.close(silent ? { silent: true } : undefined); } catch (e) {}
     return true;
   }
 
@@ -1836,6 +1924,12 @@
       hideHist();
       /* 新搜索 = 换一批结果，清掉「正在看哪部」 */
       saveView({ vod: null, vodSrc: null });
+      /* 清空关键词 = 退出搜索，把层关掉回到浏览页 */
+      if (!state.kw) { closeTvSearch(); load(1); return; }
+      /* 开二级页。⚠ 必须在 load(1) 之前 —— load 是往 #tvGrid 里渲染的，
+         网格得先搬进层里，否则这一页结果会画在主页面上一闪。 */
+      var sv = openTvSearch(state.kw);
+      tvSearch = sv;
       load(1);
     }
     doSearch = runSearch;

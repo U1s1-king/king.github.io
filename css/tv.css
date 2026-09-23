@@ -1246,3 +1246,37 @@
 @media (max-width: 768px) {
     .tv-alt-btn { padding: 6px 12px; }
 }
+
+/* ============================================================
+   搜索结果二级页（.tv-sv）
+   ------------------------------------------------------------
+   搜索结果开在 AppShell 的层里，而不是塞进主滚动的 #tvGrid。
+   原来那套要用户往下翻过 hero 大图、榜单、分类，才看得见第一条结果。
+
+   这里只负责层**内部**的排版（页头 + 结果网格）；
+   层的外框、返回按钮、下滑关闭全由 AppShell 提供 ——
+   和 archives / journal / music 那几页共用同一套，不重复造。
+   ============================================================ */
+.tv-sv-head {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 4px 2px 14px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid rgba(255, 255, 255, .08);
+}
+.tv-sv-head b {
+    font-size: 17px;
+    font-weight: 700;
+    /* 关键词可能很长，别把「多少条」挤到下一行去 */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+.tv-sv-head span {
+    flex: none;
+    font-size: 12.5px;
+    opacity: .62;
+}
+.tv-sv-body { padding-top: 4px; }
