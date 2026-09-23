@@ -774,6 +774,108 @@ async function resolveMeting(params) {
   return { ok: false, errors }
 }
 
+/* ============================================================
+   兜底音源（第三方，**只在主链路全挂时才请求**）
+   ------------------------------------------------------------
+   • 排在 Meting 镜像之后 —— 主链路成功时一次都不会请求到，不拖慢正常路径
+   • 都是别人维护的免费服务，随时可能失效/加鉴权，所以任何异常都吞掉，
+     绝不影响主路径；失败也**不缓存**，下次还会重试
+   • 都**没有 CORS**，所以只能放在这里（App 和网站顺带一起受益）
+
+   2026-09-23 实测：
+     ✅ buguyy.top      搜索 + 取链，返回酷我 CDN 直链（206 audio/mpeg，ID3 头）
+     ⚠️ ncm.landdy.cn   免费歌给直链，但同一天复测时出现过 522 —— 时好时坏，
+                        所以它只能当兜底，绝不能进主链路
+   ============================================================ */
+const BACKUP_LANDDY = 'https://ncm.landdy.cn/song/url/v1'
+const BACKUP_BUGUYY = 'https://buguyy.top/api'
+
+/** 宽松的歌名比对：聚合站会用「同名翻唱」顶替版权受限曲，
+    不核对就会「点 A 放 B」——GDStudio 就有这个毛病。 */
+function backupNameMatch(a, b) {
+  const norm = function (s) {
+    return String(s || '').toLowerCase()
+      .replace(/[\s()\[\]【】（）\-_·,，.。!！?？'"“”‘’/\\|~]/g, '')
+  }
+  const x = norm(a), y = norm(b)
+  if (!x || !y) return false
+  return x === y || x.indexOf(y) >= 0 || y.indexOf(x) >= 0
+}
+
+/** 兜底地址统一升 https。
+    网站是 https 页面，http 音频会被**混合内容**直接拦掉（表现就是「点了不出声」）。
+    只对这两个兜底源这么做：它们的 CDN（m*.music.126.net / car-*.kuwo.cn）
+    **实测 https 也能 206 audio/mpeg**。
+    ⚠️ 绝不能推广成「所有媒体地址都升 https」—— B站 的 mcdn 那种就只有 http，
+    强升会拉不到流（见 README 坑12）。 */
+function backupHttps(u) {
+  return /^http:\/\//i.test(u) ? 'https://' + u.slice(7) : u
+}
+
+/**
+ * 主链路失败后的兜底取链。
+ * @param {string} server 平台（netease / kuwo / tencent …）
+ * @param {string} id     平台歌曲 id
+ * @param {string} name   歌名（buguyy 是按关键词搜的，没有名字就用不了）
+ * @param {string} artist 歌手
+ */
+async function backupUrl(server, id, name, artist) {
+  const tried = []
+
+  /* ① 网易云：别人的公共增强实例，有 id 就能用 */
+  if (server === 'netease' && id) {
+    try {
+      const r = await fetch(BACKUP_LANDDY + '?id=' + encodeURIComponent(id) + '&level=exhigh', {
+        headers: { 'User-Agent': UA },
+      })
+      if (r.ok) {
+        const j = await r.json()
+        const u = (j && j.data && j.data[0] && j.data[0].url) || ''
+        if (/^https?:\/\//.test(u)) return { ok: true, url: backupHttps(u), mirror: 'ncm.landdy.cn（第三方兜底）' }
+        tried.push('ncm.landdy.cn: 该曲没有可用地址')
+      } else {
+        tried.push('ncm.landdy.cn: HTTP ' + r.status)
+      }
+    } catch (e) {
+      tried.push('ncm.landdy.cn: ' + (e && e.message ? e.message : 'error'))
+    }
+  }
+
+  /* ② buguyy：返回酷我 CDN 直链，任何平台都能用它兜底（它本来就是个聚合站）。
+        ⚠️ 它的搜索**只认单个关键词** —— 实测搜「晴天 周杰伦」返回 0 条，
+        搜「晴天」返回 49 条。所以先用歌名搜，搜不到再带上歌手重试。 */
+  const tries = []
+  if (name) tries.push(name)
+  if (name && artist) tries.push(name + ' ' + artist)
+  for (let i = 0; i < tries.length; i++) {
+    if (i > 0) tried.push('buguyy.top: 「' + tries[0] + '」没搜到，换关键词重试')
+    try {
+      const s = await fetch(BACKUP_BUGUYY + '/search?keyword=' + encodeURIComponent(tries[i]), {
+        headers: { 'User-Agent': UA },
+      })
+      if (!s.ok) { tried.push('buguyy.top: HTTP ' + s.status); continue }
+      const j = await s.json()
+      const list = (j && j.data) || []
+      /* **必须核对歌名**：聚合站会用「同名翻唱」顶替版权受限曲，
+         不核对就会「点 A 放 B」——GDStudio 就有这个毛病。 */
+      const hit = list.find(function (x) { return x && x.id && backupNameMatch(x.title, name) })
+      if (!hit) { tried.push('buguyy.top: 「' + tries[i] + '」没找到同名曲目（不做翻唱顶替）'); continue }
+      const g = await fetch(BACKUP_BUGUYY + '/geturl?id=' + encodeURIComponent(hit.id), {
+        headers: { 'User-Agent': UA },
+      })
+      if (!g.ok) { tried.push('buguyy.top: 取链 HTTP ' + g.status); continue }
+      const gj = await g.json()
+      const u = (gj && gj.url) || ''
+      if (/^https?:\/\//.test(u)) return { ok: true, url: backupHttps(u), mirror: 'buguyy.top（第三方兜底）' }
+      tried.push('buguyy.top: 拿到结果但没有可用地址')
+    } catch (e) {
+      tried.push('buguyy.top: ' + (e && e.message ? e.message : 'error'))
+    }
+  }
+
+  return { ok: false, errors: tried }
+}
+
 const metingApi = {
   /** 取可播放地址 */
   async url(q, origin) {
@@ -782,16 +884,52 @@ const metingApi = {
     const server = q.get('server') || 'netease'
     const br = q.get('br') || '320'
     const key = 'url:' + server + ':' + id + ':' + br
+    const name = q.get('name') || ''
+    const artist = q.get('artist') || ''
     const result = await withCache(key, CACHE_TTL.url, async function () {
       const r = await resolveMeting({ server, type: 'url', id, br })
-      return r.ok ? { ok: true, url: r.data.url, mirror: r.mirror } : { ok: false, errors: r.errors }
+
+      /* 拿到**确凿**的地址（302 目标 / 正文是 URL / 直接吐音频）-> 直接用 */
+      if (r.ok && !r.opaque) return { ok: true, url: r.data.url, mirror: r.mirror }
+
+      /* 没拿到确凿地址（全部镜像含糊，或者全挂）-> 才轮到第三方兜底。
+         它给的是**真实直链**，比「镜像地址本身」这种含糊候选更值得用。
+         name 是可选的：不给时只有网易云那条能试（landdy 按 id 取）。 */
+      const b = await backupUrl(server, id, name, artist)
+      if (b.ok) return { ok: true, url: b.url, mirror: b.mirror, backup: true }
+
+      /* 兜底也没成，退回含糊候选（客户端会自己跟随跳转，总比 502 强）。
+         注意这个**不缓存**（见下面的 keep）——否则一个「可能播不了」的结果
+         会被钉在缓存里，之后连兜底都不会再试。 */
+      if (r.ok) return { ok: true, url: r.data.url, mirror: r.mirror, opaque: true }
+
+      return { ok: false, errors: (r.errors || []).concat(b.errors || []) }
+    }, {
+      keep: function (v) { return !!(v && v.ok && !v.opaque) },
     })
-    if (!result || !result.ok) return fail('所有镜像都拿不到播放地址：' + ((result && result.errors) || []).join(' | '), 502, origin)
-    return ok({ url: result.url, mirror: result.mirror, id, server }, origin)
+    if (!result || !result.ok) {
+      return fail('所有镜像都拿不到播放地址：' + ((result && result.errors) || []).join(' | '), 502, origin)
+    }
+    return ok({ url: result.url, mirror: result.mirror, id, server, backup: !!result.backup }, origin)
   },
 
-  /** 歌词（网易云优先走 /api/lyric，这里只作为兜底） */
-  async lyric(q, origin) {
+  /**
+   * 兜底源自检。排查用：直接看**网关这个出口 IP** 能不能访问那两个第三方。
+   * 为什么需要它：第三方站对某些网段/地区会拒（比如 JOOX 就只对港台开放），
+   * 「本机能通」不等于「Worker 能通」——这类判断只能从 Worker 里做。
+   */
+  async backupCheck(q, origin) {
+    const server = q.get('server') || 'netease'
+    const r = await backupUrl(server, (q.get('id') || '').trim(), q.get('name') || '', q.get('artist') || '')
+    return ok({
+      hit: !!r.ok,
+      url: (r.url || '').slice(0, 140),
+      mirror: r.mirror || '',
+      errors: r.errors || [],
+    }, origin)
+  },
+
+  /** 歌词（网易云优先走 /api/lyric，这里只作为兜底） */  async lyric(q, origin) {
     const id = (q.get('id') || '').trim()
     const name = q.get('name') || ''
     if (!id && !name) return fail('缺少 id 或 name', 400, origin)
@@ -950,6 +1088,7 @@ const ROUTES = {
   '/api/artist': api.artist,
   '/api/artist/songs': api.artistSongs,
   '/api/url': metingApi.url,
+  '/api/backup-check': metingApi.backupCheck,
   '/api/url/lyric': metingApi.lyric,
   '/api/meting': metingApi.proxy,
   '/api/tv': tvList,

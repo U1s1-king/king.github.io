@@ -606,7 +606,12 @@ if (platform === 'kuwo') {
     if (platform === 'netease' && song.id) {
       jobs.push(gdUrl('netease', song.id));
       jobs.push(cached(cacheKey(['url', platform, song.id, level]), 600, function () {
-        return gateway('/api/url', { id: song.id, server: 'netease' })
+        /* name/artist 一并带上：网关主链路失败后会拿它们去第三方兜底源
+           （buguyy 是按关键词搜的，只给 id 它搜不了）。 */
+        return gateway('/api/url', {
+          id: song.id, server: 'netease',
+          name: song.name || '', artist: song.artist || ''
+        })
           .then(function (d) { return (d && d.url) || ''; })
           .catch(function () { return ''; });
       }));
@@ -618,11 +623,22 @@ if (platform === 'kuwo') {
           return (d && d.url) || '';
         }).catch(function () { return ''; });
       }));
+      /* 酷我桥是单点，挂了就整源哑火 —— 补一条走网关的（网关那边有 Meting 镜像
+         + 第三方兜底两层）。排在桥后面，桥正常时它就是白拿一个候选。 */
+      jobs.push(cached(cacheKey(['url', 'kuwo-gw', song.id || song.name, song.artist]), 600, function () {
+        return gateway('/api/url', {
+          id: song.id || '', server: 'kuwo',
+          name: song.name || '', artist: song.artist || ''
+        }).then(function (d) { return (d && d.url) || ''; }).catch(function () { return ''; });
+      }));
     } else if (platform !== 'itunes') {
       jobs.push(cached(cacheKey(['url', platform, song.id || song.name, song.artist]), 600, function () {
         var params = { server: platform, type: 'url' };
         if (song.id) params.id = song.id;
-        else { params.name = song.name; params.artist = song.artist; }
+        /* name/artist **总是带上**（以前只在没有 id 时才带）——
+           网关照常只用 id 走主链路，但主链路全挂时要用名字去第三方兜底。 */
+        params.name = song.name || '';
+        params.artist = song.artist || '';
         return meting(params).then(function (r) {
           var t = (r.text || '').trim();
           if (/^https?:\/\//.test(t)) return t;
