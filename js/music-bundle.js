@@ -1263,7 +1263,7 @@ var ALL_PLATFORMS = [
    （2026-09 改：原来是 B站 置顶，搜索结果里 B站 的视频会压在网易云的歌前面。
      理由是我们要主推网易云；B站 依然保留，只是排在网易云后面。）
    注意：这里只管「渲染顺序」，不改并发发起搜索的顺序，也不改任何音源的实现。 */
-var PLATFORM_RANK = { netease: 0, bilibili: 1, tencent: 2, kugou: 3, kuwo: 4, migu: 5, itunes: 6 };
+var PLATFORM_RANK = { netease: 0, bilibili: 1, tencent: 2, kugou: 3, kuwo: 4, migu: 5, itunes: 6, audius: 7, ximalaya: 8 };
 function platformRank(id) {
 var r = PLATFORM_RANK[id];
 return r === undefined ? 99 : r;
@@ -7733,7 +7733,7 @@ step(n + 1);
    后来固定成 B站 优先 —— 但我们要主推网易云，B站 的搜索结果多是视频、
    翻唱和搬运，压在网易云前面很难用。现在网易云搜不到才依次回落到其它平台，
    既不丢覆盖率又保证网易云优先。 */
-var PO_PLATFORM_ORDER = ['netease', 'bilibili', 'tencent', 'kugou', 'kuwo', 'migu'];
+var PO_PLATFORM_ORDER = ['netease', 'bilibili', 'tencent', 'kugou', 'kuwo', 'migu', 'audius', 'ximalaya'];
 function searchByPriority(kw, cb) {
 var i = 0;
 var netFail = false;

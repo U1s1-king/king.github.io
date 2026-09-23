@@ -39,7 +39,12 @@
     ['kuwo', '酷我'],
     ['migu', '咪咕'],
     ['bilibili', 'B站'],
-    ['itunes', 'iTunes']
+    ['itunes', 'iTunes'],
+    /* 这两个是**纯客户端直连**的新源：搜索响应里就带播放地址，
+       而且都发 CORS 头（实测 access-control-allow-origin），
+       不需要经过自建网关 —— 少一跳，也少一个会挂的依赖。 */
+    ['audius', 'Audius'],
+    ['ximalaya', '喜马拉雅']
   ];
 
   // 音质档位（仅网易云自建网关支持）
@@ -192,6 +197,75 @@
       duration: s.duration || s.length,
       url: s.url,
       lrc: s.lrc || s.lyric
+    });
+  }
+
+  /* ============================================================
+     两个「零网关」新源
+     ------------------------------------------------------------
+     共同点：**搜索结果里直接带播放地址**，所以不用第二次请求；
+     而且都带 CORS（实测 acao=*），浏览器可以直连。
+     这两个源补的是我们原来完全没有的品类：
+       • Audius    —— 独立音乐 / CC 授权，整曲可播，零鉴权
+       • 喜马拉雅   —— 有声书 / 播客，整曲可播（免费节目）
+     ============================================================ */
+  var AUDIUS = 'https://api.audius.co/v1';
+  var XIMA = 'https://www.ximalaya.com/revision/search';
+
+  /** Audius 搜索（GET，无鉴权；app_name 随便填，只是标识来源） */
+  function viaAudius(keywords, limit) {
+    return getJSON(AUDIUS + '/tracks/search?query=' + encodeURIComponent(keywords) +
+      '&app_name=SakuraMusic&limit=' + Math.min(limit || 20, 50)).then(function (j) {
+      var arr = (j && j.data) || [];
+      return arr.filter(function (t) {
+        /* **只有 is_streamable 的曲目才拿得到流**（实测 false 的直接 404）。
+           以前是「不过滤、拼个空地址」，结果列表里混进点了不响的歌。
+           有 stream.url 的当然也算可播。 */
+        return t.is_streamable === true || (t.stream && t.stream.url);
+      }).map(function (t) {
+        var art = t.artwork || {};
+        return makeSong({
+          platform: 'audius',
+          id: t.id,
+          name: t.title || '',
+          artist: (t.user && t.user.name) || '',
+          album: t.genre || '',
+          cover: fixUrl(art['480x480'] || art['150x150'] || ''),
+          duration: t.duration || 0,        // 秒，toSeconds 会原样保留
+          /* stream.url 是**已经签好名的临时地址**（响应里还带 mirrors 做备份）。
+             没有就按 id 现拼 —— 它会 302 到真实 CDN，播放器自己跟随。 */
+          url: (t.stream && t.stream.url) ||
+               (AUDIUS + '/tracks/' + t.id + '/stream?app_name=SakuraMusic')
+        });
+      }).filter(function (s) { return s.name && s.url; });
+    });
+  }
+
+  /** 喜马拉雅搜索（GET，无鉴权）—— 有声书 / 播客 */
+  function viaXimalaya(keywords, limit) {
+    return getJSON(XIMA + '?core=track&kw=' + encodeURIComponent(keywords) +
+      '&page=1&rows=' + Math.min(limit || 20, 30) +
+      '&spellchecker=true&condition=relation&device=web').then(function (j) {
+      var docs = (j && j.data && j.data.result && j.data.result.response &&
+                  j.data.result.response.docs) || [];
+      return docs.map(function (t) {
+        return makeSong({
+          platform: 'ximalaya',
+          id: String(t.id == null ? '' : t.id),
+          name: stripHtml(t.title || ''),
+          artist: t.nickname || '',
+          album: t.album_title || '',
+          cover: fixUrl(t.album_cover_path || t.cover_path || ''),
+          duration: t.duration || 0,        // 秒
+          /* 搜索结果里**直接带播放地址**，省掉一次请求。
+             ⚠️ 是 http://，必须 fixUrl 升 https —— 否则 https 页面下
+             会被混合内容拦掉（实测 https 版 206 audio/mpeg，且带 CORS）。
+             优先 64kbps，退化到 aac / 32kbps。 */
+          url: fixUrl(t.play_path_64 || t.play_path_aacv164 || t.play_path_32 || '')
+        });
+      /* **没有地址的直接不列出来** —— 付费/受限的节目拿不到 play_path，
+         放进去就是「点了不响」。宁可少给几条，也不要给点不动的。 */
+      }).filter(function (s) { return s.url; });
     });
   }
 
@@ -419,6 +493,9 @@
           return (j.results || []).map(fromItunes);
         });
       }
+      /* 这两个源不经过网关，直接打官方接口（它们发 CORS 头） */
+      if (platform === 'audius') return viaAudius(keywords, limit);
+      if (platform === 'ximalaya') return viaXimalaya(keywords, limit);
 if (platform === 'kuwo') {
         /* 先 Meting：它的 id 能和歌词/直链接上；空结果再落桥。
            桥只负责在取直链时给无损地址（songUrl 里优先走桥），两条路互不冲突。 */
@@ -811,6 +888,8 @@ if (platform === 'kuwo') {
     search: search,
     searchOne: searchIt.one,
     searchMulti: searchIt.multi,
+    viaAudius: viaAudius,
+    viaXimalaya: viaXimalaya,
     songUrl: songUrl,
     lyric: lyric,
     songDetail: rest.songDetail,

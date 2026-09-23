@@ -281,11 +281,18 @@ function cacheSet(key, value, ttlSeconds) {
   return value
 }
 
-async function withCache(key, ttlSeconds, producer) {
-  const hit = cacheGet(key)
+async function withCache(key, ttlSeconds, producer, opts) {
+  /* ⚠️ **必须 await**。cacheGet 是 async 的，少写一个 await 就会变成
+     「hit 是个 Promise，永远为真 -> 直接 return -> producer 根本不执行」，
+     而 Promise 解析出来的值在**缓存未命中时是 null** ——
+     表现就是「命中缓存的请求正常、未命中的请求 500」，
+     而且看代码完全看不出来。2026-09-23 线上就是这么挂的。 */
+  const hit = await cacheGet(key)
   if (hit) return hit
   const value = await producer()
-  if (value && value.ok !== false) cacheSet(key, value, ttlSeconds)
+  /* opts.keep 用来挡「成功但是空」的结果 —— 见 proxy 里的说明 */
+  const keep = !opts || typeof opts.keep !== 'function' || opts.keep(value)
+  if (value && value.ok !== false && keep) cacheSet(key, value, ttlSeconds)
   return value
 }
 
@@ -774,7 +781,7 @@ const metingApi = {
       const r = await resolveMeting({ server, type: 'url', id, br })
       return r.ok ? { ok: true, url: r.data.url, mirror: r.mirror } : { ok: false, errors: r.errors }
     })
-    if (!result.ok) return fail('所有镜像都拿不到播放地址：' + (result.errors || []).join(' | '), 502, origin)
+    if (!result || !result.ok) return fail('所有镜像都拿不到播放地址：' + ((result && result.errors) || []).join(' | '), 502, origin)
     return ok({ url: result.url, mirror: result.mirror, id, server }, origin)
   },
 
@@ -792,7 +799,7 @@ const metingApi = {
       const r = await resolveMeting(params)
       return r.ok ? { ok: true, lyric: r.data, mirror: r.mirror } : { ok: false, errors: r.errors }
     })
-    if (!result.ok) return fail('所有镜像都拿不到歌词', 502, origin)
+    if (!result || !result.ok) return fail('所有镜像都拿不到歌词', 502, origin)
     return ok({ lyric: result.lyric, mirror: result.mirror }, origin)
   },
 
@@ -808,8 +815,22 @@ const metingApi = {
     const result = await withCache(key, CACHE_TTL.search, async function () {
       const r = await resolveMeting(params)
       return r.ok ? { ok: true, text: r.data, mirror: r.mirror } : { ok: false, errors: r.errors }
+    }, {
+      /* **空结果不缓存**。网易云被限流/风控时会返回「成功但 0 条」，
+         而 `ok:true` 的空壳照样会被缓存 —— 一缓存就是 5 分钟（CACHE_TTL.search），
+         期间用户怎么搜都是空的，看着像站坏了。
+         今天就踩了这个：一次上游抖动把空结果写进了缓存，后面所有搜索全是 0 条。 */
+      keep: function (v) {
+        if (!v || !v.ok || !v.text) return false
+        try {
+          const j = JSON.parse(v.text)
+          if (Array.isArray(j)) return j.length > 0
+          if (j && typeof j === 'object' && Array.isArray(j.songs)) return j.songs.length > 0
+        } catch (e) { /* 解析不了的就照常缓存，交给调用方处理 */ }
+        return true
+      },
     })
-    if (!result.ok) return fail('所有镜像都不可用：' + (result.errors || []).join(' | '), 502, origin)
+    if (!result || !result.ok) return fail('所有镜像都不可用：' + ((result && result.errors) || []).join(' | '), 502, origin)
     let parsed = null
     try {
       parsed = JSON.parse(result.text)
