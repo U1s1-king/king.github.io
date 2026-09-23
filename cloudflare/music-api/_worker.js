@@ -1217,12 +1217,44 @@ async function tvAggregate(params, origin, bases, ac) {
         /* 这个源没赶上就算了 */
       })
   })
-  await Promise.race([
-    Promise.all(jobs),
-    new Promise(function (res) {
-      setTimeout(res, 4200)
-    }),
-  ])
+  /* 够数就返回，不再等落后的源。
+     ------------------------------------------------------------
+     原来这里是 Promise.race([Promise.all(jobs), 4200ms]) ——
+     **等所有源都回来，或者等满 4.2 秒**，然后才合并返回。
+
+     实测代价：首页列表平均 2620ms，最长见过 7949ms。但各源单独响应是
+     121 / 275 / 279 / 705 / 723 / 989ms…，最快的 4 个源 300~700ms 就齐了。
+     为了一屏装不下的条数，白等了 2 秒。
+
+     首页 per=6，4 个源就有 24 条 —— 够一屏了。先渲染出来，剩下的源慢慢来
+     （前端本来就有「加载更多」）。用户要的是"先看到东西"，不是"等全再看到"。
+
+     ⚠ 搜索不一样：per=60，多一个源就多几十条结果，用户是奔着"找全"来的，
+       所以门槛高、等得久，不改这个体感。
+     ⚠ 一轮都没回来时仍然返回 null，交给下面那套单源接力兜底 —— 不能因为
+       提前返回就把兜底路径给断了。 */
+  const enough = wd ? 7 : 4
+  const deadline = wd ? 4200 : 1500
+  await new Promise(function (done) {
+    let finished = 0
+    let settled = false
+    const finish = function () {
+      if (settled) return
+      settled = true
+      done()
+    }
+    const timer = setTimeout(finish, deadline)
+    jobs.forEach(function (p) {
+      p.then(function () {
+        finished++
+        /* 凑够就直接用；所有源都答完了也没必要再等定时器 */
+        if (got.length >= enough || finished === jobs.length) {
+          clearTimeout(timer)
+          finish()
+        }
+      })
+    })
+  })
   if (!got.length) return null
   const seen = Object.create(null)
   const list = []
