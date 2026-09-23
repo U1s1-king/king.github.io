@@ -857,6 +857,12 @@ const TV_SEARCH_SOURCES_RAW = [
   'https://api.apibdzy.com/api.php/provide/vod/', // 百度 dbm3u8
   'https://caiji.dyttzyapi.com/api.php/provide/vod/', // 电影天堂 dytt/dyttm3u8
   'https://api.zuidapi.com/api.php/provide/vod/', // 最大 zuidam3u8
+  /* 2026-09 加的三个。都是 290 个候选里实测存活、支持 wd 搜索、
+     且 m3u8 真能拉出 #EXTM3U 的（详见 SOURCES.md）。
+     「独有」= 21 个源各取前 5 页 100 条、合计 618 条去重后它独占的条数。 */
+  'https://api.yzzy-api.com/inc/apijson.php', // 亚洲 yzzy，独有 30
+  'https://cj.rycjapi.com/api.php/provide/vod/', // 如意 ruyi，独有 28
+  'https://caiji.moduapi.cc/api.php/provide/vod/', // 魔都 modu，独有 14
 ]
 
 const TV_LIST_ONLY_RAW = [
@@ -865,8 +871,16 @@ const TV_LIST_ONLY_RAW = [
   'https://suoniapi.com/api.php/provide/vod/', // 索尼 snm3u8
 ]
 
-/* 给用户看的源名，和 TV_SOURCES_RAW 一一对应，顺序不能动 */
-const TV_NAMES_RAW = ['光速', 'uku', '量子', '非凡', '百度', '电影天堂', '最大', '无损云', '同源', '索尼']
+/* 给用户看的源名，和 TV_SOURCES_RAW 一一对应，顺序不能动。
+   ⚠ 注意映射关系是 TV_ALL_RAW = TV_SEARCH_SOURCES_RAW.concat(TV_LIST_ONLY_RAW)，
+     也就是**先搜索源、后仅列表源**。所以往 TV_SEARCH_SOURCES_RAW 里插了几个，
+     名字就要插在**同一个位置**（这里是第 7、8、9 位），不能图省事追加到末尾 ——
+     追加会让「无损云」拿到「亚洲」的名字，后面全体错位一格。 */
+const TV_NAMES_RAW = [
+  '光速', 'uku', '量子', '非凡', '百度', '电影天堂', '最大',
+  '亚洲', '如意', '魔都',
+  '无损云', '同源', '索尼',
+]
 
 /* ---------------- 临时停用的源 ----------------
    只动这一行：写上源名＝彻底不调用它的接口，删掉＝立刻恢复。
