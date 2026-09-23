@@ -209,21 +209,75 @@ async function withRetry(fn, times) {
 
 // ============================================================ 缓存
 
-const memCache = new Map()
+/* 缓存分两级：
+     L1 = 进程内 Map —— 只是为了省掉一次 await，isolate 一回收就没了；
+     L2 = **Cloudflare 边缘缓存 caches.default** —— 跨 isolate、跨 PoP 共享。
 
-function cacheGet(key) {
+   原来是**只有 L1**，问题很实在：每个 isolate 各存各的，命中全看运气
+   （只有同一用户反复打到同一个 PoP 的同一个 isolate 才算命中），
+   isolate 一被回收缓存就全丢。边缘缓存才是真正提高命中率的那一层，
+   而且所有客户端（App + 网站）一起受益，不用改任何客户端代码。
+
+   ⚠️ caches.default.put() 必须挂到 ctx.waitUntil()：响应一返回，
+      没 await 的写入会被运行时取消，缓存就永远写不进去。
+      所以下面用模块级 CURRENT_CTX 接住 fetch 的第三个参数。 */
+const memCache = new Map()
+let CURRENT_CTX = null
+
+function cacheToRequest(key) {
+  /* 用内部域名造 key，避免和真实请求撞上（serveMusic 里已经在用这招） */
+  return new Request('https://sakura-music-cache.internal/api/' + encodeURIComponent(key))
+}
+
+function memCacheGet(key) {
   const hit = memCache.get(key)
   if (!hit) return null
-  if (hit.expire < Date.now()) {
-    memCache.delete(key)
-    return null
-  }
+  if (hit.expire < Date.now()) { memCache.delete(key); return null }
   return hit.value
 }
 
-function cacheSet(key, value, ttlSeconds) {
+function memCacheSet(key, value, ttlSeconds) {
   if (memCache.size > 500) memCache.clear()
   memCache.set(key, { value, expire: Date.now() + ttlSeconds * 1000 })
+}
+
+async function cacheGet(key) {
+  const l1 = memCacheGet(key)
+  if (l1) return l1
+  if (typeof caches === 'undefined' || !caches.default) return null
+  try {
+    const hit = await caches.default.match(cacheToRequest(key))
+    if (!hit) return null
+    const value = await hit.json()
+    /* 回填 L1：同 isolate 的后续请求连这次 await 都省了 */
+    if (value) memCacheSet(key, value, 60)
+    return value
+  } catch (e) {
+    return null
+  }
+}
+
+function cacheSet(key, value, ttlSeconds) {
+  memCacheSet(key, value, ttlSeconds)
+  if (typeof caches === 'undefined' || !caches.default) return value
+  const put = caches.default
+    .put(cacheToRequest(key), new Response(JSON.stringify(value), {
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'public, max-age=' + Math.max(1, Math.floor(ttlSeconds)),
+      },
+    }))
+    .catch(function () { /* 写缓存失败不能影响正常响应 */ })
+  /* CURRENT_CTX 是模块级变量：同一 isolate 里两个请求交错时（A 还在 await producer，
+     B 已经进了 fetch），A 会把 put 挂到 B 的 ctx 上。Workers 下这是未定义行为，
+     而且**抛出来的话会顺着 cacheSet -> withCache 冒出去，把正常响应变成 500**。
+     所以整个包住：最坏情况只是这次没缓存上，绝不能连累响应。
+     （这条不是理论风险：2026-09-23 线上就因为这儿的一个未声明赋值 500 过一回。） */
+  try {
+    if (CURRENT_CTX && typeof CURRENT_CTX.waitUntil === 'function') CURRENT_CTX.waitUntil(put)
+  } catch (e) {
+    /* 拿不到可用的 ctx 就算了，memCache 那一层还在 */
+  }
   return value
 }
 

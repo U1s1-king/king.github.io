@@ -32,3 +32,8 @@ jobs:
         run: python scripts/sync_nav.py --check
       - name: 站内引用完整性（文件下线后引用是否残留）
         run: python scripts/check_links.py
+      # Worker 是 ES module（严格模式），一行「赋值了但没声明」就会在运行期抛
+      # ReferenceError，把整个 Worker 打成 500。2026-09-23 线上就这么挂过一次，
+      # 所以把静态检查放进 CI。`new Function(src)` 查不出这类错（语法是合法的）。
+      - name: Worker 未声明赋值检查
+        run: node tools/check-worker.js
