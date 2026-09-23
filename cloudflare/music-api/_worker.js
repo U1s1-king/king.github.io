@@ -1554,6 +1554,10 @@ export default {
     const url = new URL(request.url)
     const origin = request.headers.get('Origin')
 
+    /* 缓存写入要靠 ctx.waitUntil()，但各个 handler 的签名只有 (params, origin)，
+       不想为了这个把 ctx 一路透传下去，所以在这里存一份模块级引用。 */
+    CURRENT_CTX = ctx
+
     if (request.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: corsHeaders(origin) })
     }
