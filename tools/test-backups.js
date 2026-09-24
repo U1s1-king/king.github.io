@@ -14,7 +14,7 @@
  * 用法: node tools/test-backups.js
  * ============================================================ */
 const https = require('https');
-const GW = 'https://sakura-music-api.pages.dev';
+const GW = 'https://zhaokening.ccwu.cc';
 let pass = 0, fail = 0;
 const ok = (c, m, x) => { if (c) { pass++; console.log('  ✅ ' + m); } else { fail++; console.log('  ❌ ' + m + (x ? '  ' + x : '')); } };
 

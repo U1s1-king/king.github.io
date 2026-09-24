@@ -1,0 +1,35 @@
+# 樱花音乐 API —— 以 Worker 形式部署
+# ------------------------------------------------------------
+# 2026-09-24 从 Pages 项目 sakura-music-api 迁到 Worker。
+# 详见同目录 README.md「为什么从 Pages 搬到 Worker」。
+#
+# 代码本身无需任何改动即可当 Worker 跑：
+#   _worker.js 的加密全用 WebCrypto + BigInt 实现，文件头明确写了
+#   「不需要 nodejs_compat」，也没有 require / process / Buffer / node: 依赖。
+#   唯一沾 Pages 的地方是 env.ASSETS，那是**可选兜底**：
+#   Worker 里该绑定不存在 → undefined → 自然跳过，走自己的路由逻辑。
+#
+# 部署：
+#   CLOUDFLARE_API_TOKEN=... CLOUDFLARE_ACCOUNT_ID=... wrangler deploy
+name = "music-api"
+main = "_worker.js"
+compatibility_date = "2026-09-11"
+
+# ⚠️ /api/* 与 tv-gate 已有的 /api/tv* 路由**重叠**。
+# Cloudflare 按「更具体的路由优先」匹配，所以 /api/tv* 仍应归 tv-gate。
+# 这条假设是生产影视的命门，每次改动本文件后都必须回归验证：
+#   curl -i https://zhaokening.ccwu.cc/api/tv?ac=list
+# 期望：HTTP 401 + application/json（tv-gate 的门卫响应）
+# 若变成 403/404 或音乐 API 的响应 → 说明 /api/* 把影视抢走了，立即回滚。
+# 2026-09-24 首次部署后已实测：/api/tv* → 401 JSON（与改动前基线一致）。
+routes = [
+  { pattern = "zhaokening.ccwu.cc/api/*",       zone_name = "zhaokening.ccwu.cc" },
+  { pattern = "zhaokening.ccwu.cc/music/*",     zone_name = "zhaokening.ccwu.cc" },
+  { pattern = "www.zhaokening.ccwu.cc/api/*",   zone_name = "zhaokening.ccwu.cc" },
+  { pattern = "www.zhaokening.ccwu.cc/music/*", zone_name = "zhaokening.ccwu.cc" },
+]
+
+# 不配置 TV_GATE_SECRET：
+# 本 Worker 里残留的 /api/tv* 处理器已随影视拆分而失效（影视数据现在只走
+# /tv-api*），不再需要这个 secret。故意保留「未配置」状态，让那段死代码
+# 即使被误触也只返回 fail-closed 的 503，而不是拿着过期密钥去连上游。

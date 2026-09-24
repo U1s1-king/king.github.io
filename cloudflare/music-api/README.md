@@ -1,8 +1,31 @@
-# 自建网易云音乐 API（Cloudflare Pages Functions）
+# 自建网易云音乐 API（Cloudflare Worker）
 
-部署地址：**https://sakura-music-api.pages.dev**
+调用地址：**https://zhaokening.ccwu.cc**（`/api/*` 元数据、`/music/*` 音频）
 
-这是一个跑在 Cloudflare Pages Functions 上的网易云音乐接口服务，作为音乐页的「元数据大脑」，
+| | |
+| --- | --- |
+| Worker 名 | `music-api` |
+| 路由 | `zhaokening.ccwu.cc/api/*`、`zhaokening.ccwu.cc/music/*`（含 www） |
+| 部署 | `wrangler deploy`（配置见同目录 `wrangler.toml`） |
+| 旧地址 | ~~https://sakura-music-api.pages.dev~~（Pages 项目，2026-09-24 起不再被前端引用） |
+
+**为什么从 Pages 搬到 Worker**（2026-09-24）：`*.pages.dev` 在国内时通时不通 ——
+本项目姊妹仓库 `sakura-music-app/FINDINGS.md` 实测该域名 ping **50% 丢包**，用户反馈
+「必须开代理才看得到」；TV 走同一域名时中位 **2102ms**、并出现过一次 **92s 超时**，
+换自定义域名后降到 **212ms**。音乐这条链路当时没有一起改，于是它成了唯一还在
+依赖 pages.dev 的入口。
+
+代码本身没改：这个 Worker 的加密全部用 WebCrypto + BigInt 实现，文件头写明
+「不需要 `nodejs_compat`」，也没有任何 `require` / `process` / `Buffer` / `node:` 依赖，
+所以同一个 `_worker.js` 既能当 Pages Function 也能当普通 Worker 跑。
+唯一沾 Pages 的是 `env.ASSETS`，那是可选兜底，Worker 里为 `undefined` 会自然跳过。
+
+> ⚠️ **`/api/*` 与 tv-gate 的 `/api/tv*` 路由重叠**，靠 Cloudflare「更具体路由优先」区分。
+> 每次改动 `wrangler.toml` 后必须回归验证：
+> `curl -i https://zhaokening.ccwu.cc/api/tv?ac=list` 期望 **401 + application/json**。
+> 若变成 403/404，说明 `/api/*` 把影视路由抢走了，立即回滚。
+
+这是一个跑在 Cloudflare 上的网易云音乐接口服务，作为音乐页的「元数据大脑」，
 配合前端统一网关 `js/music-api.js` 使用。
 
 ## 为什么需要它

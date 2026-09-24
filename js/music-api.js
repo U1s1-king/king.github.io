@@ -2,8 +2,12 @@
  * 樱花音乐 · 统一音乐 API 网关  (js/music-api.js)
  * ------------------------------------------------------------
  * 把三套原本互不相干的音源合并成一套接口：
- *   1. 自建网易云网关  https://sakura-music-api.pages.dev
+ *   1. 自建网易云网关  https://zhaokening.ccwu.cc
  *      —— 搜索 / 歌曲详情 / 歌词 / 歌单 / 排行榜 / 推荐 / 歌手
+ *      （2026-09-24 前是 https://sakura-music-api.pages.dev。那个域名在国内
+ *        时通时不通 —— TV 走同一个域名时中位 2102ms、有过一次 92s 超时，
+ *        换自定义域名后 212ms。音乐接口现由 Worker music-api 挂在
+ *        zhaokening.ccwu.cc 的 /api/* 上，代码与 Pages 版逐字节一致。）
  *   2. Meting 多平台镜像（原有）
  *      —— 网易云 / QQ / 酷狗 / 咪咕 / B站 的搜索与可播放地址
  *   3. iTunes Search API（原有）
@@ -17,7 +21,10 @@
 
   // ---------------------------------------------------------- 配置
 
-  var GATEWAY = 'https://sakura-music-api.pages.dev';
+  /* 网关宿主。默认走自定义域名（生产环境等于同源）。
+     留 window.MUSIC_GATEWAY 覆盖钩子，和 TV 那边的 window.TV_GATEWAY 一致，
+     方便本地联调指向别的入口。 */
+  var GATEWAY = (window.MUSIC_GATEWAY || 'https://zhaokening.ccwu.cc').replace(/\/+$/, '');
 
   // Meting 镜像。qijieya 是站点原有主镜像；backup 已失效（521）故移除，
   // 换成自建网关的 /api/meting（它内部会依次尝试所有镜像）。

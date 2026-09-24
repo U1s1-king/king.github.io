@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <script src="js/version.js?v=202609241"></script>
-    <script src="js/app-shell.js?v=202609241"></script>
+    <script src="js/version.js?v=202609242"></script>
+    <script src="js/app-shell.js?v=202609242"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <link rel="stylesheet" href="css/style.css?v=202609241">
-    <link rel="stylesheet" href="css/sidebar.css?v=202609241">
+    <link rel="stylesheet" href="css/style.css?v=202609242">
+    <link rel="stylesheet" href="css/sidebar.css?v=202609242">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#ffb6c1">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -22,15 +22,15 @@
     <title>影视 · Tomo Ebizuka</title>
     <link rel="canonical" href="https://zhaokening.ccwu.cc/TV.html">
     
-    <link rel="stylesheet" href="css/all.min.css?v=202609241">
-    <link rel="stylesheet" href="css/Tools.css?v=202609241">
-    <link rel="stylesheet" href="css/hub.css?v=202609241">
-    <link rel="stylesheet" href="css/tv.css?v=202609241">
-    <link rel="stylesheet" href="css/tv-v2.css?v=202609241">
-    <link rel="stylesheet" href="css/tv-player.css?v=202609241">
-    <link rel="stylesheet" href="css/anim.css?v=202609241">
-    <link rel="stylesheet" href="css/mobile.css?v=202609241">
-    <link rel="stylesheet" href="css/app.css?v=202609241">
+    <link rel="stylesheet" href="css/all.min.css?v=202609242">
+    <link rel="stylesheet" href="css/Tools.css?v=202609242">
+    <link rel="stylesheet" href="css/hub.css?v=202609242">
+    <link rel="stylesheet" href="css/tv.css?v=202609242">
+    <link rel="stylesheet" href="css/tv-v2.css?v=202609242">
+    <link rel="stylesheet" href="css/tv-player.css?v=202609242">
+    <link rel="stylesheet" href="css/anim.css?v=202609242">
+    <link rel="stylesheet" href="css/mobile.css?v=202609242">
+    <link rel="stylesheet" href="css/app.css?v=202609242">
     <meta name="description" content="Tomo Ebizuka 的影视页：聚合公开采集接口，在线看电影、剧集、综艺与动漫，支持 HLS 播放。">
     <meta name="keywords" content="影视,在线看电影,电视剧,动漫,综艺,纪录片,短剧,HLS 播放">
     <meta name="author" content="king">
@@ -306,20 +306,21 @@
     </div>
 
     <!-- 生产域名走【同源】门卫：Cloudflare Worker tv-gate 挂在 /api/tv* 上，
-         验完 cookie 再转发给 sakura-music-api.pages.dev。
-         本地/其它环境不设这个开关，tv.js 会回落到直连自建 Worker（CORS 白名单里有 8899）。 -->
+         验完 cookie 再经 Service Binding 转给影视数据层 Worker tv-api
+         （tv-gate 与 tv-api 都在 SakuraTV-app 仓库）。
+         本地/其它环境不设这个开关，tv.js 会回落到直连 /tv-api（CORS 白名单里有 8899）。 -->
     <script>
       if (/^(www\.)?zhaokening\.ccwu\.cc$/.test(location.hostname)) window.TV_GATEWAY = location.origin;
     </script>
-    <script src="js/tv-store.js?v=202609241"></script>
-    <script src="js/tv-player.js?v=202609241"></script>
-    <script src="js/tv.js?v=202609241"></script>
-<script src="js/common.js?v=202609241"></script>
-<script src="js/anim.js?v=202609241"></script>
-<script src="js/sidebar.js?v=202609241"></script>
-<script src="js/particles-config.js?v=202609241"></script>
-<script src="js/live2d-fix.js?v=202609241" defer></script>
-<script src="https://sakura-live2d.pages.dev/live2d/waifu.js?v=202609241" defer></script>
-<script src="js/live2d-app.js?v=202609241" defer></script>
+    <script src="js/tv-store.js?v=202609242"></script>
+    <script src="js/tv-player.js?v=202609242"></script>
+    <script src="js/tv.js?v=202609242"></script>
+<script src="js/common.js?v=202609242"></script>
+<script src="js/anim.js?v=202609242"></script>
+<script src="js/sidebar.js?v=202609242"></script>
+<script src="js/particles-config.js?v=202609242"></script>
+<script src="js/live2d-fix.js?v=202609242" defer></script>
+<script src="https://sakura-live2d.pages.dev/live2d/waifu.js?v=202609242" defer></script>
+<script src="js/live2d-app.js?v=202609242" defer></script>
 </body>
 </html>

@@ -16,8 +16,58 @@ function audioMime(ext) {
 
 const MUSIC_API_BASE = '';
 /* 音频走自家 Worker 代理：曲库源站 sakura-music.pages.dev 不实现 HTTP Range，
-   直接引用会让 <audio> 变成不可 seek（audio.seekable 恒为 [0,0]），进度条拖不动。 */
-const MUSIC_BASE = "https://sakura-music-api.pages.dev/music/";
+   直接引用会让 <audio> 变成不可 seek（audio.seekable 恒为 [0,0]），进度条拖不动。
+
+   2026-09-24：宿主从 sakura-music-api.pages.dev 换成 zhaokening.ccwu.cc。
+   原因同 js/music-api.js —— pages.dev 在国内时通时不通。接口地址由 Worker
+   music-api 挂在 zhaokening.ccwu.cc 的 /api/* 与 /music/* 上，
+   已与 Pages 版做过 10/10 接口比对 + 音频 Range 字节哈希比对，完全一致。 */
+const MUSIC_HOST = 'https://zhaokening.ccwu.cc';
+const LEGACY_MUSIC_HOST = 'https://sakura-music-api.pages.dev';
+const MUSIC_BASE = MUSIC_HOST + '/music/';
+
+/* ---- 旧域名迁移（必须留在文件顶层，且在任何读 localStorage 的 IIFE 之前）----
+   为什么非做不可：favKey() 给官方歌曲用的 key 是 "o:" + s.path，而 path 里
+   **带着完整域名**。只换 MUSIC_BASE 而不迁移，老用户 localStorage 里存的
+   "o:https://sakura-music-api.pages.dev/music/x.mp3" 就永远匹配不上新生成的
+   "o:https://zhaokening.ccwu.cc/music/x.mp3" —— 表现是「收藏整体消失」，
+   而且刷新也不会恢复（key 重新算过还是新的）。
+   自建歌单同理：serializeSong() 把 path 一起写进了 localStorage。
+
+   下面两个 key 必须与后面 favList（'sakuraFavs'）和 USER_PLAYLIST_KEY
+   （'sakuraUserPlaylist'）保持一致；它们是字面量而非引用，因为那两个变量
+   定义在下面的 IIFE 里，顶层看不见 —— 改了名字记得同步这里。 */
+(function migrateLegacyMusicHost() {
+  if (LEGACY_MUSIC_HOST === MUSIC_HOST) return;
+  /* 只替换 **我们掌管的「旧域名 + /music/」前缀**，不做裸域名全文替换。
+     裸替换会把不属于我们的地址也改掉 —— 比如用户自建条目里若恰好含旧域名，
+     会被改成新域名下一个根本不存在的路径，那是把用户数据改坏。
+     实例：u:https://sakura-music-api.pages.dev/some/uploaded.mp3
+     （集成测试 test-migration.mjs 场景 1 就是抓这个的。） */
+  var LEGACY_BASE = LEGACY_MUSIC_HOST + '/music/';
+  function fix(v) {
+    return typeof v === 'string' ? v.split(LEGACY_BASE).join(MUSIC_BASE) : v;
+  }
+  try {
+    var raw = localStorage.getItem('sakuraFavs');
+    if (raw && raw.indexOf(LEGACY_BASE) >= 0) {
+      var favs = JSON.parse(raw);
+      if (Array.isArray(favs)) localStorage.setItem('sakuraFavs', JSON.stringify(favs.map(fix)));
+    }
+  } catch (e) {}
+  try {
+    var raw2 = localStorage.getItem('sakuraUserPlaylist');
+    if (raw2 && raw2.indexOf(LEGACY_BASE) >= 0) {
+      var list = JSON.parse(raw2);
+      if (Array.isArray(list)) {
+        for (var i = 0; i < list.length; i++) {
+          if (list[i] && typeof list[i].path === 'string') list[i].path = fix(list[i].path);
+        }
+        localStorage.setItem('sakuraUserPlaylist', JSON.stringify(list));
+      }
+    }
+  } catch (e) {}
+})();
 const DB_NAME = 'SakuraMusicDB';
 const DB_VERSION = 1;
 const STORE_NAME = 'uploads';

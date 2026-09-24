@@ -6,19 +6,21 @@
  * 也就是说浏览器直连一定被 CORS 拦死，页面只会是空的。视频流同理
  * （hls.js 用 XHR 取 m3u8/分片，一样要 CORS）。
  * 所以列表/详情/搜索走 /api/tv，m3u8 与分片走 /api/tv/stream，
- * 由 cloudflare/music-api/_worker.js 转发（服务端请求不带 Origin，上游照常给数据）。
- * 部署：把 _worker.js 重新发布一次即可。
+ * 由影视数据层 Worker tv-api 转发（服务端请求不带 Origin，上游照常给数据）。
+ * 部署：把 SakuraTV-app/cloudflare/tv-api 重新发布一次即可。
  *
  * 生产环境走【同源】门卫：Cloudflare Worker tv-gate 挂在
- * zhaokening.ccwu.cc/api/tv* 上，验完 cookie 再转发给 pages.dev。
+ * zhaokening.ccwu.cc/api/tv* 上，验完 cookie 再经 Service Binding 转给 tv-api。
  * 所以 TV.html 会先把 window.TV_GATEWAY 设成 location.origin；
  * 这里的默认值只留给本地联调（localhost 不走门卫，CORS 白名单里有 8899）。
  * ============================================================ */
 (function () {
   'use strict';
 
-  /* 生产走同源门卫；window.TV_GATEWAY 留给本地联调覆盖 */
-  var GATEWAY = (window.TV_GATEWAY || 'https://sakura-music-api.pages.dev').replace(/\/$/, '');
+  /* 生产走同源门卫；window.TV_GATEWAY 留给本地联调覆盖。
+     默认值指向 tv-api 的独立入口（旧值 sakura-music-api.pages.dev 已随
+     影视拆分作废，而且那域名在国内时通时不通）。 */
+  var GATEWAY = (window.TV_GATEWAY || 'https://zhaokening.ccwu.cc/tv-api').replace(/\/$/, '');
   /* 门卫回 401 时拿它做标记：不重试、不降级直连，直接回登录页 */
   var NEED_GATE = 'NEED_GATE';
 

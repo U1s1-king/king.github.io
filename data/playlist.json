@@ -1,7 +1,7 @@
 {
  "version": 1,
  "updated": "2026-09-11",
- "note": "官方推荐曲库。音频文件托管在 https://sakura-music-api.pages.dev/music/ ，file 为文件名。",
+ "note": "官方推荐曲库。音频文件托管在 https://zhaokening.ccwu.cc/music/ ，file 为文件名。（2026-09-24 前为 sakura-music-api.pages.dev/music/，该域名国内时通时不通，已迁移）",
  "lists": [
   {
    "id": "official",
