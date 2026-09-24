@@ -12,7 +12,7 @@
  * __DSH_VERSION 以及各 HTML 里的 ?v= 保持一致。
  * 统一更新请执行： python scripts/bump_version.py <新版本号>
  * ============================================================ */
-const VERSION = '202609231'
+const VERSION = '202609241'
 const CACHE = 'king-blog-' + VERSION;
 
 const CORE = [
@@ -79,7 +79,7 @@ const CORE = [
      预缓存等于让每次访问都为一个二级视图白付安装开销，改走按需 stale-while-revalidate。 */
   '/icons/icon-192.png',
   '/icons/icon-512.png',
-    /* TV.html 故意【不预缓存】：它现在挂在 Cloudflare Worker 门卫（cloudflare/tv-gate）
+    /* TV.html 故意【不预缓存】：它现在挂在 Cloudflare Worker 门卫（SakuraTV-app/cloudflare/tv-gate）
        后面，未登录时返回的是登录页。而 addAll() 只要碰到一个非 200 ——
        门卫 fail-closed 时正是 503 —— 就会让整个 Service Worker 安装失败，
        把全站离线缓存一起拖下水。它按需走网络即可。

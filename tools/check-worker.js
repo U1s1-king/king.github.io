@@ -19,9 +19,17 @@
 const fs = require('fs');
 const path = require('path');
 
-const DEFAULT_FILES = [
+/* 本仓库内、**必须存在**的 Worker。缺了就是仓库结构被改坏了，直接报错。 */
+const REQUIRED_FILES = [
   '../cloudflare/music-api/_worker.js',
-  '../cloudflare/tv-gate/src/index.js',
+];
+
+/* 跨仓库的 Worker（2026-09-24 影视已拆去 SakuraTV-app）。
+ * 这些文件**可选**：不存在时给一句明确提示，而不是像以前那样静默跳过 ——
+ * 静默跳过等于检查器悄悄少查一个文件，比没有检查器更危险（见文件头注释的假阴性教训）。
+ * 可用环境变量 TV_GATE_FILE 覆盖。 */
+const OPTIONAL_FILES = [
+  process.env.TV_GATE_FILE || '../../SakuraTV-app/cloudflare/tv-gate/src/index.js',
 ];
 
 /* 运行环境自带的全局，赋值给它们不算错 */
@@ -175,13 +183,35 @@ function check(file) {
 }
 
 const args = process.argv.slice(2);
-const files = args.length
-  ? args
-  : DEFAULT_FILES.map(f => path.resolve(__dirname, f)).filter(f => fs.existsSync(f));
+const files = args.length ? args : [];
+const skipped = [];
+
+if (!args.length) {
+  for (const rel of REQUIRED_FILES) {
+    const f = path.resolve(__dirname, rel);
+    if (!fs.existsSync(f)) {
+      console.log('❌ 应当存在的 Worker 文件不见了：' + rel);
+      console.log('   tools/check-worker.js 的 REQUIRED_FILES 需要跟着仓库结构调整。');
+      process.exit(1);
+    }
+    files.push(f);
+  }
+  for (const rel of OPTIONAL_FILES) {
+    const f = path.resolve(__dirname, rel);
+    if (fs.existsSync(f)) files.push(f);
+    else skipped.push(rel);
+  }
+}
 
 if (!files.length) {
   console.log('没有可检查的文件');
   process.exit(0);
+}
+
+if (skipped.length) {
+  console.log('⚠️  跨仓库文件不在本机，本次未检查（不是通过，是没查）：');
+  skipped.forEach(s => console.log('   ' + s));
+  console.log('');
 }
 
 let total = 0;
