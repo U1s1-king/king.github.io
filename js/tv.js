@@ -21,6 +21,41 @@
      默认值指向 tv-api 的独立入口（旧值 sakura-music-api.pages.dev 已随
      影视拆分作废，而且那域名在国内时通时不通）。 */
   var GATEWAY = (window.TV_GATEWAY || 'https://zhaokening.ccwu.cc/tv-api').replace(/\/$/, '');
+
+  /* ============================================================
+     数据层备用入口（2026-09-29）
+     ------------------------------------------------------------
+     实测确认封锁匹配的是 `ccwu.cc` 这个**字符串** —— 换 IP 无效
+     （强制走 162.159.140.1 香港节点同样被 TLS RST）、换 zone 也无效。
+     所以 zhaokening.ccwu.cc 一被锁，影视页整页打不开。
+
+     备用入口是**同一份 tv-api** 在 Cloudflare Pages 上的副本（不同 apex）：
+       wrangler pages deploy SakuraTV-app/cloudflare/tv-api --project-name=sakura-tv-api
+     实测（ccwu.cc 正被封锁时）：搜索 200、1.6 秒、7 个源都有数据。
+
+     ⚠️ 备用入口**没有门卫** —— 它是跨域的，拿不到同源 session cookie，
+        只能带 App token 直连。这是**有意的降级**：
+        宁可封锁时能看，也不要整页打不开。主入口（同源）照旧要口令。
+     ⚠️ 不能用 *.workers.dev —— 真机实测整个域在大陆移动网络下不可达。 */
+  var FALLBACK = 'https://sakura-tv-api.pages.dev/tv-api';
+  if (FALLBACK === GATEWAY) FALLBACK = '';
+  /* ⚠️ 这个 token 会随站点 JS 发出去。App 里本来就硬编码同一份，
+     隔离靠的是「两端密钥不通用」（App 的 token 打不开网站那条门卫路），
+     不是靠这个值保密。 */
+  var TV_APP_TOKEN = 'tvapp_ad9aa63c1079cdd9a0bfd186deba7050dc048e6a1ee5609e';
+
+  var TV_GW_MEMO = 'sakuratv.gw.v1';
+  var tvGwBase = '';
+  try {
+    var _tg = JSON.parse(localStorage.getItem(TV_GW_MEMO) || 'null');
+    if (_tg && _tg.base && Date.now() - _tg.at < 10 * 60 * 1000) tvGwBase = _tg.base;
+  } catch (e) {}
+  function tvGwRemember(b) {
+    tvGwBase = b;
+    try { localStorage.setItem(TV_GW_MEMO, JSON.stringify({ base: b, at: Date.now() })); } catch (e) {}
+  }
+  /** 拼海报 / 分片地址时用「当前已知能用的入口」 */
+  function gwNow() { return tvGwBase || GATEWAY; }
   /* 门卫回 401 时拿它做标记：不重试、不降级直连，直接回登录页 */
   var NEED_GATE = 'NEED_GATE';
 
@@ -258,7 +293,15 @@
     /* credentials 必须是 same-origin：生产环境下 GATEWAY 是同源的，
        门卫靠 HttpOnly cookie 认人 —— 原来写的 'omit' 会把 cookie 丢掉，一律 401。
        本地联调时 GATEWAY 指向 pages.dev（跨域），same-origin 不会带凭据，正好。 */
-    return fetch(url, Object.assign({ mode: 'cors', credentials: 'same-origin' }, timeoutOpt(ms || WAIT_MAX))).then(function (r) {
+    var opt = Object.assign({ mode: 'cors', credentials: 'same-origin' }, timeoutOpt(ms || WAIT_MAX));
+    /* 备用入口是**跨域**的，没有同源 cookie 可带，只能带 App token 直连。
+       （必须同时把 credentials 降成 omit —— 带凭据的跨域请求要求 ACAO 回显具体
+        源且 ACAC=true，而 Worker 那边没开 ACAC。） */
+    if (FALLBACK && url.indexOf(FALLBACK) === 0) {
+      opt.headers = { 'X-App-Token': TV_APP_TOKEN };
+      opt.credentials = 'omit';
+    }
+    return fetch(url, opt).then(function (r) {
       if (r.status === 401) {
         /* 会话过期（关过浏览器）或门卫不认这个 cookie。
            ⚠ 这里【只报错，绝不自动刷新】。
@@ -303,11 +346,29 @@
     var deadline = Date.now() + WAIT_MAX;
     return apiTry(GATEWAY + '/api/tv?' + q, deadline, 3).catch(function (e1) {
       if (e1 && e1.message === NEED_GATE) throw e1; /* 也别降级去直连上游 */
-      var rest = leftMs(deadline);
-      if (rest < 3000) throw new Error(TOO_LONG + '（' + e1.message + '）');
-      return jget(DIRECT + '?' + q, rest).catch(function () {
-        throw new Error('代理不可用（' + e1.message + '）');
-      });
+      /* ① 先换**备用入口**（同一份 tv-api 的 Pages 副本，不同 apex）。
+         封锁 ccwu.cc 时主入口是 TLS 直接被 RST —— 这一步就是救命的那一步。
+         ⚠️ apiTry 第二个参数是**绝对 deadline**（不是剩余毫秒）——
+            传 leftMs(deadline) 会让它算出一个巨大的负数，
+            于是**一个请求都不发**就立刻 reject（真踩过）。 */
+      if (FALLBACK && leftMs(deadline) >= 3000) {
+        return apiTry(FALLBACK + '/api/tv?' + q, deadline, 2).then(function (d) {
+          tvGwRemember(FALLBACK);
+          return d;
+        }, function () { return apiDirect(q, deadline, e1); });
+      }
+      return apiDirect(q, deadline, e1);
+    });
+  }
+
+  /* 最后一道：直连公开采集源。
+     不经过我们任何入口，算是彻底去中心化 —— 但它只给列表，
+     详情/线路/集数还是得靠 tv-api。所以它只是「有总比没有好」。 */
+  function apiDirect(q, deadline, e1) {
+    var rest = leftMs(deadline);
+    if (rest < 3000) throw new Error(TOO_LONG + '（' + e1.message + '）');
+    return jget(DIRECT + '?' + q, rest).catch(function () {
+      throw new Error('代理不可用（' + e1.message + '）');
     });
   }
 
@@ -327,13 +388,15 @@
     setInterval(ping, 20 * 60 * 1000);
   })();
 
-  /* 视频流一律走代理：上游对带 Origin 的请求不给 CORS，分段也一样 */
-  function streamUrl(u) { return GATEWAY + '/api/tv/stream?u=' + encodeURIComponent(u); }
+  /* 视频流一律走代理：上游对带 Origin 的请求不给 CORS，分段也一样。
+     ⚠️ 用 gwNow() 而不是 GATEWAY：主入口被封锁时 apiGet 会记住备用入口，
+        海报和分片得跟着一起换，否则列表能出来、图全白、视频播不了。 */
+  function streamUrl(u) { return gwNow() + '/api/tv/stream?u=' + encodeURIComponent(u); }
   /* 海报同样经代理：图床热链保护会让直连的 <img> 拿不到图 */
   function picUrl(u) {
     var s = String(u || '');
     if (!s || s.indexOf('http') !== 0) return s;
-    return GATEWAY + '/api/tv/img?u=' + encodeURIComponent(s);
+    return gwNow() + '/api/tv/img?u=' + encodeURIComponent(s);
   }
 
   /* ---------------- 分类 ---------------- */
