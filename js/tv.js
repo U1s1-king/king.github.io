@@ -388,15 +388,25 @@
     setInterval(ping, 20 * 60 * 1000);
   })();
 
+  /* ⚠️ <img> / <video> **发不了自定义头** —— 备用入口要 X-App-Token，
+     直接拼上去就是 403、海报全白。worker 两种都认（见 tv-api 的
+     `headers.get('X-App-Token') || url.searchParams.get('_t')`），
+     所以这里走 ?_t= 兜底。
+     只对**备用入口**加：主入口是同源的，带不带都行，不带更干净。 */
+  function gwAuth(u) {
+    if (!FALLBACK || u.indexOf(FALLBACK) !== 0) return u;
+    return u + (u.indexOf('?') >= 0 ? '&' : '?') + '_t=' + encodeURIComponent(TV_APP_TOKEN);
+  }
+
   /* 视频流一律走代理：上游对带 Origin 的请求不给 CORS，分段也一样。
      ⚠️ 用 gwNow() 而不是 GATEWAY：主入口被封锁时 apiGet 会记住备用入口，
         海报和分片得跟着一起换，否则列表能出来、图全白、视频播不了。 */
-  function streamUrl(u) { return gwNow() + '/api/tv/stream?u=' + encodeURIComponent(u); }
+  function streamUrl(u) { return gwAuth(gwNow() + '/api/tv/stream?u=' + encodeURIComponent(u)); }
   /* 海报同样经代理：图床热链保护会让直连的 <img> 拿不到图 */
   function picUrl(u) {
     var s = String(u || '');
     if (!s || s.indexOf('http') !== 0) return s;
-    return gwNow() + '/api/tv/img?u=' + encodeURIComponent(s);
+    return gwAuth(gwNow() + '/api/tv/img?u=' + encodeURIComponent(s));
   }
 
   /* ---------------- 分类 ---------------- */
