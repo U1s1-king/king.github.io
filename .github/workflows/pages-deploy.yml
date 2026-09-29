@@ -1,0 +1,71 @@
+name: pages-deploy
+
+# 把静态站同步到 Cloudflare Pages 的**备用入口**。
+#
+# 为什么需要这份 workflow：实测确认封锁匹配的是 `ccwu.cc` 这个**字符串** ——
+# 换 IP 无效（强制走香港优选节点同样被 RST）、换 zone 也无效。所以
+# zhaokening.ccwu.cc 一被锁，整站直接打不开。页面的 <proj>.pages.dev 是
+# 不同 apex，实测可达（而 *.workers.dev 整个域在大陆移动网络下不可达）。
+#
+# ⚠️ 两份站点（GitHub Pages + Cloudflare Pages）**必须同步**，否则会出现
+#    「从这个域名打开是新的、从那个域名打开是旧的」。所以这里挂在 push:main 上。
+#
+# ⚠️ 需要在仓库里配一个 Secret：
+#      CLOUDFLARE_API_TOKEN = 没有 DNS 权限的操作令牌即可（cfut_ 那把）
+#    没配的话这个 job 会失败 —— 那是**有意的**：漂移比失败更难发现。
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # 只暂存**运行时要用的**文件 —— 绝不整仓库推：
+      # 仓库里有 .git（完整历史）、cloudflare/（worker 源码）、scripts/、tools/。
+      - name: 暂存静态文件
+        run: |
+          set -e
+          mkdir -p /tmp/stage
+          for d in css js img icons webfonts games data; do
+            [ -d "$d" ] && cp -r "$d" /tmp/stage/
+          done
+          for f in 404.html Archives.html Games.html home.html index.html \
+                   Journal.html music.html Tools.html TV.html \
+                   manifest.json robots.txt sitemap.xml sw.js favicon.ico og-image.png; do
+            [ -f "$f" ] && cp "$f" /tmp/stage/
+          done
+          for bad in .git .github cloudflare scripts tools server.js README.md; do
+            [ -e "/tmp/stage/$bad" ] && { echo "::error::暂存目录里出现了不该有的 $bad"; exit 1; }
+          done
+          echo "暂存完成：$(find /tmp/stage -type f | wc -l) 个文件"
+
+      - name: 部署到 Cloudflare Pages
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: dd634204b125f1fb16109afcc96864bf
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            # 不配 Secret 就**跳过**，但每次都喊一声 ——
+            # 直接失败会让每次 push 都挂个红叉，真问题反而被淹掉；
+            # 静默跳过又会让两份站点悄悄漂移。警告是这里的正确档位。
+            echo "::warning title=站点副本未更新::缺少 Secret CLOUDFLARE_API_TOKEN，Cloudflare Pages 副本（sakura-blog-8dv.pages.dev）没有更新，会与 GitHub Pages 漂移。去仓库 Settings → Secrets 添加即可。"
+            exit 0
+          fi
+          npx --yes wrangler@4 pages deploy /tmp/stage \
+            --project-name=sakura-blog --branch=main --commit-dirty=true

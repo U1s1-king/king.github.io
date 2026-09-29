@@ -12,7 +12,7 @@
  * __DSH_VERSION 以及各 HTML 里的 ?v= 保持一致。
  * 统一更新请执行： python scripts/bump_version.py <新版本号>
  * ============================================================ */
-const VERSION = '202609242'
+const VERSION = '202609291'
 const CACHE = 'king-blog-' + VERSION;
 
 const CORE = [
@@ -89,6 +89,10 @@ const CORE = [
        scripts/check_links.py 现在会逐页核对这份清单，再漏就会报出来。 */
     '/css/tv.css?v=' + VERSION,
     '/css/tv-player.css?v=' + VERSION,
+    /* 2026-09-29 补：TV.html 引用了它，但一直没进这份清单 ——
+       check_links.py 一直在报这个 FAIL（改动前就是红的）。
+       少了它，离线时影视页会缺样式。 */
+    '/css/tv-v2.css?v=' + VERSION,
     '/js/tv.js?v=' + VERSION,
     '/js/tv-store.js?v=' + VERSION,
     '/js/tv-player.js?v=' + VERSION,

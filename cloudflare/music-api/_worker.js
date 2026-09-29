@@ -47,6 +47,12 @@ const SITE_ORIGINS = [
   'https://www.zhaokening.ccwu.cc',
   // GitHub Pages 的用户站地址是 <user>.github.io，原来的 king.github.io 不是本站域名
   'https://u1s1-king.github.io',
+  /* Cloudflare Pages 上的站点副本（2026-09-29 新增）。
+     为什么要它：封锁匹配的是 `ccwu.cc` 字符串，换 IP / 换 zone 都无效，
+     所以整站需要一个**不同 apex** 的入口。Pages 的 <proj>.pages.dev 实测可达
+     （workers.dev 整个域在大陆移动网络下不可达）。
+     站点副本部署：scripts/pages_deploy.ps1 */
+  'https://sakura-blog-8dv.pages.dev',
   'http://localhost:8888',
   'http://127.0.0.1:8888',
   // 本站本地预览常用端口（js/tv.js 的开发联调也用它）

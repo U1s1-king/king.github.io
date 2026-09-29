@@ -21,10 +21,38 @@
 
   // ---------------------------------------------------------- 配置
 
-  /* 网关宿主。默认走自定义域名（生产环境等于同源）。
-     留 window.MUSIC_GATEWAY 覆盖钩子，和 TV 那边的 window.TV_GATEWAY 一致，
-     方便本地联调指向别的入口。 */
-  var GATEWAY = (window.MUSIC_GATEWAY || 'https://zhaokening.ccwu.cc').replace(/\/+$/, '');
+  /* 网关宿主池。默认走自定义域名（生产环境等于同源）。
+     留 window.MUSIC_GATEWAY 覆盖钩子，方便本地联调指向别的入口 ——
+     给了就连池子一起覆盖，只走那一个。 */
+  var GW_POOL = [];
+  if (window.MUSIC_GATEWAY) GW_POOL.push(String(window.MUSIC_GATEWAY).replace(/\/+$/, ''));
+  /* 备用入口 = Cloudflare Pages 上的**同一份 worker**（不同 apex）。
+     为什么必须有：实测确认封锁匹配的是 `ccwu.cc` 这个**字符串** ——
+     换 IP 无效（强制走 162.159.140.1 香港节点同样被 RST）、换 zone 也无效。
+     所以 zhaokening.ccwu.cc 一被锁，音乐搜索/歌词/曲库音频会同时死。
+     ⚠️ 备用入口**不能**用 *.workers.dev —— 2026-09-29 真机实测整个域
+        在大陆移动网络下不可达（一个已知存活的 worker 也 15s 超时）；
+        *.pages.dev 实测可达。 */
+  GW_POOL.push('https://zhaokening.ccwu.cc', 'https://sakura-music-gw.pages.dev');
+
+  var GATEWAY = GW_POOL[0];
+
+  /* 「上次成功的入口」记 10 分钟：既能让后续请求直接走对的，
+     又不至于长期钉在一个已经恢复/已经挂掉的入口上。 */
+  var GW_MEMO_KEY = 'sakuraGwBase';
+  var GW_MEMO_TTL = 10 * 60 * 1000;
+  var gwStat = { base: '', at: 0 };
+  try {
+    var _gs = JSON.parse(localStorage.getItem(GW_MEMO_KEY) || 'null');
+    if (_gs && _gs.base && GW_POOL.indexOf(_gs.base) >= 0 && Date.now() - _gs.at < GW_MEMO_TTL) gwStat = _gs;
+  } catch (e) {}
+
+  function gwOrder() {
+    var l = GW_POOL.slice();
+    var i = gwStat.base ? l.indexOf(gwStat.base) : -1;
+    if (i > 0) { l.splice(i, 1); l.unshift(gwStat.base); }
+    return l;
+  }
 
   // Meting 镜像。qijieya 是站点原有主镜像；backup 已失效（521）故移除，
   // 换成自建网关的 /api/meting（它内部会依次尝试所有镜像）。
@@ -193,10 +221,22 @@
   }
 
   /** Meting -> Song */
+  /* Meting 的搜索结果**经常没有 id 字段**，但 url / lrc 里带着 `...&id=XXXX`。
+     自建网关那边（_worker.js 的 metingSearchSongs）就是这么抠的 ——
+     这里必须对齐：少了它，Meting 来的歌全都取不到歌词（歌词要按 id 取）
+     和精确去重。 */
+  function metingIdOf(s) {
+    if (!s) return '';
+    var direct = s.id || s.songid || s.song_id;
+    if (direct) return String(direct);
+    var m = /[?&]id=([0-9A-Za-z_-]+)/.exec(String(s.url || '') + ' ' + String(s.lrc || ''));
+    return m ? m[1] : '';
+  }
+
   function fromMeting(s, platform) {
     return makeSong({
       platform: platform,
-      id: s.id || s.songid || s.song_id || '',
+      id: metingIdOf(s),
       name: s.name || s.title,
       artist: s.artist || s.author,
       album: s.album || '',
@@ -376,18 +416,28 @@
   }
 
   /** 自建网关调用：统一解包 {ok, data} */
+  /** 自建网关调用：依次试候选入口（上次成功的排最前），第一个成功的记住。
+   *  全挂才抛错。统一解包 {ok, data}。 */
   function gateway(path, params) {
     var qs = new URLSearchParams(params || {}).toString();
-    return getJSON(GATEWAY + path + (qs ? '?' + qs : '')).then(function (j) {
-      if (!j || j.ok === false) throw new Error((j && j.error) || '网关返回失败');
-      var d = j.data;
-      /* 有些接口把数组包在 {ok,total,songs} 里（/api/playlist/tracks 就是），
-         而 /api/recommend/* 直接给数组。这里统一拆开 ——
-         否则调用方对对象调 .map 会抛 TypeError，
-         表现就是「排行榜/歌单点进去啥都没有」。 */
-      if (d && !Array.isArray(d) && Array.isArray(d.songs)) return d.songs;
-      return d;
-    });
+    var list = gwOrder(), i = 0;
+    function next() {
+      if (i >= list.length) throw new Error('所有网关入口都不可用');
+      var base = list[i++];
+      return getJSON(base + path + (qs ? '?' + qs : '')).then(function (j) {
+        if (!j || j.ok === false) throw new Error((j && j.error) || '网关返回失败');
+        gwStat = { base: base, at: Date.now() };
+        try { localStorage.setItem(GW_MEMO_KEY, JSON.stringify(gwStat)); } catch (e) {}
+        /* 有些接口把数组包在 {ok,total,songs} 里（/api/playlist/tracks 就是），
+           而 /api/recommend/* 直接给数组。这里统一拆开 ——
+           否则调用方对对象调 .map 会抛 TypeError，
+           表现就是「排行榜/歌单点进去啥都没有」。 */
+        var d = j.data;
+        if (d && !Array.isArray(d) && Array.isArray(d.songs)) return d.songs;
+        return d;
+      }).catch(function () { return next(); });
+    }
+    return next();
   }
 
   /** Meting 调用（本地镜像优先，失败落到自建网关的代理） */
@@ -486,13 +536,28 @@
 
     return cached(key, 300, function () {
       if (platform === 'netease') {
-        return gateway('/api/search', { keywords: keywords, limit: limit, offset: offset }).then(function (d) {
-          /* ⚠️ gateway() 内部**已经**把 {ok,total,songs} 拆成 songs 数组返回了，
-             以前这里又取了一次 .songs —— 双重解包，对数组取 .songs 得到 undefined，
-             于是网易云搜索**永远返回 0 条**，搜索页看着像「没搜到」。
-             这里两种形状都认，网关以后改解包规则也不会再崩。 */
-          var arr = Array.isArray(d) ? d : ((d && d.songs) || []);
-          return arr.map(fromGateway);
+        /* 2026-09-29：**两条路并行打**，谁先给出非空结果就用谁。
+         *
+         *   A. 国内 Meting 镜像（api.qijieya.cn → 121.40.172.26 阿里云杭州，
+         *      实测带 `Access-Control-Allow-Origin: *`）—— 浏览器可直连，
+         *      整条链路**不碰任何自建域名**。这是「尽量走国内」的主路径。
+         *   B. 自建网关池 —— 结果更全（还带 albums / artists / playlists）。
+         *
+         * 以前只有 B，于是 ccwu.cc 一被字符串封锁，网易云搜索直接没了。
+         * 并行而不是串行：B 被封锁时是 TLS 立刻被 RST，不会拖慢 A。
+         * 优先用 B（字段更全），B 空/挂了就用 A。 */
+        var viaGw = gateway('/api/search', { keywords: keywords, limit: limit, offset: offset })
+          .then(function (d) {
+            /* ⚠️ gateway() 内部**已经**把 {ok,total,songs} 拆成 songs 数组返回了，
+               以前这里又取了一次 .songs —— 双重解包，对数组取 .songs 得到 undefined，
+               于是网易云搜索**永远返回 0 条**。两种形状都认，以后改解包规则也不会崩。 */
+            var arr = Array.isArray(d) ? d : ((d && d.songs) || []);
+            return arr.map(fromGateway);
+          })
+          .catch(function () { return []; });
+        var viaMt = viaMeting('netease', keywords, limit).catch(function () { return []; });
+        return Promise.all([viaGw, viaMt]).then(function (rs) {
+          return (rs[0] && rs[0].length) ? rs[0] : (rs[1] || []);
         });
       }
       if (platform === 'itunes') {
