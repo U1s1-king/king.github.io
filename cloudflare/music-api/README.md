@@ -7,7 +7,29 @@
 | Worker 名 | `music-api` |
 | 路由 | `zhaokening.ccwu.cc/api/*`、`zhaokening.ccwu.cc/music/*`（含 www） |
 | 部署 | `wrangler deploy`（配置见同目录 `wrangler.toml`） |
-| 旧地址 | ~~https://sakura-music-api.pages.dev~~（Pages 项目，2026-09-24 起不再被前端引用） |
+| 旧地址 | ~~https://sakura-music-api.pages.dev~~（Pages 项目已删除） |
+| **备用入口** | **https://sakura-music-gw.pages.dev**（Pages 项目 `sakura-music-gw`，Advanced Mode） |
+
+**为什么又开了一个 Pages 入口**（2026-09-29）：实测确认封锁匹配的是 `ccwu.cc`
+这个**字符串** —— 换 IP 无效（强制走 162.159.140.1 香港节点同样被 RST）、换 zone 也无效。
+所以 `zhaokening.ccwu.cc` 一被锁，音乐搜索 / 歌词 / 曲库音频 / 影视数据会**同时**死。
+App 侧现在有「网关候选池」，主入口不可用时自动切到这个 Pages 入口
+（真机日志：`[link] 网关入口=https://sakura-music-gw.pages.dev`）。
+
+> ⚠️ **备用入口也不能用 `*.workers.dev`。** 2026-09-29 真机实测：整个
+> `*.workers.dev` 在大陆移动网络下不可达 —— 连一个**已知存活**的 worker
+> 都 15s 超时。而 `*.pages.dev` 可达（实测 `/api/health` 200、
+> `/music/*` **206 且 Range 生效**、`/api/meting` 200、`/api/url` 200）。
+> `/api/search` 在该入口上是 502 —— CF 机房 IP 触发网易云风控，这条不该走网关。
+
+```powershell
+# 备用入口的部署（同一个 _worker.js，不复制代码）
+wrangler pages project create sakura-music-gw --production-branch=main   # 仅首次
+wrangler pages deploy 'D:\za\GitHub\king.github.io\cloudflare\music-api' `
+  --project-name=sakura-music-gw --branch=main --commit-dirty=true
+```
+
+> ⚠️ **绝不要部署到 `sakura-music` 项目** —— 那个托管着全部 MP3 副本。
 
 **为什么从 Pages 搬到 Worker**（2026-09-24）：`*.pages.dev` 在国内时通时不通 ——
 本项目姊妹仓库 `sakura-music-app/FINDINGS.md` 实测该域名 ping **50% 丢包**，用户反馈

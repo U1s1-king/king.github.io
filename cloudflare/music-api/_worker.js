@@ -1026,29 +1026,48 @@ async function serveMusic(request, ctx) {
     'Access-Control-Allow-Origin': '*',
     'Cache-Control': 'public, max-age=31536000, immutable',
   }
-  let buf = MUSIC_MEM.get(name) || null
-  if (!buf) {
-    const cache = typeof caches !== 'undefined' && caches.default ? caches.default : null
-    const cacheKey = new Request('https://sakura-music-cache.internal/' + encodeURIComponent(name))
+
+  /* 一、内存里就有 —— 最快的一条路，直接切片 */
+  const mem = MUSIC_MEM.get(name)
+  if (mem) return sliceFromBuffer(request, mem, headers)
+
+  /* 二、边缘缓存里有 —— 读出来再切片 */
+  const cache = typeof caches !== 'undefined' && caches.default ? caches.default : null
+  const cacheKey = new Request('https://sakura-music-cache.internal/' + encodeURIComponent(name))
+  if (cache) {
     let hit = null
-    if (cache) { try { hit = await cache.match(cacheKey) } catch (e) { hit = null } }
+    try { hit = await cache.match(cacheKey) } catch (e) { hit = null }
     if (hit) {
-      buf = await hit.arrayBuffer()
-    } else {
-      const up = await fetch(MUSIC_ORIGIN + encodeURIComponent(name))
-      if (!up.ok) {
-        return new Response('音频不存在：' + name, { status: up.status, headers: { 'Access-Control-Allow-Origin': '*' } })
-      }
-      buf = await up.arrayBuffer()
-      if (cache) {
-        const put = cache.put(cacheKey, new Response(buf, { headers: { 'Content-Type': 'audio/mpeg', 'Content-Length': String(buf.byteLength) } }))
-        if (ctx && ctx.waitUntil) ctx.waitUntil(put.catch(function () {}))
-        else { try { await put } catch (e) {} }
+      try {
+        const buf = await hit.arrayBuffer()
+        rememberInMem(name, buf)
+        return sliceFromBuffer(request, buf, headers)
+      } catch (e) {
+        /* 缓存读坏了就当没有，走下面流式那条路 */
       }
     }
-    if (MUSIC_MEM.size >= MUSIC_MEM_MAX) { MUSIC_MEM.delete(MUSIC_MEM.keys().next().value) }
-    MUSIC_MEM.set(name, buf)
   }
+
+  /* 三、都是冷的 —— **流式转发**，立刻把字节推给用户，缓存后台慢慢填。
+         ------------------------------------------------------------
+         2026-09-28 改。原来这里是 `await up.arrayBuffer()`：**先把整首
+         读进内存**（实测一首 11.4MB）才回第一个字节。曲库源站
+         （sakura-music.pages.dev）不支持 Range，所以切片这件事没法
+         交给它 —— 但「等整首下完」和「切片」是两回事，可以解耦：
+
+           · 客户端拿到的第一个字节，不再等整首下完
+           · Range 请求用 TransformStream 跳过前 N 字节再截断，
+             全程不把整首读进内存
+           · 整份数据仍然会在**后台**灌进边缘缓存和内存，
+             所以下一个用户还是走的上面第 1/2 条快路径
+
+         最坏情况（后台填充被 Worker 生命周期切断）也只是「下一个人
+         同样走流式」，不会比改之前更慢。 */
+  return streamFromOrigin(request, name, headers, cache, cacheKey, ctx)
+}
+
+/** 从内存里的完整 buffer 切片（热路径） */
+function sliceFromBuffer(request, buf, headers) {
   const total = buf.byteLength
   const range = parseRange(request.headers.get('Range'), total)
   if (range && range.invalid) {
@@ -1069,6 +1088,110 @@ async function serveMusic(request, ctx) {
     headers: Object.assign({}, headers, { 'Content-Length': String(total) }),
   })
 }
+
+function rememberInMem(name, buf) {
+  if (MUSIC_MEM.size >= MUSIC_MEM_MAX) MUSIC_MEM.delete(MUSIC_MEM.keys().next().value)
+  MUSIC_MEM.set(name, buf)
+}
+
+/**
+ * 丢掉一个流的前面若干字节、并在末尾截断。
+ * 曲库源站不支持 Range，所以「取第 N 字节往后」只能自己丢。
+ * 代价是多下一点上游流量（从 0 下到你要的位置），
+ * 但换来的是**不用把整首读进内存**，也不会卡住第一个字节。
+ */
+function skipStream(body, start, end) {
+  const reader = body.getReader()
+  let seen = 0
+  let remaining = end - start + 1
+  return new ReadableStream({
+    async pull(controller) {
+      try {
+        while (remaining > 0) {
+          const r = await reader.read()
+          if (r.done) { controller.close(); return }
+          let chunk = r.value
+          if (seen < start) {
+            const skip = Math.min(start - seen, chunk.byteLength)
+            seen += skip
+            chunk = chunk.subarray(skip)
+            if (chunk.byteLength === 0) continue
+          }
+          if (chunk.byteLength > remaining) chunk = chunk.subarray(0, remaining)
+          remaining -= chunk.byteLength
+          controller.enqueue(chunk)
+          return
+        }
+        try { reader.cancel() } catch (e) {}
+        controller.close()
+      } catch (e) {
+        controller.error(e)
+      }
+    },
+    cancel() { try { reader.cancel() } catch (e) {} },
+  })
+}
+
+async function streamFromOrigin(request, name, headers, cache, cacheKey, ctx) {
+  let up
+  try {
+    up = await fetch(MUSIC_ORIGIN + encodeURIComponent(name))
+  } catch (e) {
+    return new Response('拉取音频失败：' + (e && e.message), { status: 502, headers: { 'Access-Control-Allow-Origin': '*' } })
+  }
+  if (!up.ok) {
+    return new Response('音频不存在：' + name, { status: up.status, headers: { 'Access-Control-Allow-Origin': '*' } })
+  }
+
+  const total = Number(up.headers.get('Content-Length')) || 0
+  const range = total ? parseRange(request.headers.get('Range'), total) : null
+  if (range && range.invalid) {
+    try { up.body.cancel() } catch (e) {}
+    return new Response(null, { status: 416, headers: Object.assign({}, headers, { 'Content-Range': 'bytes */' + total }) })
+  }
+
+  /* 后台把整份灌进缓存 —— 不挡当前这个响应 */
+  if (ctx && ctx.waitUntil) {
+    const forCache = up.clone()
+    ctx.waitUntil((async () => {
+      try {
+        const b = await forCache.arrayBuffer()
+        if (cache) {
+          await cache.put(cacheKey, new Response(b, {
+            headers: { 'Content-Type': 'audio/mpeg', 'Content-Length': String(b.byteLength) },
+          }))
+        }
+        rememberInMem(name, b)
+      } catch (e) {
+        /* 后台填充失败无所谓，下次照样流式 */
+      }
+    })())
+  }
+
+  if (request.method === 'HEAD') {
+    const h = Object.assign({}, headers)
+    if (range) {
+      h['Content-Range'] = 'bytes ' + range.start + '-' + range.end + '/' + total
+      h['Content-Length'] = String(range.end - range.start + 1)
+      return new Response(null, { status: 206, headers: h })
+    }
+    if (total) h['Content-Length'] = String(total)
+    return new Response(null, { status: 200, headers: h })
+  }
+
+  if (range) {
+    const h = Object.assign({}, headers, {
+      'Content-Range': 'bytes ' + range.start + '-' + range.end + '/' + total,
+      'Content-Length': String(range.end - range.start + 1),
+    })
+    return new Response(skipStream(up.body, range.start, range.end), { status: 206, headers: h })
+  }
+
+  const h = Object.assign({}, headers)
+  if (total) h['Content-Length'] = String(total)
+  return new Response(up.body, { status: 200, headers: h })
+}
+
 
 // ============================================================ 路由
 
