@@ -56,7 +56,15 @@
 
   // Meting 镜像。qijieya 是站点原有主镜像；backup 已失效（521）故移除，
   // 换成自建网关的 /api/meting（它内部会依次尝试所有镜像）。
-  var METING = ['https://api.qijieya.cn/meting/'];
+  /* 2026-09-29：**不能只有一个镜像**。实测 api.qijieya.cn 对**同一个查询**
+     时好时坏 —— 一次 509ms 返回 10 条，下一次 211ms 返回 `[]`。
+     只有一个镜像时，撞上 `[]` 就要掉到慢网关（实测 6 秒）。
+     这里按「实测可用」排序，逐个试，空结果也算失败换下一个。 */
+  var METING = [
+    'https://api.qijieya.cn/meting/',
+    'https://api.injahow.cn/meting/',
+    'https://api.msls1441.com/'
+  ];
 
   var ITUNES = 'https://itunes.apple.com/search';
 
@@ -374,12 +382,39 @@
   }
 
   /** Meting 通用搜索（原逻辑原样抽出，行为不变） */
+  /** Meting 搜索：**并行打所有镜像，谁先给出非空结果就用谁**。
+   *
+   *  为什么不能用 meting()：那个 helper 只在「响应为空串」时才换下一个，
+   *  而实测镜像的失败形态是 **HTTP 200 + `[]`** —— 它会把空数组当成
+   *  正常结果返回，于是搜索直接空掉、掉到慢网关。
+   *
+   *  为什么并行不串行：实测单个镜像返回 `[]` 很常见（限流/抖动），
+   *  串行要一个接一个等，最坏叠成好几秒；并行最坏 = 最慢那个镜像的时间。
+   *  ⚠️ 并行会更"显眼"（一次三个请求），所以镜像清单只放**实测可用**的，
+   *     不要往里堆死链。
+   */
   function viaMeting(platform, keywords, limit) {
-    return meting({ server: platform, type: 'search', id: keywords, limit: limit }).then(function (r) {
-      var arr = null;
-      try { arr = JSON.parse(r.text); } catch (e) { arr = null; }
-      if (!Array.isArray(arr)) arr = arr && arr.data ? arr.data : [];
-      return arr.map(function (s) { return fromMeting(s, platform); });
+    var urls = METING.map(function (m) {
+      return m + '?server=' + encodeURIComponent(platform) +
+        '&type=search&id=' + encodeURIComponent(keywords) +
+        '&limit=' + (limit || 20);
+    });
+    if (!urls.length) return Promise.resolve([]);
+    return new Promise(function (resolve) {
+      var pending = urls.length, settled = false;
+      function giveUp() { if (!settled && --pending === 0) { settled = true; resolve([]); } }
+      urls.forEach(function (u) {
+        getText(u).then(function (text) {
+          if (settled) return;
+          var arr = null;
+          try { arr = JSON.parse(text); } catch (e) { arr = null; }
+          if (!Array.isArray(arr)) arr = arr && arr.data ? arr.data : [];
+          var songs = arr.map(function (s) { return fromMeting(s, platform); })
+            .filter(function (s) { return s && (s.name || s.id); });
+          if (songs.length) { settled = true; resolve(songs); return; }
+          giveUp();
+        }, giveUp);
+      });
     });
   }
 
@@ -536,28 +571,35 @@
 
     return cached(key, 300, function () {
       if (platform === 'netease') {
-        /* 2026-09-29：**两条路并行打**，谁先给出非空结果就用谁。
+        /* 2026-09-29：**国内 Meting 镜像优先**，自建网关只当兜底。
          *
-         *   A. 国内 Meting 镜像（api.qijieya.cn → 121.40.172.26 阿里云杭州，
-         *      实测带 `Access-Control-Allow-Origin: *`）—— 浏览器可直连，
-         *      整条链路**不碰任何自建域名**。这是「尽量走国内」的主路径。
-         *   B. 自建网关池 —— 结果更全（还带 albums / artists / playlists）。
+         * 为什么不是网关优先：网关的 /api/search 是 Cloudflare **机房 IP**
+         * 在打网易云，而网易云对机房 IP 风控很凶 —— 实测直接回 502，
+         * 而且重试要好几秒。把它排在前面等于每次搜索先白等一轮。
          *
-         * 以前只有 B，于是 ccwu.cc 一被字符串封锁，网易云搜索直接没了。
-         * 并行而不是串行：B 被封锁时是 TLS 立刻被 RST，不会拖慢 A。
-         * 优先用 B（字段更全），B 空/挂了就用 A。 */
-        var viaGw = gateway('/api/search', { keywords: keywords, limit: limit, offset: offset })
-          .then(function (d) {
-            /* ⚠️ gateway() 内部**已经**把 {ok,total,songs} 拆成 songs 数组返回了，
-               以前这里又取了一次 .songs —— 双重解包，对数组取 .songs 得到 undefined，
-               于是网易云搜索**永远返回 0 条**。两种形状都认，以后改解包规则也不会崩。 */
-            var arr = Array.isArray(d) ? d : ((d && d.songs) || []);
-            return arr.map(fromGateway);
-          })
-          .catch(function () { return []; });
-        var viaMt = viaMeting('netease', keywords, limit).catch(function () { return []; });
-        return Promise.all([viaGw, viaMt]).then(function (rs) {
-          return (rs[0] && rs[0].length) ? rs[0] : (rs[1] || []);
+         * 为什么不是两条并行取快的：并行要 `Promise.all` 等**最慢**的那条
+         * （实测 5.5 秒才出结果），要么就得加超时竞速，复杂度不值当。
+         *
+         * 主路径 api.qijieya.cn 解析到 121.40.172.26（阿里云杭州），
+         * 实测带 `Access-Control-Allow-Origin: *`，浏览器可直连，
+         * **整条链路不碰任何自建域名** —— 这才叫「尽量走国内」。
+         * 以前只有网关那一条，所以 ccwu.cc 一被字符串封锁，搜索直接没了。 */
+        function viaGw() {
+          return gateway('/api/search', { keywords: keywords, limit: limit, offset: offset })
+            .then(function (d) {
+              /* ⚠️ gateway() 内部**已经**把 {ok,total,songs} 拆成 songs 数组返回了，
+                 以前这里又取了一次 .songs —— 双重解包，对数组取 .songs 得到 undefined，
+                 于是网易云搜索**永远返回 0 条**。两种形状都认，以后改解包规则也不会崩。 */
+              var arr = Array.isArray(d) ? d : ((d && d.songs) || []);
+              return arr.map(fromGateway);
+            });
+        }
+        return viaMeting('netease', keywords, limit).then(function (songs) {
+          if (songs && songs.length) return songs;
+          /* 镜像给空了才去问网关（它字段更全，能拿到就用） */
+          return viaGw().catch(function () { return []; });
+        }).catch(function () {
+          return viaGw().catch(function () { return []; });
         });
       }
       if (platform === 'itunes') {
