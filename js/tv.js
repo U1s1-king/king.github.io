@@ -2020,19 +2020,18 @@
           moveHist(e.key === 'ArrowDown' ? 1 : -1);
         }
       });
-      /* 聚焦就展出历史；输入时防抖 600ms 自动搜 —— 采集源慢，
-         每敲一个字发一次会把网关打爆，也让结果乱跳。 */
+      /* 聚焦就展出历史。
+         ⚠️ 2026-10-03：**打字不再自动搜**，和 App 端保持一致。
+            原来这里是防抖 600ms 自动搜（注释里写的是「每敲一个字发一次
+            会把网关打爆」—— 所以当时加了防抖，但本质还是边打边搜）。
+            用户的要求是「全部打完字后再搜索」：
+              · 没打完就出结果，等于用半截关键词去问采集源，结果乱跳；
+              · 每敲一个字都过一遍网关，本来就慢的采集源更慢。
+            现在只有三种触发：按回车、点「搜索」按钮、从别处带词进来。 */
       kw.addEventListener('focus', function () { if (!kw.value.trim()) showHist(); });
-      var deb = 0;
       kw.addEventListener('input', function () {
-        clearTimeout(deb);
-        var v = kw.value.trim();
-        if (!v) { showHist(); return; }
-        hideHist();
-        deb = setTimeout(function () {
-          /* 只有和当前结果不同才重搜，避免「打了又删回去」白打一次网关 */
-          if (v !== state.kw) runSearch(v);
-        }, 600);
+        if (!kw.value.trim()) showHist();
+        else hideHist();
       });
       document.addEventListener('click', function (e) {
         var box = byId('tvHist');
