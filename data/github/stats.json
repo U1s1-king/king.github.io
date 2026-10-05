@@ -10,7 +10,15 @@
       "description": "一个个人博客网站",
       "stargazers_count": 2,
       "language": "JavaScript",
-      "updated_at": "2026-10-05T03:29:31Z"
+      "updated_at": "2026-10-05T13:16:51Z"
+    },
+    {
+      "name": "dsh-live2d-mygo",
+      "html_url": "https://github.com/U1s1-king/dsh-live2d-mygo",
+      "description": "MyGO!!!!! Live2D 桌宠插件 for DeepSeek Harness（本地模型同源加载，零外部依赖）",
+      "stargazers_count": 10,
+      "language": "JavaScript",
+      "updated_at": "2026-10-05T08:35:12Z"
     },
     {
       "name": "dsh-live2d-avemujica",
@@ -59,14 +67,6 @@
       "stargazers_count": 2,
       "language": "JavaScript",
       "updated_at": "2026-09-18T10:24:03Z"
-    },
-    {
-      "name": "dsh-live2d-ras",
-      "html_url": "https://github.com/U1s1-king/dsh-live2d-ras",
-      "description": null,
-      "stargazers_count": 2,
-      "language": "JavaScript",
-      "updated_at": "2026-09-18T10:23:48Z"
     }
   ]
 }
