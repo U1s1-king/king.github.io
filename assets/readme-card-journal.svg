@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 300">
+<defs>
+ <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff7fb"/><stop offset="1" stop-color="#f9dce8"/></linearGradient>
+ <filter id="s"><feGaussianBlur stdDeviation="12"/></filter>
+ <pattern id="grid" width="26" height="26" patternUnits="userSpaceOnUse"><path d="M26 0H0V26" fill="none" stroke="#e7b7c9" stroke-opacity=".28"/></pattern>
+</defs>
+<rect x="8" y="8" width="504" height="284" rx="28" fill="url(#g)" stroke="#e7a9bf" stroke-width="2"/>
+<rect x="8" y="8" width="504" height="284" rx="28" fill="url(#grid)"/>
+<circle cx="430" cy="76" r="58" fill="#f28bb0" opacity=".18" filter="url(#s)"/>
+<circle cx="430" cy="76" r="28" fill="none" stroke="#f28bb0" stroke-width="2" opacity=".65">
+ <animate attributeName="r" values="20;42;20" dur="3s" repeatCount="indefinite"/>
+ <animate attributeName="opacity" values=".7;.1;.7" dur="3s" repeatCount="indefinite"/>
+</circle>
+<path d="M55 226 C120 174 145 247 214 196 S320 170 470 118" fill="none" stroke="#d96d98" stroke-width="3" stroke-linecap="round" stroke-dasharray="9 12">
+ <animate attributeName="stroke-dashoffset" from="0" to="-63" dur="2.4s" repeatCount="indefinite"/>
+</path>
+<circle cx="55" cy="226" r="6" fill="#d96d98"><animate attributeName="cx" values="55;470;55" dur="5s" repeatCount="indefinite"/><animate attributeName="cy" values="226;118;226" dur="5s" repeatCount="indefinite"/></circle>
+<text x="52" y="68" font-family="Arial,sans-serif" font-size="14" letter-spacing="4" fill="#8f6071">01 / RECORD</text>
+<text x="52" y="118" font-family="Arial,sans-serif" font-size="38" font-weight="700" fill="#3b2630">JOURNAL</text>
+<text x="52" y="148" font-family="Arial,sans-serif" font-size="15" fill="#7a6670">thoughts · fragments · everyday traces</text>
+<text x="52" y="260" font-family="Arial,sans-serif" font-size="12" letter-spacing="3" fill="#a35f79">OPEN / READ / RETURN</text>
+</svg>
