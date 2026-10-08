@@ -14,7 +14,7 @@
 
 # ZHAOKENING
 
-**A personal digital space for records, music, archives, tools and experiments.**
+**A personal digital space for records, music, archives, tools, games and night-time viewing.**
 
 <a href="https://zhaokening.ccwu.cc/">
   <img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-core.svg" width="100%" alt="ZHAOKENING animated core">
@@ -24,37 +24,33 @@
 
 ---
 
+## HOME
+
+<a href="https://zhaokening.ccwu.cc/home.html"><img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-page-home.svg" width="100%" alt="Animated Home entrance"></a>
+
 ## JOURNAL
 
 <a href="https://zhaokening.ccwu.cc/Journal.html"><img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-page-journal.svg" width="100%" alt="Animated Journal entrance"></a>
-
-## MUSIC
-
-<a href="https://zhaokening.ccwu.cc/music.html"><img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-page-music.svg" width="100%" alt="Animated Music entrance"></a>
 
 ## ARCHIVES
 
 <a href="https://zhaokening.ccwu.cc/Archives.html"><img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-page-archives.svg" width="100%" alt="Animated Archives entrance"></a>
 
+## MUSIC
+
+<a href="https://zhaokening.ccwu.cc/music.html"><img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-page-music.svg" width="100%" alt="Animated Music entrance"></a>
+
 ## TOOLS
 
 <a href="https://zhaokening.ccwu.cc/Tools.html"><img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-page-tools.svg" width="100%" alt="Animated Tools entrance"></a>
 
-## LIVE2D
+## GAMES
 
-<a href="https://zhaokening.ccwu.cc/"><img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-page-live2d.svg" width="100%" alt="Animated Live2D entrance"></a>
+<a href="https://zhaokening.ccwu.cc/Games.html"><img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-page-games.svg" width="100%" alt="Animated Games entrance"></a>
 
-## GUESTBOOK
+## TV
 
-<a href="https://zhaokening.ccwu.cc/Journal.html#guestbook"><img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-page-guestbook.svg" width="100%" alt="Animated Guestbook entrance"></a>
-
-## DISCUSSIONS
-
-<a href="https://github.com/U1s1-king/king.github.io/discussions"><img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-page-discussions.svg" width="100%" alt="Animated Discussions entrance"></a>
-
-## SOURCE
-
-<a href="https://github.com/U1s1-king/king.github.io"><img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-page-source.svg" width="100%" alt="Animated Source entrance"></a>
+<a href="https://zhaokening.ccwu.cc/TV.html"><img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-page-tv.svg" width="100%" alt="Animated TV entrance"></a>
 
 ---
 
@@ -67,8 +63,8 @@ ROOT
 ├── ARCHIVES
 ├── MUSIC
 ├── TOOLS
-├── GUESTBOOK
-└── DISCUSSIONS
+├── GAMES
+└── TV
 ```
 
 Static-first frontend: HTML, CSS and Vanilla JavaScript. Deployed through GitHub Pages with Cloudflare at the edge, with serverless endpoints for interactive services.
@@ -103,10 +99,10 @@ http://127.0.0.1:8888
 
 ## Design
 
-- Each page has its own animated visual entrance.
+- Every site page has its own animated entrance.
 - The SVG itself is the clickable navigation surface.
-- Every module uses a different motion language while sharing the same CORE SIGNAL visual system.
-- README stays concise; animation carries the atmosphere.
+- Each module uses a different visual metaphor instead of repeating generic UI motion.
+- All modules share the same soft sakura + digital signal language.
 
 > **Code can be rational. A website can still feel alive.**
 
