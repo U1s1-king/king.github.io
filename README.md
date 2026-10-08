@@ -24,7 +24,15 @@
 
 ---
 
-<div align="center">\n\n**SITE MAP / 07 SPACES**  ·  EACH ONE IS A DOOR\n\n<img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-divider.svg" width="100%" alt="Animated divider">\n\n</div>\n\n## 01 / HOME
+<div align="center">
+
+**SITE MAP / 07 SPACES**  ·  EACH ONE IS A DOOR
+
+<img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-divider.svg" width="100%" alt="Animated divider">
+
+</div>
+
+## 01 / HOME
 
 <a href="https://zhaokening.ccwu.cc/home.html"><img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-page-home.svg" width="100%" alt="Animated Home entrance"></a>
 
