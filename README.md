@@ -2,8 +2,8 @@
 
 <img src=".github/assets/sakura-banner.svg" width="100%" alt="ZHAOKENING'S WORLD">
 
-<a href="https://zhaokening.ccwu.cc/" target="_blank">
-  <img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/og-image.png" width="100%" alt="樱花物语 · zhaokening.ccwu.cc">
+<a href="https://zhaokening.ccwu.cc/">
+  <img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-hero.svg" width="100%" alt="ZHAOKENING personal digital space">
 </a>
 
 <br>
@@ -52,17 +52,17 @@
 <a href="https://github.com/topics/web-design"><img src="https://img.shields.io/badge/web--design-E88BB0?style=flat-square" alt="web design"></a>
 <a href="https://github.com/topics/sakura"><img src="https://img.shields.io/badge/sakura-F7A8C0?style=flat-square" alt="sakura"></a><br><br>
 
-> ### 🌸 「春风同花皆闻汝等之声」
+> ### 「春风同花皆闻汝等之声」
 >
 > **记录生活 · 收藏热爱 · 聆听音乐 · 制造一点浪漫**
 
-<a href="#-quick-navigation">⌄ ENTER THE WORLD ⌄</a>
+<a href="#-quick-navigation">ENTER THE WORLD </a>
 
 </div>
 
 ---
 
-# 🌸 ZHAOKENING'S WORLD
+# ZHAOKENING
 
 > **不是模板，也不只是博客。**
 >
@@ -73,9 +73,9 @@
 ```
 ╭──────────────────────────────────────────────────────────────╮
 │                                                              │
-│   📖 RECORD    ✦    🎵 LISTEN    ✦    🧰 EXPLORE            │
+│   RECORD    LISTEN    EXPLORE            │
 │                                                              │
-│   💬 CONNECT   ✦    🎀 LIVE2D    ✦    🌸 KEEP GROWING       │
+│   CONNECT   LIVE2D    KEEP GROWING       │
 │                                                              │
 ╰──────────────────────────────────────────────────────────────╯
 ```
@@ -84,21 +84,21 @@
 
 ---
 
-## ✨ Quick Navigation
+## Quick Navigation
 
 <div align="center">
 
-| 🌐 Explore | 📚 Content | 🎮 Experience | 🛠️ Development |
+| Explore | Content | Experience | Development |
 | :---: | :---: | :---: | :---: |
-| [🏠 Website](https://zhaokening.ccwu.cc/) | [📖 Journal](https://zhaokening.ccwu.cc/Journal.html) | [🎵 Music](https://zhaokening.ccwu.cc/music.html) | [💻 Source](https://github.com/U1s1-king/king.github.io) |
-| [🗂️ Archives](https://zhaokening.ccwu.cc/Archives.html) | [🧰 Tools](https://zhaokening.ccwu.cc/Tools.html) | [💬 Guestbook](https://zhaokening.ccwu.cc/Journal.html#guestbook) | [🐛 Issues](https://github.com/U1s1-king/king.github.io/issues) |
-| [🗨️ Discussions](https://github.com/U1s1-king/king.github.io/discussions) | [⚡ Actions](https://github.com/U1s1-king/king.github.io/actions) | [📦 Repository](https://github.com/U1s1-king/king.github.io) | [🌸 Home](https://zhaokening.ccwu.cc/) |
+| [Website](https://zhaokening.ccwu.cc/) | [Journal](https://zhaokening.ccwu.cc/Journal.html) | [Music](https://zhaokening.ccwu.cc/music.html) | [Source](https://github.com/U1s1-king/king.github.io) |
+| [Archives](https://zhaokening.ccwu.cc/Archives.html) | [Tools](https://zhaokening.ccwu.cc/Tools.html) | [Guestbook](https://zhaokening.ccwu.cc/Journal.html#guestbook) | [Issues](https://github.com/U1s1-king/king.github.io/issues) |
+| [Discussions](https://github.com/U1s1-king/king.github.io/discussions) | [Actions](https://github.com/U1s1-king/king.github.io/actions) | [Repository](https://github.com/U1s1-king/king.github.io) | [Home](https://zhaokening.ccwu.cc/) |
 
 </div>
 
 ---
 
-## 🎞️ Website Preview
+## Website Preview
 
 <div align="center">
 
@@ -108,33 +108,31 @@
 
 <br><br>
 
-### ✦ [🌸 CLICK HERE TO ENTER → zhaokening.ccwu.cc](https://zhaokening.ccwu.cc/) ✦
-
-</div>
+### [CLICK HERE TO ENTER → zhaokening.ccwu.cc](https://zhaokening.ccwu.cc/) </div>
 
 ---
 
-## ⚡ Experience Matrix
+## Experience Matrix
 
 <table>
 <tr>
 <td width="33%" align="center">
 
-### 🌸 VISUAL
+### VISUAL
 
 樱花主题 · 动态视觉 · 响应式布局
 
 </td>
 <td width="33%" align="center">
 
-### 🎀 LIVE2D
+### LIVE2D
 
 互动角色 · 拖拽 · 换装 · 拍照
 
 </td>
 <td width="33%" align="center">
 
-### 🎵 MUSIC
+### MUSIC
 
 在线播放 · 多源音乐体验
 
@@ -143,21 +141,21 @@
 <tr>
 <td align="center">
 
-### 📖 JOURNAL
+### JOURNAL
 
 日记 · 随笔 · 生活碎片
 
 </td>
 <td align="center">
 
-### 🧰 TOOLBOX
+### TOOLBOX
 
 实用工具 · API · 小实验
 
 </td>
 <td align="center">
 
-### 💬 CONNECT
+### CONNECT
 
 留言板 · 评论 · Discussions
 
@@ -166,21 +164,21 @@
 <tr>
 <td align="center">
 
-### ⚡ FAST
+### FAST
 
 Service Worker · Cache
 
 </td>
 <td align="center">
 
-### ☁️ EDGE
+### EDGE
 
 Cloudflare · CDN · HTTPS
 
 </td>
 <td align="center">
 
-### 🤖 AUTO
+### AUTO
 
 GitHub Actions · 自动化任务
 
@@ -190,20 +188,20 @@ GitHub Actions · 自动化任务
 
 ---
 
-## 🎀 Live2D Residents
+## Live2D Residents
 
 <div align="center">
 
-### 「不是装饰，而是这个小世界里的住民。」
+### NOT DECORATION — PART OF THE WORLD
 
 | UNIT | CHARACTER | STATUS |
 | :---: | :--- | :---: |
-| `01` | 🌸 高松燈 | 🟢 ACTIVE |
-| `02` | 🎀 千早愛音 | 🟢 ACTIVE |
+| `01` | 高松燈 | 🟢 ACTIVE |
+| `02` | 千早愛音 | 🟢 ACTIVE |
 | `03` | 🎸 要楽奈 | 🟢 ACTIVE |
 | `04` | 🌙 長崎そよ | 🟢 ACTIVE |
-| `05` | ⚡ 椎名立希 | 🟢 ACTIVE |
-| `??` | ✨ MORE TO COME | 🔄 EVOLVING |
+| `05` | 椎名立希 | 🟢 ACTIVE |
+| `??` | MORE TO COME | 🔄 EVOLVING |
 
 <br>
 
@@ -213,38 +211,38 @@ GitHub Actions · 自动化任务
 
 ---
 
-## 🗺️ World Map
+## World Map
 
 ```text
 ROOT /
 │
-├── 🏠 HOME
-│   ├── 🌸 Sakura Motion
-│   ├── ✨ Dynamic Effects
-│   └── 🎀 Live2D Companion
+├── HOME
+│   ├── Sakura Motion
+│   ├── Dynamic Effects
+│   └── Live2D Companion
 │
-├── 📖 JOURNAL
+├── JOURNAL
 │   └── 日记 / 随笔 / 生活碎片
 │
-├── 🗂️ ARCHIVES
+├── ARCHIVES
 │   └── 收藏 / 网站 / 项目 / 历史记录
 │
-├── 🎵 MUSIC
+├── MUSIC
 │   └── Player / Music Sources / Playlist
 │
-├── 🧰 TOOLS
+├── TOOLS
 │   └── Utilities / APIs / Small Experiments
 │
-├── 💬 GUESTBOOK
+├── GUESTBOOK
 │   └── Message / Reply / Management
 │
-└── 🗨️ DISCUSSIONS
+└── DISCUSSIONS
     └── giscus / GitHub Discussions
 ```
 
 ---
 
-## 🧬 Architecture
+## Architecture
 
 ```text
                               👤 USER
@@ -269,7 +267,7 @@ ROOT /
    │Cache/Offline │     │Headers / CSP │
    └──────────────┘     └──────────────┘
 
-                       💬 GUESTBOOK SYSTEM
+                       GUESTBOOK SYSTEM
                                 │
                                 ▼
                      ┌─────────────────────┐
@@ -284,29 +282,29 @@ ROOT /
 
 ---
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 <div align="center">
 
 | LAYER | TECHNOLOGY |
 | :--- | :--- |
 | 🎨 Frontend | HTML5 · CSS3 · Vanilla JavaScript |
-| 🌐 Hosting | GitHub Pages |
-| ☁️ Edge | Cloudflare |
-| 💬 Serverless | Cloudflare Workers |
+| Hosting | GitHub Pages |
+| Edge | Cloudflare |
+| Serverless | Cloudflare Workers |
 | 🗄️ Storage | JSONBin + Cloudflare KV |
-| 🛡️ Protection | Turnstile + CSP + Security Headers |
-| 🗨️ Discussion | giscus + GitHub Discussions |
-| 🎀 Character | Live2D / Cubism |
-| 🤖 Automation | GitHub Actions |
-| ⚡ Cache | Service Worker |
+| Protection | Turnstile + CSP + Security Headers |
+| Discussion | giscus + GitHub Discussions |
+| Character | Live2D / Cubism |
+| Automation | GitHub Actions |
+| Cache | Service Worker |
 | 🖥️ Local Dev | Node.js |
 
 </div>
 
 ---
 
-## 🚀 Launch Sequence
+## Launch Sequence
 
 ### 01 — Clone
 
@@ -332,14 +330,13 @@ http://127.0.0.1:8888
 ```text
 [ SYSTEM ] Server started.
 [ SYSTEM ] Static assets ready.
-[ SYSTEM ] Welcome to ZHAOKENING'S WORLD. 🌸
-```
+[ SYSTEM ] Welcome to ZHAOKENING'S WORLD. ```
 
 </div>
 
 ---
 
-## ☁️ Deployment Flow
+## Deployment Flow
 
 <div align="center">
 
@@ -362,14 +359,14 @@ http://127.0.0.1:8888
 │ SECURITY     │
 └──────┬───────┘
        ▼
-🌸 https://zhaokening.ccwu.cc/
+https://zhaokening.ccwu.cc/
 ```
 
 </div>
 
 ---
 
-## 🛡️ Security Layer
+## Security Layer
 
 ```text
 ONLINE EDGE
@@ -393,31 +390,31 @@ SECRETS
 └── Keep API Keys / Tokens / Passwords outside Git
 ```
 
-> 🔒 **Rule #1：任何 API Key、Token、密码或 Secret，都不应该提交到仓库。**
+> **Rule #1：任何 API Key、Token、密码或 Secret，都不应该提交到仓库。**
 
 ---
 
-## 📡 Live Status
+## Live Status
 
 <div align="center">
 
 | SYSTEM | STATUS |
 | :--- | :---: |
-| 🌐 [Website](https://zhaokening.ccwu.cc/) | 🟢 ONLINE |
+| [Website](https://zhaokening.ccwu.cc/) | 🟢 ONLINE |
 | 📱 Responsive | 🟢 READY |
-| 🎀 Live2D | 🟢 ENABLED |
-| 🎵 Music | 🟢 ENABLED |
-| 🧰 Toolbox | 🟢 ENABLED |
-| 💬 Guestbook | 🟢 ENABLED |
-| 🗨️ [Discussions](https://github.com/U1s1-king/king.github.io/discussions) | 🟢 ENABLED |
-| ⚡ Cache | 🟢 ENABLED |
-| 🤖 [Actions](https://github.com/U1s1-king/king.github.io/actions) | 🟢 ENABLED |
+| Live2D | 🟢 ENABLED |
+| Music | 🟢 ENABLED |
+| Toolbox | 🟢 ENABLED |
+| Guestbook | 🟢 ENABLED |
+| [Discussions](https://github.com/U1s1-king/king.github.io/discussions) | 🟢 ENABLED |
+| Cache | 🟢 ENABLED |
+| [Actions](https://github.com/U1s1-king/king.github.io/actions) | 🟢 ENABLED |
 
 </div>
 
 ---
 
-## 📈 GitHub Signal
+## GitHub Signal
 
 <div align="center">
 
@@ -439,7 +436,7 @@ SECRETS
 
 ---
 
-## 🌱 Philosophy
+## Philosophy
 
 <div align="center">
 
@@ -452,12 +449,12 @@ MAINTAINABLE    ──→  留给未来的自己继续折腾
 PERSONAL        ──→  最重要的是：它属于自己
 ```
 
-### **代码可以很理性，网站可以有一点浪漫。**
+### **Code can be rational. A website can still feel alive.**
 
 <br>
 
 <a href="https://zhaokening.ccwu.cc/">
-  <img src="https://img.shields.io/badge/🌸%20ENTER%20THE%20WORLD-zhaokening.ccwu.cc-F45D8A?style=for-the-badge&logoColor=white" alt="Enter Website">
+  <img src="https://img.shields.io/badge/%20ENTER%20THE%20WORLD-zhaokening.ccwu.cc-F45D8A?style=for-the-badge&logoColor=white" alt="Enter Website">
 </a>
 
 <a href="https://github.com/U1s1-king/king.github.io">
@@ -466,11 +463,9 @@ PERSONAL        ──→  最重要的是：它属于自己
 
 <br><br>
 
-**Made with 💗 · JavaScript · Sakura · Music · and a little bit of magic**
+**Made with · JavaScript · Sakura · Music · and a little bit of magic**
 
-🌸 **THIS IS ZHAOKENING'S WORLD** 🌸
-
-<br>
+**THIS IS ZHAOKENING'S WORLD** <br>
 
 <img src=".github/assets/sakura-footer.svg" width="100%" alt="">
 
