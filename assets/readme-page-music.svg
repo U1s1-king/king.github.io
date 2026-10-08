@@ -1,1 +1,40 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 250"><defs><linearGradient id="g"><stop stop-color="#fff9fb"/><stop offset="1" stop-color="#f3dce7"/></linearGradient></defs><rect x="2" y="2" width="896" height="246" rx="28" fill="url(#g)" stroke="#e3b0c3" stroke-width="2"/><text x="55" y="62" font-family="Arial,sans-serif" font-size="11" letter-spacing="5" fill="#986679">MUSIC</text><text x="55" y="112" font-family="Arial,sans-serif" font-size="32" font-weight="700" fill="#3d2932">LISTEN / RHYTHM / ATMOSPHERE</text><text x="55" y="150" font-family="Arial,sans-serif" font-size="11" letter-spacing="3" fill="#9a6a7b">CLICK THE VISUAL → ENTER THE SPACE</text><g stroke="#d96d98" stroke-width="7" stroke-linecap="round"><path d="M540 145V85"><animate attributeName="y2" values="85;60;85" dur="0.7s" repeatCount="indefinite"/></path><path d="M575 145V110"><animate attributeName="y2" values="110;80;110" dur="0.7899999999999999s" repeatCount="indefinite"/></path><path d="M610 145V135"><animate attributeName="y2" values="135;100;135" dur="0.8799999999999999s" repeatCount="indefinite"/></path><path d="M645 145V85"><animate attributeName="y2" values="85;120;85" dur="0.97s" repeatCount="indefinite"/></path><path d="M680 145V110"><animate attributeName="y2" values="110;60;110" dur="1.06s" repeatCount="indefinite"/></path><path d="M715 145V135"><animate attributeName="y2" values="135;80;135" dur="1.15s" repeatCount="indefinite"/></path><path d="M750 145V85"><animate attributeName="y2" values="85;100;85" dur="1.24s" repeatCount="indefinite"/></path><path d="M785 145V110"><animate attributeName="y2" values="110;120;110" dur="1.33s" repeatCount="indefinite"/></path><path d="M820 145V135"><animate attributeName="y2" values="135;60;135" dur="1.42s" repeatCount="indefinite"/></path></g><circle cx="845" cy="45" r="5" fill="#75ad9d"><animate attributeName="r" values="4;9;4" dur="1.8s" repeatCount="indefinite"/></circle></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 250">
+<defs>
+<linearGradient id="bg" x1="0" x2="1"><stop stop-color="#fff9fb"/><stop offset="1" stop-color="#f3dce7"/></linearGradient>
+<radialGradient id="disc"><stop stop-color="#f7c9da"/><stop offset=".62" stop-color="#d96d98"/><stop offset="1" stop-color="#9d526f"/></radialGradient>
+</defs>
+<rect x="2" y="2" width="896" height="246" rx="28" fill="url(#bg)" stroke="#e3b0c3" stroke-width="2"/>
+<text x="55" y="62" font-family="Arial,sans-serif" font-size="11" letter-spacing="5" fill="#986679">MUSIC</text>
+<text x="55" y="112" font-family="Arial,sans-serif" font-size="32" font-weight="700" fill="#3d2932">LISTEN / RHYTHM / ATMOSPHERE</text>
+<text x="55" y="150" font-family="Arial,sans-serif" font-size="11" letter-spacing="3" fill="#9a6a7b">CLICK THE RECORD → ENTER THE SPACE</text>
+
+<!-- turntable -->
+<g transform="translate(690 128)">
+  <circle r="88" fill="#fff1f6" stroke="#e2b1c3" stroke-width="2"/>
+  <g>
+    <circle r="67" fill="url(#disc)" stroke="#8f4b68" stroke-width="2"/>
+    <circle r="48" fill="none" stroke="#f6dce7" stroke-opacity=".42"/>
+    <circle r="31" fill="none" stroke="#f6dce7" stroke-opacity=".32"/>
+    <circle r="13" fill="#fff4f8" stroke="#a85d7a" stroke-width="2"/>
+    <circle r="4" fill="#75ad9d"/>
+    <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="6s" repeatCount="indefinite"/>
+  </g>
+  <path d="M55 -62 L88 -88 L105 -75" fill="none" stroke="#5d4650" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="105" cy="-75" r="7" fill="#d96d98"/>
+  <circle cx="105" cy="-75" r="11" fill="none" stroke="#d96d98" stroke-width="2" opacity=".55">
+    <animate attributeName="r" values="8;17;8" dur="1.5s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values=".7;0;.7" dur="1.5s" repeatCount="indefinite"/>
+  </circle>
+</g>
+
+<!-- signal waveform -->
+<g transform="translate(505 190)" fill="none" stroke="#d96d98" stroke-width="3" stroke-linecap="round">
+  <path d="M0 0 C18 -18 18 18 36 0 S54 -18 72 0 S90 18 108 0 S126 -18 144 0 S162 18 180 0">
+    <animate attributeName="stroke-dashoffset" from="0" to="-360" dur="2.2s" repeatCount="indefinite"/>
+  </path>
+  <path d="M0 0 C18 -10 18 10 36 0 S54 -10 72 0 S90 10 108 0 S126 -10 144 0 S162 10 180 0" opacity=".35"/>
+</g>
+
+<text x="845" y="45" text-anchor="middle" font-family="Arial,sans-serif" font-size="9" letter-spacing="2" fill="#986679">PLAY</text>
+<circle cx="845" cy="62" r="5" fill="#75ad9d"><animate attributeName="r" values="4;9;4" dur="1.8s" repeatCount="indefinite"/></circle>
+</svg>
