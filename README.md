@@ -8,7 +8,7 @@
 
 
 <a href="https://zhaokening.ccwu.cc/">
-  <img src="https://img.shields.io/website?down_message=offline&label=%F0%9F%8C%B8%20WEBSITE&logo=googlechrome&style=for-the-badge&up_color=F45D8A&up_message=ONLINE&url=https%3A%2F%2Fzhaokening.ccwu.cc%2F" alt="Website Status">
+  <img src="https://img.shields.io/website?down_message=offline&label=WEBSITE&logo=googlechrome&style=for-the-badge&up_color=F45D8A&up_message=ONLINE&url=https%3A%2F%2Fzhaokening.ccwu.cc%2F" alt="Website Status">
 </a>
 <a href="https://github.com/U1s1-king/king.github.io">
   <img src="https://img.shields.io/github/stars/U1s1-king/king.github.io?style=for-the-badge&logo=github&label=STARS&color=F45D8A" alt="GitHub Stars">
@@ -33,7 +33,7 @@
 
 <br><br>
 
-###  REPOSITORY TOPICS
+### REPOSITORY TOPICS
 
 <a href="https://github.com/topics/personal-website"><img src="https://img.shields.io/badge/personal--website-F45D8A?style=flat-square" alt="personal website"></a>
 <a href="https://github.com/topics/github-pages"><img src="https://img.shields.io/badge/github--pages-222?style=flat-square&logo=githubpages" alt="github pages"></a>
@@ -50,6 +50,8 @@
 > **A personal digital space for records, music, archives, tools and experiments.**
 
 <img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-divider.svg" width="100%" alt="animated divider">
+
+<img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-orbit.svg" width="100%" alt="animated orbit">
 
 </div>
 
@@ -104,6 +106,8 @@
 ### [CLICK HERE TO ENTER → zhaokening.ccwu.cc](https://zhaokening.ccwu.cc/) </div>
 
 ---
+
+<img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-wave.svg" width="100%" alt="animated wave">
 
 ## Experience Matrix
 
@@ -428,6 +432,8 @@ SECRETS
 </div>
 
 ---
+
+<img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-orbit.svg" width="100%" alt="animated orbit">
 
 ## Philosophy
 
