@@ -1,16 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 300">
-<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f8f5ff"/><stop offset="1" stop-color="#eadcf6"/></linearGradient><filter id="b"><feGaussianBlur stdDeviation="18"/></filter></defs>
-<rect x="8" y="8" width="504" height="284" rx="28" fill="url(#g)" stroke="#c9b2dc" stroke-width="2"/>
-<circle cx="405" cy="94" r="70" fill="#b994d2" opacity=".16" filter="url(#b)"/>
-<g fill="none" stroke="#9b73b7" stroke-linecap="round">
-<path d="M48 205 Q105 135 162 205 T276 205 T390 205 T504 205" stroke-width="3">
-<animate attributeName="d" dur="3s" repeatCount="indefinite" values="M48 205 Q105 135 162 205 T276 205 T390 205 T504 205;M48 205 Q105 255 162 205 T276 205 T390 205 T504 205;M48 205 Q105 135 162 205 T276 205 T390 205 T504 205"/>
-</path>
-<path d="M48 220 Q105 170 162 220 T276 220 T390 220 T504 220" opacity=".35" stroke-width="2"/>
-</g>
-<g fill="#9b73b7"><circle cx="105" cy="176" r="5"><animate attributeName="cy" values="176;234;176" dur="1.5s" repeatCount="indefinite"/></circle><circle cx="218" cy="205" r="5"><animate attributeName="cy" values="205;160;205" dur="1.8s" repeatCount="indefinite"/></circle><circle cx="340" cy="182" r="5"><animate attributeName="cy" values="182;232;182" dur="1.3s" repeatCount="indefinite"/></circle></g>
-<text x="52" y="68" font-family="Arial,sans-serif" font-size="14" letter-spacing="4" fill="#786582">02 / LISTEN</text>
-<text x="52" y="118" font-family="Arial,sans-serif" font-size="38" font-weight="700" fill="#33273b">MUSIC</text>
-<text x="52" y="148" font-family="Arial,sans-serif" font-size="15" fill="#716477">playlists · sources · late-night loops</text>
-<text x="52" y="260" font-family="Arial,sans-serif" font-size="12" letter-spacing="3" fill="#86649a">PLAY / FLOW / REPEAT</text>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 300"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f8f5ff"/><stop offset="1" stop-color="#eadcf6"/></linearGradient></defs><rect x="8" y="8" width="504" height="284" rx="28" fill="url(#g)" stroke="#c9b2dc" stroke-width="2"/><circle cx="405" cy="94" r="70" fill="#b994d2" opacity=".16"/><g fill="none" stroke="#9b73b7" stroke-linecap="round"><path d="M48 205 Q105 135 162 205 T276 205 T390 205 T504 205" stroke-width="3"><animate attributeName="d" dur="2s" repeatCount="indefinite" values="M48 205 Q105 135 162 205 T276 205 T390 205 T504 205;M48 205 Q105 270 162 205 T276 205 T390 205 T504 205;M48 205 Q105 135 162 205 T276 205 T390 205 T504 205"/></path><path d="M48 220 Q105 170 162 220 T276 220 T390 220 T504 220" opacity=".35" stroke-width="2"/></g><g fill="#9b73b7"><circle cx="105" cy="176" r="5"><animate attributeName="cy" values="176;234;176" dur="1.2s" repeatCount="indefinite"/></circle><circle cx="218" cy="205" r="5"><animate attributeName="cy" values="205;160;205" dur="1.5s" repeatCount="indefinite"/></circle><circle cx="340" cy="182" r="5"><animate attributeName="cy" values="182;232;182" dur="1.1s" repeatCount="indefinite"/></circle></g><text x="52" y="68" font-family="Arial,sans-serif" font-size="14" letter-spacing="4" fill="#786582">02 / LISTEN</text><text x="52" y="118" font-family="Arial,sans-serif" font-size="38" font-weight="700" fill="#33273b">MUSIC</text><text x="52" y="148" font-family="Arial,sans-serif" font-size="15" fill="#716477">playlists · sources · late-night loops</text><text x="52" y="260" font-family="Arial,sans-serif" font-size="12" letter-spacing="3" fill="#86649a">PLAY / FLOW / REPEAT</text></svg>
