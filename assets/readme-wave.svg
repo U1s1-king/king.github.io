@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120">
+<defs><linearGradient id="w" x1="0" x2="1"><stop stop-color="#e57397" stop-opacity="0"/><stop offset=".5" stop-color="#e57397"/><stop offset="1" stop-color="#9b78c5" stop-opacity="0"/></linearGradient></defs>
+<path d="M0 60 Q150 20 300 60 T600 60 T900 60 T1200 60" fill="none" stroke="url(#w)" stroke-width="2">
+<animate attributeName="d" dur="5s" repeatCount="indefinite" values="M0 60 Q150 20 300 60 T600 60 T900 60 T1200 60;M0 60 Q150 100 300 60 T600 60 T900 60 T1200 60;M0 60 Q150 20 300 60 T600 60 T900 60 T1200 60"/>
+</path>
+<circle cx="0" cy="60" r="3" fill="#e57397"><animate attributeName="cx" values="0;1200" dur="4s" repeatCount="indefinite"/></circle>
+</svg>
