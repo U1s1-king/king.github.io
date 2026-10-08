@@ -24,6 +24,27 @@
 
 ---
 
+## ZHAOKENING OS
+
+<div align="center">
+
+<table>
+<tr>
+<td width="50%" align="center"><a href="https://zhaokening.ccwu.cc/Journal.html"><img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-os-journal.svg" width="100%" alt="Journal animated module"></a></td>
+<td width="50%" align="center"><a href="https://zhaokening.ccwu.cc/music.html"><img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-os-music.svg" width="100%" alt="Music animated module"></a></td>
+</tr>
+<tr>
+<td width="50%" align="center"><a href="https://zhaokening.ccwu.cc/Tools.html"><img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-os-tools.svg" width="100%" alt="Tools animated module"></a></td>
+<td width="50%" align="center"><a href="https://zhaokening.ccwu.cc/"><img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-os-live2d.svg" width="100%" alt="Live2D animated module"></a></td>
+</tr>
+</table>
+
+**MOVE → WATCH → CLICK → ENTER**
+
+</div>
+
+---
+
 ## Navigation
 
 | Space | Entry |
@@ -63,13 +84,7 @@
 
 <div align="center">
 
-<a href="https://zhaokening.ccwu.cc/">
-  <img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/og-image.png" width="94%" alt="ZHAOKENING website preview">
-</a>
-
-<br><br>
-
-<a href="https://zhaokening.ccwu.cc/">ENTER THE DIGITAL SPACE →</a>
+<a href="https://zhaokening.ccwu.cc/"><img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/og-image.png" width="94%" alt="ZHAOKENING website preview"></a>
 
 </div>
 
