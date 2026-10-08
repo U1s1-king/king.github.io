@@ -1,18 +1,11 @@
 <div align="center">
 
-<img src=".github/assets/sakura-banner.svg" width="100%" alt="ZHAOKENING'S WORLD">
-
 <a href="https://zhaokening.ccwu.cc/">
   <img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-hero.svg" width="100%" alt="ZHAOKENING personal digital space">
 </a>
 
 <br>
 
-<a href="https://zhaokening.ccwu.cc/" target="_blank">
-  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=800&size=30&duration=2800&pause=900&color=F45D8A&center=true&vCenter=true&repeat=true&width=900&lines=%F0%9F%8C%B8+WELCOME+TO+ZHAOKENING%27S+WORLD+%F0%9F%8C%B8;%E6%A8%B1%E8%8A%B1%E7%89%A9%E8%AA%9E+%C2%B7+%E4%B8%80%E5%80%8B%E5%B1%AC%E6%96%BC%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B8%E5%AD%97%E7%A9%BA%E9%96%93;Record.+Create.+Explore.+Keep+Growing.;https%3A%2F%2Fzhaokening.ccwu.cc%2F" alt="Typing SVG">
-</a>
-
-<br><br>
 
 <a href="https://zhaokening.ccwu.cc/">
   <img src="https://img.shields.io/website?down_message=offline&label=%F0%9F%8C%B8%20WEBSITE&logo=googlechrome&style=for-the-badge&up_color=F45D8A&up_message=ONLINE&url=https%3A%2F%2Fzhaokening.ccwu.cc%2F" alt="Website Status">
@@ -40,7 +33,7 @@
 
 <br><br>
 
-### 🏷️ REPOSITORY TOPICS
+###  REPOSITORY TOPICS
 
 <a href="https://github.com/topics/personal-website"><img src="https://img.shields.io/badge/personal--website-F45D8A?style=flat-square" alt="personal website"></a>
 <a href="https://github.com/topics/github-pages"><img src="https://img.shields.io/badge/github--pages-222?style=flat-square&logo=githubpages" alt="github pages"></a>
@@ -52,11 +45,11 @@
 <a href="https://github.com/topics/web-design"><img src="https://img.shields.io/badge/web--design-E88BB0?style=flat-square" alt="web design"></a>
 <a href="https://github.com/topics/sakura"><img src="https://img.shields.io/badge/sakura-F7A8C0?style=flat-square" alt="sakura"></a><br><br>
 
-> ### 「春风同花皆闻汝等之声」
+> 「春风同花皆闻汝等之声」
 >
-> **记录生活 · 收藏热爱 · 聆听音乐 · 制造一点浪漫**
+> **A personal digital space for records, music, archives, tools and experiments.**
 
-<a href="#-quick-navigation">ENTER THE WORLD </a>
+<img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-divider.svg" width="100%" alt="animated divider">
 
 </div>
 
@@ -103,7 +96,7 @@
 <div align="center">
 
 <a href="https://zhaokening.ccwu.cc/">
-  <img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/og-image.png" width="94%" alt="樱花物语 Website Preview">
+  <img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/og-image.png" width="94%" alt="ZHAOKENING website preview">
 </a>
 
 <br><br>
@@ -118,21 +111,21 @@
 <tr>
 <td width="33%" align="center">
 
-### VISUAL
+### VISUAL SYSTEM
 
 樱花主题 · 动态视觉 · 响应式布局
 
 </td>
 <td width="33%" align="center">
 
-### LIVE2D
+### LIVE2D SYSTEM
 
 互动角色 · 拖拽 · 换装 · 拍照
 
 </td>
 <td width="33%" align="center">
 
-### MUSIC
+### MUSIC SYSTEM
 
 在线播放 · 多源音乐体验
 
@@ -141,21 +134,21 @@
 <tr>
 <td align="center">
 
-### JOURNAL
+### JOURNAL SYSTEM
 
 日记 · 随笔 · 生活碎片
 
 </td>
 <td align="center">
 
-### TOOLBOX
+### TOOLBOX SYSTEM
 
 实用工具 · API · 小实验
 
 </td>
 <td align="center">
 
-### CONNECT
+### CONNECT SYSTEM
 
 留言板 · 评论 · Discussions
 
@@ -164,21 +157,21 @@
 <tr>
 <td align="center">
 
-### FAST
+### PERFORMANCE
 
 Service Worker · Cache
 
 </td>
 <td align="center">
 
-### EDGE
+### EDGE DELIVERY
 
 Cloudflare · CDN · HTTPS
 
 </td>
 <td align="center">
 
-### AUTO
+### AUTOMATION
 
 GitHub Actions · 自动化任务
 
@@ -192,16 +185,16 @@ GitHub Actions · 自动化任务
 
 <div align="center">
 
-### NOT DECORATION — PART OF THE WORLD
+### PART OF THE WORLD
 
 | UNIT | CHARACTER | STATUS |
 | :---: | :--- | :---: |
-| `01` | 高松燈 | 🟢 ACTIVE |
-| `02` | 千早愛音 | 🟢 ACTIVE |
-| `03` | 🎸 要楽奈 | 🟢 ACTIVE |
-| `04` | 🌙 長崎そよ | 🟢 ACTIVE |
-| `05` | 椎名立希 | 🟢 ACTIVE |
-| `??` | MORE TO COME | 🔄 EVOLVING |
+| `01` | 高松燈 |  ACTIVE |
+| `02` | 千早愛音 |  ACTIVE |
+| `03` |  要楽奈 |  ACTIVE |
+| `04` |  長崎そよ |  ACTIVE |
+| `05` | 椎名立希 |  ACTIVE |
+| `??` | MORE TO COME |  EVOLVING |
 
 <br>
 
@@ -245,7 +238,7 @@ ROOT /
 ## Architecture
 
 ```text
-                              👤 USER
+                               USER
                                 │
                                 ▼
                      ┌─────────────────────┐
@@ -288,17 +281,17 @@ ROOT /
 
 | LAYER | TECHNOLOGY |
 | :--- | :--- |
-| 🎨 Frontend | HTML5 · CSS3 · Vanilla JavaScript |
+| Frontend | HTML5 · CSS3 · Vanilla JavaScript |
 | Hosting | GitHub Pages |
 | Edge | Cloudflare |
 | Serverless | Cloudflare Workers |
-| 🗄️ Storage | JSONBin + Cloudflare KV |
+| Storage | JSONBin + Cloudflare KV |
 | Protection | Turnstile + CSP + Security Headers |
 | Discussion | giscus + GitHub Discussions |
 | Character | Live2D / Cubism |
 | Automation | GitHub Actions |
 | Cache | Service Worker |
-| 🖥️ Local Dev | Node.js |
+| Local Dev | Node.js |
 
 </div>
 
@@ -400,15 +393,15 @@ SECRETS
 
 | SYSTEM | STATUS |
 | :--- | :---: |
-| [Website](https://zhaokening.ccwu.cc/) | 🟢 ONLINE |
-| 📱 Responsive | 🟢 READY |
-| Live2D | 🟢 ENABLED |
-| Music | 🟢 ENABLED |
-| Toolbox | 🟢 ENABLED |
-| Guestbook | 🟢 ENABLED |
-| [Discussions](https://github.com/U1s1-king/king.github.io/discussions) | 🟢 ENABLED |
-| Cache | 🟢 ENABLED |
-| [Actions](https://github.com/U1s1-king/king.github.io/actions) | 🟢 ENABLED |
+| [Website](https://zhaokening.ccwu.cc/) |  ONLINE |
+|  Responsive |  READY |
+| Live2D |  ENABLED |
+| Music |  ENABLED |
+| Toolbox |  ENABLED |
+| Guestbook |  ENABLED |
+| [Discussions](https://github.com/U1s1-king/king.github.io/discussions) |  ENABLED |
+| Cache |  ENABLED |
+| [Actions](https://github.com/U1s1-king/king.github.io/actions) |  ENABLED |
 
 </div>
 
@@ -458,12 +451,12 @@ PERSONAL        ──→  最重要的是：它属于自己
 </a>
 
 <a href="https://github.com/U1s1-king/king.github.io">
-  <img src="https://img.shields.io/badge/★%20EXPLORE%20THE%20CODE-GITHUB-171515?style=for-the-badge&logo=github" alt="Explore Source">
+  <img src="https://img.shields.io/badge/%20EXPLORE%20THE%20CODE-GITHUB-171515?style=for-the-badge&logo=github" alt="Explore Source">
 </a>
 
 <br><br>
 
-**Made with · JavaScript · Sakura · Music · and a little bit of magic**
+**Made with JavaScript, Sakura, Music and a little bit of magic.**
 
 **THIS IS ZHAOKENING'S WORLD** <br>
 
