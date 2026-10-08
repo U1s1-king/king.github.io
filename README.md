@@ -109,79 +109,41 @@
 
 <img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-wave.svg" width="100%" alt="animated wave">
 
-## Experience Matrix
+## Interactive Cards
+
+<div align="center">
 
 <table>
 <tr>
 <td width="33%" align="center">
 
-### VISUAL SYSTEM
-
-樱花主题 · 动态视觉 · 响应式布局
-
-</td>
-<td width="33%" align="center">
-
-### LIVE2D SYSTEM
-
-互动角色 · 拖拽 · 换装 · 拍照
+<a href="https://zhaokening.ccwu.cc/Journal.html">
+  <img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-card-journal.svg" width="100%" alt="Open Journal">
+</a>
 
 </td>
 <td width="33%" align="center">
 
-### MUSIC SYSTEM
-
-在线播放 · 多源音乐体验
-
-</td>
-</tr>
-<tr>
-<td align="center">
-
-### JOURNAL SYSTEM
-
-日记 · 随笔 · 生活碎片
+<a href="https://zhaokening.ccwu.cc/music.html">
+  <img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-card-music.svg" width="100%" alt="Open Music">
+</a>
 
 </td>
-<td align="center">
+<td width="33%" align="center">
 
-### TOOLBOX SYSTEM
-
-实用工具 · API · 小实验
-
-</td>
-<td align="center">
-
-### CONNECT SYSTEM
-
-留言板 · 评论 · Discussions
-
-</td>
-</tr>
-<tr>
-<td align="center">
-
-### PERFORMANCE
-
-Service Worker · Cache
-
-</td>
-<td align="center">
-
-### EDGE DELIVERY
-
-Cloudflare · CDN · HTTPS
-
-</td>
-<td align="center">
-
-### AUTOMATION
-
-GitHub Actions · 自动化任务
+<a href="https://zhaokening.ccwu.cc/Tools.html">
+  <img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-card-tools.svg" width="100%" alt="Open Tools">
+</a>
 
 </td>
 </tr>
 </table>
+
+**CLICK A CARD → WATCH THE MOTION → ENTER THE SPACE**
+
+</div>
+
+> These cards are intentionally visual: the motion is built into SVG, while the click target takes you directly to the corresponding page.
 
 ---
 
