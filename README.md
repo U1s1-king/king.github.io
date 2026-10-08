@@ -17,7 +17,7 @@
 **A personal digital space for records, music, archives, tools, games and night-time viewing.**
 
 <a href="https://zhaokening.ccwu.cc/">
-  <img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-core.svg" width="100%" alt="ZHAOKENING animated core">
+  <img src=./og-image.png width="100%" alt="ZHAOKENING animated core">
 </a>
 
 </div>

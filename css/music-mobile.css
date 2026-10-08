@@ -1015,7 +1015,7 @@
   }
   .detail-view .mp-settings .mp-row-btn::after {
     content: '\f054';
-    font-family: 'Font Awesome 6 Free';
+    font-family: 'Font Awesome 6 Free', serif;
     font-weight: 900;
     position: absolute;
     right: 14px;
