@@ -24,69 +24,37 @@
 
 ---
 
-## ZHAOKENING OS
+## JOURNAL
 
-<div align="center">
+<a href="https://zhaokening.ccwu.cc/Journal.html"><img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-page-journal.svg" width="100%" alt="Animated Journal entrance"></a>
 
-<table>
-<tr>
-<td width="50%" align="center"><a href="https://zhaokening.ccwu.cc/Journal.html"><img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-os-journal.svg" width="100%" alt="Journal animated module"></a></td>
-<td width="50%" align="center"><a href="https://zhaokening.ccwu.cc/music.html"><img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-os-music.svg" width="100%" alt="Music animated module"></a></td>
-</tr>
-<tr>
-<td width="50%" align="center"><a href="https://zhaokening.ccwu.cc/Tools.html"><img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-os-tools.svg" width="100%" alt="Tools animated module"></a></td>
-<td width="50%" align="center"><a href="https://zhaokening.ccwu.cc/"><img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-os-live2d.svg" width="100%" alt="Live2D animated module"></a></td>
-</tr>
-</table>
+## MUSIC
 
-**MOVE → WATCH → CLICK → ENTER**
+<a href="https://zhaokening.ccwu.cc/music.html"><img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-page-music.svg" width="100%" alt="Animated Music entrance"></a>
 
-</div>
+## ARCHIVES
 
----
+<a href="https://zhaokening.ccwu.cc/Archives.html"><img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-page-archives.svg" width="100%" alt="Animated Archives entrance"></a>
 
-## Navigation
+## TOOLS
 
-| Space | Entry |
-| :--- | :--- |
-| Journal | [Journal](https://zhaokening.ccwu.cc/Journal.html) |
-| Music | [Music](https://zhaokening.ccwu.cc/music.html) |
-| Tools | [Tools](https://zhaokening.ccwu.cc/Tools.html) |
-| Archive | [Archives](https://zhaokening.ccwu.cc/Archives.html) |
-| Guestbook | [Guestbook](https://zhaokening.ccwu.cc/Journal.html#guestbook) |
-| Source | [GitHub](https://github.com/U1s1-king/king.github.io) |
+<a href="https://zhaokening.ccwu.cc/Tools.html"><img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-page-tools.svg" width="100%" alt="Animated Tools entrance"></a>
 
----
+## LIVE2D
 
-## System
+<a href="https://zhaokening.ccwu.cc/"><img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-page-live2d.svg" width="100%" alt="Animated Live2D entrance"></a>
 
-<img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-system.svg" width="100%" alt="Animated system monitor">
+## GUESTBOOK
 
-> The README is intentionally lightweight. The motion system lives in standalone SVG assets so the page can stay clean while the visuals remain alive.
+<a href="https://zhaokening.ccwu.cc/Journal.html#guestbook"><img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-page-guestbook.svg" width="100%" alt="Animated Guestbook entrance"></a>
 
----
+## DISCUSSIONS
 
-## World
+<a href="https://github.com/U1s1-king/king.github.io/discussions"><img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-page-discussions.svg" width="100%" alt="Animated Discussions entrance"></a>
 
-<a href="https://zhaokening.ccwu.cc/Journal.html"><img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-network.svg" width="100%" alt="Animated world network"></a>
+## SOURCE
 
-<div align="center">RECORD → LISTEN → EXPLORE → INTERACT</div>
-
----
-
-## Live2D
-
-<img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-live2d.svg" width="100%" alt="Animated Live2D space">
-
----
-
-## Website
-
-<div align="center">
-
-<a href="https://zhaokening.ccwu.cc/"><img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/og-image.png" width="94%" alt="ZHAOKENING website preview"></a>
-
-</div>
+<a href="https://github.com/U1s1-king/king.github.io"><img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-page-source.svg" width="100%" alt="Animated Source entrance"></a>
 
 ---
 
@@ -103,9 +71,7 @@ ROOT
 └── DISCUSSIONS
 ```
 
-The site is a static-first frontend built with HTML, CSS and Vanilla JavaScript, deployed through GitHub Pages with Cloudflare at the edge. Interactive backend services are isolated behind serverless endpoints.
-
----
+Static-first frontend: HTML, CSS and Vanilla JavaScript. Deployed through GitHub Pages with Cloudflare at the edge, with serverless endpoints for interactive services.
 
 ## Stack
 
@@ -121,8 +87,6 @@ Automation    GitHub Actions
 Cache         Service Worker
 ```
 
----
-
 ## Development
 
 ```bash
@@ -137,15 +101,12 @@ Local entry:
 http://127.0.0.1:8888
 ```
 
----
-
 ## Design
 
-- Minimal README, animated assets.
-- Motion is implemented with standalone SVG animation.
-- Clickable visual modules route directly to the real website.
-- Typography and layout stay restrained; animation carries the atmosphere.
-- The visual language combines soft sakura tones, orbital geometry, signal lines and digital-system UI.
+- Each page has its own animated visual entrance.
+- The SVG itself is the clickable navigation surface.
+- Every module uses a different motion language while sharing the same CORE SIGNAL visual system.
+- README stays concise; animation carries the atmosphere.
 
 > **Code can be rational. A website can still feel alive.**
 
