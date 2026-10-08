@@ -24,31 +24,31 @@
 
 ---
 
-## HOME
+<div align="center">\n\n**SITE MAP / 07 SPACES**  ·  EACH ONE IS A DOOR\n\n<img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-divider.svg" width="100%" alt="Animated divider">\n\n</div>\n\n## 01 / HOME
 
 <a href="https://zhaokening.ccwu.cc/home.html"><img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-page-home.svg" width="100%" alt="Animated Home entrance"></a>
 
-## JOURNAL
+## 02 / JOURNAL
 
 <a href="https://zhaokening.ccwu.cc/Journal.html"><img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-page-journal.svg" width="100%" alt="Animated Journal entrance"></a>
 
-## ARCHIVES
+## 03 / ARCHIVES
 
 <a href="https://zhaokening.ccwu.cc/Archives.html"><img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-page-archives.svg" width="100%" alt="Animated Archives entrance"></a>
 
-## MUSIC
+## 04 / MUSIC
 
 <a href="https://zhaokening.ccwu.cc/music.html"><img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-page-music.svg" width="100%" alt="Animated Music entrance"></a>
 
-## TOOLS
+## 05 / TOOLS
 
 <a href="https://zhaokening.ccwu.cc/Tools.html"><img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-page-tools.svg" width="100%" alt="Animated Tools entrance"></a>
 
-## GAMES
+## 06 / GAMES
 
 <a href="https://zhaokening.ccwu.cc/Games.html"><img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-page-games.svg" width="100%" alt="Animated Games entrance"></a>
 
-## TV
+## 07 / TV
 
 <a href="https://zhaokening.ccwu.cc/TV.html"><img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-page-tv.svg" width="100%" alt="Animated TV entrance"></a>
 
