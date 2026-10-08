@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 180">
+<defs>
+ <linearGradient id="g" x1="0" x2="1"><stop stop-color="#e57397" stop-opacity=".1"/><stop offset=".5" stop-color="#e57397"/><stop offset="1" stop-color="#9b78c5" stop-opacity=".1"/></linearGradient>
+ <filter id="b"><feGaussianBlur stdDeviation="3"/></filter>
+</defs>
+<rect width="1200" height="180" fill="none"/>
+<ellipse cx="600" cy="90" rx="360" ry="55" fill="none" stroke="url(#g)" stroke-width="1.5"/>
+<ellipse cx="600" cy="90" rx="250" ry="34" fill="none" stroke="#e57397" stroke-opacity=".18"/>
+<circle cx="240" cy="90" r="5" fill="#e57397" filter="url(#b)"><animate attributeName="cx" values="240;960;240" dur="9s" repeatCount="indefinite"/></circle>
+<circle cx="960" cy="90" r="3" fill="#9b78c5"><animate attributeName="cx" values="960;240;960" dur="7s" repeatCount="indefinite"/></circle>
+<circle cx="600" cy="90" r="3" fill="#e57397"><animate attributeName="r" values="2;7;2" dur="2.4s" repeatCount="indefinite"/></circle>
+<path d="M140 125 C300 30 420 150 600 70 S900 35 1060 120" fill="none" stroke="#e57397" stroke-opacity=".22">
+ <animate attributeName="d" dur="6s" repeatCount="indefinite" values="M140 125 C300 30 420 150 600 70 S900 35 1060 120;M140 80 C300 150 420 30 600 110 S900 145 1060 60;M140 125 C300 30 420 150 600 70 S900 35 1060 120"/>
+</path>
+</svg>
