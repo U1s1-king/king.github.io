@@ -47,13 +47,15 @@
 
 ## World
 
-<img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-timeline.svg" width="100%" alt="Animated project timeline">
+<a href="https://zhaokening.ccwu.cc/Journal.html"><img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-network.svg" width="100%" alt="Animated world network"></a>
 
-<div align="center">
+<div align="center">RECORD → LISTEN → EXPLORE → INTERACT</div>
 
-**RECORD → LISTEN → EXPLORE → EVOLVE**
+---
 
-</div>
+## Live2D
+
+<img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-live2d.svg" width="100%" alt="Animated Live2D space">
 
 ---
 
@@ -139,7 +141,7 @@ http://127.0.0.1:8888
 
 <br><br>
 
-<img src=".github/assets/sakura-footer.svg" width="100%" alt="Sakura footer">
+<img src="https://raw.githubusercontent.com/U1s1-king/king.github.io/main/assets/readme-sakura.svg" width="100%" alt="Animated sakura footer">
 
 **THIS IS ZHAOKENING'S WORLD**
 
