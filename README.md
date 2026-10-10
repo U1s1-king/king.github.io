@@ -16,14 +16,18 @@
 
 **A little corner of the internet, built to feel like its own world.**
 
-Not a product dashboard. Not just a collection of pages.  
-A personal space for things to remember, sounds to return to, tools to use, and places to explore.
+A personal website built as a small digital world — part journal, part archive, part playground.  
+Browse the pages below, or jump straight to what you came for.
 
 <a href="https://zhaokening.ccwu.cc/">
   <img src="./og-image.png" width="100%" alt="Enter the ZHAOKENING digital space">
 </a>
 
 **[ ENTER THE SPACE ↗ ](https://zhaokening.ccwu.cc/)**
+
+<sub>QUICK NAVIGATION</sub>
+
+[HOME](https://zhaokening.ccwu.cc/home.html) · [JOURNAL](https://zhaokening.ccwu.cc/Journal.html) · [ARCHIVES](https://zhaokening.ccwu.cc/Archives.html) · [MUSIC](https://zhaokening.ccwu.cc/music.html) · [TOOLS](https://zhaokening.ccwu.cc/Tools.html) · [GAMES](https://zhaokening.ccwu.cc/Games.html) · [TV](https://zhaokening.ccwu.cc/TV.html)
 
 </div>
 
