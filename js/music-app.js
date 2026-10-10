@@ -60,6 +60,10 @@
     return wrap;
   }
 
+  /* #coverInner 的 click 唯一入口在本文件，别处不得再绑。
+     历史上 music-plus.js 也往它挂过 openLyricPage()，两边都带
+     detailOpen() 守卫，谁先执行谁赢 —— 点封面行为随机。现已收敛到这里：
+     点封面 = 开全屏播放页；歌词页由播放页内的 .fs-lyric 按钮切换。 */
   var opening = false;
   function openFull() {
     /* 阶段 B1：桌面端也要有播放页。以前这一句 !narrow() 直接把桌面挡掉，
@@ -110,6 +114,18 @@
     if (collapse) collapse.addEventListener('click', function () { handle.close(); });
     var list = q('.fs-list', wrap);
     if (list) list.addEventListener('click', function () {
+      /* 窄屏没有可开的抽屉（歌单已在首屏，#plDrawer 整块 display:none）：
+         收起播放页，滚到「我的歌单」。以前这里是 find #plDrawerOpen 再 click()，
+         靠 music-mobile.js 的捕获拦截把它改道 —— 一次点击走两条路。 */
+      if (narrow()) {
+        if (window.AppShell.closeDetail) window.AppShell.closeDetail();
+        setTimeout(function () {
+          var host = byId('mmMineSection');
+          if (host) host.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 280);
+        return;
+      }
+      /* 桌面端：抽屉是歌单的唯一入口，照旧交给内联脚本那份实现 */
       var t = byId('plDrawerOpen');
       if (t) t.click();
     });

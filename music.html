@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <script src="js/version.js?v=202609297"></script>
-    <script src="js/app-shell.js?v=202609297"></script>
+    <script src="js/version.js?v=202609298"></script>
+    <script src="js/app-shell.js?v=202609298"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <link rel="stylesheet" href="css/style.css?v=202609297">
-    <link rel="stylesheet" href="css/sidebar.css?v=202609297">
+    <link rel="stylesheet" href="css/style.css?v=202609298">
+    <link rel="stylesheet" href="css/sidebar.css?v=202609298">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#ffb6c1">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -22,14 +22,17 @@
     <title> 音乐 · 本喵的播放器</title>
     <link rel="canonical" href="https://zhaokening.ccwu.cc/music.html">
     
-    <link rel="stylesheet" href="css/all.min.css?v=202609297">
-    <link rel="stylesheet" href="css/music.css?v=202609297">
-    <link rel="stylesheet" href="css/anim.css?v=202609297">
-    <link rel="stylesheet" href="css/mobile.css?v=202609297">
-    <link rel="stylesheet" href="css/app.css?v=202609297">
+    <link rel="stylesheet" href="css/fa-base.subset.css?v=202609298">
+
+    
+    <link rel="stylesheet" href="css/fa.music.subset.css?v=202609298">
+    <link rel="stylesheet" href="css/music.css?v=202609298">
+    <link rel="stylesheet" href="css/anim.css?v=202609298">
+    <link rel="stylesheet" href="css/mobile.css?v=202609298">
+    <link rel="stylesheet" href="css/app.css?v=202609298">
     <!-- 音乐页移动端（≤768px）专用层：必须排在 app.css 之后，成为本页最后一个样式表，
          这样同特异性下它的规则恒胜，不需要靠 !important。详见文件头注释。 -->
-    <link rel="stylesheet" href="css/music-mobile.css?v=202609297">
+    <link rel="stylesheet" href="css/music-mobile.css?v=202609298">
     <meta name="description" content="(O_o)??音乐盒：在线搜歌、本地音乐播放、多平台搜索与播放器自由调节。">
     <meta name="keywords" content="(O_o)??,音乐,音乐盒,在线搜歌,播放器,歌词">
     <meta name="author" content="king">
@@ -97,7 +100,12 @@
 
     <!-- ===== 首屏内容区（阶段二 T2.1）=====
          参照 Spotify Mobile UI Kit 的首页：区块标题 +「全部」入口 + 横向卡片行，
-         下面接一个纵向列表。桌面端由 css/music-mobile.css 整块隐藏，版式不变。
+         下面接一个纵向列表。
+         【桌面端隐藏】.mm-home 由 css/music-mobile.css 顶部的
+         `.mm-home, .mm-mini { display: none; }` 在 >768px 隐掉，移动端再由
+         同文件的 @media (max-width:768px) 显示（.mm-home{display:block}）。
+         那两条兜底不可删：本块样式全部写在窄屏媒体查询里，不藏就会以
+         「无样式 div」的形态出现在桌面版首屏。
          「我的歌单」区块自己不带内容：#mmListHost 由 js/music-mobile.js 在移动端
          把抽屉里的 #plViews 与 .playlist-scroll **真实节点**搬进来 ——
          播放引擎、视图过滤、点击播歌的事件绑定全部原样保留，不重新渲染。 -->
@@ -189,7 +197,10 @@
 
     <!-- ===== 页内迷你播放条（阶段二 T2.1）=====
          移动端：底部 tab 之上常驻，点它打开全屏播放页（复用已有的 .fs-wrap 路径）。
-         桌面端由 css/music-mobile.css 隐藏。
+         【桌面端隐藏】由 css/music-mobile.css 顶部的
+         `.mm-home, .mm-mini { display: none; }` 在 >768px 隐掉，
+         移动端再由同文件的 @media (max-width:768px) 显示（.mm-mini{display:flex}）。
+         兜底两条不可删，理由见文件头注释。
          在外壳（index.html）里时，本页自己的 .bot-tab 被 html.in-shell 隐藏，
          迷你条会自动落到底部（见 css 内的 in-shell 分支）。 -->
     <div class="mm-mini" id="mmMini" hidden>
@@ -339,33 +350,47 @@
 </div>
 <div class="toast" id="toastMsg"></div>
 
-    <script src="js/common.js?v=202609297"></script>
-    <script src="js/anim.js?v=202609297"></script>
-    <script src="js/music-api.js?v=202609297"></script>
-        <script src="js/music-bundle.js?v=202609297"></script>
-    <script src="js/music-app.js?v=202609297"></script>
-    <script src="js/music-plus.js?v=202609297"></script>
+    <script src="js/common.js?v=202609298"></script>
+    <script src="js/anim.js?v=202609298"></script>
+    <script src="js/music-api.js?v=202609298"></script>
+        <script src="js/music-bundle.js?v=202609298"></script>
+    <script src="js/music-app.js?v=202609298"></script>
+    <script src="js/music-plus.js?v=202609298"></script>
     <!-- 阶段二：音乐页移动端布局层。只被本页引用；在 js/music-app.js 之后加载，
          这样 AppShell 与播放引擎都已就绪。桌面端不执行任何搬运动作。 -->
-    <script src="js/music-mobile.js?v=202609297"></script>
+    <script src="js/music-mobile.js?v=202609298"></script>
     <!-- 阶段五：二级页集合（艺人/专辑详情、设置、分享卡片、歌词页）。
          全部走 AppShell.openDetail()，与 TV / 日记 / 归档同一套机制。 -->
-    <script src="js/music-pages.js?v=202609297"></script>
-    <script src="js/sidebar.js?v=202609297"></script>
-    <script src="js/particles-config.js?v=202609297"></script>
-    <script src="js/live2d-fix.js?v=202609297" defer></script>
-    <script src="https://sakura-live2d.pages.dev/live2d/waifu.js?v=202609297" defer></script>
-    <script src="js/live2d-app.js?v=202609297" defer></script>
-    <script src="js/music-fx.js?v=202609297" defer></script>
-    <script src="js/live2d-sing.js?v=202609297" defer></script>
+    <script src="js/music-pages.js?v=202609298"></script>
+    <script src="js/sidebar.js?v=202609298"></script>
+    <script src="js/particles-config.js?v=202609298"></script>
+    <script src="js/live2d-fix.js?v=202609298" defer></script>
+    <script src="https://sakura-live2d.pages.dev/live2d/waifu.js?v=202609298" defer></script>
+    <script src="js/live2d-app.js?v=202609298" defer></script>
+    <script src="js/music-fx.js?v=202609298" defer></script>
+    <script src="js/live2d-sing.js?v=202609298" defer></script>
     <script>
-    /* 歌单抽屉的开关：纯 UI，不动打包脚本 */
+    /* 歌单抽屉的开关：纯 UI，不动打包脚本。
+       ------------------------------------------------------------
+       窄屏（≤768px）不注册：css/music-mobile.css 已把 .pl-drawer 整块
+       display:none，js/music-mobile.js 又把 #plViews / .playlist-scroll 搬进
+       首屏的 #mmListHost —— 抽屉里空无一物，注册了只会得到一个「点了没反应」
+       的 #plDrawerOpen。
+       music-bundle.js 里那句 window.sakuraPlDrawer.close 是可选调用
+       （先判存在再调），窄屏拿不到它不会报错。 */
     (function () {
         var drawer = document.getElementById("plDrawer");
         var mask = document.getElementById("plDrawerMask");
         var openBtn = document.getElementById("plDrawerOpen");
         var closeBtn = document.getElementById("plDrawerClose");
         if (!drawer || !openBtn) return;
+        if (window.AppShell && window.AppShell.isNarrow && window.AppShell.isNarrow()) {
+            /* 抽屉在窄屏不参与交互：摘掉入口，别留一颗死按钮 */
+            openBtn.setAttribute("aria-disabled", "true");
+            openBtn.style.display = "none";
+            drawer.setAttribute("aria-hidden", "true");
+            return;
+        }
         function open() { drawer.classList.add("show"); if (mask) mask.classList.add("show"); drawer.setAttribute("aria-hidden", "false"); document.body.classList.add("pl-drawer-open"); }
         function close() { drawer.classList.remove("show"); if (mask) mask.classList.remove("show"); drawer.setAttribute("aria-hidden", "true"); document.body.classList.remove("pl-drawer-open"); }
         openBtn.addEventListener("click", function (e) { e.stopPropagation(); if (drawer.classList.contains("show")) { close(); } else { open(); } });

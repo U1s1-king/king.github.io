@@ -226,25 +226,13 @@
      ============================================================ */
 
   /* ============================================================
-     5. 全屏播放页里的「歌单」chip 改成「收起播放页 · 回到歌单」
+     5. 全屏播放页里的「歌单」chip：改由 music-app.js 直接负责
      ------------------------------------------------------------
      阶段二把歌单搬上首屏后，移动端的抽屉已经空掉，整块 display:none。
-     而 music-app.js 的 .fs-list 与这条 chip 都还是去点 #plDrawerOpen
-     （那个内联脚本会打开抽屉）—— 不拦的话用户点了一颗没有任何反应的按钮。
-     这里在捕获阶段截住：收起二级页，然后滚到「我的歌单」区块。
+     #plDrawerOpen 在窄屏由内联脚本标记为不可用（music.html 底部），
+     而「收起播放页 · 回到歌单」这条路径现在写在 music-app.js 的
+     .fs-list 绑定里 —— 不再需要捕获阶段拦截，一次点击只走一条路。
      ============================================================ */
-  document.addEventListener('click', function (e) {
-    if (!MQ.matches) return;
-    var t = e.target && e.target.closest ? e.target.closest('#plDrawerOpen') : null;
-    if (!t) return;
-    e.preventDefault();
-    e.stopPropagation();
-    if (window.AppShell && window.AppShell.closeDetail) window.AppShell.closeDetail();
-    setTimeout(function () {
-      var host = byId('mmMineSection');
-      if (host) host.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 280);
-  }, true);
 
   /* ============================================================
      6. 歌词空状态

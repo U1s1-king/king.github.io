@@ -12,7 +12,7 @@
  * __DSH_VERSION 以及各 HTML 里的 ?v= 保持一致。
  * 统一更新请执行： python scripts/bump_version.py <新版本号>
  * ============================================================ */
-const VERSION = '202609297'
+const VERSION = '202609298'
 const CACHE = 'king-blog-' + VERSION;
 
 const CORE = [
@@ -22,7 +22,25 @@ const CORE = [
   '/manifest.json',
   '/css/style.css?v=' + VERSION,
   '/css/sidebar.css?v=' + VERSION,
-  '/css/all.min.css?v=' + VERSION,
+  /* Font Awesome 按页拆分（2026 减负）：
+     原来一个 all.min.css（83KB）被 8 个页面共用，但实测每页只用到 2% —— 
+     每页真正用到的图标合计 117 个，其余 1000 条图标规则全站从未命中。
+     现在拆成「共享基座 + 每页图标子集」：
+       fa-base.subset.css   字体面 @font-face、动画、尺寸/旋转/堆叠等基础类（全站共用）
+       fa.<页面>.subset.css  该页真正用到的 .fa-* 图标（十几到几十条）
+     基座必须预缓存（每一页都依赖它，在首屏关键路径上）；
+     每页子集都很小（0.5–2.2KB），一并预缓存，避免版本升级时出现
+     「新 HTML 配旧图标表」的窗口 —— 与下面 tv-player.css 那条同一个理由。 */
+  '/css/fa-base.subset.css?v=' + VERSION,
+  '/css/fa.404.subset.css?v=' + VERSION,
+  '/css/fa.Archives.subset.css?v=' + VERSION,
+  '/css/fa.Games.subset.css?v=' + VERSION,
+  '/css/fa.home.subset.css?v=' + VERSION,
+  '/css/fa.index.subset.css?v=' + VERSION,
+  '/css/fa.Journal.subset.css?v=' + VERSION,
+  '/css/fa.music.subset.css?v=' + VERSION,
+  '/css/fa.Tools.subset.css?v=' + VERSION,
+  '/css/fa.TV.subset.css?v=' + VERSION,
   '/css/index.css?v=' + VERSION,
   '/css/Journal.css?v=' + VERSION,
   '/css/Archives.css?v=' + VERSION,

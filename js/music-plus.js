@@ -10,7 +10,8 @@
  *   1. 播放页「更多」面板：分享 / 收藏 / 播放历史 / 我的收藏 / 睡眠定时
  *   2. 睡眠定时器（5-90 分钟或播完这首）＋倒计时徽标，刷新后能续上
  *   3. 播放历史 + 我的收藏（localStorage，一键重播，找不到就转搜索）
- *   4. 点封面 ↔ 歌词 双视图切换，并跟随封面换主题渐变
+ *   4. 播放页主题：跟随封面换渐变色
+ * 点封面进全屏播放页由 js/music-app.js 独家负责，本文件不碰 #coverInner。
  * 桌面端：narrow() 为假直接 return，一个节点都不插。
  * ============================================================ */
 (function () {
@@ -646,15 +647,8 @@
     panel.__mpClick = openLyricPage;
     panel.addEventListener('click', panel.__mpClick);
     panel.setAttribute('title', '点一下打开歌词页');
-    /* 点唱片由 music-app.js 负责（进全屏播放页），这里**不再**绑定。
-       原来两边都往 #coverInner 挂 click：
-         music-app.js  → openFull()       （进全屏播放页）
-         music-plus.js → openLyricPage()  （进歌词页）
-       一次点击两个都会触发，而两边都带 if (AppShell.detailOpen()) return 守卫，
-       于是谁先执行谁赢、另一个被静默吞掉 —— 用户点封面时行为随机，
-       表现为「有时进播放页、有时进歌词页」，是最难查的一类失败。
-       已定：点封面 = 进全屏播放页；歌词页在播放页内由 fs-lyric 按钮切换
-       （music-plus.js:559-584 的 lyric-mode），不再需要第二个封面入口。 */
+    /* #coverInner 不在本文件的职责范围：点封面 = 进全屏播放页，
+       唯一入口在 js/music-app.js。本文件不绑、也不做任何收尾。 */
   }
 
     function initMobile() {
@@ -719,11 +713,6 @@
     var panel = q('.player-right .lyric-panel') || byId('lyricBox');
     dropClick(panel);
     if (panel) { panel.removeAttribute('title'); panel.style.cursor = ''; }
-    /* #coverInner 归 music-app.js 管（点封面进全屏播放页），这里不再清理它。
-       原先这里会 removeAttribute('title') + cursor='' —— 那是为 music-plus 自己
-       挂的封面入口做收尾。既然本文件已不再绑定封面，继续清理就会去动
-       别的模块的节点：music-app 的 openFull 入口还在，title/cursor 被抹掉
-       属于越权修改，之后没有任何地方会补回来。 */
     var nameEl = byId('trackName');
     if (nameEl && nameEl.__mpFavObs) { nameEl.__mpFavObs.disconnect(); nameEl.__mpFavObs = null; }
   }
