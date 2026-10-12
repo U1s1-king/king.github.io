@@ -4,6 +4,9 @@
 用法：
     python scripts/bump_version.py 20260912
 
+版本号格式是 YYYYMMDD，同一天发多次时在后面追加一位序号
+（20260920 → 202609231 → 202609298）。日期一律取前 8 位。
+
 会同步更新：
   1. js/version.js 的 __DSH_VERSION
   2. sw.js 的 VERSION（CACHE 与 CORE 的 ?v= 都由它生成）
@@ -12,6 +15,7 @@
      注意 sakura-live2d.pages.dev 是本站自己的 Pages 项目，不是第三方 CDN，
      它的 waifu.js 必须跟着版本走，否则外壳升版后客户端仍会拿旧脚本。
 """
+import datetime
 import os
 import re
 import sys
@@ -109,10 +113,20 @@ def bump_sitemap(new):
     if not os.path.exists(path):
         print('[skip] sitemap.xml 不存在')
         return
-    if not re.fullmatch(r'\d{8}', new):
-        print('[skip] sitemap.xml: 版本号 %s 不是 YYYYMMDD，无法推导日期' % new)
+    # 只取前 8 位当日期。原先这里要求恰好 8 位，而 main() 的入口只要求 \d{6,}，
+    # 于是 9 位版本号（同一天第二次及以后的发布）会**静默跳过**这一步：
+    # 实测 lastmod 一直停在 2026-09-24，而版本号早已推到 202609298。
+    m = re.match(r'(\d{4})(\d{2})(\d{2})', new)
+    if not m:
+        print('[skip] sitemap.xml: 版本号 %s 不是 YYYYMMDD 开头，无法推导日期' % new)
         return
-    date = '%s-%s-%s' % (new[0:4], new[4:6], new[6:8])
+    y, mo, d = m.group(1), m.group(2), m.group(3)
+    try:
+        datetime.date(int(y), int(mo), int(d))
+    except ValueError:
+        print('[skip] sitemap.xml: 版本号 %s 推导出的日期 %s-%s-%s 不存在' % (new, y, mo, d))
+        return
+    date = '%s-%s-%s' % (y, mo, d)
     text = read(path)
     out, n = re.subn(r'<lastmod>[^<]*</lastmod>', '<lastmod>' + date + '</lastmod>', text)
     if n == 0:

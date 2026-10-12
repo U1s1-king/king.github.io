@@ -1,8 +1,14 @@
 # _partials —— 页面里重复结构的唯一来源
 
-这个目录**不是站点内容**，不会被访问。仓库没有 `.nojekyll`，
-GitHub Pages 会跑 Jekyll，而 Jekyll 会忽略 `_` 开头的目录，
-所以这里天然是私有的。
+这个目录**不是站点内容，但它是公开可读的**。仓库根目录原先没有 `.nojekyll`，
+GitHub Pages 会跑 Jekyll、而 Jekyll 忽略 `_` 开头的目录 —— 但那个前提已经不成立：
+`.nojekyll` 补上之后 `_` 前缀路径会被原样发布（实测 `/_partials/sidebar.html`
+返回 200）。补 `.nojekyll` 是为了救 `games/` 下的 `_site-skin.css`、`_back.js`、
+`_lib/*`（41 个游戏页因此全丢样式与返回入口），代价就是这里跟着公开。
+
+所以这里只放**没有秘密的结构片段**：两个 `.html` 模板加这份说明，内容与各页面里
+生成出来的那块完全一样，公开可读不构成影响。**密钥、内部路径、未上线内容一律
+不要放在这个目录**。
 
 ## 为什么存在
 
@@ -37,4 +43,5 @@ GitHub Pages 会跑 Jekyll，而 Jekyll 会忽略 `_` 开头的目录，
 
 - 「当前页高亮」由脚本按 `PAGES` 里的 `active` 决定；`404.html` 没有当前页，故为 `None`。
 - 底部导航不做静态高亮，`js/common.js` 会在运行时按 `location.pathname` 处理。
-- 改链接后记得跑一次；若想让它自动兜底，可在 CI 里加一步 `python scripts/sync_nav.py --check`。
+- 改链接后记得跑一次；CI 里已经有这一步（`.github/workflows/repo-check.yml`
+  的「导航结构与 _partials/ 是否同步」），忘了跑会在流水线上失败而不是悄悄漂移。
