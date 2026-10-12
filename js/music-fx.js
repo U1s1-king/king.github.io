@@ -19,12 +19,12 @@
   }
 
   ready(function () {
-    var reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    const reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
     /* ---------- 1. 播放态 ---------- */
-    var audio = document.getElementById('nativeAudio');
+    const audio = document.getElementById('nativeAudio');
     if (audio) {
-      var sync = function () {
+      const sync = function () {
         document.body.classList.toggle('mc-playing', !audio.paused && !audio.ended);
       };
       ['play', 'pause', 'ended', 'loadedmetadata'].forEach(function (ev) {
@@ -46,12 +46,12 @@
     }
 
     if ('MutationObserver' in window) {
-      var name = document.getElementById('trackName');
+      const name = document.getElementById('trackName');
       if (name) {
         new MutationObserver(function () { replay(name, 'mc-title-in', 700); })
           .observe(name, { childList: true, characterData: true, subtree: true });
       }
-      var cover = document.getElementById('coverImg');
+      const cover = document.getElementById('coverImg');
       if (cover) {
         new MutationObserver(function () { replay(cover, 'mc-cover-in', 800); })
           .observe(cover, { attributes: true, attributeFilter: ['src'] });
@@ -61,8 +61,8 @@
     /* ---------- 3. 按钮按下反馈 ---------- */
     if (!reduce) {
       document.addEventListener('pointerdown', function (e) {
-        var t = e.target;
-        var b = t && t.closest ? t.closest('.btn-cherry,.ctrl-btn,.mode-chip,.glass-icon') : null;
+        const t = e.target;
+        const b = t && t.closest ? t.closest('.btn-cherry,.ctrl-btn,.mode-chip,.glass-icon') : null;
         if (!b) return;
         b.classList.remove('mc-ripple');
         void b.offsetWidth;
