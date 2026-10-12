@@ -43,7 +43,7 @@
         .btn-ghost404{border:2px solid #f8bbd0;color:#c2185b}
         .notfound-btns a:hover{transform:translateY(-2px)}
         #sakuraField{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0}
-        .petal404{position:absolute;top:-8vh;width:12px;height:12px;background:linear-gradient(135deg,#ffd6e0,#f48fb1);border-radius:70% 30% 70% 30%;opacity:.75;animation:sakuraFall linear infinite}
+
         @keyframes sakuraFall{0%{transform:translateY(-6vh) rotate(0deg);opacity:.75}100%{transform:translateY(112vh) rotate(420deg);opacity:.15}}
     </style>
 </head>
@@ -106,11 +106,11 @@
     <!-- nav:bot-tab:end -->
     <script>
         (function () {
-            var field = document.getElementById('sakuraField');
+            let field = document.getElementById('sakuraField');
             if (!field) return;
-            var count = 26;
-            for (var i = 0; i < count; i++) {
-                var p = document.createElement('div');
+            let count = 26;
+            for (let i = 0; i < count; i++) {
+                let p = document.createElement('div');
                 p.className = 'petal404';
                 p.style.left = (Math.random() * 100) + 'vw';
                 p.style.width = p.style.height = (9 + Math.random() * 9) + 'px';

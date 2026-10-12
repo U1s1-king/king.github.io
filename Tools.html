@@ -306,7 +306,7 @@
             <div class="tool-title"><i class="fas fa-language"></i> 在线翻译</div>
             <div class="inline-input-group">
                 <label>从：</label>
-                <select id="transFrom">
+                <label for="transFrom"></label><select id="transFrom">
                     <option value="auto" selected>自动检测</option>
                     <option value="zh-CN">中文</option>
                     <option value="en">英语</option>
@@ -316,7 +316,7 @@
                     <option value="ko">韩语</option>
                 </select>
                 <label>到：</label>
-                <select id="transTo">
+                <label for="transTo"></label><select id="transTo">
                     <option value="zh-CN" selected>中文</option>
                     <option value="en">英语</option>
                     <option value="ja">日语</option>
@@ -325,7 +325,7 @@
                     <option value="ko">韩语</option>
                 </select>
             </div>
-            <textarea id="transIn" placeholder="? 输入要翻译的文本 ?" rows="3"></textarea>
+            <label for="transIn"></label><textarea id="transIn" placeholder="? 输入要翻译的文本 ?" rows="3"></textarea>
             <div class="button-group">
                 <button class="btn-primary" id="transBtn"><i class="fas fa-language"></i> 翻译</button>
                 <button class="btn-secondary" id="transClearBtn"><i class="fas fa-trash-alt"></i> 清空</button>
@@ -340,10 +340,10 @@
         <!-- ==================== 新：二维码生成 ==================== -->
         <div id="tool-qrcode" class="tool-panel">
             <div class="tool-title"><i class="fas fa-qrcode"></i> 二维码生成</div>
-            <div class="bili-input-row"><input type="text" id="qrText" placeholder="? 输入文本或链接 ?"><button class="btn-cherry" id="qrBtn">生成</button></div>
+            <div class="bili-input-row"><label for="qrText"></label><input type="text" id="qrText" placeholder="? 输入文本或链接 ?"><button class="btn-cherry" id="qrBtn">生成</button></div>
             <div class="bili-input-row">
                 <label>尺寸：</label>
-                <select id="qrSize">
+                <label for="qrSize"></label><select id="qrSize">
                     <option value="160">小 160</option>
                     <option value="240" selected>中 240</option>
                     <option value="360">大 360</option>
@@ -358,11 +358,11 @@
             <div class="tool-title"><i class="fas fa-coins"></i> 汇率换算</div>
             <div class="inline-input-group">
                 <label>金额：</label>
-                <input type="number" id="exAmount" value="1">
+                <label for="exAmount"></label><input type="number" id="exAmount" value="1">
             </div>
             <div class="inline-input-group">
                 <label>从：</label>
-                <select id="exFrom">
+                <label for="exFrom"></label><select id="exFrom">
                     <option value="USD">美元 USD</option>
                     <option value="EUR">欧元 EUR</option>
                     <option value="CNY" selected>人民币 CNY</option>
@@ -371,7 +371,7 @@
                     <option value="KRW">韩元 KRW</option>
                 </select>
                 <label>到：</label>
-                <select id="exTo">
+                <label for="exTo"></label><select id="exTo">
                     <option value="USD">美元 USD</option>
                     <option value="EUR" selected>欧元 EUR</option>
                     <option value="CNY">人民币 CNY</option>
@@ -384,15 +384,15 @@
                 <button class="btn-primary" id="exBtn"><i class="fas fa-exchange-alt"></i> 换算</button>
                 <button class="btn-secondary" id="exSwapBtn"><i class="fas fa-sync-alt"></i> 互换</button>
             </div>
-            <textarea id="exOut" class="bili-code" rows="3" readonly placeholder="结果"></textarea>
+            <label for="exOut"></label><textarea id="exOut" class="bili-code" rows="3" readonly placeholder="结果"></textarea>
             <div class="status-message" id="exStatus"></div>
         </div>
 
         <!-- ==================== 新：IP 查询 ==================== -->
         <div id="tool-iplookup" class="tool-panel">
             <div class="tool-title"><i class="fas fa-globe"></i> IP 归属地查询</div>
-            <div class="bili-input-row"><input type="text" id="ipInput" placeholder="? 输入 IP（留空查询本机） ?"><button class="btn-cherry" id="ipBtn">查询</button></div>
-            <textarea id="ipOut" class="bili-code" rows="5" readonly placeholder="结果"></textarea>
+            <div class="bili-input-row"><label for="ipInput"></label><input type="text" id="ipInput" placeholder="? 输入 IP（留空查询本机） ?"><button class="btn-cherry" id="ipBtn">查询</button></div>
+            <label for="ipOut"></label><textarea id="ipOut" class="bili-code" rows="5" readonly placeholder="结果"></textarea>
             <div class="status-message" id="ipStatus"></div>
         </div>
 
@@ -403,7 +403,7 @@
             <div class="status-message" id="ocrStatus"></div>
             <div class="result-area">
                 <h4><i class="fas fa-spa"></i> 识别结果</h4>
-                <textarea id="ocrOut" class="bili-code" rows="6" readonly placeholder="识别文字会出现在这里"></textarea>
+                <label for="ocrOut"></label><textarea id="ocrOut" class="bili-code" rows="6" readonly placeholder="识别文字会出现在这里"></textarea>
             </div>
         </div>
 
@@ -411,7 +411,7 @@
         <!-- ==================== 新：全球天气 ==================== -->
         <div id="tool-weather" class="tool-panel">
             <div class="tool-title"><i class="fas fa-cloud-sun"></i> 全球天气查询</div>
-            <div class="bili-input-row"><input type="text" id="weatherCity" placeholder="🌸 输入城市名，如：北京 / Tokyo"><button class="btn-cherry" id="weatherBtn">查询</button></div>
+            <div class="bili-input-row"><label for="weatherCity"></label><input type="text" id="weatherCity" placeholder="🌸 输入城市名，如：北京 / Tokyo"><button class="btn-cherry" id="weatherBtn">查询</button></div>
             <div class="result-area">
                 <h4><i class="fas fa-spa"></i> 天气信息</h4>
                 <div id="weatherOut">🌸 输入城市开始查询 ...</div>
@@ -422,7 +422,7 @@
         <!-- ==================== 新：空气质量（Open-Meteo Air Quality API） ==================== -->
         <div id="tool-air" class="tool-panel">
             <div class="tool-title"><i class="fas fa-wind"></i> 空气质量查询</div>
-            <div class="bili-input-row"><input type="text" id="airCity" placeholder="🌸 输入城市名，如：北京 / Shanghai"><button class="btn-cherry" id="airBtn">查询</button></div>
+            <div class="bili-input-row"><label for="airCity"></label><input type="text" id="airCity" placeholder="🌸 输入城市名，如：北京 / Shanghai"><button class="btn-cherry" id="airBtn">查询</button></div>
             <div class="result-area">
                 <h4><i class="fas fa-spa"></i> 空气质量</h4>
                 <div id="airOut">🌸 输入城市开始查询 ...</div>
@@ -446,7 +446,7 @@
         <!-- ==================== 新：在线词典 ==================== -->
         <div id="tool-dict" class="tool-panel">
             <div class="tool-title"><i class="fas fa-book-open"></i> 在线词典</div>
-            <div class="bili-input-row"><input type="text" id="dictWord" placeholder="🌸 输入英文单词"><button class="btn-cherry" id="dictBtn">查询</button></div>
+            <div class="bili-input-row"><label for="dictWord"></label><input type="text" id="dictWord" placeholder="🌸 输入英文单词"><button class="btn-cherry" id="dictBtn">查询</button></div>
             <div class="result-area">
                 <h4><i class="fas fa-spa"></i> 释义</h4>
                 <div id="dictOut">🌸 输入单词开始查询 ...</div>
@@ -477,153 +477,154 @@
             <div class="xt-row"><label for="izQ">压缩质量</label><input type="range" id="izQ" min="0.4" max="0.95" step="0.05" value="0.72"></div>
             <div class="bili-input-row"><button class="btn-primary" id="izGo"><i class="fas fa-compress"></i> 开始压缩</button></div>
             <div class="xt-list" id="izList"></div>
-            <textarea id="izOut" class="bili-code" rows="3" readonly placeholder="压缩结果会显示在这里"></textarea>
+            <label for="izOut"></label><textarea id="izOut" class="bili-code" rows="3" readonly placeholder="压缩结果会显示在这里"></textarea>
         </div>
         <div id="tool-imgresize" class="tool-panel">
             <div class="tool-title"><i class="fas fa-crop-simple"></i> 图片改尺寸</div>
             <input type="file" id="irFile" accept="image/*">
             <div class="xt-row">
-                <select id="irPreset"><option value="">自定义尺寸</option><option value="ig">Instagram 方图 1080×1080</option><option value="igs">Instagram 竖图 1080×1350</option><option value="fb">社交分享 1200×630</option><option value="tb">商品主图 800×800</option><option value="wx">公众号头图 900×500</option></select>
-                <input type="number" id="irW" placeholder="宽" min="1"> <span>×</span> <input type="number" id="irH" placeholder="高" min="1">
+                <label for="irPreset"></label><select id="irPreset"><option value="">自定义尺寸</option><option value="ig">Instagram 方图 1080×1080</option><option value="igs">Instagram 竖图 1080×1350</option><option value="fb">社交分享 1200×630</option><option value="tb">商品主图 800×800</option><option value="wx">公众号头图 900×500</option></select>
+                <label for="irW"></label><input type="number" id="irW" placeholder="宽" min="1"> <span>×</span> <label
+                    for="irH"></label><input type="number" id="irH" placeholder="高" min="1">
             </div>
             <div class="xt-row"><label><input type="checkbox" id="irKeep" checked> 锁定比例（按宽度算高）</label></div>
             <div class="bili-input-row"><button class="btn-primary" id="irGo"><i class="fas fa-download"></i> 缩放并下载</button></div>
-            <textarea id="irOut" class="bili-code" rows="3" readonly placeholder="结果会显示在这里"></textarea>
+            <label for="irOut"></label><textarea id="irOut" class="bili-code" rows="3" readonly placeholder="结果会显示在这里"></textarea>
         </div>
         <div id="tool-token" class="tool-panel">
             <div class="tool-title"><i class="fas fa-robot"></i> AI Token 估算</div>
-            <textarea id="tkIn" class="bili-code" rows="6" placeholder="粘贴要估算的 prompt / 文本"></textarea>
+            <label for="tkIn"></label><textarea id="tkIn" class="bili-code" rows="6" placeholder="粘贴要估算的 prompt / 文本"></textarea>
             <div class="xt-row">
-                <select id="tkModel"><option value="gpt-4o">GPT-4o</option><option value="gpt-4o-mini">GPT-4o mini</option><option value="claude-3-5-sonnet">Claude 3.5 Sonnet</option><option value="claude-3-haiku">Claude 3 Haiku</option><option value="gemini-1.5-pro">Gemini 1.5 Pro</option><option value="gemini-1.5-flash">Gemini 1.5 Flash</option></select>
+                <label for="tkModel"></label><select id="tkModel"><option value="gpt-4o">GPT-4o</option><option value="gpt-4o-mini">GPT-4o mini</option><option value="claude-3-5-sonnet">Claude 3.5 Sonnet</option><option value="claude-3-haiku">Claude 3 Haiku</option><option value="gemini-1.5-pro">Gemini 1.5 Pro</option><option value="gemini-1.5-flash">Gemini 1.5 Flash</option></select>
                 <button class="btn-primary" id="tkGo"><i class="fas fa-calculator"></i> 估算</button>
             </div>
-            <textarea id="tkOut" class="bili-code" rows="6" readonly placeholder="token 数与费用的粗估"></textarea>
+            <label for="tkOut"></label><textarea id="tkOut" class="bili-code" rows="6" readonly placeholder="token 数与费用的粗估"></textarea>
         </div>
         <div id="tool-age" class="tool-panel">
             <div class="tool-title"><i class="fas fa-cake-candles"></i> 年龄计算器</div>
             <div class="xt-row"><label for="agDate">出生日期</label><input type="date" id="agDate"><button class="btn-primary" id="agGo"><i class="fas fa-cake-candles"></i> 计算</button></div>
-            <textarea id="agOut" class="bili-code" rows="6" readonly placeholder="周岁 / 虚岁 / 下次生日 / 生肖星座"></textarea>
+            <label for="agOut"></label><textarea id="agOut" class="bili-code" rows="6" readonly placeholder="周岁 / 虚岁 / 下次生日 / 生肖星座"></textarea>
         </div>
         <div id="tool-tdee" class="tool-panel">
             <div class="tool-title"><i class="fas fa-fire"></i> TDEE 卡路里计算</div>
             <div class="xt-row">
-                <select id="tdSex"><option value="m">男</option><option value="f">女</option></select>
-                <input type="number" id="tdAge" placeholder="年龄" min="1">
-                <input type="number" id="tdH" placeholder="身高 cm" min="1">
-                <input type="number" id="tdW" placeholder="体重 kg" min="1" step="0.1">
+                <label for="tdSex"></label><select id="tdSex"><option value="m">男</option><option value="f">女</option></select>
+                <label for="tdAge"></label><input type="number" id="tdAge" placeholder="年龄" min="1">
+                <label for="tdH"></label><input type="number" id="tdH" placeholder="身高 cm" min="1">
+                <label for="tdW"></label><input type="number" id="tdW" placeholder="体重 kg" min="1" step="0.1">
             </div>
             <div class="xt-row">
-                <select id="tdAct"><option value="1.2">久坐（几乎不运动）</option><option value="1.375" selected>轻度（每周 1-3 次）</option><option value="1.55">中度（每周 3-5 次）</option><option value="1.725">高强度（每周 6-7 次）</option><option value="1.9">极高（体力劳动/一天两练）</option></select>
+                <label for="tdAct"></label><select id="tdAct"><option value="1.2">久坐（几乎不运动）</option><option value="1.375" selected>轻度（每周 1-3 次）</option><option value="1.55">中度（每周 3-5 次）</option><option value="1.725">高强度（每周 6-7 次）</option><option value="1.9">极高（体力劳动/一天两练）</option></select>
                 <button class="btn-primary" id="tdGo"><i class="fas fa-fire"></i> 计算</button>
             </div>
-            <textarea id="tdOut" class="bili-code" rows="7" readonly placeholder="BMR / TDEE / 减脂增肌建议"></textarea>
+            <label for="tdOut"></label><textarea id="tdOut" class="bili-code" rows="7" readonly placeholder="BMR / TDEE / 减脂增肌建议"></textarea>
         </div>
         <div id="tool-apr" class="tool-panel">
             <div class="tool-title"><i class="fas fa-file-invoice-dollar"></i> 分期实际年化 APR</div>
             <div class="xt-row">
-                <input type="number" id="apP" placeholder="分期金额" min="0">
-                <input type="number" id="apN" placeholder="期数" min="1">
+                <label for="apP"></label><input type="number" id="apP" placeholder="分期金额" min="0">
+                <label for="apN"></label><input type="number" id="apN" placeholder="期数" min="1">
             </div>
             <div class="xt-row">
-                <input type="number" id="apPer" placeholder="每期手续费率 %" step="0.01" min="0">
-                <input type="number" id="apOnce" placeholder="一次性手续费率 %" step="0.01" min="0" value="0">
+                <label for="apPer"></label><input type="number" id="apPer" placeholder="每期手续费率 %" step="0.01" min="0">
+                <label for="apOnce"></label><input type="number" id="apOnce" placeholder="一次性手续费率 %" step="0.01" min="0" value="0">
                 <button class="btn-primary" id="apGo"><i class="fas fa-calculator"></i> 计算</button>
             </div>
-            <textarea id="apOut" class="bili-code" rows="6" readonly placeholder="每期金额 / 总手续费 / 实际年化"></textarea>
+            <label for="apOut"></label><textarea id="apOut" class="bili-code" rows="6" readonly placeholder="每期金额 / 总手续费 / 实际年化"></textarea>
         </div>
         <div id="tool-zhconv" class="tool-panel">
             <div class="tool-title"><i class="fas fa-language"></i> 简繁转换</div>
-            <textarea id="zhIn" class="bili-code" rows="5" placeholder="输入要转换的简体或繁体文字"></textarea>
+            <label for="zhIn"></label><textarea id="zhIn" class="bili-code" rows="5" placeholder="输入要转换的简体或繁体文字"></textarea>
             <div class="bili-input-row">
                 <button class="btn-primary" id="zhS2T">简 → 繁</button>
                 <button class="btn-primary" id="zhT2S">繁 → 简</button>
                 <button class="btn-secondary" id="zhCopy">复制结果</button>
             </div>
-            <textarea id="zhOut" class="bili-code" rows="5" placeholder="转换结果"></textarea>
+            <label for="zhOut"></label><textarea id="zhOut" class="bili-code" rows="5" placeholder="转换结果"></textarea>
         </div>
 
         <!-- ==================== 10. 工具箱（36工具平级） ==================== -->
         <div id="tool-base64" class="tool-panel">
-            <textarea id="b64In" class="bili-code" rows="3" placeholder="输入要编码/解码的文本"></textarea>
+            <label for="b64In"></label><textarea id="b64In" class="bili-code" rows="3" placeholder="输入要编码/解码的文本"></textarea>
                     <div class="bili-btn-row">
                         <button class="btn-cherry" id="b64Encode"> 编码</button>
                         <button class="btn-cherry" id="b64Decode"> 解码</button>
                     </div>
-                    <textarea id="b64Out" class="bili-code" rows="3" readonly placeholder="结果"></textarea>
+            <label for="b64Out"></label><textarea id="b64Out" class="bili-code" rows="3" readonly placeholder="结果"></textarea>
         </div>
         <div id="tool-urlcode" class="tool-panel">
-            <textarea id="urlIn" class="bili-code" rows="3" placeholder="输入要编码/解码的URL"></textarea>
+            <label for="urlIn"></label><textarea id="urlIn" class="bili-code" rows="3" placeholder="输入要编码/解码的URL"></textarea>
                     <div class="bili-btn-row">
                         <button class="btn-cherry" id="urlEncode"> 编码</button>
                         <button class="btn-cherry" id="urlDecode"> 解码</button>
                     </div>
-                    <textarea id="urlOut" class="bili-code" rows="3" readonly placeholder="结果"></textarea>
+            <label for="urlOut"></label><textarea id="urlOut" class="bili-code" rows="3" readonly placeholder="结果"></textarea>
         </div>
         <div id="tool-ts" class="tool-panel">
-            <div class="bili-input-row"><input type="text" id="tsIn" placeholder="时间戳(秒/毫秒) 或 日期如 2026-08-12 15:30:00"><button class="btn-cherry" id="tsConvert"> 转换</button></div>
-                    <textarea id="tsOut" class="bili-code" rows="2" readonly placeholder="结果"></textarea>
+            <div class="bili-input-row"><label for="tsIn"></label><input type="text" id="tsIn" placeholder="时间戳(秒/毫秒) 或 日期如 2026-08-12 15:30:00"><button class="btn-cherry" id="tsConvert"> 转换</button></div>
+            <label for="tsOut"></label><textarea id="tsOut" class="bili-code" rows="2" readonly placeholder="结果"></textarea>
         </div>
         <div id="tool-uuid" class="tool-panel">
             <div class="bili-btn-row"><button class="btn-cherry" id="uuidGen"> 生成 UUID v4</button></div>
-                    <textarea id="uuidOut" class="bili-code" rows="3" readonly placeholder="生成结果"></textarea>
+            <label for="uuidOut"></label><textarea id="uuidOut" class="bili-code" rows="3" readonly placeholder="生成结果"></textarea>
         </div>
         <div id="tool-textstat" class="tool-panel">
-            <textarea id="tstatIn" class="bili-code" rows="4" placeholder="粘贴文本统计字数"></textarea>
+            <label for="tstatIn"></label><textarea id="tstatIn" class="bili-code" rows="4" placeholder="粘贴文本统计字数"></textarea>
                     <div class="bili-btn-row"><button class="btn-cherry" id="tstatBtn"> 统计</button></div>
-                    <textarea id="tstatOut" class="bili-code" rows="2" readonly placeholder="结果"></textarea>
+            <label for="tstatOut"></label><textarea id="tstatOut" class="bili-code" rows="2" readonly placeholder="结果"></textarea>
         </div>
         <div id="tool-case" class="tool-panel">
-            <textarea id="caseIn" class="bili-code" rows="3" placeholder="输入文本"></textarea>
+            <label for="caseIn"></label><textarea id="caseIn" class="bili-code" rows="3" placeholder="输入文本"></textarea>
                     <div class="bili-btn-row">
                         <button class="btn-cherry" id="caseUpper"> 大写</button>
                         <button class="btn-cherry" id="caseLower"> 小写</button>
                         <button class="btn-cherry" id="caseTitle"> 首字母大写</button>
                     </div>
-                    <textarea id="caseOut" class="bili-code" rows="3" readonly placeholder="结果"></textarea>
+            <label for="caseOut"></label><textarea id="caseOut" class="bili-code" rows="3" readonly placeholder="结果"></textarea>
         </div>
         <div id="tool-jsonfmt" class="tool-panel">
-            <textarea id="jsonIn" class="bili-code" rows="4" placeholder='输入 JSON，如 {"a":1,"b":[2,3]}'></textarea>
+            <label for="jsonIn"></label><textarea id="jsonIn" class="bili-code" rows="4" placeholder='输入 JSON，如 {"a":1,"b":[2,3]}'></textarea>
                     <div class="bili-btn-row">
                         <button class="btn-cherry" id="jsonFmt"> 格式化</button>
                         <button class="btn-cherry" id="jsonMin"> 压缩</button>
                         <button class="btn-cherry" id="jsonValidate"> 校验</button>
                     </div>
-                    <textarea id="jsonOut" class="bili-code" rows="4" readonly placeholder="结果"></textarea>
+            <label for="jsonOut"></label><textarea id="jsonOut" class="bili-code" rows="4" readonly placeholder="结果"></textarea>
         </div>
         <div id="tool-hash" class="tool-panel">
-            <textarea id="hashIn" class="bili-code" rows="3" placeholder="输入要计算 Hash 的文本"></textarea>
+            <label for="hashIn"></label><textarea id="hashIn" class="bili-code" rows="3" placeholder="输入要计算 Hash 的文本"></textarea>
                     <div class="bili-btn-row">
                         <button class="btn-cherry" id="hash1">SHA-1</button>
                         <button class="btn-cherry" id="hash256">SHA-256</button>
                         <button class="btn-cherry" id="hash512">SHA-512</button>
                     </div>
-                    <textarea id="hashOut" class="bili-code" rows="4" readonly placeholder="结果"></textarea>
+            <label for="hashOut"></label><textarea id="hashOut" class="bili-code" rows="4" readonly placeholder="结果"></textarea>
         </div>
         <div id="tool-colorconv" class="tool-panel">
-            <div class="bili-input-row"><input type="text" id="colorIn" placeholder="输入颜色，如 #ff8fab 或 rgb(255,143,171)"><button class="btn-cherry" id="colorConv"> 转换</button></div>
-                    <textarea id="colorOut" class="bili-code" rows="4" readonly placeholder="结果"></textarea>
+            <div class="bili-input-row"><label for="colorIn"></label><input type="text" id="colorIn" placeholder="输入颜色，如 #ff8fab 或 rgb(255,143,171)"><button class="btn-cherry" id="colorConv"> 转换</button></div>
+            <label for="colorOut"></label><textarea id="colorOut" class="bili-code" rows="4" readonly placeholder="结果"></textarea>
         </div>
         <div id="tool-passgen" class="tool-panel">
             <div class="bili-input-row">
-                        <input type="number" id="passLen" value="16" min="4" max="64" class="st-45e74eed">
+                <label for="passLen"></label><input type="number" id="passLen" value="16" min="4" max="64" class="st-45e74eed">
                         <label class="st-fcf03b4c">长度</label>
                         <button class="btn-cherry" id="passGenBtn"> 生成密码</button>
                     </div>
-                    <textarea id="passOut" class="bili-code" rows="2" readonly placeholder="生成结果"></textarea>
+            <label for="passOut"></label><textarea id="passOut" class="bili-code" rows="2" readonly placeholder="生成结果"></textarea>
         </div>
         <div id="tool-regex" class="tool-panel">
-            <div class="bili-input-row"><input type="text" id="regexPat" placeholder='正则表达式，如 \d+'><button class="btn-cherry" id="regexTest"> 测试</button></div>
-                    <textarea id="regexIn" class="bili-code" rows="3" placeholder="测试文本"></textarea>
-                    <textarea id="regexOut" class="bili-code" rows="4" readonly placeholder="匹配结果"></textarea>
+            <div class="bili-input-row"><label for="regexPat"></label><input type="text" id="regexPat" placeholder='正则表达式，如 \d+'><button class="btn-cherry" id="regexTest"> 测试</button></div>
+            <label for="regexIn"></label><textarea id="regexIn" class="bili-code" rows="3" placeholder="测试文本"></textarea>
+            <label for="regexOut"></label><textarea id="regexOut" class="bili-code" rows="4" readonly placeholder="匹配结果"></textarea>
         </div>
         <div id="tool-baseconv" class="tool-panel">
-            <div class="bili-input-row"><input type="text" id="numIn" placeholder="输入数字（十进制/0x十六进制/0b二进制）"><button class="btn-cherry" id="numConv"> 转换</button></div>
-                    <textarea id="numOut" class="bili-code" rows="4" readonly placeholder="2/8/10/16 进制结果"></textarea>
+            <div class="bili-input-row"><label for="numIn"></label><input type="text" id="numIn" placeholder="输入数字（十进制/0x十六进制/0b二进制）"><button class="btn-cherry" id="numConv"> 转换</button></div>
+            <label for="numOut"></label><textarea id="numOut" class="bili-code" rows="4" readonly placeholder="2/8/10/16 进制结果"></textarea>
         </div>
         <div id="tool-unit" class="tool-panel">
             <div class="bili-input-row">
-                        <input type="number" id="unitVal" value="1" class="st-8935a6a1">
-                        <select id="unitType" class="st-c9b7c822">
+                <label for="unitVal"></label><input type="number" id="unitVal" value="1" class="st-8935a6a1">
+                <label for="unitType"></label><select id="unitType" class="st-c9b7c822">
                             <option value="len">长度(米)</option>
                             <option value="weight">重量(千克)</option>
                             <option value="temp">温度(摄氏)</option>
@@ -631,115 +632,120 @@
                         </select>
                         <button class="btn-cherry" id="unitConv"> 换算</button>
                     </div>
-                    <textarea id="unitOut" class="bili-code" rows="4" readonly placeholder="结果"></textarea>
+            <label for="unitOut"></label><textarea id="unitOut" class="bili-code" rows="4" readonly placeholder="结果"></textarea>
         </div>
         <div id="tool-caesar" class="tool-panel">
-            <textarea id="caesarIn" class="bili-code" rows="3" placeholder="输入文本"></textarea>
-                    <div class="bili-input-row"><input type="number" id="caesarShift" value="3" min="1" max="25" class="st-45e74eed"><button class="btn-cherry" id="caesarEnc"> 加密</button><button class="btn-cherry" id="caesarDec"> 解密</button></div>
-                    <textarea id="caesarOut" class="bili-code" rows="3" readonly placeholder="结果"></textarea>
+            <label for="caesarIn"></label><textarea id="caesarIn" class="bili-code" rows="3" placeholder="输入文本"></textarea>
+                    <div class="bili-input-row"><label for="caesarShift"></label><input type="number" id="caesarShift" value="3" min="1" max="25" class="st-45e74eed"><button class="btn-cherry" id="caesarEnc"> 加密</button><button class="btn-cherry" id="caesarDec"> 解密</button></div>
+            <label for="caesarOut"></label><textarea id="caesarOut" class="bili-code" rows="3" readonly placeholder="结果"></textarea>
         </div>
         <div id="tool-datediff" class="tool-panel">
-            <div class="bili-input-row"><input type="text" id="dateA" placeholder="日期A 2026-08-12"><input type="text" id="dateB" placeholder="日期B 2026-01-01"><button class="btn-cherry" id="dateDiffBtn"> 计算</button></div>
-                    <textarea id="dateDiffOut" class="bili-code" rows="3" readonly placeholder="结果"></textarea>
+            <div class="bili-input-row"><label for="dateA"></label><input type="text" id="dateA" placeholder="日期A 2026-08-12"><label
+                    for="dateB"></label><input type="text" id="dateB" placeholder="日期B 2026-01-01"><button class="btn-cherry" id="dateDiffBtn"> 计算</button></div>
+            <label for="dateDiffOut"></label><textarea id="dateDiffOut" class="bili-code" rows="3" readonly placeholder="结果"></textarea>
         </div>
         <div id="tool-pct" class="tool-panel">
-            <div class="bili-input-row"><input type="number" id="pctA" placeholder="数值A"><input type="number" id="pctB" placeholder="数值B"><button class="btn-cherry" id="pctBtn"> 计算</button></div>
-                    <textarea id="pctOut" class="bili-code" rows="3" readonly placeholder="A是B的百分之几"></textarea>
+            <div class="bili-input-row"><label for="pctA"></label><input type="number" id="pctA" placeholder="数值A"><label
+                    for="pctB"></label><input type="number" id="pctB" placeholder="数值B"><button class="btn-cherry" id="pctBtn"> 计算</button></div>
+            <label for="pctOut"></label><textarea id="pctOut" class="bili-code" rows="3" readonly placeholder="A是B的百分之几"></textarea>
         </div>
         <div id="tool-morse" class="tool-panel">
-            <textarea id="morseIn" class="bili-code" rows="3" placeholder="输入文字 或 摩斯码(空格分隔, / 表示空格)"></textarea>
+            <label for="morseIn"></label><textarea id="morseIn" class="bili-code" rows="3" placeholder="输入文字 或 摩斯码(空格分隔, / 表示空格)"></textarea>
                     <div class="bili-btn-row"><button class="btn-cherry" id="morseEnc"> 编码</button><button class="btn-cherry" id="morseDec"> 解码</button></div>
-                    <textarea id="morseOut" class="bili-code" rows="3" readonly placeholder="结果"></textarea>
+            <label for="morseOut"></label><textarea id="morseOut" class="bili-code" rows="3" readonly placeholder="结果"></textarea>
         </div>
         <div id="tool-diff" class="tool-panel">
-            <textarea id="diffA" class="bili-code" rows="3" placeholder="文本A"></textarea>
-                    <textarea id="diffB" class="bili-code" rows="3" placeholder="文本B"></textarea>
+            <label for="diffA"></label><textarea id="diffA" class="bili-code" rows="3" placeholder="文本A"></textarea>
+            <label for="diffB"></label><textarea id="diffB" class="bili-code" rows="3" placeholder="文本B"></textarea>
                     <div class="bili-btn-row"><button class="btn-cherry" id="diffBtn"> 对比</button></div>
-                    <textarea id="diffOut" class="bili-code" rows="4" readonly placeholder="结果"></textarea>
+            <label for="diffOut"></label><textarea id="diffOut" class="bili-code" rows="4" readonly placeholder="结果"></textarea>
         </div>
         <div id="tool-rev" class="tool-panel">
-            <textarea id="revIn" class="bili-code" rows="3" placeholder="输入文本"></textarea>
+            <label for="revIn"></label><textarea id="revIn" class="bili-code" rows="3" placeholder="输入文本"></textarea>
                     <div class="bili-btn-row"><button class="btn-cherry" id="revBtn"> 反转</button><button class="btn-cherry" id="revWordBtn"> 单词倒序</button></div>
-                    <textarea id="revOut" class="bili-code" rows="3" readonly placeholder="结果"></textarea>
+            <label for="revOut"></label><textarea id="revOut" class="bili-code" rows="3" readonly placeholder="结果"></textarea>
         </div>
         <div id="tool-dice" class="tool-panel">
-            <div class="bili-input-row"><input type="number" id="diceMin" value="1" class="st-45e74eed"><input type="number" id="diceMax" value="100" class="st-45e74eed"><button class="btn-cherry" id="diceBtn"> 随机</button></div>
-                    <textarea id="diceOut" class="bili-code" rows="2" readonly placeholder="结果"></textarea>
+            <div class="bili-input-row"><label for="diceMin"></label><input type="number" id="diceMin" value="1" class="st-45e74eed"><label
+                    for="diceMax"></label><input type="number" id="diceMax" value="100" class="st-45e74eed"><button class="btn-cherry" id="diceBtn"> 随机</button></div>
+            <label for="diceOut"></label><textarea id="diceOut" class="bili-code" rows="2" readonly placeholder="结果"></textarea>
         </div>
         <div id="tool-prime" class="tool-panel">
-            <div class="bili-input-row"><input type="number" id="primeIn" placeholder="输入数字"><button class="btn-cherry" id="primeBtn"> 判断</button></div>
-                    <textarea id="primeOut" class="bili-code" rows="3" readonly placeholder="结果"></textarea>
+            <div class="bili-input-row"><label for="primeIn"></label><input type="number" id="primeIn" placeholder="输入数字"><button class="btn-cherry" id="primeBtn"> 判断</button></div>
+            <label for="primeOut"></label><textarea id="primeOut" class="bili-code" rows="3" readonly placeholder="结果"></textarea>
         </div>
         <div id="tool-bmi" class="tool-panel">
-            <div class="bili-input-row"><input type="number" id="bmiH" placeholder="身高cm"><input type="number" id="bmiW" placeholder="体重kg"><button class="btn-cherry" id="bmiBtn"> 计算</button></div>
-                    <textarea id="bmiOut" class="bili-code" rows="3" readonly placeholder="结果"></textarea>
+            <div class="bili-input-row"><label for="bmiH"></label><input type="number" id="bmiH" placeholder="身高cm"><label
+                    for="bmiW"></label><input type="number" id="bmiW" placeholder="体重kg"><button class="btn-cherry" id="bmiBtn"> 计算</button></div>
+            <label for="bmiOut"></label><textarea id="bmiOut" class="bili-code" rows="3" readonly placeholder="结果"></textarea>
         </div>
         <div id="tool-discount" class="tool-panel">
-            <div class="bili-input-row"><input type="number" id="discPrice" placeholder="原价"><input type="number" id="discOff" placeholder="折扣 如8折=80"><button class="btn-cherry" id="discBtn"> 计算</button></div>
-                    <textarea id="discOut" class="bili-code" rows="3" readonly placeholder="结果"></textarea>
+            <div class="bili-input-row"><label for="discPrice"></label><input type="number" id="discPrice" placeholder="原价"><label
+                    for="discOff"></label><input type="number" id="discOff" placeholder="折扣 如8折=80"><button class="btn-cherry" id="discBtn"> 计算</button></div>
+            <label for="discOut"></label><textarea id="discOut" class="bili-code" rows="3" readonly placeholder="结果"></textarea>
         </div>
         <div id="tool-zodiac" class="tool-panel">
-            <div class="bili-input-row"><input type="text" id="zodiacIn" placeholder="出生日期 1990-05-20"><button class="btn-cherry" id="zodiacBtn"> 查询</button></div>
-                    <textarea id="zodiacOut" class="bili-code" rows="3" readonly placeholder="结果"></textarea>
+            <div class="bili-input-row"><label for="zodiacIn"></label><input type="text" id="zodiacIn" placeholder="出生日期 1990-05-20"><button class="btn-cherry" id="zodiacBtn"> 查询</button></div>
+            <label for="zodiacOut"></label><textarea id="zodiacOut" class="bili-code" rows="3" readonly placeholder="结果"></textarea>
         </div>
         <div id="tool-rmb" class="tool-panel">
-            <div class="bili-input-row"><input type="number" id="rmbIn" placeholder="输入金额，如 1234.56"><button class="btn-cherry" id="rmbBtn"> 转换</button></div>
-                    <textarea id="rmbOut" class="bili-code" rows="3" readonly placeholder="大写金额"></textarea>
+            <div class="bili-input-row"><label for="rmbIn"></label><input type="number" id="rmbIn" placeholder="输入金额，如 1234.56"><button class="btn-cherry" id="rmbBtn"> 转换</button></div>
+            <label for="rmbOut"></label><textarea id="rmbOut" class="bili-code" rows="3" readonly placeholder="大写金额"></textarea>
         </div>
         <div id="tool-sort" class="tool-panel">
-            <textarea id="sortIn" class="bili-code" rows="4" placeholder="每行一项"></textarea>
+            <label for="sortIn"></label><textarea id="sortIn" class="bili-code" rows="4" placeholder="每行一项"></textarea>
                     <div class="bili-btn-row"><button class="btn-cherry" id="sortAsc"> 升序</button><button class="btn-cherry" id="sortDesc"> 降序</button><button class="btn-cherry" id="sortDedup"> 去重</button></div>
-                    <textarea id="sortOut" class="bili-code" rows="4" readonly placeholder="结果"></textarea>
+            <label for="sortOut"></label><textarea id="sortOut" class="bili-code" rows="4" readonly placeholder="结果"></textarea>
         </div>
         <div id="tool-urlparse" class="tool-panel">
-            <div class="bili-input-row"><input type="text" id="upIn" placeholder="粘贴网址"><button class="btn-cherry" id="upBtn"> 解析</button></div>
-                    <textarea id="upOut" class="bili-code" rows="4" readonly placeholder="结果"></textarea>
+            <div class="bili-input-row"><label for="upIn"></label><input type="text" id="upIn" placeholder="粘贴网址"><button class="btn-cherry" id="upBtn"> 解析</button></div>
+            <label for="upOut"></label><textarea id="upOut" class="bili-code" rows="4" readonly placeholder="结果"></textarea>
         </div>
         <div id="tool-namegen" class="tool-panel">
             <div class="bili-btn-row"><button class="btn-cherry" id="nameGen"> 随机姓名</button><button class="btn-cherry" id="nameGen5"> 连出5个</button></div>
-                    <textarea id="nameOut" class="bili-code" rows="4" readonly placeholder="结果"></textarea>
+            <label for="nameOut"></label><textarea id="nameOut" class="bili-code" rows="4" readonly placeholder="结果"></textarea>
         </div>
         <div id="tool-timecalc" class="tool-panel">
             <div class="bili-btn-row"><button class="btn-cherry" id="nowBtn"> 当前时间</button></div>
-                    <textarea id="timeOut" class="bili-code" rows="4" readonly placeholder="结果"></textarea>
+            <label for="timeOut"></label><textarea id="timeOut" class="bili-code" rows="4" readonly placeholder="结果"></textarea>
         </div>
         <div id="tool-ascii" class="tool-panel">
-            <div class="bili-input-row"><input type="text" id="asciiIn" placeholder="输入字符或 ASCII 码"><button class="btn-cherry" id="asciiBtn"> 查询</button></div>
-                    <textarea id="asciiOut" class="bili-code" rows="4" readonly placeholder="结果"></textarea>
+            <div class="bili-input-row"><label for="asciiIn"></label><input type="text" id="asciiIn" placeholder="输入字符或 ASCII 码"><button class="btn-cherry" id="asciiBtn"> 查询</button></div>
+            <label for="asciiOut"></label><textarea id="asciiOut" class="bili-code" rows="4" readonly placeholder="结果"></textarea>
         </div>
         <div id="tool-aes" class="tool-panel">
             <div class="tool-title"><i class="fas fa-lock"></i> AES 加解密（AES-256-GCM）</div>
-            <textarea id="aesIn" class="bili-code" rows="3" placeholder="输入要加密/解密的文本"></textarea>
-            <div class="bili-input-row"><input type="text" id="aesKey" placeholder="口令（必须填写，解密需一致）"><button class="btn-cherry" id="aesEnc"> 加密</button><button class="btn-cherry" id="aesDec"> 解密</button></div>
-            <textarea id="aesOut" class="bili-code" rows="3" readonly placeholder="结果"></textarea>
+            <label for="aesIn"></label><textarea id="aesIn" class="bili-code" rows="3" placeholder="输入要加密/解密的文本"></textarea>
+            <div class="bili-input-row"><label for="aesKey"></label><input type="text" id="aesKey" placeholder="口令（必须填写，解密需一致）"><button class="btn-cherry" id="aesEnc"> 加密</button><button class="btn-cherry" id="aesDec"> 解密</button></div>
+            <label for="aesOut"></label><textarea id="aesOut" class="bili-code" rows="3" readonly placeholder="结果"></textarea>
             <p class="bili-tip"> 口令在浏览器本地派生密钥，建议使用强口令；本工具仅供学习交流，不替代正规加密方案。</p>
         </div>
         <div id="tool-strength" class="tool-panel">
             <div class="tool-title"><i class="fas fa-shield-alt"></i> 密码强度检测</div>
-            <div class="bili-input-row"><input type="text" id="pwIn" placeholder="输入密码检测强度"><button class="btn-cherry" id="pwBtn"> 检测</button></div>
-            <textarea id="pwOut" class="bili-code" rows="4" readonly placeholder="结果"></textarea>
+            <div class="bili-input-row"><label for="pwIn"></label><input type="text" id="pwIn" placeholder="输入密码检测强度"><button class="btn-cherry" id="pwBtn"> 检测</button></div>
+            <label for="pwOut"></label><textarea id="pwOut" class="bili-code" rows="4" readonly placeholder="结果"></textarea>
         </div>
         <div id="tool-hex" class="tool-panel">
             <div class="tool-title"><i class="fas fa-code"></i> Hex 转换</div>
-            <textarea id="hexIn" class="bili-code" rows="3" placeholder="输入文本 或 Hex（空格/逗号分隔）"></textarea>
+            <label for="hexIn"></label><textarea id="hexIn" class="bili-code" rows="3" placeholder="输入文本 或 Hex（空格/逗号分隔）"></textarea>
             <div class="bili-btn-row"><button class="btn-cherry" id="hexEnc"> 转Hex</button><button class="btn-cherry" id="hexDec"> Hex转文本</button></div>
-            <textarea id="hexOut" class="bili-code" rows="3" readonly placeholder="结果"></textarea>
+            <label for="hexOut"></label><textarea id="hexOut" class="bili-code" rows="3" readonly placeholder="结果"></textarea>
         </div>
         <div id="tool-unicode" class="tool-panel">
             <div class="tool-title"><i class="fas fa-font"></i> Unicode 转义</div>
-            <textarea id="uniIn" class="bili-code" rows="3" placeholder="输入文本 或 \uXXXX 转义"></textarea>
+            <label for="uniIn"></label><textarea id="uniIn" class="bili-code" rows="3" placeholder="输入文本 或 \uXXXX 转义"></textarea>
             <div class="bili-btn-row"><button class="btn-cherry" id="uniEnc"> 转转义</button><button class="btn-cherry" id="uniDec"> 还原</button></div>
-            <textarea id="uniOut" class="bili-code" rows="3" readonly placeholder="结果"></textarea>
+            <label for="uniOut"></label><textarea id="uniOut" class="bili-code" rows="3" readonly placeholder="结果"></textarea>
         </div>
         <div id="tool-idcard" class="tool-panel">
             <div class="tool-title"><i class="fas fa-id-card"></i> 身份证校验</div>
-            <div class="bili-input-row"><input type="text" id="idIn" placeholder="输入18位身份证号"><button class="btn-cherry" id="idBtn"> 校验</button></div>
-            <textarea id="idOut" class="bili-code" rows="4" readonly placeholder="结果"></textarea>
+            <div class="bili-input-row"><label for="idIn"></label><input type="text" id="idIn" placeholder="输入18位身份证号"><button class="btn-cherry" id="idBtn"> 校验</button></div>
+            <label for="idOut"></label><textarea id="idOut" class="bili-code" rows="4" readonly placeholder="结果"></textarea>
         </div>
         <div id="tool-luhn" class="tool-panel">
             <div class="tool-title"><i class="fas fa-credit-card"></i> Luhn 校验</div>
-            <div class="bili-input-row"><input type="text" id="luhnIn" placeholder="输入卡号/号码"><button class="btn-cherry" id="luhnBtn"> 校验</button></div>
-            <textarea id="luhnOut" class="bili-code" rows="2" readonly placeholder="结果"></textarea>
+            <div class="bili-input-row"><label for="luhnIn"></label><input type="text" id="luhnIn" placeholder="输入卡号/号码"><button class="btn-cherry" id="luhnBtn"> 校验</button></div>
+            <label for="luhnOut"></label><textarea id="luhnOut" class="bili-code" rows="2" readonly placeholder="结果"></textarea>
         </div>
 
 

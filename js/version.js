@@ -15,16 +15,16 @@
  * 防止某个页面漏改。HTML 里已是正确版本时不会触发额外请求。
  * ============================================================ */
 (function () {
-  var __DSH_VERSION = '202609298';
+  const __DSH_VERSION = '202609298';
   window.__DSH_VERSION = __DSH_VERSION;
 
   function bump(root) {
     if (!root) return;
     root.querySelectorAll('link[href*="?v="],script[src*="?v="]').forEach(function (el) {
-      var attr = el.href ? 'href' : 'src';
-      var cur = el.getAttribute(attr);
+      const attr = el.href ? 'href' : 'src';
+      const cur = el.getAttribute(attr);
       if (!cur) return;
-      var next = cur.replace(/\?v=[^"' ]+/, '?v=' + __DSH_VERSION);
+      const next = cur.replace(/\?v=[^"' ]+/, '?v=' + __DSH_VERSION);
       if (next !== cur) el.setAttribute(attr, next); /* 同值不赋值，避免重复请求 */
     });
   }

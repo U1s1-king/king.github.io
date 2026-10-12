@@ -24,20 +24,21 @@
 (function () {
   'use strict';
 
-  var MQ = window.matchMedia('(max-width: 768px)');
+  const MQ = window.matchMedia('(max-width: 768px)');
+
   function byId(id) { return document.getElementById(id); }
   function q(sel, root) { return (root || document).querySelector(sel); }
 
-  var home = byId('mmHome');
-  var listHost = byId('mmListHost');
-  var row = byId('mmRecommendRow');
-  var mini = byId('mmMini');
+  const home = byId('mmHome');
+  const listHost = byId('mmListHost');
+  const row = byId('mmRecommendRow');
+  const mini = byId('mmMini');
   if (!home || !listHost || !mini) return;   /* 只在 music.html 上存在 */
 
   /* ============================================================
      1. 我的歌单：搬进 / 搬回
      ============================================================ */
-  var moved = null;   /* { views:{node,parent,next}, scroll:{node,parent,next} } */
+  let moved = null;   /* { views:{node,parent,next}, scroll:{node,parent,next} } */
 
   function remember(node) {
     return { node: node, parent: node.parentNode, next: node.nextSibling };
@@ -50,8 +51,8 @@
 
   function moveIntoHome() {
     if (moved) return;
-    var views = byId('plViews');
-    var scroll = q('.playlist-scroll');
+    const views = byId('plViews');
+    const scroll = q('.playlist-scroll');
     if (!views || !scroll) return;
     moved = { views: remember(views), scroll: remember(scroll) };
     listHost.appendChild(views);
@@ -79,45 +80,46 @@
      数据源是 #playlistContainer 里已经渲染好的 .track-item。
      只在「官方推荐」这个视图下重建（切到收藏/我的歌单时保留上一组）。
      ============================================================ */
-  var THEMES = [
+  const THEMES = [
     ['#ffd9e6', '#ffb0ca'], ['#dbe9ff', '#b6d2ff'], ['#e8dcff', '#c9b6ff'],
     ['#d9f5e8', '#a9e8cd'], ['#fff0d6', '#ffd79b'], ['#ffe2e2', '#ffbcbc']
   ];
+
   function themeFor(text) {
-    var h = 0;
-    for (var i = 0; i < text.length; i++) h = (h * 31 + text.charCodeAt(i)) % 9973;
+    let h = 0;
+    for (let i = 0; i < text.length; i++) h = (h * 31 + text.charCodeAt(i)) % 9973;
     return THEMES[h % THEMES.length];
   }
 
   function buildRecommendRow() {
     if (!row) return;
-    var box = byId('playlistContainer');
+    const box = byId('playlistContainer');
     if (!box) return;
-    var view = 'official';
+    let view = 'official';
     try { view = localStorage.getItem('sakuraPlView') || 'official'; } catch (e) {}
     if (view !== 'official') return;          /* 非官方推荐视图时不重建 */
-    var items = box.querySelectorAll('.track-item');
+    const items = box.querySelectorAll('.track-item');
     if (!items.length) return;
     /* 已经建过同一批就跳过，避免 MutationObserver 自激 */
     if (row.dataset.built === String(items.length) && row.children.length) return;
 
-    var frag = document.createDocumentFragment();
-    for (var i = 0; i < items.length && i < 12; i++) {
+    const frag = document.createDocumentFragment();
+    for (let i = 0; i < items.length && i < 12; i++) {
       (function (item) {
-        var info = q('.track-info', item);
-        var name = info ? (info.textContent || '').replace(/^\s+/, '').trim() : '';
+        const info = q('.track-info', item);
+        const name = info ? (info.textContent || '').replace(/^\s+/, '').trim() : '';
         if (!name) return;
-        var th = themeFor(name);
-        var b = document.createElement('button');
+        const th = themeFor(name);
+        const b = document.createElement('button');
         b.type = 'button';
         b.className = 'mm-card';
-        var art = document.createElement('span');
+        const art = document.createElement('span');
         art.className = 'mm-card-art';
         art.style.background = 'linear-gradient(140deg,' + th[0] + ',' + th[1] + ')';
-        var ic = document.createElement('i');
+        const ic = document.createElement('i');
         ic.className = 'fas fa-music';
         art.appendChild(ic);
-        var nm = document.createElement('span');
+        const nm = document.createElement('span');
         nm.className = 'mm-card-name';
         nm.textContent = name;
         b.appendChild(art);
@@ -131,61 +133,62 @@
     row.dataset.built = String(items.length);
   }
 
-  var plBox = byId('playlistContainer');
+  const plBox = byId('playlistContainer');
   if (plBox && window.MutationObserver) {
     new MutationObserver(function () { buildRecommendRow(); })
       .observe(plBox, { childList: true });
   }
 
   /* 「艺人」→ 按艺人浏览（阶段五的艺人列表页） */
-  var more = byId('mmRecommendMore');
+  const more = byId('mmRecommendMore');
   if (more) more.addEventListener('click', function () {
     if (window.MusicPages && window.MusicPages.artists) window.MusicPages.artists();
   });
 
   /* 「设置」→ 设置页 */
-  var setBtn = byId('mmSettingsBtn');
+  const setBtn = byId('mmSettingsBtn');
   if (setBtn) setBtn.addEventListener('click', function () {
     if (window.MusicPages && window.MusicPages.settings) window.MusicPages.settings();
   });
 
   /* 「上传」→ 复用抽屉里的上传入口（它绑着打开上传弹窗的逻辑） */
-  var up = byId('mmUploadBtn');
+  const up = byId('mmUploadBtn');
   if (up) up.addEventListener('click', function () {
-    var t = byId('uploadTrigger');
+    const t = byId('uploadTrigger');
     if (t) t.click();
   });
 
   /* ============================================================
      3. 页内迷你播放条
      ============================================================ */
-  var audio = byId('nativeAudio');
+  const audio = byId('nativeAudio');
+
   function fmt(t) {
     if (!isFinite(t) || t <= 0) return '';
-    var m = Math.floor(t / 60), s = Math.floor(t % 60);
+    const m = Math.floor(t / 60), s = Math.floor(t % 60);
     return m + ':' + (s < 10 ? '0' : '') + s;
   }
 
   function syncMini() {
     if (!audio) return;
-    var started = !!(audio.currentSrc || audio.getAttribute('src'));
-    var open = document.body.classList.contains('detail-open');
-    var show = started && !open && MQ.matches;
+    const started = !!(audio.currentSrc || audio.getAttribute('src'));
+    const open = document.body.classList.contains('detail-open');
+    const show = started && !open && MQ.matches;
     mini.hidden = !show;
     mini.classList.toggle('show', show);
     if (!show) return;
 
-    var nameEl = byId('trackName'), artistEl = byId('trackArtist'), coverEl = byId('coverImg');
-    var t = byId('mmMiniTitle'), a = byId('mmMiniArtist'), c = byId('mmMiniCover');
-    var txt = nameEl ? (nameEl.textContent || '').trim() : '';
+    const nameEl = byId('trackName'), artistEl = byId('trackArtist'), coverEl = byId('coverImg');
+    const t = byId('mmMiniTitle'), a = byId('mmMiniArtist'), c = byId('mmMiniCover');
+    const txt = nameEl ? (nameEl.textContent || '').trim() : '';
     if (t) t.textContent = txt || '未在播放';
     if (a) a.textContent = artistEl ? (artistEl.textContent || '').trim() : '';
     if (c && coverEl && coverEl.src) c.src = coverEl.src;
-    var pb = byId('mmMiniPlay');
+    const pb = byId('mmMiniPlay');
     if (pb) pb.innerHTML = '<i class="fas ' + (audio.paused ? 'fa-play' : 'fa-pause') + '"></i>';
-    var bar = byId('mmMiniProgress');
+    const bar = byId('mmMiniProgress');
     if (bar) {
-      var d = audio.duration;
+      const d = audio.duration;
       bar.style.width = (isFinite(d) && d > 0 ? (audio.currentTime / d) * 100 : 0) + '%';
       mini.title = fmt(audio.currentTime) + (isFinite(d) && d > 0 ? ' / ' + fmt(d) : '');
     }
@@ -194,19 +197,21 @@
   /* 点条身 → 全屏播放页。全屏页是 music-app.js 绑在 #coverInner 上的那条路径，
      这里不重写 openFull()，只触发同一个入口，避免两套逻辑漂移。 */
   mini.addEventListener('click', function () {
-    var disc = byId('coverInner');
+    const disc = byId('coverInner');
     if (disc) disc.click();
   });
-  var mp = byId('mmMiniPlay');
+  const mp = byId('mmMiniPlay');
   if (mp) mp.addEventListener('click', function (e) {
     e.stopPropagation();
-    var b = byId('playPauseBtn'); if (b) b.click();
+    const b = byId('playPauseBtn');
+    if (b) b.click();
     setTimeout(syncMini, 120);
   });
-  var mn = byId('mmMiniNext');
+  const mn = byId('mmMiniNext');
   if (mn) mn.addEventListener('click', function (e) {
     e.stopPropagation();
-    var b = byId('nextBtn'); if (b) b.click();
+    const b = byId('nextBtn');
+    if (b) b.click();
     setTimeout(syncMini, 120);
   });
 
@@ -243,10 +248,10 @@
      空的时候把歌词区收成一条提示，省下的高度全部让给封面。
      ============================================================ */
   function syncLyricState() {
-    var wrap = document.querySelector('.fs-wrap');
+    const wrap = document.querySelector('.fs-wrap');
     if (!wrap) return;
-    var box = byId('lyricBox');
-    var empty = !box || !box.querySelector('.lyr-line');
+    const box = byId('lyricBox');
+    const empty = !box || !box.querySelector('.lyr-line');
     wrap.classList.toggle('mm-no-lyric', empty);
   }
 
@@ -259,13 +264,13 @@
      ============================================================ */
   function patchMenu() {
     if (!window.MusicPlus || window.MusicPlus.__pagesPatched) return;
-    var orig = window.MusicPlus.menu;
+    const orig = window.MusicPlus.menu;
     if (typeof orig !== 'function') return;
     window.MusicPlus.menu = function () {
-      var extra = [];
+      const extra = [];
       if (window.MusicPages) {
         if (window.MusicPages.artist) {
-          var s = currentSongForMenu();
+          const s = currentSongForMenu();
           if (s && s.artist) {
             extra.push({ icon: 'fa-compact-disc', label: '查看「' + s.artist + '」', run: function () { window.MusicPages.artist(s.artist); } });
           }
@@ -286,9 +291,9 @@
     window.MusicPlus.__pagesPatched = true;
   }
   function currentSongForMenu() {
-    var nameEl = byId('trackName'), artistEl = byId('trackArtist');
-    var artist = artistEl ? (artistEl.textContent || '').replace(/^\s+/, '').trim() : '';
-    var name = nameEl ? (nameEl.textContent || '').trim() : '';
+    const nameEl = byId('trackName'), artistEl = byId('trackArtist');
+    const artist = artistEl ? (artistEl.textContent || '').replace(/^\s+/, '').trim() : '';
+    const name = nameEl ? (nameEl.textContent || '').trim() : '';
     if (!name) return null;
     return { name: name, artist: artist };
   }

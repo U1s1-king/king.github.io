@@ -1361,7 +1361,7 @@ if (target === 'netease' && !window._plViewsInit) { window._plViewsInit = true; 
     audius: 7,
     ximalaya: 8
   };
-
+  // 音源设置走入网关脱离本地设置，
   function platformRank(id) {
   const r = PLATFORM_RANK[id];
   return r === undefined ? 99 : r;
@@ -2271,8 +2271,7 @@ var UMCrypto = (() => {
 
         static decryptDatabase(database) {
           const ptr0 = passArray8ToWasm0(database, wasm.__wbindgen_malloc);
-          const len0 = WASM_VECTOR_LEN;
-          const ret = wasm.kugou_decryptDatabase(ptr0, len0, database);
+          const ret = wasm.kugou_decryptDatabase(ptr0, WASM_VECTOR_LEN, database);
           if (ret[1]) {
             throw takeFromExternrefTable0(ret[0]);
           }
@@ -2280,8 +2279,7 @@ var UMCrypto = (() => {
 
         static from_header(header) {
           const ptr0 = passArray8ToWasm0(header, wasm.__wbindgen_malloc);
-          const len0 = WASM_VECTOR_LEN;
-          const ret = wasm.kugou_from_header(ptr0, len0);
+          const ret = wasm.kugou_from_header(ptr0, WASM_VECTOR_LEN);
           if (ret[2]) {
             throw takeFromExternrefTable0(ret[1]);
           }
@@ -2301,8 +2299,7 @@ var UMCrypto = (() => {
 
         decrypt(buffer, offset) {
           const ptr0 = passArray8ToWasm0(buffer, wasm.__wbindgen_malloc);
-          const len0 = WASM_VECTOR_LEN;
-          wasm.kugou_decrypt(this.__wbg_ptr, ptr0, len0, buffer, offset);
+          wasm.kugou_decrypt(this.__wbg_ptr, ptr0, WASM_VECTOR_LEN, buffer, offset);
         }
       };
       const KuGouHeaderFinalization = typeof FinalizationRegistry === "undefined" ? {

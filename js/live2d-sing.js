@@ -21,32 +21,32 @@
   'use strict';
   if (window.waifuSing) return;
 
-  var COOLDOWN   = 22000;   /* 两次开口至少隔多久 */
-  var CHANCE      = 0.34;   /* 冷却结束后，每换一句的触发概率 */
-  var BUBBLE_MS   = 3200;   /* 气泡停留时长 */
-  var MIN_LEN     = 2;
-  var MAX_LEN     = 42;     /* 太长的一句话塞进气泡会溢出来 */
+  const COOLDOWN = 22000;   /* 两次开口至少隔多久 */
+  const CHANCE = 0.34;   /* 冷却结束后，每换一句的触发概率 */
+  const BUBBLE_MS = 3200;   /* 气泡停留时长 */
+  const MIN_LEN = 2;
+  const MAX_LEN = 42;     /* 太长的一句话塞进气泡会溢出来 */
 
-  var lastAt = 0, lastText = '', okCount = 0, skipCount = 0;
+  let lastAt = 0, lastText = '', okCount = 0, skipCount = 0;
 
   /* 制作人员 / 纯符号这类不适合当台词的行，跟歌词面板用同一套判断 */
-  var BAD = new RegExp(
-    '^(作词|作詞|作曲|编曲|編曲|制作人|製作人|制作|製作|混音|母带|母帶|录音|錄音|' +
-    '监制|監製|出品|发行|發行|统筹|統籌|企划|企劃|策划|策劃|原唱|演唱|配唱|' +
-    '合声|合聲|吉他|贝斯|貝斯|鼓|键盘|鍵盤|和声|和聲|弦乐|弦樂|OP|SP|词|詞|曲)' +
-    '[^:：]{0,4}[:：]'
+  const BAD = new RegExp(
+      '^(作词|作詞|作曲|编曲|編曲|制作人|製作人|制作|製作|混音|母带|母帶|录音|錄音|' +
+      '监制|監製|出品|发行|發行|统筹|統籌|企划|企劃|策划|策劃|原唱|演唱|配唱|' +
+      '合声|合聲|吉他|贝斯|貝斯|鼓|键盘|鍵盤|和声|和聲|弦乐|弦樂|OP|SP|词|詞|曲)' +
+      '[^:：]{0,4}[:：]'
   );
 
   function fab() { return document.getElementById('waifu-fab'); }
 
   function bubbleEl() {
-    var f = fab();
+    const f = fab();
     return f ? f.querySelector('.wf-bubble') : null;
   }
 
   /* 这句适不适合让看板娘念 */
   function singable(text) {
-    var t = String(text == null ? '' : text).trim();
+    const t = String(text == null ? '' : text).trim();
     if (!t || t.length < MIN_LEN || t.length > MAX_LEN) return null;
     if (BAD.test(t)) return null;
     if (t === lastText) return null;                       /* 同一句不重复 */
@@ -55,7 +55,7 @@
   }
 
   function showBubble(text, ms) {
-    var b = bubbleEl();
+    const b = bubbleEl();
     if (!b) return false;
     /* 看板娘自己在说话时不打断（点她会出 TIPS 台词） */
     if (b.classList.contains('show') && !b.classList.contains('wf-sing')) return false;
@@ -69,7 +69,7 @@
 
   /* 模型晃动 + 引擎 idle 动作，双保险 */
   function wiggle(ms) {
-    var f = fab();
+    const f = fab();
     if (!f) return;
     f.classList.add('wf-singing');
     clearTimeout(f._singTO);
@@ -82,10 +82,10 @@
   /* 供音乐页调用；audio 传进来是为了确认"真的在放" */
   window.waifuSing = function (text, audio) {
     if (audio && audio.paused) { skipCount++; return false; }
-    var f = fab();
+    const f = fab();
     if (!f || f.classList.contains('wf-hidden')) { skipCount++; return false; }
     if (Date.now() - lastAt < COOLDOWN) { skipCount++; return false; }
-    var t = singable(text);
+    const t = singable(text);
     if (!t) { skipCount++; return false; }
     if (Math.random() > CHANCE) { skipCount++; return false; }
     if (!showBubble(t, BUBBLE_MS)) { skipCount++; return false; }
@@ -103,9 +103,9 @@
 
   /* 手动触发一次（自检用，不受冷却与概率限制） */
   window.waifuSingNow = function (text) {
-    var t = String(text == null ? '' : text).trim() || '测试一句歌词喵～';
+    const t = String(text == null ? '' : text).trim() || '测试一句歌词喵～';
     lastAt = 0;
-    var r = showBubble(t, BUBBLE_MS);
+    const r = showBubble(t, BUBBLE_MS);
     wiggle(BUBBLE_MS);
     return r;
   };

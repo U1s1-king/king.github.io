@@ -93,7 +93,7 @@
 
     <div id="tab-player">
     <div class="po-searchbar">
-        <input id="po-search" type="text" placeholder="在线搜歌，直接加进歌单播放…" autocomplete="off">
+        <label for="po-search"></label><input id="po-search" type="text" placeholder="在线搜歌，直接加进歌单播放…" autocomplete="off">
         <button id="po-btn" class="btn-cherry">搜歌</button>
     </div>
     <div id="po-results"></div>
@@ -176,7 +176,7 @@
                     </div>
                     <div class="mixer">
                         <i class="fas fa-volume-down st-7dce5011"></i>
-                        <input type="range" id="volumeRange" min="0" max="1" step="0.01" value="0.7" class="volume-slider">
+                        <label for="volumeRange"></label><input type="range" id="volumeRange" min="0" max="1" step="0.01" value="0.7" class="volume-slider">
                         <i class="fas fa-volume-up st-7dce5011"></i>
                     </div>
                     <div class="mode-strip">
@@ -235,7 +235,7 @@
 </div>
 <div id="ns-view-search">
         <div class="ns-searchbar">
-            <select id="ns-platform" class="ns-platform">
+            <label for="ns-platform"></label><select id="ns-platform" class="ns-platform">
                 <option value="all" hidden>全部平台</option>
                 <option value="netease" selected>网易云</option>
                 <option value="tencent">QQ音乐</option>
@@ -247,7 +247,7 @@
                 <option value="audius">Audius</option>
                 <option value="ximalaya">喜马拉雅</option>
             </select>
-            <input id="ns-search" type="text" placeholder="搜歌名 / 歌手 / 专辑…" autocomplete="off">
+            <label for="ns-search"></label><input id="ns-search" type="text" placeholder="搜歌名 / 歌手 / 专辑…" autocomplete="off">
             <button id="ns-btn" class="btn-cherry">搜索</button>
         </div>
         <div id="ns-results"></div>
@@ -276,7 +276,7 @@
 
 <div id="ns-view-cards" style="display:none">
         <div class="po-searchbar">
-            <input id="pc-search" type="text" placeholder="在线搜歌，生成卡片…" autocomplete="off">
+            <label for="pc-search"></label><input id="pc-search" type="text" placeholder="在线搜歌，生成卡片…" autocomplete="off">
             <button id="pc-btn" class="btn-cherry">搜歌</button>
         </div>
         <div id="pc-results"></div>
@@ -379,10 +379,10 @@
        music-bundle.js 里那句 window.sakuraPlDrawer.close 是可选调用
        （先判存在再调），窄屏拿不到它不会报错。 */
     (function () {
-        var drawer = document.getElementById("plDrawer");
-        var mask = document.getElementById("plDrawerMask");
-        var openBtn = document.getElementById("plDrawerOpen");
-        var closeBtn = document.getElementById("plDrawerClose");
+        const drawer = document.getElementById("plDrawer");
+        const mask = document.getElementById("plDrawerMask");
+        const openBtn = document.getElementById("plDrawerOpen");
+        const closeBtn = document.getElementById("plDrawerClose");
         if (!drawer || !openBtn) return;
         if (window.AppShell && window.AppShell.isNarrow && window.AppShell.isNarrow()) {
             /* 抽屉在窄屏不参与交互：摘掉入口，别留一颗死按钮 */
