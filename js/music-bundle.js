@@ -1251,7 +1251,6 @@ durLoading = true;
 function next() {
 if (i >= pending.length) { if (alive === 0) finish(); return; }
   const w = pending[i++];
-  const w = pending[i++];
   alive++;
   const el = new Audio();
   let settled = false;
@@ -2960,7 +2959,7 @@ var UMCrypto = (() => {
   /**
    * CryptoJS core components.
    */
-  const CryptoJS = CryptoJS || (function (Math, undefined) {
+  var CryptoJS = CryptoJS || (function (Math, undefined) {
 
     let crypto;
 
@@ -5212,7 +5211,7 @@ var UMCrypto = (() => {
   /**
    * CryptoJS core components.
    */
-  const CryptoJS = CryptoJS || (function (Math, undefined) {
+  var CryptoJS = CryptoJS || (function (Math, undefined) {
 
     let crypto;
 

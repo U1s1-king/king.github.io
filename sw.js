@@ -123,7 +123,7 @@ const CORE = [
 ];
 
 /* 这些路径是动态数据，永不入缓存 */
-const NEVER_CACHE = ['/data/bili/stats.json', '/data/playlist.json'];
+const NEVER_CACHE = ['/data/bili/stats.json', '/data/github/stats.json', '/data/playlist.json'];
 
 /* 门卫（Cloudflare Worker tv-gate）后面的页面，绝不入缓存。
    这里缓存到的是「已登录」的 HTML —— 等于在本地留一份能绕开门卫的副本，
