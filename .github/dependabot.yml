@@ -1,0 +1,27 @@
+# 依赖更新的看门人。
+#
+# 加它的原因很具体：本仓库 4 个 workflow 把 action 全部固定在浮动大版本 tag 上，
+# 而且已经落后主流好几个大版本，却没有任何机制会提醒：
+#   actions/checkout@v4      → 主流 v7
+#   actions/setup-node@v4    → 主流 v7
+#   actions/setup-python@v5  → 主流 v7
+# 之所以拖这么久没人发现，是因为 gh-sync / bili-sync 这类定时任务的特点是
+# 「失败了也不影响页面、没人天天看」。等哪天 runner 的 Node runtime 被强制升级，
+# 它们会先静默失败很久，而不是立刻报错。
+#
+# 只跟 github-actions：站点本身是纯静态、无构建步骤，没有 npm 运行时依赖，
+# 根目录那个 package.json 只服务于 tools/ 下几个端到端脚本，暂时不必纳入。
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore"
+    groups:
+      # 这几个 action 的升级互相独立、都无风险，合成一个 PR 减少噪音
+      actions:
+        patterns:
+          - "actions/*"

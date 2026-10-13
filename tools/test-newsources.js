@@ -17,7 +17,10 @@ const ROOT = path.resolve(__dirname, '..');
 /* 允许用 CHROME_PATH 覆盖，理由同 test-netease.js：不设时保持原默认值。 */
 const CHROME = process.env.CHROME_PATH
   || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
-const PORT = 8896;
+/* 8899 而不是 8896：必须落在网关 CORS 白名单里（见 _worker.js 的 SITE_ORIGINS，
+   只放行了 8888 与 8899）。audius/ximalaya 走直连时用不到它，但一旦被测路径
+   回落到网关，端口不在白名单就会变成一堆 "Failed to fetch"。与 test-netease.js 统一。 */
+const PORT = 8899;
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css' };
 
 async function probe(u) {

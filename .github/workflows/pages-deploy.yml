@@ -46,7 +46,7 @@ jobs:
         run: |
           set -e
           mkdir -p /tmp/stage
-          for d in css js img icons webfonts games data; do
+          for d in css js img icons webfonts games data screenshots; do
             [ -d "$d" ] && cp -r "$d" /tmp/stage/
           done
           for f in 404.html Archives.html Games.html home.html index.html \

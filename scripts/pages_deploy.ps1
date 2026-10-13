@@ -1,4 +1,4 @@
-﻿# NOTE: this file MUST keep a UTF-8 BOM. Windows PowerShell 5.1 reads
+# NOTE: this file MUST keep a UTF-8 BOM. Windows PowerShell 5.1 reads
 #       BOM-less .ps1 as GBK, which turns the Chinese comments below into
 #       parser errors. If you edit it with a tool that drops the BOM, re-add it:
 #         $c = Get-Content $p -Raw -Encoding UTF8; Set-Content $p $c -Encoding UTF8
@@ -26,7 +26,7 @@ $Project   = if ($env:PAGES_PROJECT) { $env:PAGES_PROJECT } else { 'sakura-blog'
 $Stage     = Join-Path $env:TEMP 'sakura-blog-stage'
 
 # 目录白名单（运行时要用的）
-$Dirs = @('css', 'js', 'img', 'icons', 'webfonts', 'games', 'data')
+$Dirs = @('css', 'js', 'img', 'icons', 'webfonts', 'games', 'data', 'screenshots')
 # 根目录下的散文件白名单
 $Files = @(
   '404.html', 'Archives.html', 'Games.html', 'home.html', 'index.html',

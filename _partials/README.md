@@ -10,6 +10,37 @@ GitHub Pages 会跑 Jekyll、而 Jekyll 忽略 `_` 开头的目录 —— 但那
 生成出来的那块完全一样，公开可读不构成影响。**密钥、内部路径、未上线内容一律
 不要放在这个目录**。
 
+## 同样的规矩适用于 tools/、scripts/、cloudflare/、server.js
+
+上面那条规矩原先只写给了本目录，但它要管得宽得多。实测（2026-10-13）下列路径在
+`zhaokening.ccwu.cc` 上**都可以直接下载**：
+
+    /tools/check-worker.js        /tools/test-netease.js
+    /tools/SOURCES-TRIED.md       /scripts/gh_sync.py
+    /scripts/pages_deploy.ps1     /scripts/bump_version.py
+    /server.js                    /cloudflare/music-api/_worker.js
+    /README.md                    /data/playlist.json
+
+原因是 `zhaokening.ccwu.cc` 是本仓库的 **GitHub Pages 自定义域名**（见根目录
+`CNAME`），而 `.nojekyll` 关掉了 Jekyll → **整个仓库原样发布，没有任何 exclude
+机制可用**。好消息是 `.git/`、`.github/workflows/`、`__pycache__/*.pyc` 是 404；
+但 `.gitignore` 对已入库文件不起任何发布层面的作用（它自己都能被下载）。
+
+Cloudflare Pages 镜像 `sakura-blog-8dv.pages.dev` 是例外：它靠
+`pages-deploy.yml` / `pages_deploy.ps1` 用**白名单**暂存目录推上去，所以那边
+`/tools/*`、`/server.js`、`/screenshots/*` 都是 404。
+
+**真正要当心的是假安全感**：那两份部署脚本里都写着「绝不整仓库推…cloudflare/、
+scripts/、tools/ 都不该进静态托管」，但那只保护了镜像站 —— 主站是整仓发布的。
+所以任何**将来**写进 `tools/*.js` 或 `scripts/*.py` 的 token、账号口令、私有地址，
+都会在 push 的瞬间变成 `zhaokening.ccwu.cc/tools/xxx.js` 上的公开文本；而且正因为
+大家都以为这些目录不会被发布，这类提交不会在 review 时被拦住。
+
+放进去之前先问一句：这段东西能不能直接贴到公网上？
+
+（已知的一个例外是 `js/tv.js` 里的 `TV_APP_TOKEN`：它**有意**随站点 JS 发出，
+注释里写明了「隔离靠的是两端密钥不通用」。那属于设计取舍，不是这里的疏漏。）
+
 ## 为什么存在
 
 侧边栏（`.site-sidebar`）和底部导航（`.bot-tab`）的 HTML 结构

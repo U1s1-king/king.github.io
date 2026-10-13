@@ -93,39 +93,58 @@ wrangler pages deploy 'D:\za\GitHub\king.github.io\cloudflare\music-api' `
 | `/api/url` | **可播放地址**（多 Meting 镜像轮询，返回真实 CDN 直链，不代理音频流） |
 | `/api/url/lyric` | 备用歌词源 |
 | `/api/meting` | Meting 通用代理 |
-| `/api/tv` | 影视片单/详情/搜索（`ac` `t` `pg` `wd` `ids`），代理公开苹果 CMS 采集接口 |
-| `/api/tv/img` | 影视海报代理（海报图床普遍有热链保护，浏览器直连会 418） |
-| `/api/tv/stream` | m3u8/分片代理**兜底**（返回的播放列表里地址会重写回本代理） |
 
-未匹配的路径会回退到 `env.ASSETS.fetch`（静态资源）。
+未匹配的路径会回退到 `env.ASSETS.fetch`（静态资源）。影视接口**不在这里**，见下一节。
 
-## 影视代理（`/api/tv*`）
+## 影视接口不在本 Worker 内
 
-`TV.html` 直连 `cj.lziapi.com` 这类公开采集接口时会失败：实测 12 个接口
-**只要请求带 `Origin` 就不回 `Access-Control-Allow-Origin`**（不带反而给 `*`），
-浏览器被 CORS 一拦就是空页面。所以片单/详情/搜索由 Worker 转发（服务端请求不带 Origin，
-上游照常返回数据），再按本站白名单回 CORS；上游依次尝试、命中后记住该源，
-单次请求 8 秒超时，避免某个源挂了把整页卡住。
+`/api/tv`、`/api/tv/img`、`/api/tv/stream` **不属于本 Worker**。本节原先描述的是影视
+代码还留在这里时的行为。`c6edf81`（2026-09-25，「清理 music-api 里的影视死代码」）把
+756 行影视代码整段删掉、`_worker.js` 从 1898 行降到 1095 行，**但当时没有同步改这份
+README**，于是留下了一段指向已不存在的东西的文档。实测确认：
 
-视频流**默认不走代理**：实测视频 CDN 对带 Origin 的请求照样回 `Access-Control-Allow-Origin: *`，
-master / variant / TS 分片全部 200，浏览器直连即可；同时也避开了「CDN 按客户端指纹判掉非浏览器
-请求」的坑——Cloudflare 与 Node 侧实测都会拿到上游 404，因此 `/api/tv/stream` 只作为
-直连失败后的兜底重试（对这类会判指纹的 CDN 兜底可能仍失败，此时换线路即可）。
+- `_worker.js` 的 `ROUTES`（约 1204-1223 行）共 16 条，**没有任何 `/api/tv*`**；
+  在本目录全量 grep `api/tv|Gate-Secret|TV_GATE_SECRET|tv-gate` 命中数为 **0**。
+- 未知路径落到 `env.ASSETS.fetch`，而部署成 Worker 时 `env.ASSETS` 是 undefined，
+  于是返回 **404 JSON**（不是 403，也不是 503）。
+- 线上 `GET https://zhaokening.ccwu.cc/api/tv?ac=list` → **401
+  `{"ok":false,"error":"需要影视口令","needGate":true}`**，正是门卫 tv-gate 的响应体；
+  同时 `GET /api/health` → 200 `{"ok":true,"service":"sakura-music-api",...}`，
+  说明本 Worker 活着、只是不碰影视。
 
-## 影视接口门禁（/api/tv*）
+实际链路：
 
-从 2026-09-17 起 `/api/tv*` **不再允许浏览器直连**。所有影视请求必须经由
-`zhaokening.ccwu.cc` 上的独立门卫 Worker（`SakuraTV-app` 的 `cloudflare/tv-gate`）转发，
-门卫会带上内部头 `X-Gate-Secret`；这个 Worker 只认该头，其余一律 403。
+    浏览器 / TV.html
+      → zhaokening.ccwu.cc/api/tv*      （Cloudflare 按「更具体的路由优先」交给 tv-gate）
+      → SakuraTV-app/cloudflare/tv-gate （校验会话 cookie，转发时带上内部头 X-Gate-Secret）
+      → SakuraTV-app/cloudflare/tv-api  （Service Binding TV_API；真正的数据层）
 
-因此这个 Pages 项目**必须**配置环境变量：
+三个 Worker 都在姊妹仓库 `SakuraTV-app`。前端 `js/tv.js` 在生产域用**同源**
+`location.origin` 作网关、请求带 `credentials: 'same-origin'`（浏览器不带、也不该带
+`X-Gate-Secret`）；只有走备用入口 `sakura-tv-api.pages.dev/tv-api` 时才改用
+`X-App-Token` / `?_t=`。
 
-| 变量 | 类型 | 说明 |
-| --- | --- | --- |
-| `TV_GATE_SECRET` | Secret | 与 `SakuraTV-app` 里 `cloudflare/tv-gate` 的 `TV_GATE_SECRET` 完全一致 |
+几点原先写错、值得单独记下的：
 
-**缺少它会让 `/api/tv*` 直接返回 503（fail-closed），影视页会打不开。**
-注意 Pages 的环境变量改完必须重新部署才生效。
+- 说「`/api/tv*` 不再允许浏览器直连」不准确 —— 浏览器**确实**直连同源 `/api/tv*`，
+  只是必须先过 tv-gate 的会话。准确说法是「不再允许**未经门卫**的直连」。
+- 说「这个 Worker 只认 `X-Gate-Secret`，其余一律 403」有两处错：本 Worker 根本不校验
+  任何东西（收到只会 404 JSON）；真正校验的 tv-api **两把钥匙都认**（`X-Gate-Secret`
+  或 `X-App-Token`/`?_t=` 任一匹配即放行）。
+- 说「这个 Pages 项目必须配置 `TV_GATE_SECRET`」是**反的**：本 Worker 故意不配
+  （见 `wrangler.toml` 末尾）。该 secret 属于 **tv-api**，且必须与 tv-gate 里那份
+  完全一致。tv-api 在 `TV_APP_TOKEN` 与 `TV_GATE_SECRET` **两者都缺**时才 503，
+  只缺/错 gate secret 是 **403**。
+- 「Pages 的环境变量改完要重新部署」属旧架构说法：本 Worker 现在是 `wrangler deploy`，
+  secret 走 `wrangler secret put`。
+
+### 唯一仍需注意的：路由重叠
+
+tv-gate 占 `/api/tv*`，本 Worker 占 `/api/*`，Cloudflare 按「更具体的路由优先」匹配，
+所以 `/api/tv*` 仍归 tv-gate。**改动任一 `wrangler.toml` 之后都要回归一次**：
+
+    curl -i https://zhaokening.ccwu.cc/api/tv?ac=list
+    # 期望 401 + application/json
 
 音乐那一整套接口（`/api/search`、`/api/url`…）完全不受影响。
 
