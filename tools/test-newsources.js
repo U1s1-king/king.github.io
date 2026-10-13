@@ -14,7 +14,9 @@ const path = require('path');
 const puppeteer = require('puppeteer-core');
 
 const ROOT = path.resolve(__dirname, '..');
-const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
+/* 允许用 CHROME_PATH 覆盖，理由同 test-netease.js：不设时保持原默认值。 */
+const CHROME = process.env.CHROME_PATH
+  || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const PORT = 8896;
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css' };
 

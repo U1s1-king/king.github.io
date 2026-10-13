@@ -1,0 +1,15 @@
+{
+  "name": "king-github-io",
+  "version": "0.0.0",
+  "private": true,
+  "description": "ZHAOKENING 静态站仓库。站点本身是纯静态、无构建步骤 —— 这个文件只服务于 tools/ 下的端到端脚本，不参与网站发布。",
+  "scripts": {
+    "check": "node tools/check-js-syntax.js && node tools/check-worker.js",
+    "test:netease": "node tools/test-netease.js",
+    "test:newsources": "node tools/test-newsources.js"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^23.11.1"
+  },
+  "comment": "tools/test-*.js 用 puppeteer-core 而不是 puppeteer：前者不下载浏览器，直接复用本机已装的 Chrome。因此跑之前需要指定浏览器路径，例如 CHROME_PATH=/usr/bin/google-chrome npm run test:netease；不指定时回退到 Windows 上的默认安装路径。"
+}

@@ -22,7 +22,10 @@ const path = require('path');
 const puppeteer = require('puppeteer-core');
 
 const ROOT = path.resolve(__dirname, '..');
-const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
+/* 允许用 CHROME_PATH 覆盖：CI 上 Chrome 不在这条路径，换一台机器也未必一样。
+   不设这个环境变量时保持原来的 Windows 默认值，行为不变。 */
+const CHROME = process.env.CHROME_PATH
+  || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 /* 必须用网关 CORS 白名单里的端口，否则从本地页调 gateway 全是 "Failed to fetch"
    （白名单见 cloudflare/music-api/_worker.js 的 SITE_ORIGINS） */
 const PORT = 8899;
@@ -134,7 +137,12 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   ok(order[0] === 'netease', '网易云排第一');
   ok(order.indexOf('bilibili') > 0, 'B站 仍在列表里但不再是第一');
 
-  const rm = /var PLATFORM_RANK = \{([^}]+)\}/.exec(src);
+  /* 声明关键字写成 (?:var|const|let)：这里原先硬编码 `var`，后来一次
+     var→const 归整之后正则再也匹配不到，`rank` 静默变成空字符串，
+     下面两条断言就一直在测「空串里有没有 netease:0」——必然失败，
+     而且失败信息看起来像业务回归，实际只是测试自己腐了。
+     与其跟着改一次关键字，不如让它从一开始就对此不敏感。 */
+  const rm = /(?:var|const|let) PLATFORM_RANK = \{([^}]+)\}/.exec(src);
   const rank = rm ? rm[1] : '';
   ok(/netease:\s*0/.test(rank), 'PLATFORM_RANK 里 netease=0');
   ok(/bilibili:\s*1/.test(rank), 'PLATFORM_RANK 里 bilibili=1');
@@ -152,11 +160,11 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   const apiSrc = fs.readFileSync(path.join(ROOT, 'js/music-api.js'), 'utf8');
   const workerSrc = fs.readFileSync(path.join(ROOT, 'cloudflare/music-api/_worker.js'), 'utf8');
   const codeSrc = strip(src), codeApi = strip(apiSrc);
-  const backup = (/var PO_BACKUP\s*=\s*'([^']+)'/.exec(src) || [])[1] || '';
+  const backup = (/(?:var|const|let) PO_BACKUP\s*=\s*'([^']+)'/.exec(src) || [])[1] || '';
   ok(/api\.injahow\.cn\/meting\//.test(backup), 'PO_BACKUP 已换成实测可用的 injahow');
   ok(!/musicapi\.qijieya\.cn/.test(codeSrc), 'music-bundle 代码里已无 521 的 musicapi.qijieya.cn');
 
-  const sm = (/var STREAM_MIRRORS = \[([^\]]+)\]/.exec(apiSrc) || [])[1] || '';
+  const sm = (/(?:var|const|let) STREAM_MIRRORS = \[([^\]]+)\]/.exec(apiSrc) || [])[1] || '';
   const mirrors = sm.replace(/\/\*[\s\S]*?\*\//g, '')
     .split(',').map(x => x.trim().replace(/['"]/g, '')).filter(Boolean);
   console.log('  STREAM_MIRRORS = ' + JSON.stringify(mirrors));
