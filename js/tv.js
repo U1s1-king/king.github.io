@@ -20,7 +20,7 @@
   /* 生产走同源门卫；window.TV_GATEWAY 留给本地联调覆盖。
      默认值指向 tv-api 的独立入口（旧值 sakura-music-api.pages.dev 已随
      影视拆分作废，而且那域名在国内时通时不通）。 */
-  var GATEWAY = (window.TV_GATEWAY || 'https://zhaokening.ccwu.cc/tv-api').replace(/\/$/, '');
+  const GATEWAY = (window.TV_GATEWAY || 'https://zhaokening.ccwu.cc/tv-api').replace(/\/$/, '');
 
   /* ============================================================
      数据层备用入口（2026-09-29）
@@ -37,17 +37,17 @@
         只能带 App token 直连。这是**有意的降级**：
         宁可封锁时能看，也不要整页打不开。主入口（同源）照旧要口令。
      ⚠️ 不能用 *.workers.dev —— 真机实测整个域在大陆移动网络下不可达。 */
-  var FALLBACK = 'https://sakura-tv-api.pages.dev/tv-api';
+  let FALLBACK = 'https://sakura-tv-api.pages.dev/tv-api';
   if (FALLBACK === GATEWAY) FALLBACK = '';
   /* ⚠️ 这个 token 会随站点 JS 发出去。App 里本来就硬编码同一份，
      隔离靠的是「两端密钥不通用」（App 的 token 打不开网站那条门卫路），
      不是靠这个值保密。 */
-  var TV_APP_TOKEN = 'tvapp_ad9aa63c1079cdd9a0bfd186deba7050dc048e6a1ee5609e';
+  const TV_APP_TOKEN = 'tvapp_ad9aa63c1079cdd9a0bfd186deba7050dc048e6a1ee5609e';
 
-  var TV_GW_MEMO = 'sakuratv.gw.v1';
-  var tvGwBase = '';
+  const TV_GW_MEMO = 'sakuratv.gw.v1';
+  let tvGwBase = '';
   try {
-    var _tg = JSON.parse(localStorage.getItem(TV_GW_MEMO) || 'null');
+    const _tg = JSON.parse(localStorage.getItem(TV_GW_MEMO) || 'null');
     if (_tg && _tg.base && Date.now() - _tg.at < 10 * 60 * 1000) tvGwBase = _tg.base;
   } catch (e) {}
   function tvGwRemember(b) {
@@ -57,17 +57,17 @@
   /** 拼海报 / 分片地址时用「当前已知能用的入口」 */
   function gwNow() { return tvGwBase || GATEWAY; }
   /* 门卫回 401 时拿它做标记：不重试、不降级直连，直接回登录页 */
-  var NEED_GATE = 'NEED_GATE';
+  const NEED_GATE = 'NEED_GATE';
 
   /* 门卫会话过期时的统一提示：说清原因 + 给一个【用户自己点】的重新登录链接。
      绝不在这里 location.replace —— 用户没要求刷新，页面就不该自己刷新。
      用相对路径 'TV.html'：站点可能部署在子路径下，绝对根路径会 404
      （仓库有 CNAME，但 server.js 也支持任意 ROOT）。 */
   function gateExpired() {
-    var note = byId('tvNote');
+    const note = byId('tvNote');
     if (note) {
       note.textContent = '登录状态已过期，需要重新登录：';
-      var a = document.createElement('a');
+      const a = document.createElement('a');
       a.href = 'TV.html';
       a.textContent = '点这里重新登录 ›';
       note.appendChild(a);
@@ -79,12 +79,13 @@
     }
   }
   /* 采集站常见成人向栏目，站点是公开页面，直接不展示 */
-  var BLOCK = /伦理|福利|里番|情色|成人|无码|色情|自拍|偷拍|人妖|淫/;
+  const BLOCK = /伦理|福利|里番|情色|成人|无码|色情|自拍|偷拍|人妖|淫/;
   /* 可以直接塞进 <video> 的直链后缀 */
-  var MEDIA_EXT = ['.mp4', '.m4v', '.mkv', '.flv', '.avi', '.mov', '.webm', '.mp3', '.m4a'];
+  const MEDIA_EXT = ['.mp4', '.m4v', '.mkv', '.flv', '.avi', '.mov', '.webm', '.mp3', '.m4a'];
 
   /* src：分类列表来自哪号源。各站 type_id 编号不同，翻页/点分类必须带上它 */
-  var state = { t: '', pg: 1, kw: '', src: null, pick: false, hits: [], sort: 'def', acc: [] };
+  const state = {t: '', pg: 1, kw: '', src: null, pick: false, hits: [], sort: 'def', acc: []};
+
   /* 聚合模式（无关键词、且用户没手动指定片源）不能翻页，只能「加载更多」。
      原因在网关：聚合时它把各采集源的第 N 页并起来去重，total 是「本页条数 ×
      最深那个源的页数」估出来的（_worker.js 的 tvAggregate），实测首页 total=74000
@@ -94,21 +95,22 @@
      搜索和选中单一源时数据是连续的真分页，照旧用上一页/下一页。 */
   function isAggMode() { return !state.kw && !state.pick; }
   /* 追加模式下的页码游标：只在「加载更多」里递增 */
-  var more = { busy: false, html: '' };
+  let more = {busy: false, html: ''};
   /* 每次请求发一个序号：后发的永远赢。慢响应回来只作废、不覆盖页面 */
-  var reqSeq = 0;
+  let reqSeq = 0;
   /* 「片源」那排的源清单（由网关下发），以及这次每个源的耗时 */
-  var SRCS = [];
+  let SRCS = [];
   /* 当前打开的这部片在各源的候选（含正在看的那个）。换源那排按钮用它，
      切换时沿用同一份集合，所以切完还能继续切回来。 */
-  var ALT_LIST = [];
+  let ALT_LIST = [];
   /* 扁平化的选集列表，给播放器的上一集/下一集/自动连播用 */
-  var EP = { list: [], i: -1 };
-  var LINE_NAMES = { liangzi: '量子线路', lzm3u8: '量子 M3U8', lz: '量子' };
+  const EP = {list: [], i: -1};
+  const LINE_NAMES = {liangzi: '量子线路', lzm3u8: '量子 M3U8', lz: '量子'};
 
   function byId(id) { return document.getElementById(id); }
   /* 页面自带的那句提示，搜索结果显示时临时换掉，换回来用 */
-  var NOTE0 = '';
+  let NOTE0 = '';
+
   /* 页面 load 之后统一把海报 src 补上 */
   function flushImgs() {
     window.__tvLoaded = 1;
@@ -119,18 +121,23 @@
   }
   if (document.readyState === 'complete') window.__tvLoaded = 1;
   else window.addEventListener('load', flushImgs);
-  function setText(id, s) { var el = byId(id); if (el) el.textContent = s; }
-  function say(html) { var g = byId('tvGrid'); if (g) g.innerHTML = '<p class="tv-tip">' + html + '</p>'; }
+  function setText(id, s) {
+    const el = byId(id);
+    if (el) el.textContent = s; }
+  function say(html) {
+    const g = byId('tvGrid');
+    if (g) g.innerHTML = '<p class="tv-tip">' + html + '</p>'; }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 
   /* ---------------- 加载中 / 加载失败（别让用户对着空屏或者一直转） ----------------
      骨架屏而不是一行「已等 N 秒」：空的灰块能立刻告诉用户「内容是这个形状、正在来」，
      比一句转圈提示稳得多（转圈看两秒就开始怀疑是不是卡死了）。
      秒表仍然保留，但降级成角落一行小字：等太久时它才是有用的信息。 */
-  var loadTimers = [];
-  var loadTick = 0;
+  let loadTimers = [];
+  let loadTick = 0;
   /* 上一次列表结果：翻页/追加要往它后面接，不能每次清空 */
-  var gridHtml = '';
+  const gridHtml = '';
+
   function clearLoad() {
     loadTimers.forEach(clearTimeout);
     loadTimers = [];
@@ -138,8 +145,8 @@
   }
 
   function skeleton(n) {
-    var out = '';
-    for (var i = 0; i < (n || 12); i++) {
+    let out = '';
+    for (let i = 0; i < (n || 12); i++) {
       out += '<span class="tv-sk"><span class="tv-sk-poster"></span><span class="tv-sk-line"></span></span>';
     }
     return out;
@@ -147,11 +154,11 @@
 
   function loadingStart(what, append) {
     clearLoad();
-    var g = byId('tvGrid');
+    const g = byId('tvGrid');
     if (!g) return;
     if (append) {
       /* 追加模式：底部插一个「正在加载更多」的小条，已有的卡片一张都不动 */
-      var more = byId('tvMore');
+      let more = byId('tvMore');
       if (!more) {
         more = document.createElement('div');
         more.id = 'tvMore';
@@ -161,19 +168,22 @@
       more.innerHTML = '<span class="tv-spin"></span><span id="tvLoadMsg">' + esc(what) + '</span>' +
         '<span class="tv-more-sec" id="tvLoadSec"></span>';
     } else {
-      var moreOld = byId('tvMore');
+      const moreOld = byId('tvMore');
       if (moreOld && moreOld.parentNode) moreOld.parentNode.removeChild(moreOld);
       g.innerHTML = '<div class="tv-sk-grid">' + skeleton(12) + '</div>' +
         '<p class="tv-loading-hint tv-sk-hint"><span id="tvLoadMsg">' + esc(what) +
         '</span> <span id="tvLoadSec"></span></p>';
     }
-    var msg = function (s) { var m = byId('tvLoadMsg'); if (m) m.textContent = s; };
-    var t0 = Date.now();
+    const msg = function (s) {
+      const m = byId('tvLoadMsg');
+      if (m) m.textContent = s;
+    };
+    const t0 = Date.now();
     /* 秒表：让用户看得见在等多久，也提醒上限是一分钟 */
     loadTick = setInterval(function () {
-      var s = byId('tvLoadSec');
+      const s = byId('tvLoadSec');
       if (!s) return;
-      var n = Math.floor((Date.now() - t0) / 1000);
+      const n = Math.floor((Date.now() - t0) / 1000);
       s.textContent = n >= 3 ? ('已等 ' + n + ' 秒' + (n >= 50 ? '（快到一分钟上限）' : '')) : '';
     }, 1000);
     /* 提示语只在真的慢下来之后才换，别一上来就吓用户 */
@@ -185,17 +195,17 @@
 
   function loadingFail(msg) {
     clearLoad();
-    var g = byId('tvGrid');
+    const g = byId('tvGrid');
     if (!g) return;
     /* 出错了就别再摆着「上一页 / 1 / 1 / 下一页」——
        页面明明什么都没拿到，分页器却还在，看着像加载完了只是内容空。
        这里和 render() 的无结果分支保持一致。 */
-    var pager = byId('tvPager');
+    const pager = byId('tvPager');
     if (pager) pager.hidden = true;
     g.innerHTML = '<div class="tv-loading is-fail"><i class="fas fa-circle-exclamation"></i><p>' + esc(msg) +
       '</p><button type="button" class="tv-retry" id="tvRetry"><i class="fas fa-rotate-right"></i> 重试一次</button>' +
       '<p class="tv-loading-hint">还是不行就点上面「片源」换一个源，或者过会儿再来</p></div>';
-    var b = byId('tvRetry');
+    const b = byId('tvRetry');
     if (b) b.addEventListener('click', function () { load(state.pg); });
   }
 
@@ -205,24 +215,24 @@
      坏数据直接忽略，免得把本地好的 SRCS 覆盖成空的。 */
   function renderSrcs(sources, stats) {
     if (sources && sources.length && typeof sources[0].id === 'number') SRCS = sources;
-    var bar = byId('tvSrcs');
+    const bar = byId('tvSrcs');
     if (!bar || !SRCS.length) return;
-    var ms = {};
+    const ms = {};
     (stats || []).forEach(function (s) { ms[s.i] = s.ms; });
     bar.innerHTML = '';
-    var all = document.createElement('button');
+    const all = document.createElement('button');
     all.type = 'button';
     all.className = 'hub-chip' + (state.pick ? '' : ' is-on');
     all.innerHTML = '<i class="fas fa-layer-group"></i><span>聚合（全部源）</span>';
     all.addEventListener('click', function () { pickSrc(null); });
     bar.appendChild(all);
     SRCS.forEach(function (s) {
-      var b = document.createElement('button');
+      const b = document.createElement('button');
       b.type = 'button';
       b.className = 'hub-chip' + (state.pick && state.src === s.id ? ' is-on' : '');
       b.title = s.name + (s.search ? '（支持搜索）' : '（不支持搜索，只能翻列表）');
       b.innerHTML = '<i class="fas fa-tower-broadcast"></i><span></span>';
-      var nm = s.name;
+      let nm = s.name;
       if (ms[s.id]) {
         nm += ' ' + (ms[s.id] / 1000).toFixed(1) + 's';
         if (ms[s.id] > 5000) b.classList.add('is-slow');
@@ -239,24 +249,25 @@
     /* 清掉关键词：用户点「片源」是想看这个源的片单，不是在这个源里再搜一次。
        留着关键词会让下次 load 走进搜索分支，选源看起来「没反应」。 */
     state.kw = '';
-    var kwEl = byId('tvKw'); if (kwEl) kwEl.value = '';
+    const kwEl = byId('tvKw');
+    if (kwEl) kwEl.value = '';
     renderSrcs(SRCS, []);
     hideHist();
     savePref();
     /* 换源 = 换一批片，正在看的那部不再适用，视图里把它清掉 */
     saveView({ vod: null, vodSrc: null });
-    /* 分类现在是固定档（电影/动漫/体育…），跨源通用，换源不用清掉重选；
+    /* 分类现在很固定档（电影/动漫/体育…），跨源通用，换源不用清掉重选；
        网关会按新源把这一档翻译成它自己的 type_id */
     load(1);
   }
 
-  /* 结果提示里要带链接，用 DOM 拼，避免把第三方字符串当 HTML 插 */
+  /* 结果提示里要带链接，用 DOM 拼，避免当把……第 HTML 插 */
   function noteWithLink(msg, url) {
-    var note = byId('tvNote');
+    const note = byId('tvNote');
     if (!note) return;
     note.textContent = msg + ' ';
     if (!url) return;
-    var a = document.createElement('a');
+    const a = document.createElement('a');
     a.href = url; a.target = '_blank'; a.rel = 'noopener nofollow';
     a.textContent = '在新标签页打开 ›';
     note.appendChild(a);
@@ -265,8 +276,8 @@
   function isPage(u) { return String(u).indexOf('/share/') >= 0; }
   function isM3u8(u) { return String(u).toLowerCase().indexOf('.m3u8') >= 0; }
   function isMedia(u) {
-    var p = String(u).split('?')[0].toLowerCase();
-    for (var i = 0; i < MEDIA_EXT.length; i++) { if (p.slice(-MEDIA_EXT[i].length) === MEDIA_EXT[i]) return true; }
+    const p = String(u).split('?')[0].toLowerCase();
+    for (let i = 0; i < MEDIA_EXT.length; i++) { if (p.slice(-MEDIA_EXT[i].length) === MEDIA_EXT[i]) return true; }
     return false;
   }
 
@@ -274,14 +285,15 @@
     if (t.charCodeAt(0) === 0xFEFF) t = t.slice(1);
     t = t.trim();
     try { return JSON.parse(t); } catch (e) { /* 下面再兜一次 */ }
-    var s = t.indexOf('{'), e2 = t.lastIndexOf('}');
+    const s = t.indexOf('{'), e2 = t.lastIndexOf('}');
     if (s >= 0 && e2 > s) { try { return JSON.parse(t.slice(s, e2 + 1)); } catch (e3) {} }
     throw new Error('片源返回的不是合法 JSON');
   }
 
   /* 一次请求最慢等一分钟（含重试的总预算，不是每次一分钟）。
      CF 边缘偶尔会把响应传到一半卡住，所以必须有上限；但也不能短，有的源本来就慢。 */
-  var WAIT_MAX = 60000;
+  const WAIT_MAX = 60000;
+
   function timeoutOpt(ms) {
     try {
       if (typeof AbortSignal !== 'undefined' && AbortSignal.timeout) return { signal: AbortSignal.timeout(ms) };
@@ -293,7 +305,7 @@
     /* credentials 必须是 same-origin：生产环境下 GATEWAY 是同源的，
        门卫靠 HttpOnly cookie 认人 —— 原来写的 'omit' 会把 cookie 丢掉，一律 401。
        本地联调时 GATEWAY 指向 pages.dev（跨域），same-origin 不会带凭据，正好。 */
-    var opt = Object.assign({ mode: 'cors', credentials: 'same-origin' }, timeoutOpt(ms || WAIT_MAX));
+    const opt = Object.assign({mode: 'cors', credentials: 'same-origin'}, timeoutOpt(ms || WAIT_MAX));
     /* 备用入口是**跨域**的，没有同源 cookie 可带，只能带 App token 直连。
        （必须同时把 credentials 降成 omit —— 带凭据的跨域请求要求 ACAO 回显具体
         源且 ACAC=true，而 Worker 那边没开 ACAC。） */
@@ -316,7 +328,7 @@
         /* X-TV-Err: source = 网关明确告诉我们「是上游某个源不行」，
            **不是这个入口不行**。这种失败绝不能触发换入口（2026-10-13 修）：
            以前分不清，点一个挂掉的源就会整站切到备用入口并锁 10 分钟。 */
-        var se = new Error('HTTP ' + r.status);
+        const se = new Error('HTTP ' + r.status);
         if (r.headers.get('X-TV-Err') === 'source') se.srcErr = true;
         throw se;
       }
@@ -325,20 +337,21 @@
   }
 
   function qs(params) {
-    var q = [];
-    for (var k in params) { if (params[k] !== '' && params[k] !== undefined && params[k] !== null) q.push(k + '=' + encodeURIComponent(params[k])); }
+    const q = [];
+    for (let k in params) { if (params[k] !== '' && params[k] !== undefined && params[k] !== null) q.push(k + '=' + encodeURIComponent(params[k])); }
     return q.join('&');
   }
 
   /* 列表/详情：优先自建 Worker 代理（有 CORS），失败再试直连（几乎必被拦，留个念想） */
-  var DIRECT = 'https://cj.lziapi.com/api.php/provide/vod/';
-  var TOO_LONG = '等了超过一分钟还没回来';
+  const DIRECT = 'https://cj.lziapi.com/api.php/provide/vod/';
+  const TOO_LONG = '等了超过一分钟还没回来';
+
   function leftMs(deadline) { return deadline - Date.now(); }
 
   /* 重试共用同一个 deadline：不管重试几次，总共就等一分钟。
      次数也封顶 —— 否则网络一断就会 700ms 一次空转满一分钟，白等 */
   function apiTry(url, deadline, n) {
-    var left = leftMs(deadline);
+    const left = leftMs(deadline);
     if (left < 2500) return Promise.reject(new Error(TOO_LONG));
     return jget(url, left).catch(function (e) {
       if (e && e.message === NEED_GATE) throw e; /* 门卫要口令，重试没意义 */
@@ -350,8 +363,8 @@
   }
 
   function apiGet(params) {
-    var q = qs(params);
-    var deadline = Date.now() + WAIT_MAX;
+    const q = qs(params);
+    const deadline = Date.now() + WAIT_MAX;
     return apiTry(GATEWAY + '/api/tv?' + q, deadline, 3).catch(function (e1) {
       if (e1 && e1.message === NEED_GATE) throw e1; /* 也别降级去直连上游 */
       /* ⚠ 源不行 ≠ 入口不行：**不许**换备用入口，也不许 tvGwRemember。
@@ -378,7 +391,7 @@
      不经过我们任何入口，算是彻底去中心化 —— 但它只给列表，
      详情/线路/集数还是得靠 tv-api。所以它只是「有总比没有好」。 */
   function apiDirect(q, deadline, e1) {
-    var rest = leftMs(deadline);
+    const rest = leftMs(deadline);
     if (rest < 3000) throw new Error(TOO_LONG + '（' + e1.message + '）');
     return jget(DIRECT + '?' + q, rest).catch(function () {
       throw new Error('代理不可用（' + e1.message + '）');
@@ -417,36 +430,36 @@
   function streamUrl(u) { return gwAuth(gwNow() + '/api/tv/stream?u=' + encodeURIComponent(u)); }
   /* 海报同样经代理：图床热链保护会让直连的 <img> 拿不到图 */
   function picUrl(u) {
-    var s = String(u || '');
+    const s = String(u || '');
     if (!s || s.indexOf('http') !== 0) return s;
     return gwAuth(gwNow() + '/api/tv/img?u=' + encodeURIComponent(s));
   }
 
   /* ---------------- 分类 ---------------- */
   /* 固定档的图标（网关只会回这几个名字，对不上就用文件夹图标兜底） */
-  var CAT_ICON = {
+  const CAT_ICON = {
     '电影': 'fa-film', '电视剧': 'fa-tv', '动漫': 'fa-dragon', '综艺': 'fa-star',
     '纪录片': 'fa-book', '短剧': 'fa-bolt', '体育': 'fa-futbol', '预告片': 'fa-clapperboard',
   };
 
   function loadCats() {
     return apiGet({ ac: 'list' }).then(function (d) {
-      var bar = byId('tvCats');
+      const bar = byId('tvCats');
       if (!bar) return;
       if (d && typeof d._src === 'number' && !state.pick) state.src = d._src;
       if (d && d.sources) renderSrcs(d.sources, null);
-      var list = (d && d['class']) || [];
+      const list = (d && d['class']) || [];
       bar.innerHTML = '';
-      var all = document.createElement('button');
+      const all = document.createElement('button');
       all.type = 'button';
       all.className = 'hub-chip is-on';
       all.innerHTML = '<i class="fas fa-border-all"></i><span>全部</span>';
       all.addEventListener('click', function () { pickCat('', 1); });
       bar.appendChild(all);
       list.forEach(function (c) {
-        var name = String(c.type_name || '');
+        const name = String(c.type_name || '');
         if (!name || BLOCK.test(name)) return;
-        var b = document.createElement('button');
+        const b = document.createElement('button');
         b.type = 'button';
         b.className = 'hub-chip';
         b.setAttribute('data-t', c.type_id);
@@ -465,10 +478,10 @@
          片源和分类是一起挂的（同一个接口），下面那张失败卡已经把
          「没找到片源：…」说清楚了。两处各喊一次同样的话只是噪音，
          而且分类条上那行字还会把筛选区撑高一截。 */
-      var bar = byId('tvCats');
+      const bar = byId('tvCats');
       if (!bar) return;
       bar.innerHTML = '';
-      var again = document.createElement('button');
+      const again = document.createElement('button');
       again.type = 'button';
       again.className = 'hub-chip';
       again.innerHTML = '<i class="fas fa-rotate-right"></i><span>分类没加载出来，点这重试</span>';
@@ -478,16 +491,17 @@
   }
 
   function pickCat(t, pg) {
-    var bar = byId('tvCats');
+    const bar = byId('tvCats');
     if (bar) {
       Array.prototype.forEach.call(bar.querySelectorAll('.hub-chip'), function (x) {
         x.classList.toggle('is-on', String(x.getAttribute('data-t') || '') === String(t || ''));
       });
     }
     state.t = t;
-    /* 换分类等于换一个问题，把搜索词清掉（否则会带着旧关键词去筛分类） */
+    /* 换分类等于换一个问题，会把……搜索带着旧关键词去筛分类） */
     state.kw = '';
-    var kwEl = byId('tvKw'); if (kwEl) kwEl.value = '';
+    const kwEl = byId('tvKw');
+    if (kwEl) kwEl.value = '';
     hideHist();
     savePref();
     /* 换分类同样是换一批片，清掉正在看的那部 */
@@ -498,7 +512,7 @@
   /* 按记忆下来的偏好把对应分类胶囊点亮（分类是异步加载的，
      所以要在 loadCats 渲染完之后再调） */
   function markCat() {
-    var bar = byId('tvCats');
+    const bar = byId('tvCats');
     if (!bar) return;
     Array.prototype.forEach.call(bar.querySelectorAll('.hub-chip'), function (x) {
       x.classList.toggle('is-on', String(x.getAttribute('data-t') || '') === String(state.t || ''));
@@ -525,7 +539,7 @@
      直接拼进 innerHTML 就是 XSS —— 本站的片源全是第三方内容，不能信。 */
   function plain(s) {
     if (!s) return '';
-    var t = String(s);
+    let t = String(s);
     t = t.replace(/<br\s*\/?>/gi, ' ').replace(/<\/(p|div|li|h[1-6])>/gi, ' ');
     t = t.replace(/<[^>]*>/g, '');
     t = t.replace(/&nbsp;/gi, ' ')
@@ -549,9 +563,9 @@
      为 0 时**必须整项丢掉** —— 满屏 ★0.0 比压根不显示更难看。
      豆瓣分作为次选，同样是 0 就丢。 */
   function scoreOf(it) {
-    var v = parseFloat(it && it.vod_score);
+    const v = parseFloat(it && it.vod_score);
     if (isFinite(v) && v > 0) return v.toFixed(1);
-    var d = parseFloat(it && it.vod_douban_score);
+    const d = parseFloat(it && it.vod_douban_score);
     if (isFinite(d) && d > 0) return d.toFixed(1);
     return '';
   }
@@ -560,26 +574,26 @@
      刻意【不含 vod_remarks】—— 它已经是海报左下角的角标了，再来一遍是噪音。
      缺哪项就少哪项，全缺就整行不渲染（回到旧版卡片的样子）。 */
   function metaArr(it) {
-    var out = [];
-    var sc = scoreOf(it);
+    const out = [];
+    const sc = scoreOf(it);
     if (sc) out.push({ t: '★ ' + sc, star: true });
-    var y = String((it && it.vod_year) || '').trim();
+    const y = String((it && it.vod_year) || '').trim();
     if (y && y !== '0' && y !== '0000') out.push({ t: y });
-    var ty = String((it && (it.type_name || it.vod_class)) || '').trim();
+    const ty = String((it && (it.type_name || it.vod_class)) || '').trim();
     if (ty) out.push({ t: ty });
-    var ar = String((it && it.vod_area) || '').trim();
+    const ar = String((it && it.vod_area) || '').trim();
     if (ar) out.push({ t: ar });
     return out;
   }
 
   /* 用 DOM 拼，不拼 HTML —— 上面几个字段全是第三方字符串 */
   function metaEl(it) {
-    var arr = metaArr(it);
+    const arr = metaArr(it);
     if (!arr.length) return null;
-    var box = document.createElement('span');
+    const box = document.createElement('span');
     box.className = 'tvc-meta';
     arr.forEach(function (m) {
-      var s = document.createElement('span');
+      const s = document.createElement('span');
       if (m.star) s.className = 'tvc-star';
       s.textContent = m.t;
       box.appendChild(s);
@@ -591,15 +605,16 @@
      默认那档【不排】：网关聚合时是「各源轮转着取」，本身就是混着的最新，
      硬排反而更差。所以叫「推荐」而不是「热门」—— 站里没有真实热度数据
      （vod_hits 实测全是 0），叫热门是撒谎。 */
-  var SORTS = [
-    { k: 'def', n: '推荐', tip: '按片源返回顺序' },
-    { k: 'new', n: '最近更新', tip: '按片源更新时间' },
-    { k: 'score', n: '评分最高', tip: '没有评分的排在最后' },
-    { k: 'az', n: 'A - Z', tip: '按片名' },
+  const SORTS = [
+    {k: 'def', n: '推荐', tip: '按片源返回顺序'},
+    {k: 'new', n: '最近更新', tip: '按片源更新时间'},
+    {k: 'score', n: '评分最高', tip: '没有评分的排在最后'},
+    {k: 'az', n: 'A - Z', tip: '按片名'},
   ];
+
   function sortList(list, mode) {
     if (!mode || mode === 'def' || !list || list.length < 2) return list;
-    var a = list.slice();
+    const a = list.slice();
     if (mode === 'new') {
       a.sort(function (x, y) {
         return String(y.vod_time || '').localeCompare(String(x.vod_time || ''));
@@ -617,29 +632,29 @@
   }
 
   /* ---------------- Hero 影厅 ---------------- */
-  var HERO_MAX = 5;
-  var HERO_MS = 8000;
-  var hero = { list: [], i: 0, timer: 0 };
-  var REDUCE = false;
+  const HERO_MAX = 5;
+  const HERO_MS = 8000;
+  const hero = {list: [], i: 0, timer: 0};
+  let REDUCE = false;
   try { REDUCE = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); } catch (e) {}
 
   function heroStop() { if (hero.timer) { clearInterval(hero.timer); hero.timer = 0; } }
 
   function heroPaint() {
-    var box = byId('tvHero');
+    const box = byId('tvHero');
     if (!box || !hero.list.length) return;
-    var it = hero.list[hero.i];
+    const it = hero.list[hero.i];
     if (!it) return;
-    var pic = picUrl(String(it.vod_pic || ''));
+    const pic = picUrl(String(it.vod_pic || ''));
 
     /* 背板：海报放大虚化，css 里已经 filter:blur() */
-    var bg = box.querySelector('.tvh-bg');
+    const bg = box.querySelector('.tvh-bg');
     if (bg) {
       /* 进 url() 之前把可能截断声明的字符剔掉，避免拼出坏样式 */
       bg.style.backgroundImage = pic ? 'url("' + pic.replace(/["()\\\s]/g, '') + '")' : 'none';
     }
-    var pbox = box.querySelector('.tvh-poster');
-    var pimg = pbox && pbox.querySelector('img');
+    const pbox = box.querySelector('.tvh-poster');
+    const pimg = pbox && pbox.querySelector('img');
     if (pbox && pimg) {
       if (pic) {
         pbox.classList.remove('is-empty');
@@ -652,21 +667,23 @@
       }
     }
 
-    var tag = box.querySelector('.tvh-tag');
-    var rm = String(it.vod_remarks || '').trim();
+    const tag = box.querySelector('.tvh-tag');
+    const rm = String(it.vod_remarks || '').trim();
     if (tag) {
       if (rm) { tag.hidden = false; tag.textContent = rm; } else { tag.hidden = true; }
     }
 
-    var ti = box.querySelector('.tvh-title');
+    const ti = box.querySelector('.tvh-title');
     if (ti) ti.textContent = String(it.vod_name || '未命名');
 
-    var me = box.querySelector('.tvh-meta');
+    const me = box.querySelector('.tvh-meta');
     if (me) {
       me.textContent = '';
       metaArr(it).forEach(function (m) {
-        var s = document.createElement('span');
-        if (m.star) { var b = document.createElement('b'); b.textContent = m.t; s.appendChild(b); }
+        const s = document.createElement('span');
+        if (m.star) {
+          const b = document.createElement('b');
+          b.textContent = m.t; s.appendChild(b); }
         else s.textContent = m.t;
         me.appendChild(s);
       });
@@ -674,31 +691,31 @@
       me.hidden = !me.children.length;
     }
 
-    var bl = box.querySelector('.tvh-blurb');
+    const bl = box.querySelector('.tvh-blurb');
     if (bl) {
-      var txt = clip(it.vod_blurb || it.vod_content || '', 160);
+      const txt = clip(it.vod_blurb || it.vod_content || '', 160);
       bl.textContent = txt;
       bl.hidden = !txt;
     }
 
     /* 追剧按钮要反映当前状态，否则点了没反馈、再进来又是「追剧」 */
-    var favTxt = byId('tvHeroFavTxt');
-    var favBtn = byId('tvHeroFav');
+    const favTxt = byId('tvHeroFavTxt');
+    const favBtn = byId('tvHeroFav');
     if (favBtn && window.TVStore) {
-      var on = TVStore.isFav(it);
+      const on = TVStore.isFav(it);
       favBtn.classList.toggle('is-on', !!on);
       if (favTxt) favTxt.textContent = on ? '已追剧' : '追剧';
     }
 
     /* 圆点 */
-    var dots = box.querySelector('.tvh-dots');
+    const dots = box.querySelector('.tvh-dots');
     if (dots) {
       dots.textContent = '';
       if (hero.list.length < 2) { dots.hidden = true; }
       else {
         dots.hidden = false;
         hero.list.forEach(function (_, i) {
-          var d = document.createElement('button');
+          const d = document.createElement('button');
           d.type = 'button';
           d.className = 'tvh-dot' + (i === hero.i ? ' is-on' : '');
           d.setAttribute('aria-label', '第 ' + (i + 1) + ' 部');
@@ -716,7 +733,7 @@
   }
 
   function heroPlay() {
-    var it = hero.list[hero.i];
+    const it = hero.list[hero.i];
     if (it) detail(it.vod_id, it._src);
   }
 
@@ -729,11 +746,15 @@
   }
 
   function renderHero(list) {
-    var box = byId('tvHero');
+    const box = byId('tvHero');
     if (!box) return;
     /* 优先挑有海报的：hero 全靠图撑，没图的那条放上去是一片深色，很空 */
-    var picks = (list || []).filter(function (it) { return it && it.vod_name; });
-    var withPic = picks.filter(function (it) { return it.vod_pic; });
+    let picks = (list || []).filter(function (it) {
+      return it && it.vod_name;
+    });
+    const withPic = picks.filter(function (it) {
+      return it.vod_pic;
+    });
     picks = (withPic.length ? withPic : picks).slice(0, HERO_MAX);
     if (!picks.length) { box.hidden = true; heroStop(); hero.list = []; return; }
     hero.list = picks;
@@ -745,26 +766,28 @@
 
   /* ---------------- 排行榜 ---------------- */
   function renderRank(list) {
-    var box = byId('tvRank');
-    var row = box && byId('tvRankRow');
+    const box = byId('tvRank');
+    const row = box && byId('tvRankRow');
     if (!box || !row) return;
-    var picks = (list || []).filter(function (it) { return it && it.vod_name; }).slice(0, 4);
+    const picks = (list || []).filter(function (it) {
+      return it && it.vod_name;
+    }).slice(0, 4);
     if (picks.length < 2) { box.hidden = true; return; }
     row.textContent = '';
     picks.forEach(function (it, i) {
-      var b = document.createElement('button');
+      const b = document.createElement('button');
       b.type = 'button';
       b.className = 'tvr-item';
 
-      var no = document.createElement('span');
+      const no = document.createElement('span');
       no.className = 'tvr-no';
       no.textContent = String(i + 1);
 
-      var po = document.createElement('span');
+      const po = document.createElement('span');
       po.className = 'tvr-poster';
-      var pic = picUrl(String(it.vod_pic || ''));
+      const pic = picUrl(String(it.vod_pic || ''));
       if (pic) {
-        var im = document.createElement('img');
+        const im = document.createElement('img');
         im.loading = 'lazy';
         im.referrerPolicy = 'no-referrer';
         im.alt = '';
@@ -774,21 +797,23 @@
         po.classList.add('is-empty');
       }
 
-      var bd = document.createElement('span');
+      const bd = document.createElement('span');
       bd.className = 'tvr-body';
-      var nm = document.createElement('span');
+      const nm = document.createElement('span');
       nm.className = 'tvr-name';
       nm.textContent = String(it.vod_name || '未命名');
-      var mt = document.createElement('span');
+      const mt = document.createElement('span');
       mt.className = 'tvr-meta';
-      var parts = metaArr(it);
+      const parts = metaArr(it);
       parts.forEach(function (m, k) {
         if (k) mt.appendChild(document.createTextNode(' · '));
-        if (m.star) { var s = document.createElement('b'); s.textContent = m.t; mt.appendChild(s); }
+        if (m.star) {
+          const s = document.createElement('b');
+          s.textContent = m.t; mt.appendChild(s); }
         else mt.appendChild(document.createTextNode(m.t));
       });
       if (!parts.length) {
-        var rm = String(it.vod_remarks || '').trim();
+        const rm = String(it.vod_remarks || '').trim();
         mt.textContent = rm || '—';
       }
       bd.appendChild(nm);
@@ -817,23 +842,23 @@
      所以：offset = 搜索栏的 top + 搜索栏自己的高度。桌面搜索栏不吸顶，
      直接把这个变量撤掉，回落到 CSS 里的 0。 */
   function syncFilterTop() {
-    var f = byId('tvFilter');
+    const f = byId('tvFilter');
     if (!f) return;
-    var s = document.querySelector('.tv-search');
+    const s = document.querySelector('.tv-search');
     if (!s) { f.style.removeProperty('--tvf-top'); return; }
-    var cs = window.getComputedStyle(s);
+    const cs = window.getComputedStyle(s);
     if (cs.position !== 'sticky' && cs.position !== 'fixed') {
       f.style.removeProperty('--tvf-top');
       return;
     }
-    var t = parseFloat(cs.top);
+    let t = parseFloat(cs.top);
     if (!isFinite(t)) t = 0; /* top:auto 之类，当 0 处理 */
     f.style.setProperty('--tvf-top', Math.round(t + s.offsetHeight) + 'px');
   }
 
   function initFilterTop() {
-    var f = byId('tvFilter');
-    var s = document.querySelector('.tv-search');
+    const f = byId('tvFilter');
+    const s = document.querySelector('.tv-search');
     if (!f || !s) return;
     syncFilterTop();
     /* 搜索栏自身高度变化（折行/字号/安全区） */
@@ -855,19 +880,21 @@
 
   /* ---------------- 排序 UI ---------------- */
   function initSort() {
-    var wrap = byId('tvSort');
-    var btn = byId('tvSortBtn');
-    var menu = byId('tvSortMenu');
+    const wrap = byId('tvSort');
+    const btn = byId('tvSortBtn');
+    const menu = byId('tvSortMenu');
     if (!wrap || !btn || !menu) return;
     /* HTML 里默认是 hidden 的：老缓存的 tv.js 不会跑到这里，
        排序控件就整块不出现，而不是留一个点不动的空胶囊。
        能跑到这里说明脚本是新的，这时才把它放出来。 */
     wrap.hidden = false;
 
-    var cur = SORTS.filter(function (s) { return s.k === state.sort; })[0] || SORTS[0];
+    const cur = SORTS.filter(function (s) {
+      return s.k === state.sort;
+    })[0] || SORTS[0];
     btn.textContent = cur.n;
     btn.title = cur.tip;
-    var caret = document.createElement('i');
+    const caret = document.createElement('i');
     caret.className = 'fas fa-chevron-down';
     btn.appendChild(document.createTextNode(' '));
     btn.appendChild(caret);
@@ -877,13 +904,13 @@
 
     menu.textContent = '';
     SORTS.forEach(function (s) {
-      var b = document.createElement('button');
+      const b = document.createElement('button');
       b.type = 'button';
       b.className = s.k === state.sort ? 'is-on' : '';
       b.title = s.tip;
-      var t = document.createElement('span');
+      const t = document.createElement('span');
       t.textContent = s.n;
-      var ck = document.createElement('i');
+      const ck = document.createElement('i');
       ck.className = 'fas fa-check';
       b.appendChild(t);
       b.appendChild(ck);
@@ -920,15 +947,15 @@
 
   /* Hero 上的按钮只在容器存在时才绑 */
   function initHero() {
-    var box = byId('tvHero');
+    const box = byId('tvHero');
     if (!box) return;
-    var play = byId('tvHeroPlay');
+    const play = byId('tvHeroPlay');
     if (play) play.addEventListener('click', heroPlay);
-    var fav = byId('tvHeroFav');
+    const fav = byId('tvHeroFav');
     if (fav) fav.addEventListener('click', function () {
-      var it = hero.list[hero.i];
+      const it = hero.list[hero.i];
       if (!it || !window.TVStore) return;
-      var on = TVStore.toggleFav(it);
+      const on = TVStore.toggleFav(it);
       heroPaint();
       renderMy();
       if (window.TVPlayer && TVPlayer.toast) TVPlayer.toast(on ? '已加入追剧' : '已取消追剧');
@@ -942,19 +969,19 @@
 
   /* ---------------- 列表 ---------------- */
   function card(it) {
-    var a = document.createElement('a');
+    const a = document.createElement('a');
     a.className = 'tv-card';
     a.href = 'javascript:void(0)';
     /* 追加模式靠这个键去重（源+id），也方便「续播角标」回查进度 */
     a.setAttribute('data-k', String(it._src == null ? '' : it._src) + '|' + String(it.vod_id || ''));
-    var pic = String(it.vod_pic || '');
+    const pic = String(it.vod_pic || '');
     a.innerHTML = '<span class="tv-poster">' + (pic ? '<img loading="lazy" referrerpolicy="no-referrer" alt="">' : '') +
       '<span class="tv-badge"></span></span><span class="tv-name"></span>';
     if (pic) {
-      var img = a.querySelector('img');
+      const img = a.querySelector('img');
       /* 图床经代理偶尔拉不动：降级成站点色占位，不留破图 */
       img.addEventListener('error', function () {
-        var box = a.querySelector('.tv-poster');
+        const box = a.querySelector('.tv-poster');
         if (box) box.classList.add('is-empty');
         if (img.parentNode) img.parentNode.removeChild(img);
       });
@@ -963,13 +990,13 @@
          页面已经 load 完了就直接赋 src，不影响后面的翻页/搜索。 */
       if (window.__tvLoaded) { img.src = picUrl(pic); } else { img.setAttribute('data-src', picUrl(pic)); }
     }
-    var badge = a.querySelector('.tv-badge');
-    var remark = String(it.vod_remarks || '');
+    const badge = a.querySelector('.tv-badge');
+    const remark = String(it.vod_remarks || '');
     if (remark) badge.textContent = remark; else badge.remove();
     a.querySelector('.tv-name').textContent = it.vod_name || '未命名';
     /* v2：片名下的副信息行（★评分 · 年份 · 类型 · 地区）。
        全缺就整行不加，卡片自动退回旧样子 —— 不是所有源都给这些字段。 */
-    var mEl = metaEl(it);
+    const mEl = metaEl(it);
     if (mEl) a.appendChild(mEl);
     a.addEventListener('click', function () { detail(it.vod_id, it._src, a, it._alts); });
     return a;
@@ -977,19 +1004,19 @@
 
   /* 往网格里塞卡片，并统一压片名。append=true 时不先清空。 */
   function fillGrid(list, append) {
-    var grid = byId('tvGrid');
+    const grid = byId('tvGrid');
     if (!grid) return;
     if (!append) grid.innerHTML = '';
-    var before = grid.children.length;
+    const before = grid.children.length;
     list.forEach(function (it) { grid.appendChild(card(it)); });
     /* 片名统一压到两行：卡片高度是定死的，等进了文档再按 scrollHeight 逐字减，
        比按字数猜准（中英文宽度不一样，CSS 的 line-clamp 实测还会漏出第三行半个字）。
        只处理这次新增的那批（append 时前面的早就压好了）。 */
-    var names = grid.querySelectorAll('.tv-name');
-    for (var i = before; i < names.length; i++) {
-      var n = names[i];
-      var s = n.textContent;
-      var guard = 0;
+    const names = grid.querySelectorAll('.tv-name');
+    for (let i = before; i < names.length; i++) {
+      const n = names[i];
+      let s = n.textContent;
+      let guard = 0;
       while (n.scrollHeight > n.clientHeight + 1 && s.length > 2 && guard++ < 60) {
         s = s.slice(0, -1);
         n.textContent = s + '…';
@@ -998,11 +1025,11 @@
   }
 
   function render(d, append, agg) {
-    var grid = byId('tvGrid');
+    const grid = byId('tvGrid');
     if (!grid) return;
-    var list = (d && d.list) || [];
-    var pager = byId('tvPager');
-    var moreBox = byId('tvMore');
+    let list = (d && d.list) || [];
+    const pager = byId('tvPager');
+    const moreBox = byId('tvMore');
     if (moreBox && moreBox.parentNode) moreBox.parentNode.removeChild(moreBox);
 
     if (!list.length) {
@@ -1015,12 +1042,13 @@
     /* 追加模式去重：各源翻页会反复吐同一批新片，按 源+id 去重（片名去重不够，
        不同源可能有同名片）。不重复的才算进这次新增。 */
     if (append) {
-      var have = {};
+      const have = {};
       Array.prototype.forEach.call(grid.querySelectorAll('.tv-card'), function (c) {
-        var k = c.getAttribute('data-k'); if (k) have[k] = 1;
+        const k = c.getAttribute('data-k');
+        if (k) have[k] = 1;
       });
       list = list.filter(function (it) {
-        var k = String(it._src == null ? '' : it._src) + '|' + String(it.vod_id || '');
+        const k = String(it._src == null ? '' : it._src) + '|' + String(it.vod_id || '');
         if (have[k]) return false;
         have[k] = 1;
         return true;
@@ -1038,13 +1066,13 @@
        接完再整体重排会把用户已经看过的顺序打乱，所以追加时不动顺序。 */
     if (!append) state.acc = [];
     state.acc = state.acc.concat(list);
-    var view = append ? list : sortList(list, state.sort);
+    const view = append ? list : sortList(list, state.sort);
     fillGrid(view, append);
     /* v2：hero 与排行榜。容器不在（byId 返回 null）就整段不跑 */
     if (!append) { renderHero(view); renderRank(view); }
 
-    var total = parseInt(d.total, 10) || 0;
-    var limit = parseInt(d.limit, 10) || list.length || 1;
+    const total = parseInt(d.total, 10) || 0;
+    const limit = parseInt(d.limit, 10) || list.length || 1;
     if (append) {
       /* 追加模式没有可信的 total，用「还能不能再翻」判断：
          网关每页固定取 6 轮 × 源数，只要这页条数接近满员就认为后面还有。
@@ -1063,7 +1091,7 @@
       renderMoreBtn(true);
       return;
     }
-    var pages = Math.max(1, Math.ceil(total / limit));
+    let pages = Math.max(1, Math.ceil(total / limit));
     /* 单源模式 total 是真的；但如果算出离谱的页数（网关估错），别把用户送到空白页 */
     if (pages > 500) pages = 500;
     setText('tvPage', state.pg + ' / ' + pages);
@@ -1072,12 +1100,12 @@
 
   /* 聚合模式下把「上一页/下一页」换成一颗「加载更多」 */
   function renderMoreBtn(on) {
-    var pager = byId('tvPager');
+    const pager = byId('tvPager');
     if (!pager) return;
-    var prev = byId('tvPrev'), next = byId('tvNext');
+    const prev = byId('tvPrev'), next = byId('tvNext');
     if (prev) prev.hidden = true;
     if (next) next.hidden = true;
-    var box = byId('tvMoreBtn');
+    let box = byId('tvMoreBtn');
     if (!on) { if (box && box.parentNode) box.parentNode.removeChild(box); pager.hidden = true; return; }
     if (!box) {
       box = document.createElement('button');
@@ -1091,17 +1119,18 @@
     pager.hidden = false;
   }
   function restorePager() {
-    var box = byId('tvMoreBtn');
+    const box = byId('tvMoreBtn');
     if (box && box.parentNode) box.parentNode.removeChild(box);
-    var prev = byId('tvPrev'), next = byId('tvNext');
+    const prev = byId('tvPrev'), next = byId('tvNext');
     if (prev) prev.hidden = false;
     if (next) next.hidden = false;
   }
 
   /* 一句短提示（复用列表下方那行），2.4 秒后自动还原 */
-  var flashT = 0;
+  let flashT = 0;
+
   function flashNote(msg) {
-    var note = byId('tvNote');
+    const note = byId('tvNote');
     if (!note) return;
     note.textContent = msg;
     clearTimeout(flashT);
@@ -1113,13 +1142,15 @@
   /* 为什么不是「有请求在跑就直接 return」：首屏那次聚合要等三四秒，用户经常刚进页面
      就敲关键词搜索，旧写法会把这次搜索**静默丢掉**，页面上留的还是上一轮结果
      （表现就是「我搜蜘蛛侠，出来的是别的片」，海报/片名全对不上）。
-     现在改成序号：新请求一律发出，旧的响应回来发现序号过期就整份作废。 */
+     现在改成序号：新请求一律发出，旧地响应回来发现序号过期就整份作废。 */
   function load(pg, append, auto) {
-    var my = ++reqSeq;
+    const my = ++reqSeq;
     state.pg = pg || 1;
-    var t0 = Date.now();
-    var single = state.pick && typeof state.src === 'number' ? SRCS.filter(function (s) { return s.id === state.src; }) : [];
-    var agg = isAggMode();
+    const t0 = Date.now();
+    const single = state.pick && typeof state.src === 'number' ? SRCS.filter(function (s) {
+      return s.id === state.src;
+    }) : [];
+    const agg = isAggMode();
     /* 聚合模式永远走「加载更多」；单源/搜索走真分页，把分页器还回来 */
     if (!agg) restorePager();
     if (!append) loadingStart(
@@ -1131,12 +1162,12 @@
        曾经想过搜索时不带 _src（以为能让网关多打源），结果详情请求的 ids 会打到
        别的源上 —— vod_id 只在单个源内唯一，跨源同号是另一部片，表现就是
        「有些片源点进去拿不到视频」。列表里的 _src 和详情请求的 _src 必须一致。 */
-    var q = { ac: 'videolist', t: state.t, pg: state.pg, wd: state.kw, pick: state.pick ? 1 : '' };
+    const q = {ac: 'videolist', t: state.t, pg: state.pg, wd: state.kw, pick: state.pick ? 1 : ''};
     q._src = state.src;
     apiGet(q)
       .then(function (d) {
         /* 动画最少露 500ms：太快反而像闪一下，看不清发生了什么 */
-        var wait = append ? 0 : Math.max(0, 500 - (Date.now() - t0));
+        const wait = append ? 0 : Math.max(0, 500 - (Date.now() - t0));
         return new Promise(function (r) { setTimeout(r, wait); }).then(function () {
           if (my !== reqSeq) return; /* 期间用户又搜了/翻页了/点进详情了，这份结果作废 */
           clearLoad();
@@ -1160,7 +1191,7 @@
             if (tvSearch) {
               if (tvSearch.head) tvSearch.head.textContent = '「' + state.kw + '」';
               if (tvSearch.count) {
-                var n = ((d && d.list) || []).length;
+                const n = ((d && d.list) || []).length;
                 tvSearch.count.textContent = n + ' 条' +
                   (d && d._srcs ? ' · ' + d._srcs + ' 个片源' : '');
               }
@@ -1172,46 +1203,46 @@
       })
       .catch(function (e) {
         if (my !== reqSeq) return; /* 旧请求的报错别糊在新结果上 */
-        var pager = byId('tvPager'); if (pager) pager.hidden = true;
-        var m = String(e.message || e);
+        const pager = byId('tvPager');
+        if (pager) pager.hidden = true;
+        const m = String(e.message || e);
         /* 门卫过期：单独给一句人话 + 重新登录链接，别混进「源站出错」里 */
         if (m === NEED_GATE) { gateExpired(); return; }
         /* srcErr = 网关明确说了「是上游某个源不行」，入口本身是好的。
            这种情况别提示成「源站出错了」——用户会以为整个站坏了。 */
-        var why = (e && e.srcErr)
-          ? '这个片源暂时不可用，换个源试试'
-          : /一分钟|timeout|abort/i.test(m)
-            ? '这个源太慢了或者没响应'
-            : /^HTTP 5/.test(m)
-              ? '源站这会儿出错了'
-              : /failed|fetch|network|load/i.test(m)
-                ? '连不上片源（网络或代理不通）'
-                : '没找到片源';
+        const why = (e && e.srcErr)
+            ? '这个片源暂时不可用，换个源试试'
+            : /一分钟|timeout|abort/i.test(m)
+                ? '这个源太慢了或者没响应'
+                : /^HTTP 5/.test(m)
+                    ? '源站这会儿出错了'
+                    : /failed|fetch|network|load/i.test(m)
+                        ? '连不上片源（网络或代理不通）'
+                        : '没找到片源';
         /* 追加失败别把已经看到的列表清掉：只在底部提示一句，保留现场 */
         if (append) { flashNote('加载更多失败：' + m); return; }
         loadingFail(why + '：' + m);
       });
   }
 
-  /* 给已经在看的片子标一个续播角标：进列表一眼能看出哪几部看过、看到哪。
+  /* 给已经在看的片子标一个续播角标：进列表一眼能看出哪几不看过、看到哪。
      只读本地 localStorage，不发请求。 */
   function markResume() {
     if (!window.TVStore || !TVStore.getProgress) return;
     Array.prototype.forEach.call(document.querySelectorAll('#tvGrid .tv-card'), function (c) {
-      var k = String(c.getAttribute('data-k') || '');
-      var i = k.indexOf('|');
+      const k = String(c.getAttribute('data-k') || '');
+      const i = k.indexOf('|');
       if (i < 0) return;
-      var src = k.slice(0, i), id = k.slice(i + 1);
+      const src = k.slice(0, i), id = k.slice(i + 1);
       if (!id) return;
-      var p = TVStore.getProgress({ vod_id: id, _src: src === '' ? undefined : Number(src) }, '');
+      let p = TVStore.getProgress({vod_id: id, _src: src === '' ? undefined : Number(src)}, '');
       /* 空集数名查不到是正常的（进度按「片+集」存），这里只做粗标记：
          用任意一集的进度代表这部片 */
       if (!p) {
-        var any = TVStore.getVodProgress({ vod_id: id, _src: src === '' ? undefined : Number(src) });
-        p = any;
+        p = TVStore.getVodProgress({vod_id: id, _src: src === '' ? undefined : Number(src)});
       }
       if (!p || !p.t) return;
-      var badge = c.querySelector('.tv-resume');
+      let badge = c.querySelector('.tv-resume');
       if (!badge) {
         badge = document.createElement('span');
         badge.className = 'tv-resume';
@@ -1224,7 +1255,7 @@
   /* ---------------- 详情与线路 ---------------- */
   /* 源编号 -> 显示名（SRCS 来自网关的 tvSourceList） */
   function srcName(id) {
-    for (var i = 0; i < SRCS.length; i++) { if (SRCS[i].id === id) return SRCS[i].name; }
+    for (let i = 0; i < SRCS.length; i++) { if (SRCS[i].id === id) return SRCS[i].name; }
     return (typeof id === 'number') ? ('源 ' + (id + 1)) : '未知源';
   }
 
@@ -1232,21 +1263,21 @@
      网关聚合时会把同名片记在首条的 _alts 上（见 tvAggregate），
      没有候选项就整排不渲染，不占位。 */
   function renderAltSrcs(cur) {
-    var eps = byId('tvEps');
+    const eps = byId('tvEps');
     if (!eps) return;
-    var old = byId('tvAltSrcs');
+    const old = byId('tvAltSrcs');
     if (old && old.parentNode) old.parentNode.removeChild(old);
     if (!ALT_LIST.length || ALT_LIST.length < 2) return;
-    var box = document.createElement('div');
+    const box = document.createElement('div');
     box.className = 'tv-alt-srcs';
     box.id = 'tvAltSrcs';
-    var lab = document.createElement('span');
+    const lab = document.createElement('span');
     lab.className = 'tv-alt-label';
     lab.textContent = '换源';
     box.appendChild(lab);
     ALT_LIST.forEach(function (a) {
-      var isCur = (a._src === cur);
-      var b = document.createElement('button');
+      const isCur = (a._src === cur);
+      const b = document.createElement('button');
       b.type = 'button';
       b.className = 'tv-alt-btn' + (isCur ? ' is-on' : '');
       b.textContent = srcName(a._src);
@@ -1270,35 +1301,35 @@
        ⚠ 这里必须原样把 pin 发出去（包括搜索场景）：vod_id 只在单个源内唯一，
        不带 _src 时网关会按 order 依次试源、命中即返回，很可能给你另一个源里
        同号的另一部片 —— 播放器拿到的就是错的地址。 */
-    var pin = typeof src === 'number' ? src : state.src;
+    const pin = typeof src === 'number' ? src : state.src;
     /* 这部片在别的源也有 —— 网关聚合时把同名片挂在列表条目的 _alts 上。
        带数组 = 新打开一部片，重建候选（含当前源）；不带 = 源内切换，
        沿用现有候选，别把它清掉，否则切一次「换源」那排就没了。 */
     if (Object.prototype.toString.call(alts) === '[object Array]') {
       ALT_LIST = [{ _src: pin, vod_id: vodId, cur: true }];
-      for (var ai = 0; ai < alts.length; ai++) {
-        var av = alts[ai];
+      for (let ai = 0; ai < alts.length; ai++) {
+        const av = alts[ai];
         if (!av) continue;
         if (av._src === pin && String(av.vod_id) === String(vodId)) continue;
         ALT_LIST.push({ _src: av._src, vod_id: av.vod_id, remarks: av.remarks || '' });
       }
     }
-    var params = { ac: 'videolist', ids: vodId };
+    const params = {ac: 'videolist', ids: vodId};
     if (typeof pin === 'number') params._src = pin;
     apiGet(params).then(function (d) {
-      var it = (d && d.list && d.list[0]) || null;
+      const it = (d && d.list && d.list[0]) || null;
       if (!it) throw new Error('没拿到该资源');
       /* ⚠ 详情接口的条目【不返回 _src】，只有外层信封有（实测确认）。
          不补这一下，TVStore 的 key 会退化成 "|id|集"，进度/追剧跨源会串台。 */
       if (typeof it._src !== 'number') {
-        var envSrc = (d && typeof d._src === 'number') ? d._src : (typeof pin === 'number' ? pin : undefined);
+        const envSrc = (d && typeof d._src === 'number') ? d._src : (typeof pin === 'number' ? pin : undefined);
         if (typeof envSrc === 'number') it._src = envSrc;
       }
       /* 片名以服务端返回的这条为准：列表里拿到的名字可能是空的、也可能被源写串了。
          用服务端的标题回填卡片（用户回头还看得见）再开播放器，点进去才知道自己在看什么。 */
-      var nm = String(it.vod_name || '').trim();
+      const nm = String(it.vod_name || '').trim();
       if (nm && cardEl) {
-        var nmEl = cardEl.querySelector('.tv-name');
+        const nmEl = cardEl.querySelector('.tv-name');
         if (nmEl && nmEl.textContent !== nm) nmEl.textContent = nm;
       }
       openPlayer(it);
@@ -1320,7 +1351,7 @@
      AppShell 的二级页（.detail-view）只在 ≤768px 生效，正好就是手机。
      adopt 会把节点整块搬进去并在关闭时自动搬回原位，所以 <video> 不会
      被重建、播放不中断；这也正是它比「克隆一份 DOM」强的地方。 */
-  var tvDetail = null;
+  let tvDetail = null;
 
   /* 返回 true 表示「本来就有二级页，已经关掉了」。
      silent=true 表示「只是要换一层，不是真的离开」：这时不能让 AppShell
@@ -1328,7 +1359,7 @@
      新哨兵上，把历史搞乱，最后「返回列表」会多退一步直接退出 TV 页。 */
   function closeTvDetail(silent) {
     if (!tvDetail) return false;
-    var h = tvDetail;
+    const h = tvDetail;
     tvDetail = null;   /* 先置空：close() 会回调 onClose，不置空会绕回来 */
     h.close(silent ? { silent: true } : undefined);
     /* 静默关闭是「换一层」，紧接着 detail() 会把新的写回去；
@@ -1353,25 +1384,25 @@
        渲染两份会立刻不同步。搬 DOM 的好处是无论怎么翻页都对。
        关层时必须搬回原位，否则下次从导航栏进影视页会是一片空白。
      ============================================================ */
-  var searchDetail = null;      /* AppShell 给的层句柄 */
-  var searchHome = null;        /* #tvGrid 原来的父节点，关层时搬回去 */
+  let searchDetail = null;      /* AppShell 给的层句柄 */
+  let searchHome = null;        /* #tvGrid 原来的父节点，关层时搬回去 */
   var tvSearch = null;          /* {head, count} —— 结果回来后往这里写「多少条」 */
 
   function openTvSearch(kw) {
     if (!window.AppShell || !AppShell.openDetail) return null;
     closeTvSearch(true);
 
-    var grid = byId('tvGrid');
+    const grid = byId('tvGrid');
     if (!grid) return null;
 
-    var wrap = document.createElement('div');
+    const wrap = document.createElement('div');
     wrap.className = 'tv-sv';
-    var head = document.createElement('div');
+    const head = document.createElement('div');
     head.className = 'tv-sv-head';
-    var k = document.createElement('b');
-    var c = document.createElement('span');
+    const k = document.createElement('b');
+    const c = document.createElement('span');
     head.appendChild(k); head.appendChild(c);
-    var box = document.createElement('div');
+    const box = document.createElement('div');
     box.className = 'tv-sv-body';
     wrap.appendChild(head); wrap.appendChild(box);
 
@@ -1388,9 +1419,9 @@
         if (searchHome && grid && grid.parentNode !== searchHome) {
           searchHome.appendChild(grid);
           /* 分页条也跟着回去 */
-          var pg = byId('tvPager');
+          const pg = byId('tvPager');
           if (pg && pg.parentNode !== searchHome) {
-            var note = byId('tvNote');
+            const note = byId('tvNote');
             if (note) searchHome.insertBefore(pg, note);
             else searchHome.appendChild(pg);
           }
@@ -1401,14 +1432,14 @@
     if (!searchDetail) return null;
     AppShell.adopt(grid, box);
     /* 分页条一起搬 —— 搜索结果也是分页的，留在原页面就点不到了 */
-    var pager = byId('tvPager');
+    const pager = byId('tvPager');
     if (pager) box.appendChild(pager);
     return { head: k, count: c, box: box };
   }
 
   function closeTvSearch(silent) {
     if (!searchDetail) return false;
-    var h = searchDetail;
+    const h = searchDetail;
     searchDetail = null;
     try { h.close(silent ? { silent: true } : undefined); } catch (e) {}
     return true;
@@ -1418,7 +1449,7 @@
     if (!window.AppShell || !AppShell.openDetail) return null;
     /* 本来有层 = 这是一次「换掉」而不是「新开」（换源走的就是这条路）。
        静默关旧的 + replaceState 开新的，历史位不变，后退才不会多退一步。 */
-    var replacing = closeTvDetail(true);
+    const replacing = closeTvDetail(true);
     tvDetail = AppShell.openDetail({
       title: title || '播放',
       replace: replacing,
@@ -1434,14 +1465,16 @@
            `p.hidden = false` 在 openTvDetail 之前就执行了，而这里会把它
            重新藏起来 —— 结果就是「换完源画面不见了，得再点一集」。
            要藏只在用户真离开时藏；其它清理（收抽屉、选集归位、停播）照做。 */
-        var silent = !!(o && o.silent);
+        const silent = !!(o && o.silent);
         if (!silent) {
-          var p = byId('tvPlayer'); if (p) p.hidden = true;
-          var bar = byId('tvBar'); if (bar) bar.hidden = true;
+          const p = byId('tvPlayer');
+          if (p) p.hidden = true;
+          const bar = byId('tvBar');
+          if (bar) bar.hidden = true;
         }
         /* 层关掉时抽屉也得跟着收，并把选集搬回右栏，
            否则下次在桌面端打开会发现选集不在侧栏里 */
-        var sh = byId('tvSheet'), mk = byId('tvMask'), eps = byId('tvEps'), home = epsHome();
+        const sh = byId('tvSheet'), mk = byId('tvMask'), eps = byId('tvEps'), home = epsHome();
         if (sh) sh.classList.remove('is-open');
         if (mk) mk.classList.remove('is-open');
         if (sh) sh.hidden = true;
@@ -1463,26 +1496,26 @@
      点开其中一部后，侧栏还列着其它几部，可以直接横跳，不必退回列表重搜。
      没有关键词（直接按分类浏览）时整块隐藏。 */
   function renderSbHits(cur) {
-    var box = byId('tvSbHits');
-    var list = byId('tvSbList');
+    const box = byId('tvSbHits');
+    const list = byId('tvSbList');
     if (!box || !list) return;
-    var hits = state.hits || [];
+    const hits = state.hits || [];
     list.innerHTML = '';
     if (!state.kw || hits.length < 2) { box.hidden = true; return; }
     setText('tvSbKw', state.kw);
     setText('tvSbCount', hits.length + ' 条');
-    var curId = String((cur && cur.vod_id) || '');
+    const curId = String((cur && cur.vod_id) || '');
     hits.forEach(function (h) {
-      var on = String(h.vod_id || '') === curId;
-      var b = document.createElement('button');
+      const on = String(h.vod_id || '') === curId;
+      const b = document.createElement('button');
       b.type = 'button';
       b.className = 'tv-sb-item' + (on ? ' is-on' : '');
       b.title = h.vod_name || '';
       b.innerHTML = '<span class="tv-sb-poster"></span><span class="tv-sb-body">' +
         '<span class="tv-sb-name"></span><span class="tv-sb-remark"></span></span>';
-      var pic = String(h.vod_pic || '');
+      const pic = String(h.vod_pic || '');
       if (pic) {
-        var im = document.createElement('img');
+        const im = document.createElement('img');
         im.loading = 'lazy';
         im.referrerPolicy = 'no-referrer';
         im.alt = '';
@@ -1491,7 +1524,7 @@
         b.querySelector('.tv-sb-poster').appendChild(im);
       }
       b.querySelector('.tv-sb-name').textContent = h.vod_name || '未命名';
-      var rm = String(h.vod_remarks || '');
+      const rm = String(h.vod_remarks || '');
       if (rm) b.querySelector('.tv-sb-remark').textContent = rm;
       else b.querySelector('.tv-sb-remark').remove();
       b.addEventListener('click', function () {
@@ -1510,18 +1543,18 @@
      同一个思路：节点身份不变，已经绑好的事件、已经点亮的「当前集」都不会丢。 */
   function isNarrowTv() { return window.matchMedia('(max-width: 992px)').matches; }
 
-  var sheetHome = null;   /* #tvEps 原来的爸爸（.tv-aside），搬回来用 */
+  let sheetHome = null;   /* #tvEps 原来的爸爸（.tv-aside），搬回来用 */
 
   function epsHome() {
     if (!sheetHome) {
-      var a = document.querySelector('.tv-aside');
+      const a = document.querySelector('.tv-aside');
       if (a) sheetHome = a;
     }
     return sheetHome;
   }
 
   function sheetOpen() {
-    var sh = byId('tvSheet'), mk = byId('tvMask'), body = byId('tvSheetBody'), eps = byId('tvEps');
+    const sh = byId('tvSheet'), mk = byId('tvMask'), body = byId('tvSheetBody'), eps = byId('tvEps');
     if (!sh || !eps) return;
     if (!isNarrowTv()) return;
     if (body && eps.parentNode !== body) body.appendChild(eps);
@@ -1537,11 +1570,11 @@
   }
 
   function sheetClose() {
-    var sh = byId('tvSheet'), mk = byId('tvMask'), eps = byId('tvEps'), home = epsHome();
+    const sh = byId('tvSheet'), mk = byId('tvMask'), eps = byId('tvEps'), home = epsHome();
     if (mk) mk.classList.remove('is-open');
     if (sh) sh.classList.remove('is-open');
     document.documentElement.classList.remove('tvsheet-open');
-    /* 等过渡走完再真正隐藏，否则抽屉会「啪」地消失、看不到下滑动画 */
+    /* 等过度走完再真正隐藏，否则抽屉会「啪」地消失、看不到下滑动画 */
     setTimeout(function () {
       if (mk && !mk.classList.contains('is-open')) mk.hidden = true;
       if (sh && !sh.classList.contains('is-open')) sh.hidden = true;
@@ -1551,24 +1584,24 @@
 
   /* 底部操作栏上显示当前集数，让用户不用开抽屉也知道自己在第几集 */
   function setBarEp(txt) {
-    var el = byId('tvBarEpsTxt');
+    const el = byId('tvBarEpsTxt');
     if (!el) return;
     el.textContent = txt ? ('选集 · ' + txt) : '选集';
   }
 
   function openPlayer(it) {
-    var p = byId('tvPlayer');
-    var eps = byId('tvEps');
+    const p = byId('tvPlayer');
+    const eps = byId('tvEps');
     if (!p || !eps) return;
     /* 关掉上一次可能还开着的抽屉，并把选集搬回右栏，重开一部片时状态才是干净的 */
     sheetClose();
     setText('tvTitle', it.vod_name || '');
     setText('tvRemark', it.vod_remarks || '');
     /* 数据栏第二格：这条详情是从哪个片源来的（B 站那个位置是播放量） */
-    var srcLine = byId('tvSrcLine');
-    var pin = typeof it._src === 'number' ? it._src : (typeof state.src === 'number' ? state.src : -1);
-    var srcName = '';
-    for (var si = 0; si < SRCS.length; si++) { if (SRCS[si].id === pin) { srcName = SRCS[si].name; break; } }
+    const srcLine = byId('tvSrcLine');
+    const pin = typeof it._src === 'number' ? it._src : (typeof state.src === 'number' ? state.src : -1);
+    let srcName = '';
+    for (let si = 0; si < SRCS.length; si++) { if (SRCS[si].id === pin) { srcName = SRCS[si].name; break; } }
     if (srcLine) {
       if (srcName) { setText('tvSrcName', srcName); srcLine.hidden = false; }
       else { srcLine.hidden = true; }
@@ -1578,22 +1611,22 @@
     EP.list = [];
     EP.i = -1;
     eps.innerHTML = '';
-    var froms = String(it.vod_play_from || '').split('$$$');
-    var groups = String(it.vod_play_url || '').split('$$$');
-    var firstPlayable = null;
+    const froms = String(it.vod_play_from || '').split('$$$');
+    const groups = String(it.vod_play_url || '').split('$$$');
+    let firstPlayable = null;
     /* 各条线路（给播放器右上角那个「线路」菜单用，B 站那个位置是清晰度） */
-    var LINES = [];
+    const LINES = [];
 
     /* ---- 选集面板：线路做顶部 tab，集数做网格（B 站那个观感）----
        原来是把所有线路的所有集数一次性铺开成「线路名 + 一长串集数」，
        线路一多就得滚很久才能翻到下一集；现在一次只显示一条线路。 */
-    var tabsBox = document.createElement('div');
+    const tabsBox = document.createElement('div');
     tabsBox.className = 'tv-ep-tabs';
-    var panesBox = document.createElement('div');
+    const panesBox = document.createElement('div');
     panesBox.className = 'tv-ep-panes';
-    var countEl = byId('tvEpCount');
-    var PANES = [];        /* 每条线路一项：{ tab, pane, count } */
-    var firstPlayablePane = -1;
+    const countEl = byId('tvEpCount');
+    const PANES = [];        /* 每条线路一项：{ tab, pane, count } */
+    let firstPlayablePane = -1;
 
     function selectLine(k) {
       if (!PANES.length) return;
@@ -1604,30 +1637,34 @@
       });
       if (countEl) countEl.textContent = PANES[k].count + ' 集';
       /* 抽屉标题里那份集数也得跟着换线路走，否则切了线路数字还是旧的 */
-      var sc2 = byId('tvSheetCount');
+      const sc2 = byId('tvSheetCount');
       if (sc2) sc2.textContent = PANES[k].count + ' 集';
     }
 
     groups.forEach(function (g, gi) {
-      var parts = [];
+      const parts = [];
       g.split('#').forEach(function (x) { if (x.indexOf('$') > 0) parts.push(x); });
       if (!parts.length) return;
-      var urls = parts.map(function (x) { return x.slice(x.indexOf('$') + 1); });
-      var playable = urls.some(function (u) { return isM3u8(u) || isMedia(u); });
+      const urls = parts.map(function (x) {
+        return x.slice(x.indexOf('$') + 1);
+      });
+      const playable = urls.some(function (u) {
+        return isM3u8(u) || isMedia(u);
+      });
 
-      var pane = document.createElement('div');
+      const pane = document.createElement('div');
       pane.className = 'tv-ep-grid';
-      var tab = document.createElement('button');
+      const tab = document.createElement('button');
       tab.type = 'button';
       tab.className = 'tv-ep-tab' + (playable ? '' : ' is-html');
       tab.textContent = lineName(froms[gi], gi) + (playable ? '' : ' · 网页');
-      var entry = { tab: tab, pane: pane, count: parts.length };
+      const entry = {tab: tab, pane: pane, count: parts.length};
       PANES.push(entry);
       tab.addEventListener('click', function () { selectLine(PANES.indexOf(entry)); });
 
       parts.forEach(function (part, pi) {
-        var cut = part.indexOf('$');
-        var b = document.createElement('button');
+        const cut = part.indexOf('$');
+        const b = document.createElement('button');
         b.type = 'button';
         b.className = 'tv-ep';
         b.textContent = part.slice(0, cut) || ('第' + (pi + 1) + '集');
@@ -1636,14 +1673,14 @@
           Array.prototype.forEach.call(eps.querySelectorAll('.tv-ep'), function (x) { x.classList.toggle('is-on', x === b); });
           /* 上一集/下一集可能跨线路，面板得跟着切到那一页 */
           selectLine(PANES.indexOf(entry));
-          var idx = -1;
-          for (var k = 0; k < EP.list.length; k++) { if (EP.list[k].btn === b) { idx = k; break; } }
+          let idx = -1;
+          for (let k = 0; k < EP.list.length; k++) { if (EP.list[k].btn === b) { idx = k; break; } }
           EP.i = idx;
           if (window.TVPlayer) { TVPlayer.setNav(idx > 0, idx >= 0 && idx < EP.list.length - 1); TVPlayer.setEpisode(b.textContent || ''); }
           /* 底部栏跟着显示当前集；手机上选完就收起抽屉，把画面还给用户 */
           setBarEp(b.textContent || '');
           if (isNarrowTv()) sheetClose();
-          /* 记下「现在在看哪部片的哪一集」——进度和直链都按这个键存 */
+          /* 记下「现在在看哪不片的哪一集」——进度和直链都按这个键存 */
           CUR.it = it;
           CUR.ep = b.textContent || '';
           if (window.TVStore) TVStore.saveUrl(it, CUR.ep, urls[pi] || '');
@@ -1677,24 +1714,24 @@
     renderAltSrcs(it._src);
     p.hidden = false;
     /* 移动端底部操作栏：只在窄屏出现（宽屏选集就在右栏，不需要它） */
-    var bar = byId('tvBar');
+    const bar = byId('tvBar');
     if (bar) bar.hidden = !isNarrowTv();
     /* 抽屉标题里的集数，和右栏那个 #tvEpCount 是同一个数 */
-    var sc = byId('tvSheetCount');
+    const sc = byId('tvSheetCount');
     if (sc) sc.textContent = (byId('tvEpCount') || {}).textContent || '';
     setBarEp('');
     /* 手机端把播放器整块搬进二级页：整屏只留「标题 + 视频 + 选集」，
        比在长页面里往下滚着找播放器舒服得多；关闭时自动搬回原位。 */
-    var det = openTvDetail(it.vod_name || '');
+    const det = openTvDetail(it.vod_name || '');
     if (det && det.el) {
       AppShell.adopt(p, det.el);
       document.documentElement.classList.add('tvp-open');
     }
     if (firstPlayable) { firstPlayable.click(); }
     else {
-      var any = eps.querySelector('.tv-ep');
+      const any = eps.querySelector('.tv-ep');
       if (any) {
-        var raw = String(it.vod_play_url || '').split('$$$')[0].split('#')[0];
+        const raw = String(it.vod_play_url || '').split('$$$')[0].split('#')[0];
         var u = raw.indexOf('$') > 0 ? raw.slice(raw.indexOf('$') + 1) : '';
         any.click();
         noteWithLink('这个资源只有网页线路，浏览器里播不了。', u);
@@ -1708,18 +1745,18 @@
   /* ---------------- 继续观看 / 我的追剧（本地数据） ----------------
      这两块只读 localStorage，不碰网络。没有内容时整块隐藏，不占位。 */
   function myCard(rec, kind) {
-    var b = document.createElement('button');
+    const b = document.createElement('button');
     b.type = 'button';
     b.className = 'tv-my-item';
     b.title = rec.name || '';
-    var pos = (rec.d && rec.t) ? Math.min(100, Math.max(2, Math.round(rec.t / rec.d * 100))) : 0;
+    const pos = (rec.d && rec.t) ? Math.min(100, Math.max(2, Math.round(rec.t / rec.d * 100))) : 0;
     b.innerHTML = '<span class="tv-my-poster"><span class="tv-my-bar"' + (pos ? '' : ' hidden') +
       '><i style="width:' + pos + '%"></i></span></span>' +
       '<span class="tv-my-name"></span><span class="tv-my-sub"></span>';
-    var pic = String(rec.pic || '');
-    var poster = b.querySelector('.tv-my-poster');
+    const pic = String(rec.pic || '');
+    const poster = b.querySelector('.tv-my-poster');
     if (pic) {
-      var im = document.createElement('img');
+      const im = document.createElement('img');
       im.loading = 'lazy';
       im.referrerPolicy = 'no-referrer';
       im.alt = '';
@@ -1735,9 +1772,9 @@
     b.querySelector('.tv-my-name').textContent = rec.name || '未命名';
 
     /* 副标题：续播显示「看到 12:34 · 第3集」，追剧显示备注 */
-    var sub = b.querySelector('.tv-my-sub');
+    const sub = b.querySelector('.tv-my-sub');
     if (kind === 'prog') {
-      var parts = [];
+      const parts = [];
       if (rec.t) parts.push('看到 ' + fmtTime(rec.t));
       if (rec.ep) parts.push(rec.ep);
       sub.textContent = parts.join(' · ');
@@ -1748,7 +1785,7 @@
 
     /* 追剧卡片右上角给个删除叉 */
     if (kind === 'fav') {
-      var del = document.createElement('span');
+      const del = document.createElement('span');
       del.className = 'tv-my-del';
       del.setAttribute('role', 'button');
       del.setAttribute('aria-label', '取消追剧');
@@ -1770,12 +1807,12 @@
   }
 
   function renderMy() {
-    var box = byId('tvMy'), row = byId('tvMyRow'), favRow = byId('tvFavRow'),
+    const box = byId('tvMy'), row = byId('tvMyRow'), favRow = byId('tvFavRow'),
         favHead = byId('tvFavHead'), favCount = byId('tvFavCount');
     if (!box || !row || !favRow || !window.TVStore) return;
 
-    var prog = TVStore.recent(12);
-    var favs = TVStore.favList();
+    const prog = TVStore.recent(12);
+    const favs = TVStore.favList();
 
     row.innerHTML = '';
     prog.forEach(function (r) { row.appendChild(myCard(r, 'prog')); });
@@ -1794,11 +1831,11 @@
 
   /* 播放页上「追剧」按钮的选中态 */
   function updateFavBtn() {
-    var b = byId('tvFav'), t = byId('tvFavTxt');
+    const b = byId('tvFav'), t = byId('tvFavTxt');
     if (!b || !window.TVStore) return;
-    var on = CUR.it ? TVStore.isFav(CUR.it) : false;
+    const on = CUR.it ? TVStore.isFav(CUR.it) : false;
     b.classList.toggle('is-on', on);
-    var ic = b.querySelector('i');
+    const ic = b.querySelector('i');
     if (ic) ic.className = on ? 'fas fa-star' : 'far fa-star';
     if (t) t.textContent = on ? '已追剧' : '追剧';
   }
@@ -1807,24 +1844,28 @@
      这两样都只写 localStorage：不联网、不上传。用途很直接 ——
      影视页的用法就是「反复搜同一批片名」，每次重敲一遍很烦；
      分类和片源同理，用户选「动漫 + 量子」之后下次进来还得再选一次。 */
-  var K_SK = 'tv.search.v1';
-  var K_PREF = 'tv.pref.v1';
-  var MAX_SK = 12;
+  const K_SK = 'tv.search.v1';
+  const K_PREF = 'tv.pref.v1';
+  const MAX_SK = 12;
 
   function lsGet(k, d) {
-    try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; }
+    try {
+      const v = localStorage.getItem(k);
+      return v ? JSON.parse(v) : d; } catch (e) { return d; }
   }
   function lsSet(k, v) {
     try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* 配额满了就算了 */ }
   }
   function searchHistory() {
-    var a = lsGet(K_SK, []);
+    const a = lsGet(K_SK, []);
     return Object.prototype.toString.call(a) === '[object Array]' ? a : [];
   }
   function pushHistory(kw) {
     kw = String(kw || '').trim();
     if (!kw) return;
-    var a = searchHistory().filter(function (x) { return x !== kw; });
+    const a = searchHistory().filter(function (x) {
+      return x !== kw;
+    });
     a.unshift(kw);
     lsSet(K_SK, a.slice(0, MAX_SK));
   }
@@ -1835,7 +1876,7 @@
     lsSet(K_PREF, { t: state.t, src: state.src, pick: state.pick });
   }
   function loadPref() {
-    var p = lsGet(K_PREF, null);
+    const p = lsGet(K_PREF, null);
     if (!p || typeof p !== 'object') return;
     /* 只恢复分类和「选了哪个源」。关键词刻意不恢复：用户下次进来
        想看的是最新片单，而不是被上一次的搜索结果困住。 */
@@ -1852,11 +1893,14 @@
      用 sessionStorage 而不是 localStorage：同一个标签页内刷新要还原，
      但关掉标签页再进来应该回到「最新片单」—— 跨会话恢复关键词会把人
      困在上次搜的东西里（这正是 loadPref 不恢复 kw 的原因）。 */
-  var K_VIEW = 'tv.view.v1';
-  function ssGet(k, d) { try { var v = sessionStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
+  const K_VIEW = 'tv.view.v1';
+
+  function ssGet(k, d) { try {
+    const v = sessionStorage.getItem(k);
+    return v ? JSON.parse(v) : d; } catch (e) { return d; } }
   function ssSet(k, v) { try { sessionStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
   function saveView(extra) {
-    var v = ssGet(K_VIEW, null);
+    let v = ssGet(K_VIEW, null);
     if (!v || typeof v !== 'object') v = {};
     v.kw = state.kw || '';
     v.t = state.t || '';
@@ -1871,7 +1915,7 @@
     ssSet(K_VIEW, v);
   }
   function loadView() {
-    var v = ssGet(K_VIEW, null);
+    const v = ssGet(K_VIEW, null);
     return (v && typeof v === 'object') ? v : null;
   }
 
@@ -1879,20 +1923,26 @@
      自己画一个：<input list=datalist> 那种原生建议框在移动端表现很差
      （iOS 上根本不弹），而且没法做「点 × 删掉这一条」。
      doSearch 由 boot() 注入 —— 历史项被点时得走和按钮完全一样的流程。 */
-  var doSearch = function () {};
-  function histOpen() { var b = byId('tvHist'); return !!(b && !b.hidden); }
-  function hideHist() { var b = byId('tvHist'); if (b) b.hidden = true; }
+  let doSearch = function () {
+  };
+
+  function histOpen() {
+    const b = byId('tvHist');
+    return !!(b && !b.hidden); }
+  function hideHist() {
+    const b = byId('tvHist');
+    if (b) b.hidden = true; }
   function showHist() {
-    var box = byId('tvHist');
+    const box = byId('tvHist');
     if (!box) return;
-    var list = searchHistory();
+    const list = searchHistory();
     if (!list.length) { box.hidden = true; return; }
     box.innerHTML = '';
-    var head = document.createElement('div');
+    const head = document.createElement('div');
     head.className = 'tv-hist-head';
-    var ht = document.createElement('span');
+    const ht = document.createElement('span');
     ht.textContent = '最近搜索';
-    var clr = document.createElement('button');
+    const clr = document.createElement('button');
     clr.type = 'button';
     clr.textContent = '清空';
     clr.addEventListener('click', function (e) {
@@ -1904,14 +1954,14 @@
     head.appendChild(clr);
     box.appendChild(head);
     list.forEach(function (w) {
-      var row = document.createElement('div');
+      const row = document.createElement('div');
       row.className = 'tv-hist-row';
-      var b = document.createElement('button');
+      const b = document.createElement('button');
       b.type = 'button';
       b.className = 'tv-hist-word';
       b.textContent = w;
       b.addEventListener('click', function () { doSearch(w); });
-      var del = document.createElement('button');
+      const del = document.createElement('button');
       del.type = 'button';
       del.className = 'tv-hist-del';
       del.setAttribute('aria-label', '删除这条记录');
@@ -1929,18 +1979,18 @@
   }
   /* 上下键在下拉里移动高亮，同时把词填回输入框 */
   function moveHist(dir) {
-    var box = byId('tvHist');
+    const box = byId('tvHist');
     if (!box) return;
-    var words = box.querySelectorAll('.tv-hist-word');
+    const words = box.querySelectorAll('.tv-hist-word');
     if (!words.length) return;
-    var cur = -1;
-    for (var i = 0; i < words.length; i++) if (words[i].classList.contains('is-cur')) cur = i;
+    let cur = -1;
+    for (let i = 0; i < words.length; i++) if (words[i].classList.contains('is-cur')) cur = i;
     if (cur >= 0) words[cur].classList.remove('is-cur');
-    var nx = cur + dir;
+    let nx = cur + dir;
     if (nx < 0) nx = words.length - 1;
     if (nx >= words.length) nx = 0;
     words[nx].classList.add('is-cur');
-    var kw = byId('tvKw');
+    const kw = byId('tvKw');
     if (kw) kw.value = words[nx].textContent;
   }
 
@@ -1966,16 +2016,16 @@
 
   function onTimeUpdate() {
     if (!window.TVStore || !CUR.it) return;
-    var v = TVPlayer.getVideo && TVPlayer.getVideo();
+    const v = TVPlayer.getVideo && TVPlayer.getVideo();
     if (!v || !v.duration || !isFinite(v.duration)) return;
     TVStore.saveProgress(CUR.it, CUR.ep, v.currentTime, v.duration);
   }
 
   function resumeIfAny() {
     if (!window.TVStore || !CUR.it) return;
-    var v = TVPlayer.getVideo && TVPlayer.getVideo();
+    const v = TVPlayer.getVideo && TVPlayer.getVideo();
     if (!v || !v.duration || !isFinite(v.duration)) return;
-    var p = TVStore.getProgress(CUR.it, CUR.ep);
+    const p = TVStore.getProgress(CUR.it, CUR.ep);
     if (!p || !p.t) return;
     /* 已经接近上次那个位置就别再跳了（可能是重试引起的第二次 metadata） */
     if (Math.abs(v.currentTime - p.t) < 3) return;
@@ -1985,14 +2035,15 @@
 
   function fmtTime(s) {
     s = Math.max(0, Math.floor(s || 0));
-    var h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60;
+    const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60;
+
     function p2(n) { return (n < 10 ? '0' : '') + n; }
     return (h > 0 ? h + ':' : '') + p2(m) + ':' + p2(x);
   }
 
   /* ---------------- 绑定 ---------------- */
   function boot() {
-    var n0 = byId('tvNote');
+    const n0 = byId('tvNote');
     if (n0) NOTE0 = n0.textContent;
     /* v2：hero 与排序条。两个函数都自己判断容器在不在，删了容器就自动跳过 */
     initHero();
@@ -2006,7 +2057,8 @@
         onEnded: function () { if (EP.i >= 0 && EP.i < EP.list.length - 1) EP.list[EP.i + 1].btn.click(); },
       });
     }
-    var go = byId('tvGo'), kw = byId('tvKw'), back = byId('tvBack');
+    const go = byId('tvGo'), kw = byId('tvKw'), back = byId('tvBack');
+
     /* 统一的「执行搜索」入口：记历史、关下拉、回到第 1 页。
        追加模式一律关掉 —— 换关键词必须重开一页，不能往后接。 */
     function runSearch(k) {
@@ -2020,8 +2072,7 @@
       if (!state.kw) { closeTvSearch(); load(1); return; }
       /* 开二级页。⚠ 必须在 load(1) 之前 —— load 是往 #tvGrid 里渲染的，
          网格得先搬进层里，否则这一页结果会画在主页面上一闪。 */
-      var sv = openTvSearch(state.kw);
-      tvSearch = sv;
+      tvSearch = openTvSearch(state.kw);
       load(1);
     }
     doSearch = runSearch;
@@ -2043,7 +2094,7 @@
             会把网关打爆」—— 所以当时加了防抖，但本质还是边打边搜）。
             用户的要求是「全部打完字后再搜索」：
               · 没打完就出结果，等于用半截关键词去问采集源，结果乱跳；
-              · 每敲一个字都过一遍网关，本来就慢的采集源更慢。
+              · 每敲一个字都过一遍网关，本来就慢地采集源更慢。
             现在只有三种触发：按回车、点「搜索」按钮、从别处带词进来。 */
       kw.addEventListener('focus', function () { if (!kw.value.trim()) showHist(); });
       kw.addEventListener('input', function () {
@@ -2051,30 +2102,31 @@
         else hideHist();
       });
       document.addEventListener('click', function (e) {
-        var box = byId('tvHist');
+        const box = byId('tvHist');
         if (box && !box.hidden && !box.contains(e.target) && e.target !== kw) hideHist();
       });
     }
-    var prev = byId('tvPrev'), next = byId('tvNext');
+    const prev = byId('tvPrev'), next = byId('tvNext');
     if (prev) prev.addEventListener('click', function () { if (state.pg > 1) load(state.pg - 1); });
     if (next) next.addEventListener('click', function () { load(state.pg + 1); });
     if (back) back.addEventListener('click', function () {
       /* 二级页开着时「返回列表」就是关掉它：onClose 里已经隐藏 + 停播了 */
       if (closeTvDetail()) return;
-      var p = byId('tvPlayer'); if (p) p.hidden = true;
+      const p = byId('tvPlayer');
+      if (p) p.hidden = true;
       stopPlayer();
       load(state.pg);
     });
-    var rot = byId('tvRotate');
+    const rot = byId('tvRotate');
     if (rot) rot.addEventListener('click', function () {
       if (window.TVPlayer && TVPlayer.enterLandscape) TVPlayer.enterLandscape();
     });
 
     /* ---------- 追剧 / 原站打开 / 清空记录 ---------- */
-    var favBtn = byId('tvFav');
+    const favBtn = byId('tvFav');
     if (favBtn) favBtn.addEventListener('click', function () {
       if (!window.TVStore || !CUR.it) return;
-      var on = TVStore.toggleFav(CUR.it);
+      const on = TVStore.toggleFav(CUR.it);
       updateFavBtn();
       renderMy();
       if (window.TVPlayer && TVPlayer.toast) TVPlayer.toast(on ? '已加入追剧' : '已取消追剧');
@@ -2082,17 +2134,17 @@
 
     /* 原站打开：把这一集的真实地址甩给浏览器。
        这是「暴露直链」不是「下载」——本站不托管、不转存任何文件。 */
-    var srcOpen = byId('tvSrcOpen');
+    const srcOpen = byId('tvSrcOpen');
     if (srcOpen) srcOpen.addEventListener('click', function () {
       if (!CUR.it || !CUR.ep) { noteWithLink('还没选集，先点一集再打开原站。', ''); return; }
-      var u = window.TVStore ? TVStore.getUrl(CUR.it, CUR.ep) : '';
+      const u = window.TVStore ? TVStore.getUrl(CUR.it, CUR.ep) : '';
       if (!u) { noteWithLink('这一集还没有地址记录，先播放一次再试。', ''); return; }
       /* 网页线路（/share/ 那种）本来就要在新标签页看，一并走这里 */
       window.open(u, '_blank', 'noopener,noreferrer');
       noteWithLink('已在原站打开：' + CUR.ep + '（本站不托管该视频，直链来自采集接口）', '');
     });
 
-    var myClear = byId('tvMyClear');
+    const myClear = byId('tvMyClear');
     if (myClear) myClear.addEventListener('click', function () {
       if (!window.TVStore) return;
       /* 只清进度，不动追剧列表 —— 用户主动收藏的东西不该被「清空记录」带走 */
@@ -2105,11 +2157,11 @@
        等 loadedmetadata 再跳（那时 duration 才是真的），
        timeupdate 负责回写。两个都在 TVPlayer.init 之后绑。 */
     if (window.TVPlayer && TVPlayer.getVideo) {
-      var vv = TVPlayer.getVideo();
+      const vv = TVPlayer.getVideo();
       if (vv) {
         vv.addEventListener('loadedmetadata', function () { setTimeout(resumeIfAny, 120); });
         vv.addEventListener('timeupdate', onTimeUpdate);
-        /* 关页面/切后台时补存一次，别把最后几秒丢了 */
+        /* 关页面/切后台时不存一次，别把最后几秒丢了 */
         vv.addEventListener('pause', function () { onTimeUpdate(); });
       }
       window.addEventListener('pagehide', function () { if (CUR.it) onTimeUpdate(); });
@@ -2120,7 +2172,7 @@
     }
 
     /* ---------- 移动端底部栏 + 选集抽屉 ---------- */
-    var barEps = byId('tvBarEps'), barBack = byId('tvBarBack'), mask = byId('tvMask'),
+    const barEps = byId('tvBarEps'), barBack = byId('tvBarBack'), mask = byId('tvMask'),
         sheet = byId('tvSheet'), sheetClose = byId('tvSheetClose'), grip = byId('tvGrip');
     if (barEps) barEps.addEventListener('click', sheetOpen);
     if (mask) mask.addEventListener('click', sheetClose);
@@ -2131,15 +2183,15 @@
     /* 抓手下拉关闭：B 站那个小横条是可以往下甩的。
        只认纵向位移，横向滑动不误触。 */
     if (grip && sheet) {
-      var gy = 0, gdown = false;
+      let gy = 0, gdown = false;
       grip.addEventListener('touchstart', function (e2) {
-        var t = e2.touches[0];
+        const t = e2.touches[0];
         gy = t.clientY; gdown = true;
         sheet.style.transition = 'none';
       }, { passive: true });
       grip.addEventListener('touchmove', function (e2) {
         if (!gdown) return;
-        var dy = e2.touches[0].clientY - gy;
+        const dy = e2.touches[0].clientY - gy;
         if (dy > 0) sheet.style.transform = 'translateY(' + dy + 'px)';
       }, { passive: true });
       grip.addEventListener('touchend', function (e2) {
@@ -2148,7 +2200,7 @@
         sheet.style.transition = '';
         sheet.style.transform = '';
         /* 甩过 70px 就当「要关」 */
-        var dy = (e2.changedTouches[0] || {}).clientY - gy;
+        const dy = (e2.changedTouches[0] || {}).clientY - gy;
         if (dy > 70) sheetClose();
       });
     }
@@ -2161,19 +2213,26 @@
     /* 窗口从窄变宽时收掉抽屉和底部栏：宽屏选集在右栏，
        留着抽屉会浮在没有侧栏的布局上。 */
     if (window.matchMedia) {
-      var mq = window.matchMedia('(max-width: 992px)');
-      var onMq = function () {
+      const mq = window.matchMedia('(max-width: 992px)');
+      const onMq = function () {
         if (!mq.matches) {
-          var sh = byId('tvSheet'), mk = byId('tvMask'), eps = byId('tvEps'), home = epsHome();
-          if (sh) { sh.classList.remove('is-open'); sh.hidden = true; }
-          if (mk) { mk.classList.remove('is-open'); mk.hidden = true; }
+          const sh = byId('tvSheet'), mk = byId('tvMask'), eps = byId('tvEps'), home = epsHome();
+          if (sh) {
+            sh.classList.remove('is-open');
+            sh.hidden = true;
+          }
+          if (mk) {
+            mk.classList.remove('is-open');
+            mk.hidden = true;
+          }
           document.documentElement.classList.remove('tvsheet-open');
           if (eps && home && eps.parentNode !== home) home.appendChild(eps);
-          var bar = byId('tvBar'); if (bar) bar.hidden = true;
+          const bar = byId('tvBar');
+          if (bar) bar.hidden = true;
         } else {
           /* 变窄：如果播放器正开着，底部栏要补上 */
-          var pr = byId('tvPlayer');
-          var bar2 = byId('tvBar');
+          const pr = byId('tvPlayer');
+          const bar2 = byId('tvBar');
           if (bar2 && pr && !pr.hidden) bar2.hidden = false;
         }
       };
@@ -2190,11 +2249,11 @@
     /* 再把「本标签页刷新前的位置」接上：同一个搜索词、同一个分类/片源，
        而且如果刷新前正在看某部片，等列表回来后自动把它打开 ——
        这样门卫 401 触发的重载（或用户按 F5）之后，页面看起来没变。 */
-    var vw = loadView();
+    const vw = loadView();
     if (vw) {
       if (typeof vw.kw === 'string' && vw.kw) {
         state.kw = vw.kw;
-        var kwEl = byId('tvKw');
+        const kwEl = byId('tvKw');
         if (kwEl) kwEl.value = vw.kw;
       }
       if (typeof vw.t === 'string' && vw.t) state.t = vw.t;

@@ -11,49 +11,49 @@
 (function () {
   'use strict';
 
-  var HLS_SRC = 'https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js';
-  var MEDIA_EXT = ['.mp4', '.m4v', '.mkv', '.flv', '.avi', '.mov', '.webm', '.mp3', '.m4a'];
-  var RATES = [2, 1.5, 1.25, 1, 0.75, 0.5];
+  const HLS_SRC = 'https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js';
+  const MEDIA_EXT = ['.mp4', '.m4v', '.mkv', '.flv', '.avi', '.mov', '.webm', '.mp3', '.m4a'];
+  const RATES = [2, 1.5, 1.25, 1, 0.75, 0.5];
   /* 快捷键说明（设置菜单里那一项弹出它）。写成一行，toast 里换行靠 CSS 的 white-space。 */
-  var KEYHELP = '空格/k 播放暂停 · ←/→ 5秒 · j/l 10秒 · ↑/↓ 音量 · m 静音 · ' +
-    'f 全屏 · w 网页全屏 · t 宽屏 · 0-9 跳到N0% · Shift+,/. 减速加速 · Shift+1~4 倍速 · p/n 上下集';
-  var FITS = [
-    { k: 'contain', n: '适应' },
-    { k: 'cover', n: '填充' },
-    { k: '16:9', n: '16:9' },
-    { k: '4:3', n: '4:3' },
+  const KEYHELP = '空格/k 播放暂停 · ←/→ 5秒 · j/l 10秒 · ↑/↓ 音量 · m 静音 · ' +
+      'f 全屏 · w 网页全屏 · t 宽屏 · 0-9 跳到N0% · Shift+,/. 减速加速 · Shift+1~4 倍速 · p/n 上下集';
+  const FITS = [
+    {k: 'contain', n: '适应'},
+    {k: 'cover', n: '填充'},
+    {k: '16:9', n: '16:9'},
+    {k: '4:3', n: '4:3'},
   ];
-  var SVG_VOL = '<svg viewBox="0 0 28 28"><path d="M6 11.4h3.6L14 7.2v13.6l-4.4-4.2H6z"/><path d="M17.4 10.6a5 5 0 0 1 0 6.8" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="M20.3 8a8.6 8.6 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>';
-  var SVG_MUTE = '<svg viewBox="0 0 28 28"><path d="M6 11.4h3.6L14 7.2v13.6l-4.4-4.2H6z"/><path d="M17.6 11 23 16.4M23 11l-5.4 5.4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>';
+  const SVG_VOL = '<svg viewBox="0 0 28 28"><path d="M6 11.4h3.6L14 7.2v13.6l-4.4-4.2H6z"/><path d="M17.4 10.6a5 5 0 0 1 0 6.8" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="M20.3 8a8.6 8.6 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>';
+  const SVG_MUTE = '<svg viewBox="0 0 28 28"><path d="M6 11.4h3.6L14 7.2v13.6l-4.4-4.2H6z"/><path d="M17.6 11 23 16.4M23 11l-5.4 5.4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>';
 
-  var D = {};
-  var cfg = {};
-  var S = { rate: 1, fit: 'contain', loop: false, autonext: true, bright: 1 };
-  var hls = null;
-  var hlsLoading = false;
-  var cur = '';
-  var hideTimer = 0;
-  var clickTimer = 0;
-  var watchdog = 0;
-  var volBeforeMute = 1;
-  var dragging = 0;
-  var quals = [];
+  const D = {};
+  let cfg = {};
+  const S = {rate: 1, fit: 'contain', loop: false, autonext: true, bright: 1};
+  let hls = null;
+  let hlsLoading = false;
+  let cur = '';
+  let hideTimer = 0;
+  let clickTimer = 0;
+  let watchdog = 0;
+  let volBeforeMute = 1;
+  let dragging = 0;
+  let quals = [];
 
   function $(id) { return document.getElementById(id); }
   function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
   function fmt(s) {
     if (!isFinite(s) || s < 0) s = 0;
     s = Math.floor(s);
-    var h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60;
-    var mm = (m < 10 ? '0' : '') + m;
+    const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60;
+    const mm = (m < 10 ? '0' : '') + m;
     return (h > 0 ? h + ':' : '') + mm + ':' + (x < 10 ? '0' : '') + x;
   }
 
   function classify(url) {
-    var s = String(url || '');
+    const s = String(url || '');
     if (s.indexOf('/share/') >= 0) return 'page';
-    var p = s.split('?')[0].toLowerCase();
-    for (var i = 0; i < MEDIA_EXT.length; i++) if (p.slice(-MEDIA_EXT[i].length) === MEDIA_EXT[i]) return 'media';
+    const p = s.split('?')[0].toLowerCase();
+    for (let i = 0; i < MEDIA_EXT.length; i++) if (p.slice(-MEDIA_EXT[i].length) === MEDIA_EXT[i]) return 'media';
     return 'hls';
   }
 
@@ -122,27 +122,28 @@
 
   function setTime() {
     if (!D.video) return;
-    var d = D.video.duration || 0, t = D.video.currentTime || 0;
+    const d = D.video.duration || 0, t = D.video.currentTime || 0;
     if (D.cur) D.cur.textContent = fmt(t);
     if (D.dur) D.dur.textContent = fmt(d);
     if (D.played) D.played.style.width = (d > 0 ? Math.min(100, (t / d) * 100) : 0) + '%';
   }
   function setBuffer() {
     if (!D.video || !D.buf) return;
-    var d = D.video.duration || 0;
+    const d = D.video.duration || 0;
     if (!d) { D.buf.style.width = '0%'; return; }
-    var b = D.video.buffered, end = 0;
-    for (var i = 0; i < b.length; i++) if (b.start(i) <= D.video.currentTime + 0.5) end = Math.max(end, b.end(i));
+    const b = D.video.buffered;
+    let end = 0;
+    for (let i = 0; i < b.length; i++) if (b.start(i) <= D.video.currentTime + 0.5) end = Math.max(end, b.end(i));
     D.buf.style.width = Math.min(100, (end / d) * 100) + '%';
   }
   function seekTo(t) {
     if (!D.video) return;
-    var d = D.video.duration || 0;
+    const d = D.video.duration || 0;
     D.video.currentTime = Math.max(0, Math.min(d ? d - 0.2 : t, t));
     setTime();
   }
   function ratioAt(e) {
-    var r = D.track.getBoundingClientRect();
+    const r = D.track.getBoundingClientRect();
     return Math.max(0, Math.min(1, (e.clientX - r.left) / (r.width || 1)));
   }
 
@@ -152,13 +153,13 @@
   function closeMenus() { menus().forEach(function (m) { m.hidden = true; }); }
   function toggleMenu(m) {
     if (!m) return;
-    var was = m.hidden;
+    const was = m.hidden;
     closeMenus();
     m.hidden = !was;
     if (!m.hidden) showUI();
   }
   function menuBtn(list, label, on) {
-    var b = document.createElement('button');
+    const b = document.createElement('button');
     b.type = 'button';
     b.textContent = label;
     if (on) b.classList.add('is-on');
@@ -169,7 +170,7 @@
     if (!D.rateMenu) return;
     D.rateMenu.innerHTML = '';
     RATES.forEach(function (r) {
-      var b = menuBtn(RATES, (r === Math.floor(r) ? r.toFixed(1) : String(r)) + 'x', r === S.rate);
+      const b = menuBtn(RATES, (r === Math.floor(r) ? r.toFixed(1) : String(r)) + 'x', r === S.rate);
       b.addEventListener('click', function () { setRate(r); closeMenus(); });
       D.rateMenu.appendChild(b);
     });
@@ -177,7 +178,7 @@
   function buildSetMenu() {
     if (!D.setMenu) return;
     D.setMenu.innerHTML = '';
-    var loop = menuBtn(0, '循环播放', S.loop);
+    const loop = menuBtn(0, '循环播放', S.loop);
     loop.addEventListener('click', function () {
       S.loop = !S.loop;
       if (D.video) D.video.loop = S.loop;
@@ -185,17 +186,17 @@
       toast(S.loop ? '循环播放：开' : '循环播放：关');
     });
     D.setMenu.appendChild(loop);
-    var an = menuBtn(0, '自动连播', S.autonext);
+    const an = menuBtn(0, '自动连播', S.autonext);
     an.addEventListener('click', function () { S.autonext = !S.autonext; buildSetMenu(); toast(S.autonext ? '自动连播：开' : '自动连播：关'); });
     D.setMenu.appendChild(an);
     FITS.forEach(function (f) {
-      var b = menuBtn(0, '画面 ' + f.n, S.fit === f.k);
+      const b = menuBtn(0, '画面 ' + f.n, S.fit === f.k);
       b.addEventListener('click', function () { setFit(f.k); buildSetMenu(); toast('画面比例：' + f.n); });
       D.setMenu.appendChild(b);
     });
     /* 快捷键说明：B 站没有这一项，但我们的键位比 B 站多，
        不给个地方写出来用户不会知道（尤其 j/l 和 Shift+数字）。 */
-    var help = menuBtn(0, '快捷键说明', false);
+    const help = menuBtn(0, '快捷键说明', false);
     help.addEventListener('click', function () { closeMenus(); toast(KEYHELP, 6000); });
     D.setMenu.appendChild(help);
   }
@@ -205,7 +206,7 @@
     if (D.qualMenu) {
       D.qualMenu.innerHTML = '';
       quals.forEach(function (q, i) {
-        var b = menuBtn(0, q.name || '线路 ' + (i + 1), i === active);
+        const b = menuBtn(0, q.name || '线路 ' + (i + 1), i === active);
         b.addEventListener('click', function () {
           closeMenus();
           updateQualBtn(q);
@@ -283,7 +284,7 @@
   function webFullOn() { return D.stage && D.stage.classList.contains('is-web-full'); }
   function toggleWide() {
     if (!D.stage) return;
-    var on = D.stage.classList.toggle('is-wide');
+    const on = D.stage.classList.toggle('is-wide');
     document.documentElement.style.overflow = on || webFullOn() ? 'hidden' : '';
     if (D.wide) D.wide.classList.toggle('is-on', on);
     syncImmersive();
@@ -291,7 +292,7 @@
   }
   function toggleWebFull() {
     if (!D.stage) return;
-    var on = D.stage.classList.toggle('is-web-full');
+    const on = D.stage.classList.toggle('is-web-full');
     document.documentElement.style.overflow = on || wideOn() ? 'hidden' : '';
     if (D.web) D.web.classList.toggle('is-on', on);
     syncImmersive();
@@ -310,8 +311,10 @@
        3. 什么都不支持的：至少把方向锁试一遍（部分安卓 WebView 只有这一半）。 */
   function lockLandscape() {
     try {
-      var so = screen.orientation || screen.mozOrientation || screen.msOrientation;
-      if (so && so.lock) { var p = so.lock('landscape'); if (p && p.catch) p.catch(function () {}); }
+      const so = screen.orientation || screen.mozOrientation || screen.msOrientation;
+      if (so && so.lock) {
+        const p = so.lock('landscape');
+        if (p && p.catch) p.catch(function () {}); }
     } catch (e) {}
   }
   function unlockOrientation() {
@@ -328,15 +331,15 @@
       try { D.video.webkitEnterFullscreen(); return; } catch (e) {}
     }
     if (isFull()) { lockLandscape(); return; }
-    var fn = D.stage && (D.stage.requestFullscreen || D.stage.webkitRequestFullscreen);
+    const fn = D.stage && (D.stage.requestFullscreen || D.stage.webkitRequestFullscreen);
     if (!fn) { lockLandscape(); return; }
-    var p = fn.call(D.stage);
+    const p = fn.call(D.stage);
     if (p && p.then) p.then(lockLandscape, lockLandscape);
     else lockLandscape();
   }
   function toggleFull() {
     if (!D.stage) return;
-    var d = document;
+    const d = document;
     if (isFull()) {
       unlockOrientation();
       (d.exitFullscreen || d.webkitExitFullscreen || function () {}).call(d);
@@ -352,13 +355,13 @@
           （比如没播放、或用户手势不足）会静默失败，这里接住并提示。 */
   function syncPipBtn() {
     if (!D.pip) return;
-    var d = document;
-    var on = !!(d.pictureInPictureElement && d.pictureInPictureElement === D.video);
+    const d = document;
+    const on = !!(d.pictureInPictureElement && d.pictureInPictureElement === D.video);
     D.pip.classList.toggle('is-on', on);
   }
   function togglePip() {
     if (!D.video) return;
-    var d = document;
+    const d = document;
     if (!d.pictureInPictureEnabled && !d.pictureInPictureElement) {
       toast('这个浏览器不支持画中画');
       return;
@@ -384,17 +387,18 @@
 
   /* hls.js 只加载一次；加载期间又来的播放请求排队等脚本，别用定时器猜
      （之前那个 400ms 猜测会在加载没完成时误报「浏览器不支持 HLS」） */
-  var hlsCbs = [];
+  let hlsCbs = [];
+
   function loadHls(cb) {
     if (window.Hls) { cb(); return; }
     hlsCbs.push(cb);
     if (hlsLoading) return;
     hlsLoading = true;
-    var s = document.createElement('script');
+    const s = document.createElement('script');
     s.src = HLS_SRC;
     s.onload = function () {
       hlsLoading = false;
-      var list = hlsCbs;
+      const list = hlsCbs;
       hlsCbs = [];
       list.forEach(function (x) { try { x(); } catch (e) {} });
     };
@@ -414,22 +418,22 @@
      过几秒又好了」，实测多等几秒画面就出来了。所以统一交给下面这个重试器：
      没出画面就换个姿势重来（重建 hls → 绕本站代理 → 再交替试），
      全程只转圈 + 一句提示，不弹失败卡片；等满一分钟还是没画面才认输。 */
-  var PLAY_BUDGET = 60000;
-  var pv = { seq: 0, tries: 0, viaProxy: false, t0: 0, started: false };
+  const PLAY_BUDGET = 60000;
+  const pv = {seq: 0, tries: 0, viaProxy: false, t0: 0, started: false};
 
   function attempt() {
-    var my = pv.seq;
-    var url = cur;
+    const my = pv.seq;
+    const url = cur;
     if (!url) return;
     clearTimeout(watchdog);
     destroyHls();
     setSpin(true);
-    var src = pv.viaProxy ? cfg.gateway + '/api/tv/stream?u=' + encodeURIComponent(url) : url;
+    const src = pv.viaProxy ? cfg.gateway + '/api/tv/stream?u=' + encodeURIComponent(url) : url;
     if (classify(url) === 'media' && !pv.viaProxy) {
       /* 直链 mp4：浏览器原生就能放，出错也只重试不报错 */
       D.video.onerror = function () { if (my === pv.seq) softRetry('直链失败'); };
       D.video.src = url;
-      var p = D.video.play();
+      const p = D.video.play();
       if (p && p.catch) p.catch(function () { showUI(); });
     } else {
       D.video.onerror = null;
@@ -449,7 +453,7 @@
     pv.viaProxy = pv.tries >= 2 && pv.tries % 2 === 0;
     toast(pv.viaProxy ? '再等一下，改走本站代理重试…' : '这个源有点慢，正在自动重试…');
     setSpin(true);
-    var my = pv.seq;
+    const my = pv.seq;
     setTimeout(function () { if (my === pv.seq) attempt(); }, Math.min(1200 * pv.tries, 6000));
   }
 
@@ -460,11 +464,11 @@
   function whyText() { return '等了 ' + Math.round((Date.now() - pv.t0) / 1000) + ' 秒'; }
 
   function playHls(src, my) {
-    var v = D.video;
+    const v = D.video;
     if (v.canPlayType && v.canPlayType('application/vnd.apple.mpegurl')) {
       v.onerror = function () { if (my === pv.seq) softRetry('原生 HLS 失败'); };
       v.src = src;
-      var pn = v.play();
+      const pn = v.play();
       if (pn && pn.catch) pn.catch(function () { showUI(); });
       return;
     }
@@ -487,7 +491,7 @@
       hls.on(window.Hls.Events.MANIFEST_PARSED, function () {
         if (my !== pv.seq) return;
         setSpin(false);
-        var p = v.play();
+        const p = v.play();
         if (p && p.catch) p.catch(function () { showUI(); });
       });
       hls.on(window.Hls.Events.ERROR, function (ev, data) {
@@ -528,7 +532,7 @@
     clearFS();
     document.documentElement.classList.remove('tvp-open');
     destroyHls();
-    var v = D.video;
+    const v = D.video;
     if (v) { try { v.pause(); } catch (e) {} v.removeAttribute('src'); try { v.load(); } catch (e2) {} }
     setSpin(false);
     hideErr();
@@ -566,17 +570,18 @@
    *     用户在搜索框里打字时，f/j/k 都得是普通字符。
    * ============================================================ */
   /* 按 B 站的档位顺序排列，Shift+N 的 N 就是这里的下标 + 1 */
-  var KEY_RATES = [1, 2, 3, 4];
+  const KEY_RATES = [1, 2, 3, 4];
+
   /* 倍速增减用的完整档位表（和倍速菜单一致，只是方向反过来用） */
   function stepRate(dir) {
     /* RATES 是从快到慢排的：[2, 1.5, 1.25, 1, 0.75, 0.5]
        「加速」= 往数组前面走。找不到当前位置就退回 1x 再走一步。 */
-    var i = RATES.indexOf(S.rate);
+    let i = RATES.indexOf(S.rate);
     if (i < 0) {
       /* 当前倍速不在档位表里（比如手改过），先归到 1x */
       i = RATES.indexOf(1);
     }
-    var j = i - dir; /* dir=+1 加速 -> 下标减小 */
+    let j = i - dir; /* dir=+1 加速 -> 下标减小 */
     if (j < 0) j = 0;
     if (j > RATES.length - 1) j = RATES.length - 1;
     if (j === i) { toast(dir > 0 ? '已是最快' : '已是最慢'); return; }
@@ -592,24 +597,24 @@
      于是「全屏后快捷键失灵」—— 而全屏恰恰是最需要键盘的场景。
      所以先把全屏/网页全屏/宽屏三种「确定在被使用」的状态直接放行。 */
   function playerActive() {
-    var st = D.stage;
+    const st = D.stage;
     if (!st) return false;
     if (immersive()) return true;
-    var r = st.getBoundingClientRect();
+    const r = st.getBoundingClientRect();
     return r.width > 0 && r.height > 0;
   }
 
   function onKey(e) {
     if (!playerActive()) return;
-    var t = e.target || {};
-    var tag = (t.tagName || '').toLowerCase();
+    const t = e.target || {};
+    const tag = (t.tagName || '').toLowerCase();
     /* 输入框、可编辑区域里一律放行，别把用户打的字吃掉 */
     if (tag === 'input' || tag === 'textarea' || tag === 'select' || t.isContentEditable) return;
     /* 带 Ctrl/Alt/Meta 的组合键交给浏览器（Ctrl+F 找内容、Alt+← 后退…） */
     if (e.ctrlKey || e.altKey || e.metaKey) return;
 
-    var k = e.key;
-    var shift = e.shiftKey;
+    const k = e.key;
+    const shift = e.shiftKey;
 
     /* ---------- 带 Shift 的：倍速 ---------- */
     if (shift) {
@@ -652,7 +657,7 @@
   }
 
   function bind() {
-    var v = D.video, st = D.stage;
+    const v = D.video, st = D.stage;
     ['playing', 'pause', 'ended'].forEach(function (ev) { v.addEventListener(ev, function () { syncPlayIcon(); setTime(); }); });
     v.addEventListener('timeupdate', function () { setTime(); setBuffer(); });
     v.addEventListener('progress', setBuffer);
@@ -698,7 +703,7 @@
     if (D.qual) D.qual.addEventListener('click', function (e) { e.stopPropagation(); toggleMenu(D.qualMenu); });
     if (D.setBtn) D.setBtn.addEventListener('click', function (e) { e.stopPropagation(); toggleMenu(D.setMenu); });
     document.addEventListener('click', function (e) {
-      var m = openMenu();
+      const m = openMenu();
       if (m && !m.contains(e.target)) closeMenus();
     });
 
@@ -710,7 +715,7 @@
       if (D.video.duration) seekTo(ratioAt(e) * D.video.duration);
     });
     D.track.addEventListener('pointermove', function (e) {
-      var r = ratioAt(e);
+      const r = ratioAt(e);
       if (D.hover) {
         D.hover.style.left = (r * 100) + '%';
         D.hover.textContent = fmt((D.video.duration || 0) * r);
@@ -723,7 +728,7 @@
 
     /* 音量条 */
     function volAt(e) {
-      var r = D.volWrap.getBoundingClientRect();
+      const r = D.volWrap.getBoundingClientRect();
       setVolume((e.clientX - r.left) / (r.width || 1), true);
     }
     D.volWrap.addEventListener('pointerdown', function (e) {
@@ -741,8 +746,20 @@
        双击 = 播放/暂停，单击 = 显示/隐藏控制条。
        全部用 touch 事件而不是 pointer：pointer 在移动端会和进度条的拖拽抢事件。
        判断阈值 12px —— 小于它当点击，避免轻微滑动被当成手势。 */
-    var g = { on: false, x0: 0, y0: 0, t0: 0, axis: '', moved: false, baseVol: 0, baseSeek: 0, kind: '', baseBright: 0 };
-    var GEST = 12;
+    const g = {
+      on: false,
+      x0: 0,
+      y0: 0,
+      t0: 0,
+      axis: '',
+      moved: false,
+      baseVol: 0,
+      baseSeek: 0,
+      kind: '',
+      baseBright: 0
+    };
+    const GEST = 12;
+
     function gestTip(txt) { toast(txt, 700); }
 
     /* ---------------- 亮度蒙层 ----------------
@@ -750,7 +767,8 @@
          用 #000 + opacity（不是灰幕/白幕，那才会让画面发灰）。
          蒙层在 CSS 里 z-index 卡在视频之上、控件之下，
          所以调暗时播放键和进度条依然看得见。 */
-    var dimEl = null;
+    let dimEl = null;
+
     function ensureDim() {
       if (dimEl && dimEl.parentNode === st) return dimEl;
       dimEl = document.createElement('div');
@@ -760,20 +778,20 @@
     }
     /* 整屏高 = 100% 行程；0 = 最亮，0.75 = 最暗（留一点，全黑就没法操作了） */
     function setBright(mul, save) {
-      var x = Math.max(0, Math.min(1, mul));
+      const x = Math.max(0, Math.min(1, mul));
       D.bright = x;
       /* mul=1（最亮）时蒙层完全不遮；mul 越小遮得越狠 */
-      var dim = (1 - x) * 0.75;
-      var el = ensureDim();
+      const dim = (1 - x) * 0.75;
+      const el = ensureDim();
       if (el) el.style.setProperty('--tvp-dim', String(dim));
       if (save) S.bright = x;
     }
 
     st.addEventListener('touchstart', function (e) {
       if (e.touches.length !== 1) { g.on = false; return; }
-      var t = e.touches[0];
+      const t = e.touches[0];
       /* 从控制条/菜单上起手的滑动不算手势（那是进度条拖拽和点按钮） */
-      var el = e.target;
+      const el = e.target;
       if (el && el.closest && el.closest('.tvp-bar, .tvp-menu, .tvp-err')) { g.on = false; return; }
       g.on = true; g.moved = false; g.axis = ''; g.kind = '';
       g.x0 = t.clientX; g.y0 = t.clientY; g.t0 = Date.now();
@@ -782,14 +800,14 @@
       g.baseBright = typeof D.bright === 'number' ? D.bright : 1;
       /* 按**起手位置**定左右。中途横移过去也不改 ——
          手指按下之后再「换边」会让用户莫名其妙。 */
-      var r0 = st.getBoundingClientRect();
+      const r0 = st.getBoundingClientRect();
       g.kind = (g.x0 - r0.left) < r0.width / 2 ? 'bright' : 'vol';
     }, { passive: true });
 
     st.addEventListener('touchmove', function (e) {
       if (!g.on || e.touches.length !== 1) return;
-      var t = e.touches[0];
-      var dx = t.clientX - g.x0, dy = t.clientY - g.y0;
+      const t = e.touches[0];
+      const dx = t.clientX - g.x0, dy = t.clientY - g.y0;
       if (!g.axis) {
         if (Math.abs(dx) < GEST && Math.abs(dy) < GEST) return;
         g.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
@@ -797,26 +815,26 @@
         if (clickTimer) { clearTimeout(clickTimer); clickTimer = 0; }
       }
       g.moved = true;
-      var r = st.getBoundingClientRect();
+      const r = st.getBoundingClientRect();
       if (g.axis === 'x') {
         /* 横向：整屏宽 ≈ 120 秒，滑多少给多少，实时预览但不立刻 seek
            （立刻 seek 会让 HLS 反复重载分片，滑完再落点更顺）
            只保留横屏 —— 竖屏下屏幕窄，而且竖屏横滑往往被当成切页面。 */
         if (!(window.innerWidth > window.innerHeight || wideOn() || webFullOn())) return;
-        var span = r.width || 320;
-        var dt = (dx / span) * 120;
-        var to = Math.max(0, Math.min((D.video.duration || 0) - 1, g.baseSeek + dt));
+        const span = r.width || 320;
+        const dt = (dx / span) * 120;
+        const to = Math.max(0, Math.min((D.video.duration || 0) - 1, g.baseSeek + dt));
         g.pending = to;
         gestTip((dt >= 0 ? '快进 ' : '快退 ') + fmt(Math.abs(dt)) + ' / ' + fmt(to));
       } else if (g.kind === 'bright') {
         /* 向上拖 = 变亮 */
-        var nb = Math.max(0, Math.min(1, g.baseBright - dy / (r.height || 240)));
+        const nb = Math.max(0, Math.min(1, g.baseBright - dy / (r.height || 240)));
         setBright(nb, true);
         /* 边拖边更新基准，避免拖到顶后拉不回来 */
         g.baseBright = nb; g.y0 = t.clientY;
         gestTip('亮度 ' + Math.round(nb * 100) + '%');
       } else {
-        var dv = -dy / (r.height || 240);
+        const dv = -dy / (r.height || 240);
         setVolume(g.baseVol + dv, true);
         gestTip('音量 ' + Math.round(D.video.volume * 100) + '%');
       }
@@ -825,7 +843,7 @@
     st.addEventListener('touchend', function (e) {
       if (!g.on) return;
       g.on = false;
-      var dt = Date.now() - g.t0;
+      const dt = Date.now() - g.t0;
       if (!g.moved) {
         /* 没滑动：当点击。
            ⚠ 单击 / 双击在这里是**两件事**，和桌面端不一样：

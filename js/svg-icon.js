@@ -11,7 +11,7 @@
 (function () {
     'use strict';
     /* 全部用描边线性风格，和站点的粉色细线一致；每条路径都只写 24×24 视口内的几何。 */
-    var P = {
+    const P = {
         'fa-film': '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7.5 5v14M16.5 5v14M3 9.2h4.5M3 14.8h4.5M16.5 9.2H21M16.5 14.8H21"/>',
         'fa-tv': '<rect x="3" y="7.5" width="18" height="12" rx="2.5"/><path d="M8.5 3.5L12 7.5l3.5-4M9 16.5h6"/>',
         'fa-dragon': '<path d="M4.5 9.5L4 4.5l4.5 2.5h7L20 4.5l-.5 5v4a7 7 0 01-14 0z"/><path d="M9.2 12.3h.01M14.8 12.3h.01M11 15.4c.7.7 1.3.7 2 0"/>',
@@ -127,22 +127,23 @@
     };
 
     /* 线性描边的统一风格；尺寸用 1em 跟着原有的字号走，颜色用 currentColor 跟着文字色走 */
-    var CSS = '.svgico{width:1em;height:1em;display:inline-block;vertical-align:-.135em;'
+    const CSS = '.svgico{width:1em;height:1em;display:inline-block;vertical-align:-.135em;'
         + 'fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;'
         + 'overflow:visible;flex:0 0 auto}';
 
     function styleOnce() {
         if (document.getElementById('svgico-style')) return;
-        var s = document.createElement('style');
+        const s = document.createElement('style');
         s.id = 'svgico-style';
         s.textContent = CSS;
         (document.head || document.documentElement).appendChild(s);
     }
 
-    var CACHE = {};
+    const CACHE = {};
+
     function make(name) {
         if (CACHE[name]) return CACHE[name].cloneNode(true);
-        var el = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        const el = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         el.setAttribute('viewBox', '0 0 24 24');
         el.setAttribute('class', 'svgico');
         el.setAttribute('aria-hidden', 'true');
@@ -155,42 +156,45 @@
     /* 把一棵子树里的 <i class="fas fa-xxx"> 换成 SVG；没有对应画法的原样留着 */
     function swap(root) {
         if (!root || !root.querySelectorAll) return 0;
-        var list = root.querySelectorAll('i[class*="fa-"]');
-        var n = 0;
-        for (var i = 0; i < list.length; i++) {
-            var it = list[i];
-            var cls = String(it.className || '').split(/\s+/);
-            var hit = '';
-            for (var k = 0; k < cls.length; k++) {
+        const list = root.querySelectorAll('i[class*="fa-"]');
+        let n = 0;
+        for (let i = 0; i < list.length; i++) {
+            const it = list[i];
+            const cls = String(it.className || '').split(/\s+/);
+            let hit = '';
+            for (let k = 0; k < cls.length; k++) {
                 if (P[cls[k]]) { hit = cls[k]; break; }
                 /* fab fa-x 这种两个 class 拼出来的名字 */
                 if (cls[k] === 'fab' || cls[k] === 'fas' || cls[k] === 'far') {
-                    for (var m = 0; m < cls.length; m++) {
-                        var combo = cls[k] + ' ' + cls[m];
+                    for (let m = 0; m < cls.length; m++) {
+                        const combo = cls[k] + ' ' + cls[m];
                         if (P[combo]) { hit = combo; break; }
                     }
                     if (hit) break;
                 }
             }
             if (!hit) continue;
-            var svg = make(hit);
+            const svg = make(hit);
             /* make() 只给 SVG 带上 svgico 这一个类。原元素上除图标名以外的类
                必须一起搬过来 —— 否则靠类定位/排序的写法会静默失效。
                实例：音乐页「本地音乐解锁」的
                  <i class="fas fa-chevron-down unlock-caret">
                被替换后丢掉 unlock-caret，summary 上的 margin-left:auto 与
                order 全部不命中，折叠箭头从右端跑到左端。 */
-            var extra = [];
-            for (var e = 0; e < cls.length; e++) {
-                var c = cls[e];
+            const extra = [];
+            for (let e = 0; e < cls.length; e++) {
+                const c = cls[e];
                 if (!c || P[c]) continue;
                 if (c === 'fas' || c === 'far' || c === 'fab' || c === 'fa') continue;
                 extra.push(c);
             }
             if (extra.length) svg.setAttribute('class', 'svgico ' + extra.join(' '));
-            var st = it.getAttribute('style'); if (st) svg.setAttribute('style', st);
-            var ti = it.getAttribute('title'); if (ti) svg.setAttribute('title', ti);
-            var al = it.getAttribute('aria-label'); if (al) svg.setAttribute('aria-label', al);
+            const st = it.getAttribute('style');
+            if (st) svg.setAttribute('style', st);
+            const ti = it.getAttribute('title');
+            if (ti) svg.setAttribute('title', ti);
+            const al = it.getAttribute('aria-label');
+            if (al) svg.setAttribute('aria-label', al);
             if (it.parentNode) { it.parentNode.replaceChild(svg, it); n++; }
         }
         return n;
@@ -201,11 +205,11 @@
         swap(document);
         /* 工具卡/影视分类/游戏分类都是 JS 拼出来的，动态加的也要补上 */
         try {
-            var ob = new MutationObserver(function (muts) {
-                for (var i = 0; i < muts.length; i++) {
-                    var added = muts[i].addedNodes;
-                    for (var k = 0; k < added.length; k++) {
-                        var node = added[k];
+            const ob = new MutationObserver(function (muts) {
+                for (let i = 0; i < muts.length; i++) {
+                    const added = muts[i].addedNodes;
+                    for (let k = 0; k < added.length; k++) {
+                        const node = added[k];
                         if (node.nodeType === 1) swap(node.parentNode || node);
                     }
                 }

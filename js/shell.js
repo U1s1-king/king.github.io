@@ -11,18 +11,19 @@
   'use strict';
 
   function byId(id) { return document.getElementById(id); }
-  var pageFrame = byId('page-frame');
-  var playerFrame = byId('player-frame');
-  var mini = byId('app-mini-player');
-  var MUSIC = 'music.html';
-  var current = '';
-  var lastTab = 'home.html';   /* 内容帧最后停在哪一页（音乐页除外） */
+
+  const pageFrame = byId('page-frame');
+  const playerFrame = byId('player-frame');
+  const mini = byId('app-mini-player');
+  const MUSIC = 'music.html';
+  let current = '';
+  let lastTab = 'home.html';   /* 内容帧最后停在哪一页（音乐页除外） */
 
   function tabs() { return Array.prototype.slice.call(document.querySelectorAll('.bot-tab a')); }
   function fileOf(a) { return (a.getAttribute('href') || '').split('/').pop(); }
   function highlight(file) {
     tabs().forEach(function (a) {
-      var hit = fileOf(a) === file;
+      const hit = fileOf(a) === file;
       a.classList.toggle('on', hit);
       a.classList.toggle('active', hit);   /* mobile.css 的高亮样式挂在 .active 上 */
     });
@@ -30,7 +31,7 @@
 
   /* show() 是公共入口：底部 tab、popstate、迷你条、两个导航守卫都会调它。
      只接受「单个文件名 + .html/.htm」，其余一律拒绝。
-     以前不校验，任何被误当成页面名的东西都会被塞进 pageFrame.src ——
+     以前不校验，任何会被……误被塞进 pageFrame.src ——
      比如下载用的 blob URL 被 split('/').pop() 取出来的那个 UUID，
      加载出来就是一个 404 页面，地址栏也跟着变了。 */
   function isPageName(f) {
@@ -44,7 +45,7 @@
     if (file !== MUSIC) lastTab = file;
     highlight(file);
     if (file === MUSIC) {
-      var src = playerFrame.getAttribute('src');
+      const src = playerFrame.getAttribute('src');
       if (!src || src === 'about:blank') playerFrame.setAttribute('src', MUSIC + location.search);
       playerFrame.style.display = 'block';
       pageFrame.style.display = 'none';
@@ -64,16 +65,16 @@
 
   /* 底部 tab 一律由外壳接管：让它整页跳转就等于把音乐掐断 */
   document.addEventListener('click', function (e) {
-    var a = e.target && e.target.closest ? e.target.closest('.bot-tab a') : null;
+    const a = e.target && e.target.closest ? e.target.closest('.bot-tab a') : null;
     if (!a) return;
     e.preventDefault();
     e.stopPropagation();
-    var f = fileOf(a);
+    const f = fileOf(a);
     if (f && f !== current) show(f);
   });
 
   window.addEventListener('popstate', function () {
-    var st = history.state;
+    const st = history.state;
     if (st && st.shell) show(st.shell, true);
   });
 
@@ -82,12 +83,12 @@
     try { return playerFrame.contentDocument || null; } catch (e) { return null; }
   }
   function playerState() {
-    var d = playerDoc();
+    const d = playerDoc();
     if (!d) return null;
-    var audio = d.getElementById('nativeAudio');
-    var name = d.getElementById('trackName');
+    const audio = d.getElementById('nativeAudio');
+    const name = d.getElementById('trackName');
     if (!audio || !name) return null;
-    var text = (name.textContent || '').trim();
+    const text = (name.textContent || '').trim();
     if (!text) return null;
     return {
       name: text,
@@ -104,7 +105,7 @@
      改成把目标页装进内容帧。 */
   /* 这次点击该不该由外壳接管？接管就返回页面名，不接管返回空串。
      ------------------------------------------------------------
-     守卫只该接管「真的会换页的站内链接」。原来的判断是反过来的（先排除几种
+     守卫只该接管「真的会换页的站内链接」。原来地判断是反过来的（先排除几种
      协议，剩下的全拦），于是下载链接被误伤：
 
        var a = document.createElement('a');
@@ -123,17 +124,17 @@
   function pageOf(a) {
     if (!a) return '';
     if (a.hasAttribute('download')) return '';          /* 下载链接：交给浏览器，别拦 */
-    var href = a.getAttribute('href') || '';
+    const href = a.getAttribute('href') || '';
     if (!href || href.charAt(0) === '#') return '';
     if (a.target === '_blank') return '';
-    var path = href.split('#')[0].split('?')[0];
+    const path = href.split('#')[0].split('?')[0];
     if (/^[a-z][a-z0-9+.-]*:/i.test(path)) return '';    /* 带协议的一律不接管（含 blob:/data:） */
     if (!/^[A-Za-z0-9._\/-]+\.html?$/i.test(path)) return '';
     return path.split('/').pop();
   }
 
   function guardPlayerNavigation() {
-    var d = playerDoc();
+    const d = playerDoc();
     if (!d) return;
     /* 播放器帧里装的就是 music.html，它自己也有 .bot-tab —— 不交出来就和外壳的
        底栏叠成两层（内容帧那边同理，见 guardContentNavigation）。 */
@@ -141,8 +142,8 @@
     if (d.__shellGuarded) return;
     d.__shellGuarded = true;
     d.addEventListener('click', function (e) {
-      var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
-      var f = pageOf(a);
+      const a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+      const f = pageOf(a);
       if (!f) return;                                       /* 不是站内页面链接（下载等）：放行 */
       e.preventDefault();
       if (f.toLowerCase() === MUSIC.toLowerCase()) return;  /* 指向音乐页自己，什么都不用做 */
@@ -159,7 +160,7 @@
      内容帧并在那一帧里播放 —— 他下一次切页，这一帧导航，<audio> 随帧销毁，
      于是「切页断音」。所以内容帧里的音乐链接一律拦下来，改成亮出播放器帧。 */
   function guardContentNavigation() {
-    var d = pageDoc();
+    const d = pageDoc();
     if (!d) return;
     /* 帧内页面必须交出自己的底部导航：壳自己有一层 .bot-tab，内容页还有一层，
        两个都是 fixed bottom —— 桌面端 .bot-tab 本来就 display:none 看不出来，
@@ -168,8 +169,8 @@
     if (d.__shellGuardedC) return;
     d.__shellGuardedC = true;
     d.addEventListener('click', function (e) {
-      var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
-      var f = pageOf(a);
+      const a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+      const f = pageOf(a);
       if (!f) return;                                        /* 下载 / 外链 / 非页面链接：放行 */
       if (f.toLowerCase() !== MUSIC.toLowerCase()) return;   /* 其它页面正常在内容帧里走 */
       e.preventDefault();
@@ -180,9 +181,9 @@
   /* 兜底：内容帧偷偷落到音乐页（JS 跳转 / 深链 / 表单）→ 交给播放器帧，
      并把内容帧退回它上一页，避免出现第二个播放实例跟着一起放。 */
   function keepContentOffMusic() {
-    var d = pageDoc();
+    const d = pageDoc();
     if (!d) return;
-    var href = '';
+    let href;
     try { href = d.location.href || ''; } catch (e) { href = ''; }
     if (!href || href.indexOf('about:') === 0) return;
     if (href.indexOf(MUSIC) < 0) return;
@@ -196,7 +197,7 @@
      <audio> 随之销毁。一旦发现它不在 music.html，立刻重新装回音乐页 ——
      续播会从记录的断点接着放。代价是一次加载，而不是"音乐没了"。 */
   function keepPlayerHome() {
-    var href = '';
+    let href;
     try { href = (playerFrame.contentWindow || {}).location.href || ''; } catch (e) { href = ''; }
     if (!href || href.indexOf('about:') === 0) return;
     if (href.indexOf(MUSIC) >= 0) return;
@@ -209,35 +210,36 @@
     guardContentNavigation();
     keepContentOffMusic();
     if (!mini) return;
-    var s = playerState();
-    var on = !!(s && s.started && current !== MUSIC);
+    const s = playerState();
+    const on = !!(s && s.started && current !== MUSIC);
     mini.classList.toggle('show', on);
     if (!on) return;
-    var c = byId('mpCover');
+    const c = byId('mpCover');
     if (c && s.cover) c.src = s.cover;
-    var t = byId('mpTitle');
+    const t = byId('mpTitle');
     if (t) t.textContent = s.name;
-    var ar = byId('mpArtist');
+    const ar = byId('mpArtist');
     if (ar) ar.textContent = s.artist;
-    var pb = byId('mpPlay');
+    const pb = byId('mpPlay');
     if (pb) pb.innerHTML = '<i class="fas ' + (s.paused ? 'fa-play' : 'fa-pause') + '"></i>';
   }
   function tap(sel) {
-    var d = playerDoc();
+    const d = playerDoc();
     if (!d) return;
-    var b = d.querySelector(sel);
+    const b = d.querySelector(sel);
     if (b) b.click();
     setTimeout(syncMini, 250);
   }
-  var play = byId('mpPlay'), prev = byId('mpPrev'), next = byId('mpNext');
+
+  const play = byId('mpPlay'), prev = byId('mpPrev'), next = byId('mpNext');
   if (play) play.addEventListener('click', function (e) { e.stopPropagation(); tap('#playPauseBtn'); });
   if (prev) prev.addEventListener('click', function (e) { e.stopPropagation(); tap('#prevBtn'); });
   if (next) next.addEventListener('click', function (e) { e.stopPropagation(); tap('#nextBtn'); });
   if (mini) mini.addEventListener('click', function () { show(MUSIC); });
 
   /* 起始 tab：支持 index.html#journal 直接进对应页 */
-  var want = (location.hash || '').replace(/^#/, '');
-  var initial = 'home.html';
+  const want = (location.hash || '').replace(/^#/, '');
+  let initial = 'home.html';
   tabs().forEach(function (a) {
     if (want && fileOf(a).replace(/\.html$/, '').toLowerCase() === want.toLowerCase()) initial = fileOf(a);
   });

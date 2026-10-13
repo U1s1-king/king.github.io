@@ -28,10 +28,10 @@
   function byId(id) { return document.getElementById(id); }
   function q(sel, root) { return (root || document).querySelector(sel); }
 
-  var OPEN_KEY = 'tools-cat-open';
+  const OPEN_KEY = 'tools-cat-open';
 
   /* 图标表：只影响观感，取不到就退回通用扳手。键 = data-tool */
-  var ICONS = {
+  const ICONS = {
     converter: 'fa-exchange-alt', random: 'fa-dice', countdown: 'fa-hourglass-half',
     password: 'fa-key', lottery: 'fa-ticket-alt', color: 'fa-palette',
     counter: 'fa-font', base64: 'fa-code', urlcode: 'fa-link',
@@ -57,7 +57,7 @@
   /* 兜底分类：tools-hub.js 没加载（或没暴露 HUB_META）时按关键字粗分，
      保证任何工具都有归属，不会掉出分类。加工具时若忘了登记分类，
      会落进「其它」而不是凭空消失。 */
-  var FALLBACK = {
+  const FALLBACK = {
     dev: ['converter', 'base64', 'urlcode', 'ts', 'uuid', 'jsonfmt', 'hash', 'regex',
       'baseconv', 'caesar', 'morse', 'ascii', 'aes', 'hex', 'unicode'],
     text: ['counter', 'textstat', 'case', 'diff', 'rev', 'sort', 'namegen', 'translate',
@@ -69,7 +69,7 @@
     sec: ['password', 'passgen', 'strength'],
     fun: ['random', 'countdown', 'lottery', 'dice']
   };
-  var FALLBACK_LABEL = {
+  const FALLBACK_LABEL = {
     dev: ['开发者', 'fa-code'], text: ['文字工具', 'fa-font'],
     calc: ['计算·换算', 'fa-calculator'], media: ['图片·媒体', 'fa-image'],
     net: ['网络·查询', 'fa-globe'], life: ['生活·健康', 'fa-heart'],
@@ -80,10 +80,10 @@
   /* 分类表：优先用 tools-hub.js 暴露的 HUB_META（桌面/手机共用一份，
      两边不会因为各写一张表而分叉）。 */
   function catalog() {
-    var meta = window.HUB_META;
+    const meta = window.HUB_META;
     if (meta && typeof meta === 'object') return meta;
-    var out = {};
-    for (var cat in FALLBACK) {
+    const out = {};
+    for (let cat in FALLBACK) {
       if (!FALLBACK.hasOwnProperty(cat)) continue;
       FALLBACK[cat].forEach(function (id) { out[id] = [cat]; });
     }
@@ -91,9 +91,9 @@
   }
 
   function catLabel(cat) {
-    var list = window.HUB_CATS;
+    const list = window.HUB_CATS;
     if (list) {
-      for (var i = 0; i < list.length; i++) {
+      for (let i = 0; i < list.length; i++) {
         if (list[i][0] === cat) return [list[i][1], list[i][2]];
       }
     }
@@ -103,7 +103,7 @@
   /* ---------- 展开状态 ---------- */
   function readOpen() {
     try {
-      var raw = JSON.parse(localStorage.getItem(OPEN_KEY) || '{}');
+      const raw = JSON.parse(localStorage.getItem(OPEN_KEY) || '{}');
       return raw && typeof raw === 'object' && !(raw instanceof Array) ? raw : {};
     } catch (e) { return {}; }
   }
@@ -115,14 +115,14 @@
   /* 收集当前页面上真实存在的工具（有 .tool-tab 且对应面板存在），
      按分类归组；没登记的落进 other。 */
   function collect() {
-    var meta = catalog();
-    var groups = [];
-    var index = {};
+    const meta = catalog();
+    const groups = [];
+    const index = {};
     Array.prototype.forEach.call(document.querySelectorAll('.tool-tab'), function (btn) {
-      var id = btn.getAttribute('data-tool');
+      const id = btn.getAttribute('data-tool');
       if (!id || !byId('tool-' + id)) return;
-      var m = meta[id];
-      var cat = (m && m[0]) || 'other';
+      const m = meta[id];
+      const cat = (m && m[0]) || 'other';
       if (!index[cat]) { index[cat] = { cat: cat, items: [] }; groups.push(index[cat]); }
       index[cat].items.push({ id: id, label: (btn.textContent || '').trim() || id });
     });
@@ -130,24 +130,26 @@
   }
 
   function buildAccordion(groups, openMap) {
-    var wrap = document.createElement('div');
+    const wrap = document.createElement('div');
     wrap.className = 'tcat-wrap';
 
-    var head = document.createElement('div');
+    const head = document.createElement('div');
     head.className = 'tcat-head';
-    var total = groups.reduce(function (n, g) { return n + g.items.length; }, 0);
+    const total = groups.reduce(function (n, g) {
+      return n + g.items.length;
+    }, 0);
     head.textContent = '工具分类 · ' + groups.length + ' 类 / ' + total + ' 个';
     wrap.appendChild(head);
 
     groups.forEach(function (g) {
-      var lab = catLabel(g.cat);
-      var open = !!openMap[g.cat];
+      const lab = catLabel(g.cat);
+      const open = !!openMap[g.cat];
 
-      var sec = document.createElement('section');
+      const sec = document.createElement('section');
       sec.className = 'tcat' + (open ? ' is-open' : '');
       sec.setAttribute('data-cat', g.cat);
 
-      var btn = document.createElement('button');
+      const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'tcat-btn';
       btn.setAttribute('aria-expanded', open ? 'true' : 'false');
@@ -157,25 +159,25 @@
         '<span class="tcat-count">' + g.items.length + '</span>' +
         '<i class="fas fa-chevron-down tcat-arrow"></i>';
 
-      var body = document.createElement('div');
+      const body = document.createElement('div');
       body.className = 'tcat-body';
-      var inner = document.createElement('div');
+      const inner = document.createElement('div');
       inner.className = 'tcat-inner';
       body.appendChild(inner);
 
       /* 收起时用 display:none 而不是 max-height 动画：60 个工具的网格
-         在低端机上做高度过渡会掉帧，且 max-height 需要一个猜的魔法值。 */
+         在低端机上做高度过度会掉帧，且 max-height 需要一个猜的魔法值。 */
       if (!open) body.style.display = 'none';
 
       btn.addEventListener('click', function () {
-        var isOpen = sec.classList.toggle('is-open');
+        const isOpen = sec.classList.toggle('is-open');
         body.style.display = isOpen ? '' : 'none';
         btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
         /* 懒构建必须放在这里：只在「构建时就已经展开」的分组上调
            fillGroup 的话，点开一个收起的分类会展开出一个空壳
            —— 高度只有分隔线那么高，看起来像没反应。 */
         if (isOpen) fillGroup(inner, g);
-        var map = readOpen();
+        const map = readOpen();
         if (isOpen) map[g.cat] = 1; else delete map[g.cat];
         writeOpen(map);
       });
@@ -195,7 +197,7 @@
     if (inner.getAttribute('data-built')) return;
     inner.setAttribute('data-built', '1');
     g.items.forEach(function (it) {
-      var item = document.createElement('button');
+      const item = document.createElement('button');
       item.type = 'button';
       item.className = 'tcat-item';
       item.setAttribute('data-tool', it.id);
@@ -216,17 +218,17 @@
     if (!narrow()) return;
     if (!window.AppShell || !window.AppShell.openDetail) return;
     if (window.AppShell.detailOpen()) return;
-    var panel = byId('tool-' + id);
+    const panel = byId('tool-' + id);
     if (!panel) return;
 
     /* 记下进来之前是哪个工具，出去时要还原回去 */
-    var prevTab = document.querySelector('.tool-tab.active');
+    const prevTab = document.querySelector('.tool-tab.active');
 
     /* 先点原标签按钮：面板要拿到 .active 才可见，也保证状态与原有逻辑一致 */
-    var tab = document.querySelector('.tool-tab[data-tool="' + id + '"]');
+    const tab = document.querySelector('.tool-tab[data-tool="' + id + '"]');
     if (tab) tab.click();
 
-    var wrap = document.createElement('div');
+    const wrap = document.createElement('div');
     wrap.className = 'tool-detail';
     window.AppShell.openDetail({
       title: label || '工具',
@@ -259,7 +261,7 @@
      切换视口时只转移所有权，绝不删容器 —— 里面还装着 60 个面板，
      删容器＝删工具（60 个面板连同监听器一起没）。 */
   function stashHost() {
-    var host = byId('toolsStash') || byId('toolsStashDesktop');
+    let host = byId('toolsStash') || byId('toolsStashDesktop');
     if (!host) {
       host = document.createElement('div');
       host.id = 'toolsStash';
@@ -273,7 +275,7 @@
   /* 位置无关：不管面板此刻在 .main-card、桌面端的暂存容器、还是别处，
      一律收进暂存容器。 */
   function stashPanels() {
-    var host = stashHost();
+    const host = stashHost();
     Array.prototype.forEach.call(document.querySelectorAll('.tool-panel, .info-box'), function (el) {
       if (el.parentNode !== host) host.appendChild(el);
     });
@@ -282,23 +284,23 @@
   /* 变宽交给桌面端：只交出所有权，容器与面板留在原地。
      桌面端的 ensureStash 会复用这个容器。 */
   function releaseStash() {
-    var host = byId('toolsStashDesktop');
+    const host = byId('toolsStashDesktop');
     /* 把 id 归一化，免得两个入口各认一个 id */
-    var h = byId('toolsStash');
+    const h = byId('toolsStash');
     if (h && !host) h.id = 'toolsStashDesktop';
   }
 
   function init() {
     if (!narrow()) return;
-    var tabs = document.querySelectorAll('.tool-tab');
-    var row = q('.tools-tabs');
-    var main = q('.main-card');
+    const tabs = document.querySelectorAll('.tool-tab');
+    const row = q('.tools-tabs');
+    const main = q('.main-card');
     if (!tabs.length || !row || !main || q('.tcat-wrap')) return;
 
     /* 开关挂在 html 上：脚本没跑到就整块不生效，页面退回原来的标签墙 */
     document.documentElement.classList.add('tool-cats');
 
-    var groups = collect();
+    const groups = collect();
     if (!groups.length) return;
 
     /* 面板移出：一级页只留分类入口。必须在 collect() 之前/之后就无所谓了
@@ -311,13 +313,13 @@
        分类按钮的展开收起是各自绑的（要拿闭包里的 groups 与 sec），
        这里只处理「点工具进三级页」。 */
     document.addEventListener('click', function (e) {
-      var t = e.target;
+      const t = e.target;
       if (!t || !t.closest) return;
       if (t.closest('.detail-view')) return;   /* 详情层里的点击不重复开卡 */
 
-      var item = t.closest('.tcat-item');
+      const item = t.closest('.tcat-item');
       if (!item) return;
-      var nm = q('.tc-name', item);
+      const nm = q('.tc-name', item);
       openTool(item.getAttribute('data-tool'), nm ? nm.textContent : '工具');
     });
   }
@@ -327,20 +329,21 @@
      于是手机点开 #tool/xxx 的链接会停在分类页 —— 看起来像链接失效。
      这里补一条窄屏专用的：直接开三级页。
      只处理「刚进页面」和 hashchange 两种，不抢 detailOpen 的栈。 */
-  var HASH = '#tool/';
+  const HASH = '#tool/';
+
   function openFromHash() {
     if (!narrow()) return;
-    var h = String(location.hash || '');
+    const h = String(location.hash || '');
     if (h.indexOf(HASH) !== 0) return;
-    var id = h.slice(HASH.length);
+    const id = h.slice(HASH.length);
     if (!id || id.length > 40 || id.indexOf('"') >= 0 || id.indexOf(']') >= 0) return;
     if (!document.querySelector('.tool-tab[data-tool="' + id + '"]')) return;
     if (window.AppShell && window.AppShell.detailOpen && window.AppShell.detailOpen()) return;
-    var tab = document.querySelector('.tool-tab[data-tool="' + id + '"]');
-    var nm = tab ? (tab.textContent || '').trim() : id;
+    const tab = document.querySelector('.tool-tab[data-tool="' + id + '"]');
+    const nm = tab ? (tab.textContent || '').trim() : id;
     /* 标题优先用分类表里的中文名，取不到就退回 tab 上的文字 */
-    var meta = catalog()[id];
-    var label = (meta && meta[1]) || nm;
+    const meta = catalog()[id];
+    const label = (meta && meta[1]) || nm;
     /* 顶栏标题要在详情层压栈之后再写一次：openDetail 里 setBarDetail
        会把 baseTitle 记成「栈空时的标题」，而本次导航带着 hash 时
        顶栏可能刚被重建，早写会被随后的 setBarDetail 覆盖掉。 */
