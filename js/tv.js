@@ -312,7 +312,14 @@
            再给一个用户自己点的「重新登录」链接，要不要跳由用户决定。 */
         throw new Error(NEED_GATE);
       }
-      if (!r.ok) throw new Error('HTTP ' + r.status);
+      if (!r.ok) {
+        /* X-TV-Err: source = 网关明确告诉我们「是上游某个源不行」，
+           **不是这个入口不行**。这种失败绝不能触发换入口（2026-10-13 修）：
+           以前分不清，点一个挂掉的源就会整站切到备用入口并锁 10 分钟。 */
+        var se = new Error('HTTP ' + r.status);
+        if (r.headers.get('X-TV-Err') === 'source') se.srcErr = true;
+        throw se;
+      }
       return r.text();
     }).then(parseJson);
   }
@@ -335,6 +342,7 @@
     if (left < 2500) return Promise.reject(new Error(TOO_LONG));
     return jget(url, left).catch(function (e) {
       if (e && e.message === NEED_GATE) throw e; /* 门卫要口令，重试没意义 */
+      if (e && e.srcErr) throw e; /* 源不行 ≠ 入口不行：重试同一个源没意义，也不许换入口 */
       if (n <= 1) throw (leftMs(deadline) < 2500 ? new Error(TOO_LONG) : e);
       if (leftMs(deadline) < 2500) throw new Error(TOO_LONG);
       return new Promise(function (r) { setTimeout(r, 700); }).then(function () { return apiTry(url, deadline, n - 1); });
@@ -346,6 +354,11 @@
     var deadline = Date.now() + WAIT_MAX;
     return apiTry(GATEWAY + '/api/tv?' + q, deadline, 3).catch(function (e1) {
       if (e1 && e1.message === NEED_GATE) throw e1; /* 也别降级去直连上游 */
+      /* ⚠ 源不行 ≠ 入口不行：**不许**换备用入口，也不许 tvGwRemember。
+         换了会连着锁 10 分钟，还会拿备用入口的源清单覆盖本地「片源」那排
+         ——用户看到的就是「慢源一多，新源全消失、页面不可用」。
+         这里直接抛给页面，提示「这个片源暂时不可用，换个源试试」。 */
+      if (e1 && e1.srcErr) throw e1;
       /* ① 先换**备用入口**（同一份 tv-api 的 Pages 副本，不同 apex）。
          封锁 ccwu.cc 时主入口是 TLS 直接被 RST —— 这一步就是救命的那一步。
          ⚠️ apiTry 第二个参数是**绝对 deadline**（不是剩余毫秒）——
@@ -1163,13 +1176,17 @@
         var m = String(e.message || e);
         /* 门卫过期：单独给一句人话 + 重新登录链接，别混进「源站出错」里 */
         if (m === NEED_GATE) { gateExpired(); return; }
-        var why = /一分钟|timeout|abort/i.test(m)
-          ? '这个源太慢了或者没响应'
-          : /^HTTP 5/.test(m)
-            ? '源站这会儿出错了'
-            : /failed|fetch|network|load/i.test(m)
-              ? '连不上片源（网络或代理不通）'
-              : '没找到片源';
+        /* srcErr = 网关明确说了「是上游某个源不行」，入口本身是好的。
+           这种情况别提示成「源站出错了」——用户会以为整个站坏了。 */
+        var why = (e && e.srcErr)
+          ? '这个片源暂时不可用，换个源试试'
+          : /一分钟|timeout|abort/i.test(m)
+            ? '这个源太慢了或者没响应'
+            : /^HTTP 5/.test(m)
+              ? '源站这会儿出错了'
+              : /failed|fetch|network|load/i.test(m)
+                ? '连不上片源（网络或代理不通）'
+                : '没找到片源';
         /* 追加失败别把已经看到的列表清掉：只在底部提示一句，保留现场 */
         if (append) { flashNote('加载更多失败：' + m); return; }
         loadingFail(why + '：' + m);
