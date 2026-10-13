@@ -450,7 +450,7 @@ function saveUserPlaylist() {
   } catch (e) {}
 }
 function restoreUserPlaylist() {
-  let arr = [];
+  let arr;
   try { arr = JSON.parse(localStorage.getItem(USER_PLAYLIST_KEY) || "[]") || []; } catch (e) { arr = []; }
   let added = 0;
   for (let i = 0; i < arr.length; i++) {
@@ -1637,7 +1637,7 @@ else resultBox.innerHTML = '<div class="ns-empty">搜索失败喵～网络或接
 if (searchBtn) searchBtn.addEventListener('click', doSearch);
 searchBox.addEventListener('keydown', function (e) { if (e.key === 'Enter') doSearch(); });
 })();
-;
+
 /* ===== 统一歌词加载 =====
    自建网关本来就有 /api/lyric（网易云返回带时间轴的 LRC + 翻译），
    但这里从来没调用过 MusicAPI.lyric：
@@ -1708,7 +1708,7 @@ if (!txt) return [];
   const lines = [];
   /* 注意 [^\S\r\n]* 而不是 \s*：\s 会把行尾换行也吃掉，于是「只有时间戳、后面没内容」的
        那一行会连下一行的歌词一起吞进来，界面上就会看到歌词前挂着 [00:12.06]。 */
-  const re = /\[(\d{1,2}):(\d{1,2})(?:[.:](\d{1,3}))?\][^\S\r\n]*(.*)/g;
+  const re = /\[(\d{1,2}):(\d{1,2})(?:[.:](\d{1,3}))?][^\S\r\n]*(.*)/g;
   let m;
   /* 开头几秒的「作词/作曲/编曲」是元信息不是歌词，显示出来会让人以为歌词没对上；
      只在前 20 秒内过滤，避免误伤真正的歌词行。 */
@@ -1726,7 +1726,7 @@ if (!txt) return [];
    （1.080 与 1.08，或差几十毫秒），所以按最近邻（±400ms）挂到主行上。 */
   const attach = function (raw, field) {
     if (!raw) return;
-    const map = [], re2 = /\[(\d{1,2}):(\d{1,2})(?:[.:](\d{1,3}))?\][^\S\r\n]*(.*)/g;
+    const map = [], re2 = /\[(\d{1,2}):(\d{1,2})(?:[.:](\d{1,3}))?][^\S\r\n]*(.*)/g;
     let m2;
     while ((m2 = re2.exec(raw)) !== null) {
       const fr2 = m2[3] || '';
@@ -1840,7 +1840,7 @@ if (this.timer) { clearInterval(this.timer); this.timer = null; }
 this.lines = [];
 }
 };
-;
+
 "use strict";
 var UMCrypto = (() => {
   const __getOwnPropNames = Object.getOwnPropertyNames;
@@ -1862,7 +1862,7 @@ var UMCrypto = (() => {
       const _documentCurrentScript = typeof document !== "undefined" ? document.currentScript : null;
 
       function _loadWasmModule(sync, filepath, src, imports) {
-        let buf = null;
+        let buf;
         const isNode = typeof process !== "undefined" && process.versions != null && process.versions.node != null;
         if (isNode) {
           buf = Buffer.from(src, "base64");
@@ -1875,8 +1875,7 @@ var UMCrypto = (() => {
           }
         }
         {
-          const mod = new WebAssembly.Module(buf);
-          return mod;
+          return new WebAssembly.Module(buf);
         }
       }
 
@@ -1912,9 +1911,6 @@ var UMCrypto = (() => {
 
       let WASM_VECTOR_LEN = 0;
       const cachedTextEncoder = typeof TextEncoder !== "undefined" ? new TextEncoder("utf-8") : {
-        encode: () => {
-          throw Error("TextEncoder not available");
-        }
       };
       const encodeString = typeof cachedTextEncoder.encodeInto === "function" ? function (arg, view) {
         return cachedTextEncoder.encodeInto(arg, view);
@@ -1987,14 +1983,12 @@ var UMCrypto = (() => {
 
       function decryptQMC1(buffer, offset) {
         const ptr0 = passArray8ToWasm0(buffer, wasm.__wbindgen_malloc);
-        const len0 = WASM_VECTOR_LEN;
-        wasm.decryptQMC1(ptr0, len0, buffer, offset);
+        wasm.decryptQMC1(ptr0, WASM_VECTOR_LEN, buffer, offset);
       }
 
       function decryptQRCFile(buffer) {
         const ptr0 = passArray8ToWasm0(buffer, wasm.__wbindgen_malloc);
-        const len0 = WASM_VECTOR_LEN;
-        const ret = wasm.decryptQRCFile(ptr0, len0, buffer);
+        const ret = wasm.decryptQRCFile(ptr0, WASM_VECTOR_LEN, buffer);
         if (ret[3]) {
           throw takeFromExternrefTable0(ret[2]);
         }
@@ -2202,8 +2196,7 @@ var UMCrypto = (() => {
         constructor(header, ekey) {
           _assertClass(header, KuwoHeader);
           const ptr0 = isLikeNone(ekey) ? 0 : passStringToWasm0(ekey, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-          const len0 = WASM_VECTOR_LEN;
-          const ret = wasm.kwmdecipher_make_decipher(header.__wbg_ptr, ptr0, len0);
+          const ret = wasm.kwmdecipher_make_decipher(header.__wbg_ptr, ptr0, WASM_VECTOR_LEN);
           if (ret[2]) {
             throw takeFromExternrefTable0(ret[1]);
           }
@@ -2603,8 +2596,7 @@ var UMCrypto = (() => {
 
         static parse(footer) {
           const ptr0 = passArray8ToWasm0(footer, wasm.__wbindgen_malloc);
-          const len0 = WASM_VECTOR_LEN;
-          const ret = wasm.qmcfooter_parse(ptr0, len0);
+          const ret = wasm.qmcfooter_parse(ptr0, WASM_VECTOR_LEN);
           if (ret[2]) {
             throw takeFromExternrefTable0(ret[1]);
           }

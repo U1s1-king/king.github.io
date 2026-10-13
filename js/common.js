@@ -1,9 +1,10 @@
 (function () {
-var bar = document.createElement('div');
-bar.id = 'page-progress';
+  const bar = document.createElement('div');
+  bar.id = 'page-progress';
 document.body.appendChild(bar);
-var w = 2, timer = null;
-function tick() {
+  let w = 2, timer = null;
+
+  function tick() {
 w = Math.min(92, w + (100 - w) * 0.09);
 bar.style.width = w + '%';
 }
@@ -20,29 +21,30 @@ setTimeout(function () { if (bar.parentNode) bar.parentNode.removeChild(bar); },
 /* 进度条原先只挂 load。但 Archives 内嵌 4 个 B 站播放器 iframe 加一个远程 mp3，
    它们永不 load，实测该页 load 要 16.8 秒才触发 —— 于是进度条会卡在 92% 十几秒。
    DOMContentLoaded 之后内容其实已经可用了，再加一道兜底把它收掉。 */
-var finished = false;
-function once() { if (finished) return; finished = true; done(); }
+  let finished = false;
+
+  function once() { if (finished) return; finished = true; done(); }
 if (document.readyState === 'complete') { once(); }
 else {
   window.addEventListener('load', once);
   document.addEventListener('DOMContentLoaded', function () { setTimeout(once, 1200); });
   setTimeout(once, 8000);
 }
-var els = document.querySelectorAll(
-'.profile-card,.card,.post-card,.page-card,.info-grid,.intro-name,' +
-'.about-container > * , main > * , .link-grid'
-);
-if (!('IntersectionObserver' in window) || !els.length) return;
-var io = new IntersectionObserver(function (entries) {
-entries.forEach(function (e) {
-if (e.isIntersecting) {
-e.target.classList.remove('reveal-init');
-e.target.classList.add('reveal-in');
-io.unobserve(e.target);
-}
-});
-}, { threshold: 0.06, rootMargin: '0px 0px -30px 0px' });
-Array.prototype.forEach.call(els, function (el) {
+  const els = document.querySelectorAll(
+      '.profile-card,.card,.post-card,.page-card,.info-grid,.intro-name,' +
+      '.about-container > * , main > * , .link-grid'
+  );
+  if (!('IntersectionObserver' in window) || !els.length) return;
+  const io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (e.isIntersecting) {
+        e.target.classList.remove('reveal-init');
+        e.target.classList.add('reveal-in');
+        io.unobserve(e.target);
+      }
+    });
+  }, {threshold: 0.06, rootMargin: '0px 0px -30px 0px'});
+  Array.prototype.forEach.call(els, function (el) {
 /* 初始隐藏的面板（display:none 的 tab）不参与 reveal，避免首次切换时内容不可见 */
 if (getComputedStyle(el).display === 'none') return;
 el.classList.add('reveal-init');
@@ -58,21 +60,22 @@ io.observe(el);
  *     改成固定对象池复用节点，并让池成员不占 will-change 合成层。
  */
 (function () {
-var isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
-if (isMobile || !window.matchMedia('(pointer: fine)').matches) return;
+  const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+  if (isMobile || !window.matchMedia('(pointer: fine)').matches) return;
 document.body.classList.add('custom-cursor');
-var cur = document.createElement('div');
-cur.id = 'sakura-cursor';
+  const cur = document.createElement('div');
+  cur.id = 'sakura-cursor';
 cur.innerHTML = '🌸';
 cur.style.translate = '-100px -100px';
 document.body.appendChild(cur);
 
 /* 帧率无关的跟随：写死 0.32/帧 的话，144Hz 上会比 60Hz 快一倍 */
-var cx = -100, cy = -100, tx = -100, ty = -100, raf = 0, prev = 0;
-function loop(now) {
-  var dt = prev ? Math.min(now - prev, 50) : 16.7;
+  let cx = -100, cy = -100, tx = -100, ty = -100, raf = 0, prev = 0;
+
+  function loop(now) {
+  const dt = prev ? Math.min(now - prev, 50) : 16.7;
   prev = now;
-  var k = 1 - Math.pow(1 - 0.32, dt / 16.7);
+  const k = 1 - Math.pow(1 - 0.32, dt / 16.7);
   cx += (tx - cx) * k;
   cy += (ty - cy) * k;
   cur.style.translate = cx + 'px ' + cy + 'px';
@@ -83,9 +86,10 @@ function loop(now) {
 function kick() { if (!raf) { prev = 0; raf = requestAnimationFrame(loop); } }
 
 /* 花瓣对象池：18 个节点循环复用 */
-var POOL = 18, tails = [], pi = 0;
-for (var i = 0; i < POOL; i++) {
-  var el = document.createElement('div');
+  const POOL = 18, tails = [];
+  let pi = 0;
+  for (let i = 0; i < POOL; i++) {
+  const el = document.createElement('div');
   el.className = 'sakura-tail';
   el.innerHTML = '🌸';
   el.style.willChange = 'auto';
@@ -93,7 +97,8 @@ for (var i = 0; i < POOL; i++) {
   tails.push(el);
 }
 function emit(x, y) {
-  var p = tails[pi]; pi = (pi + 1) % POOL;
+  const p = tails[pi];
+  pi = (pi + 1) % POOL;
   /* 用 translate 定位而不是 left/top：fixed 元素上写 left/top 会触发布局，
      translate 只走合成，且与 tailFall 动画里的 transform 叠加不冲突 */
   p.style.translate = (x + (Math.random() - 0.5) * 14).toFixed(1) + 'px ' + (y + (Math.random() - 0.5) * 14).toFixed(1) + 'px';
@@ -102,15 +107,16 @@ function emit(x, y) {
   p.style.setProperty('--dy', (35 + Math.random() * 70).toFixed(0) + 'px');
   p.style.setProperty('--dr', ((Math.random() - 0.5) * 240).toFixed(0) + 'deg');
   /* 用 WAAPI 归零重启，避开 "改 style 再读 offsetWidth" 的强制同步布局 */
-  var a = p.getAnimations ? p.getAnimations()[0] : null;
+  const a = p.getAnimations ? p.getAnimations()[0] : null;
   if (a) { a.currentTime = 0; a.play(); }
   else { p.style.animation = 'none'; void p.offsetWidth; p.style.animation = ''; }
 }
-var last = 0;
-document.addEventListener('mousemove', function (e) {
+
+  let last = 0;
+  document.addEventListener('mousemove', function (e) {
   tx = e.clientX; ty = e.clientY;
   kick();
-  var now = Date.now();
+  const now = Date.now();
   if (now - last < 28) return;
   last = now;
   emit(e.clientX, e.clientY);
@@ -119,9 +125,9 @@ document.addEventListener('mousemove', function (e) {
 
 /* ===== 骨架屏/加载层 ===== */
 (function () {
-  var root = document.documentElement;
+  const root = document.documentElement;
   if (sessionStorage.getItem('king-loaded')) { root.classList.add('app-ready'); return; }
-  var layer = document.createElement('div');
+  const layer = document.createElement('div');
   layer.id = 'sakura-loading-layer';
   layer.innerHTML = '<div class="loading-inner"><span class="sakura-spinner"></span><span class="loading-text">加载中…</span></div>';
   document.body.appendChild(layer);
@@ -142,12 +148,12 @@ document.addEventListener('mousemove', function (e) {
 })();
 /* ===== 飘落动画（全站统一，原各页面各自内嵌一份，已收敛于此） ===== */
 (function () {
-  var flurryContainer = document.getElementById('sakura-flurry');
+  const flurryContainer = document.getElementById('sakura-flurry');
   if (!flurryContainer) return;
   function createPetal() {
-    var petal = document.createElement('div');
+    const petal = document.createElement('div');
     petal.classList.add('petal');
-    var size = 8 + Math.random() * 14;
+    const size = 8 + Math.random() * 14;
     petal.style.width = size + 'px';
     petal.style.height = size * 0.9 + 'px';
     petal.style.left = Math.random() * 100 + '%';
@@ -162,24 +168,26 @@ document.addEventListener('mousemove', function (e) {
      transform/opacity 无限动画的 div，28 个和 12 个在手机上肉眼几乎分不出，
      但少掉的 16 个一直在合成层里跑。桌面端（>=700px）仍然 45，观感不变。 */
   function desiredCount() { return window.innerWidth < 700 ? 12 : 45; }
-  var petalCount = desiredCount();
-  function spawn(n) { for (var i = 0; i < n; i++) flurryContainer.appendChild(createPetal()); }
+
+  let petalCount = desiredCount();
+
+  function spawn(n) { for (let i = 0; i < n; i++) flurryContainer.appendChild(createPetal()); }
   spawn(petalCount);
   function replenishPetals() {
     if (document.hidden) return; /* 页面在后台时别再扫 DOM、别再补花瓣 */
-    var currentCount = flurryContainer.children.length;
+    const currentCount = flurryContainer.children.length;
     if (currentCount < petalCount - 8) {
       spawn(Math.min(petalCount - currentCount, 8));
     }
-    var allPetals = flurryContainer.querySelectorAll('.petal');
-    for (var i = 0; i < allPetals.length; i++) {
-      var rect = allPetals[i].getBoundingClientRect();
+    const allPetals = flurryContainer.querySelectorAll('.petal');
+    for (let i = 0; i < allPetals.length; i++) {
+      const rect = allPetals[i].getBoundingClientRect();
       if (rect.top > window.innerHeight + 100 || rect.bottom < -100) allPetals[i].remove();
     }
   }
   setInterval(replenishPetals, 4000);
   window.addEventListener('resize', function () {
-    var expected = desiredCount();
+    const expected = desiredCount();
     if (Math.abs(flurryContainer.children.length - expected) > 12) {
       while (flurryContainer.firstChild) flurryContainer.removeChild(flurryContainer.firstChild);
       petalCount = expected;
@@ -203,14 +211,15 @@ document.addEventListener('mousemove', function (e) {
        换成 /sw.js?v=<版本> 后每个版本都是一个全新 URL，浏览器必然重新拉取，
        安装完 skipWaiting + clients.claim 立即接管。
        同一个 scope 下只会存在一份注册，旧注册会被这次注册替换。 */
-    var v = window.__DSH_VERSION || "1";
+    const v = window.__DSH_VERSION || "1";
     navigator.serviceWorker.register("/sw.js?v=" + v).catch(function(){});
   }
 })();
 
 /* ===== 公共：离线提示条 ===== */
 (function () {
-  var bar = null;
+  let bar = null;
+
   function showBar(on) {
     if (on) {
       if (bar) return;
@@ -232,7 +241,7 @@ document.addEventListener('mousemove', function (e) {
   if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
     navigator.serviceWorker.getRegistration().then(function (reg) {
       if (reg) {
-        var check = function () {
+        const check = function () {
           showBar(!navigator.onLine);
         };
         navigator.serviceWorker.controller.addEventListener('statechange', check);
@@ -243,7 +252,7 @@ document.addEventListener('mousemove', function (e) {
 
 /* ===== 公共：占位符悬停提示（原 index.js / Journal.js 开头各一份，已收敛） ===== */
 (function () {
-  var placeholders = document.querySelectorAll('.placeholder-marker, .cherry-placeholder');
+  const placeholders = document.querySelectorAll('.placeholder-marker, .cherry-placeholder');
   placeholders.forEach(function (elem) {
       elem.style.transition = 'all 0.2s';
     elem.addEventListener('mouseenter', function () {
@@ -263,10 +272,10 @@ document.addEventListener('mousemove', function (e) {
  * 既省配额，也避免被限流后页面显示失败。
  */
 window.fetchCachedJSON = function (url, ttlMs) {
-  var ttl = ttlMs || 15 * 60 * 1000;
-  var key = 'json:' + url;
+  const ttl = ttlMs || 15 * 60 * 1000;
+  const key = 'json:' + url;
   try {
-    var hit = JSON.parse(sessionStorage.getItem(key) || 'null');
+    const hit = JSON.parse(sessionStorage.getItem(key) || 'null');
     if (hit && Date.now() - hit.t < ttl) return Promise.resolve(hit.d);
   } catch (e) {}
   return fetch(url).then(function (r) {
@@ -305,9 +314,9 @@ window.__WMO_WEATHER = {
 
 /* ===== 公共：悬浮提示 toast（原 Archives.js / Guestbook.js 各一份，已收敛） ===== */
 (function () {
-  var tipTimeout = null;
+  let tipTimeout = null;
   window.showFloatingTip = function (msg) {
-    var tipDiv = document.getElementById('floatingTip');
+    let tipDiv = document.getElementById('floatingTip');
     if (!tipDiv) {
       tipDiv = document.createElement('div');
       tipDiv.id = 'floatingTip';
@@ -337,14 +346,15 @@ window.escapeHtml = function (str) {
 (function () {
   /* 分享页面：Web Share API 优先，降级复制链接 */
   window.sharePage = function () {
-    var url = location.href;
-    var title = document.title || 'Tomo Ebizuka';
+    const url = location.href;
+    const title = document.title || 'Tomo Ebizuka';
+
     function done() { try { if (window.showFloatingTip) showFloatingTip('已复制分享链接喵～'); } catch (e) {} }
     function copy() {
       try {
         navigator.clipboard.writeText(url).then(done, done);
       } catch (e) {
-        var ta = document.createElement('textarea');
+        const ta = document.createElement('textarea');
         ta.value = url;
         ta.style.position = 'fixed'; ta.style.opacity = '0';
         document.body.appendChild(ta);
@@ -358,9 +368,9 @@ window.escapeHtml = function (str) {
     else copy();
   };
   /* 页脚自动注入分享链接（不动各页 HTML） */
-  var footer = document.querySelector('footer');
+  const footer = document.querySelector('footer');
   if (footer) {
-    var lnk = document.createElement('a');
+    const lnk = document.createElement('a');
     lnk.href = 'javascript:void(0)';
     lnk.className = 'footer-share';
     lnk.onclick = function (e) { e.preventDefault(); window.sharePage(); };
@@ -373,7 +383,7 @@ window.escapeHtml = function (str) {
 (function () {
   if (!('vibrate' in navigator) || !('ontouchstart' in window)) return;
   document.addEventListener('click', function (e) {
-    var t = e.target && e.target.closest ? e.target.closest('a, button') : null;
+    const t = e.target && e.target.closest ? e.target.closest('a, button') : null;
     if (!t) return;
     try { navigator.vibrate(8); } catch (err) {}
   }, true);
@@ -381,7 +391,8 @@ window.escapeHtml = function (str) {
 
 /* 大图 Lightbox：点击放大（图片加 class="js-lightbox" 启用） */
 (function () {
-  var mask = null;
+  let mask = null;
+
   function close() { if (mask) { mask.remove(); mask = null; } }
 
   /* ---- 手机端图片查看器（二级页面） ----
@@ -391,9 +402,9 @@ window.escapeHtml = function (str) {
     return Array.prototype.slice.call(document.querySelectorAll('img.js-lightbox'));
   }
   function openViewer(src, alt) {
-    var api = window.AppShell;
+    const api = window.AppShell;
     if (!api || !api.openDetail) return false;
-    var imgs = viewerGroup();
+    const imgs = viewerGroup();
     if (!imgs.length) return false;
     /* 层栈化（app-shell v2）之后的必要一步：以前 openDetail 会**静默关掉**
        已开的那一层，图片查看器因此天然是「替换」语义。现在层栈只压不替，
@@ -401,49 +412,50 @@ window.escapeHtml = function (str) {
        下拉关闭也会关错层。这里显式还原旧的「替换」语义。
        桌面端不建层（openDetail 有 isNarrow 闸门），所以这条对网页端无影响。 */
     if (api.detailOpen && api.detailOpen()) api.closeDetail({ silent: true });
-    var total = imgs.length;
-    var idx = 0;
-    for (var i = 0; i < total; i++) { if (imgs[i].src === src) { idx = i; break; } }
+    const total = imgs.length;
+    let idx = 0;
+    for (let i = 0; i < total; i++) { if (imgs[i].src === src) { idx = i; break; } }
 
-    var wrap = document.createElement('div');
+    const wrap = document.createElement('div');
     wrap.className = 'iv-wrap';
-    var big = document.createElement('img');
+    const big = document.createElement('img');
     big.className = 'iv-img';
     big.src = imgs[idx].src;
     big.alt = imgs[idx].alt || alt || '';
     wrap.appendChild(big);
 
-    var nav = document.createElement('div');
+    const nav = document.createElement('div');
     nav.className = 'iv-nav';
-    var prev = document.createElement('button');
+    const prev = document.createElement('button');
     prev.type = 'button'; prev.className = 'iv-arrow iv-prev'; prev.setAttribute('aria-label', '上一张');
     prev.innerHTML = '<i class="fas fa-chevron-left"></i>';
-    var next = document.createElement('button');
+    const next = document.createElement('button');
     next.type = 'button'; next.className = 'iv-arrow iv-next'; next.setAttribute('aria-label', '下一张');
     next.innerHTML = '<i class="fas fa-chevron-right"></i>';
     if (total < 2) { prev.disabled = true; next.disabled = true; }
     nav.appendChild(prev); nav.appendChild(next);
     wrap.appendChild(nav);
 
-    var bar = document.createElement('div');
+    const bar = document.createElement('div');
     bar.className = 'iv-bar';
-    var caption = document.createElement('span');
+    const caption = document.createElement('span');
     caption.className = 'iv-cap';
-    var save = document.createElement('a');
+    const save = document.createElement('a');
     save.className = 'iv-btn'; save.setAttribute('download', '');
     save.innerHTML = '<i class="fas fa-download"></i> 保存';
-    var raw = document.createElement('a');
+    const raw = document.createElement('a');
     raw.className = 'iv-btn'; raw.target = '_blank'; raw.rel = 'noopener noreferrer';
     raw.innerHTML = '<i class="fas fa-up-right-from-square"></i> 原图';
-    var shut = document.createElement('button');
+    const shut = document.createElement('button');
     shut.type = 'button'; shut.className = 'iv-btn iv-close';
     shut.innerHTML = '<i class="fas fa-xmark"></i> 关闭';
     bar.appendChild(caption); bar.appendChild(save); bar.appendChild(raw); bar.appendChild(shut);
     wrap.appendChild(bar);
 
-    var handle;
+    let handle;
+
     function render() {
-      var cur = imgs[idx];
+      const cur = imgs[idx];
       big.src = cur.src;
       big.alt = cur.alt || '';
       save.href = cur.src;
@@ -472,7 +484,7 @@ window.escapeHtml = function (str) {
     if (mask) return;
     mask = document.createElement('div');
     mask.className = 'js-lb-mask';
-    var img = document.createElement('img');
+    const img = document.createElement('img');
     img.className = 'js-lb-img';
     img.src = src;
     if (alt) img.alt = alt;
@@ -498,12 +510,12 @@ window.escapeHtml = function (str) {
 
 /* 底部 Tab：当前页高亮（.bot-tab 由各页 HTML 提供，样式在 mobile.css） */
 (function () {
-  var tabs = document.querySelectorAll('.bot-tab a');
+  const tabs = document.querySelectorAll('.bot-tab a');
   if (!tabs.length) return;
-  var here = location.pathname.split('/').pop() || 'home.html';
+  let here = location.pathname.split('/').pop() || 'home.html';
   if (here === '') here = 'home.html';
   tabs.forEach(function (a) {
-    var href = (a.getAttribute('href') || '').split(/[?#]/)[0];
+    const href = (a.getAttribute('href') || '').split(/[?#]/)[0];
     if (href === here) a.classList.add('active');
   });
 })();
@@ -515,7 +527,8 @@ window.escapeHtml = function (str) {
  * （桌面端没有对应规则，等于空转，不影响网页端）。
  */
 (function () {
-  var root = document.documentElement;
+  const root = document.documentElement;
+
   function apply() { root.classList.toggle('page-hidden', !!document.hidden); }
   document.addEventListener('visibilitychange', apply);
   window.addEventListener('pagehide', function () { root.classList.add('page-hidden'); });
@@ -528,7 +541,7 @@ window.escapeHtml = function (str) {
    见 js/svg-icon.js —— 换成 currentColor + 1em 的描边 SVG，跟着原字号和文字色走。 */
 (function () {
   if (window.SVGIcon) return;
-  var s = document.createElement('script');
+  const s = document.createElement('script');
   s.src = 'js/svg-icon.js' + (window.__DSH_VERSION ? '?v=' + window.__DSH_VERSION : '');
   s.defer = true;
   document.head.appendChild(s);

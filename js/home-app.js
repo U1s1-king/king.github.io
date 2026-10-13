@@ -29,24 +29,24 @@
   /* 二级页内容在窄屏才装配；宽屏时这些节点必须拆掉，否则会留下
      「没有样式定义的残骸」——各页样式都写在 @media(max-width:768px) 里，
      宽屏下它们就是裸露的无样式 DOM。app-shell.js 的 onMode 就是为这个存在的。 */
-  var NARROW_ONLY_SEL = '.ha-grid, .ha-grid-title, .ha-preview';
+  const NARROW_ONLY_SEL = '.ha-grid, .ha-grid-title, .ha-preview';
 
   /* 记录被我们隐藏掉的原生区块，宽屏时要还原 */
-  var hidden = [];
+  let hidden = [];
 
   function hideForGrid() {
     /* P1 只做骨架：先把「将来要搬进二级页」的区块在窄屏隐藏，
        证明结构与滚动锁成立。P2 再把它们真正搬进二级页。 */
-    var sels = [
+    const sels = [
       '.info-grid',        /* -> 我的数据 */
       '.st-d01d8085',      /* -> 纪念册 */
       '.social-links',     /* -> 社交媒体 */
       '.st-c2f5961e'       /* -> 联络与寄语 */
     ];
-    for (var i = 0; i < sels.length; i++) {
-      var nodes = document.querySelectorAll(sels[i]);
-      for (var j = 0; j < nodes.length; j++) {
-        var el = nodes[j];
+    for (let i = 0; i < sels.length; i++) {
+      const nodes = document.querySelectorAll(sels[i]);
+      for (let j = 0; j < nodes.length; j++) {
+        const el = nodes[j];
         if (el.dataset.haHidden === '1') continue;
         el.dataset.haHidden = '1';
         el.dataset.haPrevDisplay = el.style.display || '';
@@ -56,8 +56,8 @@
     }
   }
   function unhideAll() {
-    for (var i = 0; i < hidden.length; i++) {
-      var el = hidden[i];
+    for (let i = 0; i < hidden.length; i++) {
+      const el = hidden[i];
       el.style.display = el.dataset.haPrevDisplay || '';
       delete el.dataset.haHidden;
       delete el.dataset.haPrevDisplay;
@@ -66,23 +66,23 @@
   }
 
   /* ---------- 4 个宫格入口 ---------- */
-  var ENTRIES = [
-    { key: 'data',    icon: 'fa-chart-simple',      title: '我的数据',   sub: '所在地 · 职业 · 在听 · 天气' },
-    { key: 'album',   icon: 'fa-images',            title: '纪念册',     sub: '三张想留住的瞬间' },
-    { key: 'social',  icon: 'fa-share-nodes',       title: '社交媒体',   sub: 'B站 · YouTube · X · GitHub' },
-    { key: 'contact', icon: 'fa-envelope-open-text',title: '联络与寄语', sub: '想跟本喵说点什么' }
+  const ENTRIES = [
+    {key: 'data', icon: 'fa-chart-simple', title: '我的数据', sub: '所在地 · 职业 · 在听 · 天气'},
+    {key: 'album', icon: 'fa-images', title: '纪念册', sub: '三张想留住的瞬间'},
+    {key: 'social', icon: 'fa-share-nodes', title: '社交媒体', sub: 'B站 · YouTube · X · GitHub'},
+    {key: 'contact', icon: 'fa-envelope-open-text', title: '联络与寄语', sub: '想跟本喵说点什么'}
   ];
 
   function buildGrid() {
     if (document.querySelector('.ha-grid')) return;
-    var grid = document.createElement('div');
+    const grid = document.createElement('div');
     grid.className = 'ha-grid';
     grid.setAttribute('role', 'navigation');
     grid.setAttribute('aria-label', '首页快捷入口');
 
-    for (var i = 0; i < ENTRIES.length; i++) {
-      var e = ENTRIES[i];
-      var a = document.createElement('button');
+    for (let i = 0; i < ENTRIES.length; i++) {
+      const e = ENTRIES[i];
+      const a = document.createElement('button');
       a.type = 'button';
       a.className = 'ha-card';
       a.setAttribute('data-ha', e.key);
@@ -95,18 +95,18 @@
       grid.appendChild(a);
     }
     grid.addEventListener('click', function (ev) {
-      var btn = ev.target && ev.target.closest ? ev.target.closest('.ha-card') : null;
+      const btn = ev.target && ev.target.closest ? ev.target.closest('.ha-card') : null;
       if (!btn) return;
       ev.preventDefault();
       openEntry(btn.getAttribute('data-ha'));
     });
 
     /* 放在 bio 之后、纪念册之前 */
-    var anchor = document.querySelector('.bio-text');
+    const anchor = document.querySelector('.bio-text');
     if (anchor && anchor.parentNode) {
       anchor.parentNode.insertBefore(grid, anchor.nextSibling);
     } else {
-      var main = document.querySelector('.about-container') || document.body;
+      const main = document.querySelector('.about-container') || document.body;
       main.appendChild(grid);
     }
   }
@@ -117,9 +117,9 @@
      用 cloneNode 而不是 adopt：原节点仍在首屏 DOM 里（只是 display:none），
      宽屏要还原，搬走了就回不去。 */
   function detailShell(title) {
-    var box = document.createElement('div');
+    const box = document.createElement('div');
     box.className = 'ha-detail';
-    var h = document.createElement('div');
+    const h = document.createElement('div');
     h.className = 'ha-detail-title';
     h.textContent = title;
     box.appendChild(h);
@@ -137,10 +137,10 @@
      观察器不会为它触发 —— 结果 DOM 有内容、高度也对，就是【全透明看不见】
      （「纪念册」空白就是这么来的）。直接跳过入场动画，进二级页即最终态。 */
   function stripReveal(root) {
-    var nodes = root.classList && root.classList.contains('reveal-init')
-      ? [root].concat(Array.prototype.slice.call(root.querySelectorAll('.reveal-init')))
-      : Array.prototype.slice.call(root.querySelectorAll('.reveal-init'));
-    for (var i = 0; i < nodes.length; i++) {
+    const nodes = root.classList && root.classList.contains('reveal-init')
+        ? [root].concat(Array.prototype.slice.call(root.querySelectorAll('.reveal-init')))
+        : Array.prototype.slice.call(root.querySelectorAll('.reveal-init'));
+    for (let i = 0; i < nodes.length; i++) {
       nodes[i].classList.remove('reveal-init');
       nodes[i].classList.add('reveal-in');   /* 直接给终态，不要入场动画 */
     }
@@ -148,22 +148,22 @@
   }
 
   function cloneForDetail(sel) {
-    var src = document.querySelector(sel);
+    const src = document.querySelector(sel);
     if (!src) return null;
-    var c = src.cloneNode(true);
+    const c = src.cloneNode(true);
     c.style.display = '';
     stripReveal(c);
     delete c.dataset.haHidden;
     delete c.dataset.haPrevDisplay;
     /* 后代里也可能带着隐藏标记（info-item 等），一并清掉 */
-    var marked = c.querySelectorAll('[data-ha-hidden]');
-    for (var i = 0; i < marked.length; i++) {
+    const marked = c.querySelectorAll('[data-ha-hidden]');
+    for (let i = 0; i < marked.length; i++) {
       marked[i].style.display = '';
       delete marked[i].dataset.haHidden;
       delete marked[i].dataset.haPrevDisplay;
     }
-    var imgs = c.querySelectorAll('img');
-    for (var k = 0; k < imgs.length; k++) {
+    const imgs = c.querySelectorAll('img');
+    for (let k = 0; k < imgs.length; k++) {
       imgs[k].loading = 'eager';       /* 二级页里要立刻显示，别等懒加载 */
       imgs[k].removeAttribute('loading');
     }
@@ -171,10 +171,10 @@
   }
 
   function sectionCard(label) {
-    var s = document.createElement('div');
+    const s = document.createElement('div');
     s.className = 'ha-section';
     if (label) {
-      var l = document.createElement('div');
+      const l = document.createElement('div');
       l.className = 'ha-section-label';
       l.textContent = label;
       s.appendChild(l);
@@ -184,22 +184,22 @@
 
   /* 我的数据：7 个 info-item + 被隐藏的一言 */
   function buildData() {
-    var box = detailShell('我的数据');
-    var grid = document.querySelector('.info-grid');
+    const box = detailShell('我的数据');
+    const grid = document.querySelector('.info-grid');
     if (grid) {
-      var sec = sectionCard('关于本喵');
-      var wrap = document.createElement('div');
+      const sec = sectionCard('关于本喵');
+      const wrap = document.createElement('div');
       wrap.className = 'ha-info-list';
-      var items = grid.querySelectorAll('.info-item');
-      for (var i = 0; i < items.length; i++) {
+      const items = grid.querySelectorAll('.info-item');
+      for (let i = 0; i < items.length; i++) {
         wrap.appendChild(items[i].cloneNode(true));
       }
       sec.appendChild(wrap);
       box.appendChild(sec);
     }
-    var hk = document.querySelector('.hitokoto-box');
+    const hk = document.querySelector('.hitokoto-box');
     if (hk) {
-      var s2 = sectionCard('今日一言');
+      const s2 = sectionCard('今日一言');
       s2.appendChild(hk.cloneNode(true));
       box.appendChild(s2);
     }
@@ -207,22 +207,22 @@
   }
 
   function buildAlbum() {
-    var box = detailShell('纪念册');
-    var album = cloneForDetail('.st-d01d8085');
+    const box = detailShell('纪念册');
+    const album = cloneForDetail('.st-d01d8085');
     if (album) box.appendChild(album);
     return box;
   }
 
   function buildSocial() {
-    var box = detailShell('社交媒体');
-    var soc = cloneForDetail('.social-links');
+    const box = detailShell('社交媒体');
+    const soc = cloneForDetail('.social-links');
     if (soc) box.appendChild(soc);
     return box;
   }
 
   function buildContact() {
-    var box = detailShell('联络与寄语');
-    var c = cloneForDetail('.st-c2f5961e');
+    const box = detailShell('联络与寄语');
+    const c = cloneForDetail('.st-c2f5961e');
     if (c) box.appendChild(c);
     return box;
   }
@@ -236,13 +236,13 @@
   }
 
   function openEntry(key) {
-    var api = shell();
+    const api = shell();
     if (!api || !api.openDetail) return;
     if (!narrow()) return;
     if (api.detailOpen && api.detailOpen()) return;
 
-    var meta = null;
-    for (var i = 0; i < ENTRIES.length; i++) if (ENTRIES[i].key === key) meta = ENTRIES[i];
+    let meta = null;
+    for (let i = 0; i < ENTRIES.length; i++) if (ENTRIES[i].key === key) meta = ENTRIES[i];
     if (!meta) return;
 
     api.openDetail({
@@ -257,11 +257,11 @@
      P1 阶段内容还没搬走，所以先靠 hideForGrid 把大块藏起来；
      P3 会再配合 CSS 把首屏收紧到一屏内。 */
   function lockScroll() {
-    var r = document.documentElement;
+    const r = document.documentElement;
     r.classList.add('ha-narrow');
   }
   function unlockScroll() {
-    var r = document.documentElement;
+    const r = document.documentElement;
     r.classList.remove('ha-narrow');
   }
 
@@ -274,8 +274,8 @@
   function unmount() {
     unlockScroll();
     unhideAll();
-    var nodes = document.querySelectorAll(NARROW_ONLY_SEL);
-    for (var i = nodes.length - 1; i >= 0; i--) {
+    const nodes = document.querySelectorAll(NARROW_ONLY_SEL);
+    for (let i = nodes.length - 1; i >= 0; i--) {
       if (nodes[i].parentNode) nodes[i].parentNode.removeChild(nodes[i]);
     }
   }
@@ -287,7 +287,7 @@
 
   function init() {
     apply();
-    var api = shell();
+    const api = shell();
     /* 跨越 768px 时拆装：不订阅的话，宽屏会留下窄屏注入的无样式节点 */
     if (api && api.onMode) api.onMode(function (n) { if (n) mount(); else unmount(); });
   }

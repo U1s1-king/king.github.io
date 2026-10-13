@@ -24,7 +24,7 @@
   /* 网关宿主池。默认走自定义域名（生产环境等于同源）。
      留 window.MUSIC_GATEWAY 覆盖钩子，方便本地联调指向别的入口 ——
      给了就连池子一起覆盖，只走那一个。 */
-  var GW_POOL = [];
+  const GW_POOL = [];
   if (window.MUSIC_GATEWAY) GW_POOL.push(String(window.MUSIC_GATEWAY).replace(/\/+$/, ''));
   /* 备用入口 = Cloudflare Pages 上的**同一份 worker**（不同 apex）。
      为什么必须有：实测确认封锁匹配的是 `ccwu.cc` 这个**字符串** ——
@@ -35,21 +35,21 @@
         *.pages.dev 实测可达。 */
   GW_POOL.push('https://zhaokening.ccwu.cc', 'https://sakura-music-gw.pages.dev');
 
-  var GATEWAY = GW_POOL[0];
+  const GATEWAY = GW_POOL[0];
 
   /* 「上次成功的入口」记 10 分钟：既能让后续请求直接走对的，
      又不至于长期钉在一个已经恢复/已经挂掉的入口上。 */
-  var GW_MEMO_KEY = 'sakuraGwBase';
-  var GW_MEMO_TTL = 10 * 60 * 1000;
-  var gwStat = { base: '', at: 0 };
+  const GW_MEMO_KEY = 'sakuraGwBase';
+  const GW_MEMO_TTL = 10 * 60 * 1000;
+  let gwStat = {base: '', at: 0};
   try {
-    var _gs = JSON.parse(localStorage.getItem(GW_MEMO_KEY) || 'null');
+    const _gs = JSON.parse(localStorage.getItem(GW_MEMO_KEY) || 'null');
     if (_gs && _gs.base && GW_POOL.indexOf(_gs.base) >= 0 && Date.now() - _gs.at < GW_MEMO_TTL) gwStat = _gs;
   } catch (e) {}
 
   function gwOrder() {
-    var l = GW_POOL.slice();
-    var i = gwStat.base ? l.indexOf(gwStat.base) : -1;
+    const l = GW_POOL.slice();
+    const i = gwStat.base ? l.indexOf(gwStat.base) : -1;
     if (i > 0) { l.splice(i, 1); l.unshift(gwStat.base); }
     return l;
   }
@@ -60,21 +60,21 @@
      时好时坏 —— 一次 509ms 返回 10 条，下一次 211ms 返回 `[]`。
      只有一个镜像时，撞上 `[]` 就要掉到慢网关（实测 6 秒）。
      这里按「实测可用」排序，逐个试，空结果也算失败换下一个。 */
-  var METING = [
+  const METING = [
     'https://api.qijieya.cn/meting/',
     'https://api.injahow.cn/meting/',
     'https://api.msls1441.com/'
   ];
 
-  var ITUNES = 'https://itunes.apple.com/search';
+  const ITUNES = 'https://itunes.apple.com/search';
 
   /* 第三方公共桥（MusicSquare 同款），一律「桥优先 → Meting 回落」，不改原链路：
      - 酷我 oiapi.net：?msg=&page=&limit= 拿列表；?msg=&n=1&br=2 拿可播直链（br=1 的无损是 VIP 死链，实测 410）
      - s01s.cn：QQ 音乐的兜底搜索（?msg=&type=json） */
-  var KUWO_API = 'https://oiapi.net/api/Kuwo';
-  var S01S = 'https://tang.api.s01s.cn/music_open_api.php';
+  const KUWO_API = 'https://oiapi.net/api/Kuwo';
+  const S01S = 'https://tang.api.s01s.cn/music_open_api.php';
 
-  var PLATFORMS = [
+  const PLATFORMS = [
     ['all', '全部平台'],
     ['netease', '网易云'],
     ['tencent', 'QQ音乐'],
@@ -91,14 +91,14 @@
   ];
 
   // 音质档位（仅网易云自建网关支持）
-  var LEVELS = [
+  const LEVELS = [
     ['standard', '标准'],
     ['higher', '较高'],
     ['exhigh', '极高'],
     ['lossless', '无损']
   ];
 
-  var TIMEOUT = 12000;
+  const TIMEOUT = 12000;
 
   // ---------------------------------------------------------- 小工具
 
@@ -132,7 +132,7 @@
   }
 
   function toSeconds(v) {
-    var n = Number(v) || 0;
+    const n = Number(v) || 0;
     if (n > 100000) return Math.round(n / 1000); // 毫秒
     return Math.round(n);
   }
@@ -140,8 +140,8 @@
   function formatTime(sec) {
     sec = Math.floor(Number(sec) || 0);
     if (!isFinite(sec) || sec < 0) return '0:00';
-    var m = Math.floor(sec / 60);
-    var s = sec % 60;
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
     return m + ':' + (s < 10 ? '0' + s : s);
   }
 
@@ -173,7 +173,8 @@
      所以这里按 id 就地拼出来 —— makeSong 是所有来源的必经之路，
      搜索结果 / 排行榜 / 歌单曲目一次性全覆盖。
      ============================================================ */
-  var PROXY_MIRROR = 'https://api.qijieya.cn/meting/';
+  const PROXY_MIRROR = 'https://api.qijieya.cn/meting/';
+
   function proxyUrl(server, id) {
     if (!id) return '';
     return PROXY_MIRROR + '?server=' + encodeURIComponent(server) +
@@ -182,11 +183,11 @@
 
   function makeSong(o) {
     o = o || {};
-    var platform = o.platform || 'netease';
-    var id = o.id != null && o.id !== '' ? String(o.id) : '';
-    var name = stripHtml(o.name || o.title || '未知歌曲');
-    var artist = stripHtml(o.artist || o.author || '');
-    var song = {
+    const platform = o.platform || 'netease';
+    const id = o.id != null && o.id !== '' ? String(o.id) : '';
+    const name = stripHtml(o.name || o.title || '未知歌曲');
+    const artist = stripHtml(o.artist || o.author || '');
+    const song = {
       platform: platform,
       id: id,
       name: name,
@@ -235,9 +236,9 @@
      和精确去重。 */
   function metingIdOf(s) {
     if (!s) return '';
-    var direct = s.id || s.songid || s.song_id;
+    const direct = s.id || s.songid || s.song_id;
     if (direct) return String(direct);
-    var m = /[?&]id=([0-9A-Za-z_-]+)/.exec(String(s.url || '') + ' ' + String(s.lrc || ''));
+    const m = /[?&]id=([0-9A-Za-z_-]+)/.exec(String(s.url || '') + ' ' + String(s.lrc || ''));
     return m ? m[1] : '';
   }
 
@@ -264,21 +265,21 @@
        • Audius    —— 独立音乐 / CC 授权，整曲可播，零鉴权
        • 喜马拉雅   —— 有声书 / 播客，整曲可播（免费节目）
      ============================================================ */
-  var AUDIUS = 'https://api.audius.co/v1';
-  var XIMA = 'https://www.ximalaya.com/revision/search';
+  const AUDIUS = 'https://api.audius.co/v1';
+  const XIMA = 'https://www.ximalaya.com/revision/search';
 
   /** Audius 搜索（GET，无鉴权；app_name 随便填，只是标识来源） */
   function viaAudius(keywords, limit) {
     return getJSON(AUDIUS + '/tracks/search?query=' + encodeURIComponent(keywords) +
       '&app_name=SakuraMusic&limit=' + Math.min(limit || 20, 50)).then(function (j) {
-      var arr = (j && j.data) || [];
+      const arr = (j && j.data) || [];
       return arr.filter(function (t) {
         /* **只有 is_streamable 的曲目才拿得到流**（实测 false 的直接 404）。
            以前是「不过滤、拼个空地址」，结果列表里混进点了不响的歌。
            有 stream.url 的当然也算可播。 */
         return t.is_streamable === true || (t.stream && t.stream.url);
       }).map(function (t) {
-        var art = t.artwork || {};
+        const art = t.artwork || {};
         return makeSong({
           platform: 'audius',
           id: t.id,
@@ -301,8 +302,8 @@
     return getJSON(XIMA + '?core=track&kw=' + encodeURIComponent(keywords) +
       '&page=1&rows=' + Math.min(limit || 20, 30) +
       '&spellchecker=true&condition=relation&device=web').then(function (j) {
-      var docs = (j && j.data && j.data.result && j.data.result.response &&
-                  j.data.result.response.docs) || [];
+      const docs = (j && j.data && j.data.result && j.data.result.response &&
+          j.data.result.response.docs) || [];
       return docs.map(function (t) {
         return makeSong({
           platform: 'ximalaya',
@@ -358,7 +359,7 @@
   /** 酷我桥列表搜索：?msg=&page=&limit= -> data[] */
   function viaKuwo(keywords, limit) {
     return getJSON(KUWO_API + '?msg=' + encodeURIComponent(keywords) + '&page=1&limit=' + limit).then(function (j) {
-      var arr = (j && j.data) || [];
+      const arr = (j && j.data) || [];
       if (!Array.isArray(arr) || !arr.length) throw new Error('kuwo bridge empty');
       return arr.map(fromKuwo);
     });
@@ -367,7 +368,7 @@
   /** s01s 开放接口：QQ 音乐兜底搜索 -> [{song_title,singer_name,song_mid}] */
   function viaS01s(keywords, limit) {
     return getJSON(S01S + '?msg=' + encodeURIComponent(keywords) + '&type=json').then(function (j) {
-      var arr = Array.isArray(j) ? j : ((j && j.data) || []);
+      const arr = Array.isArray(j) ? j : ((j && j.data) || []);
       if (!Array.isArray(arr) || !arr.length) return [];
       return arr.slice(0, limit).map(function (it) {
         return makeSong({
@@ -394,23 +395,28 @@
    *     不要往里堆死链。
    */
   function viaMeting(platform, keywords, limit) {
-    var urls = METING.map(function (m) {
+    const urls = METING.map(function (m) {
       return m + '?server=' + encodeURIComponent(platform) +
-        '&type=search&id=' + encodeURIComponent(keywords) +
-        '&limit=' + (limit || 20);
+          '&type=search&id=' + encodeURIComponent(keywords) +
+          '&limit=' + (limit || 20);
     });
     if (!urls.length) return Promise.resolve([]);
     return new Promise(function (resolve) {
-      var pending = urls.length, settled = false;
+      let pending = urls.length, settled = false;
+
       function giveUp() { if (!settled && --pending === 0) { settled = true; resolve([]); } }
       urls.forEach(function (u) {
         getText(u).then(function (text) {
           if (settled) return;
-          var arr = null;
+          let arr;
           try { arr = JSON.parse(text); } catch (e) { arr = null; }
           if (!Array.isArray(arr)) arr = arr && arr.data ? arr.data : [];
-          var songs = arr.map(function (s) { return fromMeting(s, platform); })
-            .filter(function (s) { return s && (s.name || s.id); });
+          const songs = arr.map(function (s) {
+            return fromMeting(s, platform);
+          })
+              .filter(function (s) {
+                return s && (s.name || s.id);
+              });
           if (songs.length) { settled = true; resolve(songs); return; }
           giveUp();
         }, giveUp);
@@ -419,9 +425,9 @@
   }
 
     function withTimeout(url, opts) {
-    var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
-    var timer = null;
-    if (ctrl) {
+      const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+      let timer = null;
+      if (ctrl) {
       timer = setTimeout(function () { ctrl.abort(); }, TIMEOUT);
       opts = Object.assign({}, opts || {}, { signal: ctrl.signal });
     }
@@ -429,7 +435,7 @@
       function (res) {
         if (timer) clearTimeout(timer);
         if (!res.ok) {
-          var err = new Error('HTTP ' + res.status);
+          const err = new Error('HTTP ' + res.status);
           err.status = res.status;
           throw err;
         }
@@ -454,11 +460,12 @@
   /** 自建网关调用：依次试候选入口（上次成功的排最前），第一个成功的记住。
    *  全挂才抛错。统一解包 {ok, data}。 */
   function gateway(path, params) {
-    var qs = new URLSearchParams(params || {}).toString();
-    var list = gwOrder(), i = 0;
+    const qs = new URLSearchParams(params || {}).toString();
+    let list = gwOrder(), i = 0;
+
     function next() {
       if (i >= list.length) throw new Error('所有网关入口都不可用');
-      var base = list[i++];
+      const base = list[i++];
       return getJSON(base + path + (qs ? '?' + qs : '')).then(function (j) {
         if (!j || j.ok === false) throw new Error((j && j.error) || '网关返回失败');
         gwStat = { base: base, at: Date.now() };
@@ -467,7 +474,7 @@
            而 /api/recommend/* 直接给数组。这里统一拆开 ——
            否则调用方对对象调 .map 会抛 TypeError，
            表现就是「排行榜/歌单点进去啥都没有」。 */
-        var d = j.data;
+        const d = j.data;
         if (d && !Array.isArray(d) && Array.isArray(d.songs)) return d.songs;
         return d;
       }).catch(function () { return next(); });
@@ -477,15 +484,17 @@
 
   /** Meting 调用（本地镜像优先，失败落到自建网关的代理） */
   function meting(params) {
-    var qs = new URLSearchParams(params).toString();
-    var urls = METING.map(function (m) { return m + '?' + qs; });
+    const qs = new URLSearchParams(params).toString();
+    const urls = METING.map(function (m) {
+      return m + '?' + qs;
+    });
     urls.push(GATEWAY + '/api/meting?' + qs);
 
     return new Promise(function (resolve, reject) {
-      var i = 0;
+      let i = 0;
       (function step() {
         if (i >= urls.length) return reject(new Error('所有音源镜像都不可用'));
-        var u = urls[i++];
+        const u = urls[i++];
         getText(u).then(
           function (text) {
             if (!text || !text.trim()) return step();
@@ -499,7 +508,7 @@
 
   // ---------------------------------------------------------- 缓存
 
-  var CACHE_PREFIX = 'sakuraMusicCache:';
+  const CACHE_PREFIX = 'sakuraMusicCache:';
 
   function cacheKey(parts) {
     return CACHE_PREFIX + parts.join('|');
@@ -507,9 +516,9 @@
 
   function cacheGet(key) {
     try {
-      var raw = localStorage.getItem(key);
+      const raw = localStorage.getItem(key);
       if (!raw) return null;
-      var obj = JSON.parse(raw);
+      const obj = JSON.parse(raw);
       if (!obj || obj.expire < Date.now()) {
         localStorage.removeItem(key);
         return null;
@@ -530,12 +539,12 @@
   }
 
   function cached(key, ttl, producer) {
-    var hit = cacheGet(key);
+    const hit = cacheGet(key);
     if (hit !== null && hit !== undefined) return Promise.resolve(hit);
     return Promise.resolve(producer()).then(function (v) {
       /* 空结果绝不入缓存。原来只判断 null/undefined，空字符串会被当成有效结果
          存 24 小时——歌词一旦取失败（比如网关风控），这一整天里每次播放都「没有歌词」。 */
-      var empty = v === null || v === undefined || v === '' || (Array.isArray(v) && v.length === 0);
+      const empty = v === null || v === undefined || v === '' || (Array.isArray(v) && v.length === 0);
       if (!empty) cacheSet(key, v, ttl);
       return v;
     });
@@ -544,30 +553,30 @@
   /* 历史上被写进缓存的空歌词要清掉，否则修了写入逻辑它们还会继续生效一天。 */
   (function purgeEmptyLyricCache() {
     try {
-      var dead = [];
-      for (var i = 0; i < localStorage.length; i++) {
-        var k = localStorage.key(i);
+      const dead = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
         if (!k || k.indexOf(CACHE_PREFIX + 'lyric') !== 0) continue;
-        var raw = localStorage.getItem(k);
+        const raw = localStorage.getItem(k);
         if (!raw) continue;
-        var obj = null;
+        let obj = null;
         try { obj = JSON.parse(raw); } catch (e) { dead.push(k); continue; }
         if (!obj || obj.value === '' || obj.value === null || obj.value === undefined) dead.push(k);
       }
-      for (var n = 0; n < dead.length; n++) { try { localStorage.removeItem(dead[n]); } catch (e) {} }
+      for (let n = 0; n < dead.length; n++) { try { localStorage.removeItem(dead[n]); } catch (e) {} }
     } catch (e) {}
   })();
 
   // ---------------------------------------------------------- 搜索
 
-  var searchIt = {};
+  const searchIt = {};
 
   /** 单平台搜索 */
   searchIt.one = function (platform, keywords, opts) {
     opts = opts || {};
-    var limit = opts.limit || 30;
-    var offset = opts.offset || 0;
-    var key = cacheKey(['search', platform, keywords, limit, offset]);
+    const limit = opts.limit || 30;
+    const offset = opts.offset || 0;
+    const key = cacheKey(['search', platform, keywords, limit, offset]);
 
     return cached(key, 300, function () {
       if (platform === 'netease') {
@@ -590,7 +599,7 @@
               /* ⚠️ gateway() 内部**已经**把 {ok,total,songs} 拆成 songs 数组返回了，
                  以前这里又取了一次 .songs —— 双重解包，对数组取 .songs 得到 undefined，
                  于是网易云搜索**永远返回 0 条**。两种形状都认，以后改解包规则也不会崩。 */
-              var arr = Array.isArray(d) ? d : ((d && d.songs) || []);
+              const arr = Array.isArray(d) ? d : ((d && d.songs) || []);
               return arr.map(fromGateway);
             });
         }
@@ -631,10 +640,14 @@ if (platform === 'kuwo') {
   /** 多平台并行搜索 + 去重 */
   searchIt.multi = function (keywords, opts) {
     opts = opts || {};
-    var limit = opts.limit || 20;
-    var platforms = opts.platforms && opts.platforms.length
-      ? opts.platforms
-      : PLATFORMS.map(function (p) { return p[0]; }).filter(function (p) { return p !== 'all'; });
+    const limit = opts.limit || 20;
+    const platforms = opts.platforms && opts.platforms.length
+        ? opts.platforms
+        : PLATFORMS.map(function (p) {
+          return p[0];
+        }).filter(function (p) {
+          return p !== 'all';
+        });
 
     return Promise.all(
       platforms.map(function (p) {
@@ -643,13 +656,13 @@ if (platform === 'kuwo') {
           .catch(function () { return { platform: p, songs: [], ok: false }; });
       })
     ).then(function (groups) {
-      var seen = Object.create(null);
-      var merged = [];
-      var stats = [];
+      const seen = Object.create(null);
+      const merged = [];
+      const stats = [];
       groups.forEach(function (g) {
         stats.push({ platform: g.platform, count: g.songs.length, ok: g.ok });
         g.songs.forEach(function (s) {
-          var fp = s.platform + ':' + fingerprint(s.name, s.artist);
+          const fp = s.platform + ':' + fingerprint(s.name, s.artist);
           if (seen[fp]) return;
           seen[fp] = true;
           merged.push(s);
@@ -661,7 +674,7 @@ if (platform === 'kuwo') {
 
   function search(keywords, opts) {
     opts = opts || {};
-    var platform = opts.platform || 'netease';
+    const platform = opts.platform || 'netease';
     if (platform === 'all') return searchIt.multi(keywords, opts).then(function (r) { return r.songs; });
     return searchIt.one(platform, keywords, opts);
   }
@@ -671,14 +684,14 @@ if (platform === 'kuwo') {
   /* GD Studio（music-api.gdstudio.xyz）：返回真实 CDN 直链、带 CORS、支持 Range，
      实测网易云可取到 200/206 可播地址。作第一顺位，失败再退下面的流式镜像与网关。
      它是「返回地址」型；下面的 STREAM_MIRRORS 是「直接吐音频」型，两者不能混。 */
-  var GD_API = 'https://music-api.gdstudio.xyz/api.php';
+  const GD_API = 'https://music-api.gdstudio.xyz/api.php';
 
   /* 流式镜像：这些镜像的 type=url 不返回 JSON 地址，而是 **302 跳转**到真实 CDN，
      所以要把「镜像地址本身」当成播放地址交给 <audio>（不要 fetch，顺带绕开 CORS）。
      实测 qijieya / injahow 都会 302 到 m8xx.music.126.net 并给出 audio/mpeg。
      （2026-09 复测：musicapi.qijieya.cn 已 521，meting.qjqq.cn 522，
         music.xianqiao.wang 只会返回一页 HTML —— 都不要再放进来了。） */
-  var STREAM_MIRRORS = [
+  const STREAM_MIRRORS = [
     'https://api.qijieya.cn/meting/',
     'https://api.injahow.cn/meting/',
     /* 2026-09-23 自己复测出来的可用镜像（302 到真实 CDN） */
@@ -689,14 +702,14 @@ if (platform === 'kuwo') {
     if (!id) return Promise.resolve('');
     return getJSON(GD_API + '?types=url&source=' + encodeURIComponent(server) + '&id=' + encodeURIComponent(id) + '&br=320')
       .then(function (j) {
-        var u = Array.isArray(j) ? (j[0] && j[0].url) : (j && j.url);
+        const u = Array.isArray(j) ? (j[0] && j[0].url) : (j && j.url);
         return (u && /^https?:\/\//.test(u)) ? u : '';
       })
       .catch(function () { return ''; });
   }
 
   function streamUrls(platform, song) {
-    var q = 'server=' + encodeURIComponent(platform) + '&type=url&br=320';
+    let q = 'server=' + encodeURIComponent(platform) + '&type=url&br=320';
     if (song.id) q += '&id=' + encodeURIComponent(song.id);
     if (song.name) q += '&name=' + encodeURIComponent(song.name) + '&artist=' + encodeURIComponent(song.artist || '');
     return STREAM_MIRRORS.map(function (m) { return m + '?' + q; });
@@ -709,14 +722,14 @@ if (platform === 'kuwo') {
    */
   function songUrlCandidates(song, opts) {
     opts = opts || {};
-    var out = [];
+    const out = [];
     if (!song) return Promise.resolve(out);
-    var platform = song.platform || 'netease';
-    var level = opts.level || 'exhigh';
+    const platform = song.platform || 'netease';
+    const level = opts.level || 'exhigh';
     if (song.url && /^https?:\/\//.test(song.url)) out.push(song.url);
     if (song.isLocal) return Promise.resolve(out);
 
-    var jobs = [];
+    const jobs = [];
     if (platform === 'netease' && song.id) {
       jobs.push(gdUrl('netease', song.id));
       jobs.push(cached(cacheKey(['url', platform, song.id, level]), 600, function () {
@@ -731,9 +744,9 @@ if (platform === 'kuwo') {
       }));
     } else if (platform === 'kuwo') {
       jobs.push(cached(cacheKey(['url', 'kuwo-bridge', song.name, song.artist]), 600, function () {
-        var msg = ((song.name || '') + ' ' + (song.artist || '')).trim();
+        const msg = ((song.name || '') + ' ' + (song.artist || '')).trim();
         return getJSON(KUWO_API + '?msg=' + encodeURIComponent(msg) + '&n=1&br=2').then(function (j) {  // br=1 无损是 VIP 死链，br=2 实测可播
-          var d = (j && j.data) || null;
+          const d = (j && j.data) || null;
           return (d && d.url) || '';
         }).catch(function () { return ''; });
       }));
@@ -747,18 +760,18 @@ if (platform === 'kuwo') {
       }));
     } else if (platform !== 'itunes') {
       jobs.push(cached(cacheKey(['url', platform, song.id || song.name, song.artist]), 600, function () {
-        var params = { server: platform, type: 'url' };
+        const params = {server: platform, type: 'url'};
         if (song.id) params.id = song.id;
         /* name/artist **总是带上**（以前只在没有 id 时才带）——
            网关照常只用 id 走主链路，但主链路全挂时要用名字去第三方兜底。 */
         params.name = song.name || '';
         params.artist = song.artist || '';
         return meting(params).then(function (r) {
-          var t = (r.text || '').trim();
+          const t = (r.text || '').trim();
           if (/^https?:\/\//.test(t)) return t;
           try {
-            var j = JSON.parse(t);
-            var first = Array.isArray(j) ? j[0] : (j && j.data ? j.data[0] : j);
+            const j = JSON.parse(t);
+            const first = Array.isArray(j) ? j[0] : (j && j.data ? j.data[0] : j);
             if (first && first.url) return first.url;
           } catch (e) { /* 落空 */ }
           return '';
@@ -782,10 +795,10 @@ if (platform === 'kuwo') {
 
   /** Meting / 网关代理的响应可能是一层 {ok, data:{raw}} 信封，这里统一拆出来 */
   function unwrapLrcText(text) {
-    var t = (text || '').trim();
+    const t = (text || '').trim();
     if (!t || t.charAt(0) !== '{') return t;
     try {
-      var j = JSON.parse(t);
+      const j = JSON.parse(t);
       if (j && j.data) {
         if (typeof j.data === 'string') return j.data;
         if (j.data.raw) return String(j.data.raw);
@@ -804,19 +817,23 @@ if (platform === 'kuwo') {
   function lyric(song) {
     if (!song) return Promise.resolve('');
     if (song.lrc) return Promise.resolve({ lrc: song.lrc, trans: '', roma: '' });
-    var platform = song.platform || 'netease';
-    var key = cacheKey(['lyric2', platform, song.id || song.name, song.artist]);
+    const platform = song.platform || 'netease';
+    const key = cacheKey(['lyric2', platform, song.id || song.name, song.artist]);
     return cached(key, 86400, function () {
-      var idP = song.id
-        ? Promise.resolve(String(song.id))
-        : (song.name
-            ? searchIt.one(platform, (song.name + ' ' + (song.artist || '')).trim(), { limit: 1 })
-                .then(function (arr) { return (arr && arr[0] && arr[0].id) || ''; })
-                .catch(function () { return ''; })
-            : Promise.resolve(''));
+      const idP = song.id
+          ? Promise.resolve(String(song.id))
+          : (song.name
+              ? searchIt.one(platform, (song.name + ' ' + (song.artist || '')).trim(), {limit: 1})
+                  .then(function (arr) {
+                    return (arr && arr[0] && arr[0].id) || '';
+                  })
+                  .catch(function () {
+                    return '';
+                  })
+              : Promise.resolve(''));
 
       return idP.then(function (id) {
-        var tries = [];
+        const tries = [];
         if (id && platform === 'netease') {
           tries.push(function () {
             return gateway('/api/lyric', { id: id }).then(function (d) {
@@ -830,7 +847,7 @@ if (platform === 'kuwo') {
         if (id) {
           tries.push(function () {
             return meting({ server: platform, type: 'lrc', id: id }).then(function (r) {
-              var t = unwrapLrcText(r.text);
+              const t = unwrapLrcText(r.text);
               return t ? { lrc: t, trans: '', roma: '' } : null;
             }).catch(function () { return null; });
           });
@@ -845,50 +862,56 @@ if (platform === 'kuwo') {
 
   // ---------------------------------------------------------- 其余接口
 
-  var rest = {
+  const rest = {
     songDetail: function (ids) {
-      var arr = Array.isArray(ids) ? ids : String(ids).split(',');
+      const arr = Array.isArray(ids) ? ids : String(ids).split(',');
       return cached(cacheKey(['detail', arr.join(',')]), 3600, function () {
-        return gateway('/api/song/detail', { ids: arr.join(',') }).then(function (list) {
+        return gateway('/api/song/detail', {ids: arr.join(',')}).then(function (list) {
           return (list || []).map(fromGateway);
         });
       });
     },
     playlist: function (id) {
       return cached(cacheKey(['playlist', id]), 1800, function () {
-        return gateway('/api/playlist', { id: id });
+        return gateway('/api/playlist', {id: id});
       });
     },
     playlistTracks: function (id, opts) {
       opts = opts || {};
       return cached(cacheKey(['playlistTracks', id, opts.limit || 1000, opts.offset || 0]), 1800, function () {
-        return gateway('/api/playlist/tracks', { id: id, limit: opts.limit || 1000, offset: opts.offset || 0 });
+        return gateway('/api/playlist/tracks', {id: id, limit: opts.limit || 1000, offset: opts.offset || 0});
       });
     },
     toplist: function () {
-      return cached(cacheKey(['toplist']), 1800, function () { return gateway('/api/toplist'); });
+      return cached(cacheKey(['toplist']), 1800, function () {
+        return gateway('/api/toplist');
+      });
     },
     recommendPlaylist: function (limit) {
       return cached(cacheKey(['recPlaylist', limit || 12]), 1800, function () {
-        return gateway('/api/recommend/playlist', { limit: limit || 12 });
+        return gateway('/api/recommend/playlist', {limit: limit || 12});
       });
     },
     recommendNewSong: function (limit) {
       return cached(cacheKey(['recNewSong', limit || 12]), 1800, function () {
-        return gateway('/api/recommend/newsong', { limit: limit || 12 }).then(function (list) {
+        return gateway('/api/recommend/newsong', {limit: limit || 12}).then(function (list) {
           return (list || []).map(fromGateway);
         });
       });
     },
     catalogue: function () {
-      return cached(cacheKey(['catalogue']), 86400, function () { return gateway('/api/catalogue'); });
+      return cached(cacheKey(['catalogue']), 86400, function () {
+        return gateway('/api/catalogue');
+      });
     },
     artist: function (id) {
-      return cached(cacheKey(['artist', id]), 86400, function () { return gateway('/api/artist', { id: id }); });
+      return cached(cacheKey(['artist', id]), 86400, function () {
+        return gateway('/api/artist', {id: id});
+      });
     },
     artistSongs: function (id, limit) {
       return cached(cacheKey(['artistSongs', id, limit || 50]), 86400, function () {
-        return gateway('/api/artist/songs', { id: id, limit: limit || 50 }).then(function (list) {
+        return gateway('/api/artist/songs', {id: id, limit: limit || 50}).then(function (list) {
           return (list || []).map(fromGateway);
         });
       });
@@ -901,7 +924,7 @@ if (platform === 'kuwo') {
   // ---------------------------------------------------------- 下载
 
   function probeExt(buf) {
-    var b = new Uint8Array(buf.slice(0, 12));
+    const b = new Uint8Array(buf.slice(0, 12));
     if (b[0] === 0x49 && b[1] === 0x44 && b[2] === 0x33) return 'mp3';
     if (b[0] === 0xff && (b[1] & 0xe0) === 0xe0) return 'mp3';
     if (b[0] === 0x66 && b[1] === 0x4c && b[2] === 0x61 && b[3] === 0x43) return 'flac';
@@ -917,7 +940,7 @@ if (platform === 'kuwo') {
       if (!url) throw new Error('拿不到播放地址，可能受版权/VIP限制');
       return withTimeout(url, { redirect: 'follow' }).then(function (r) { return r.arrayBuffer(); });
     }).then(function (buf) {
-      var ext = probeExt(buf);
+      const ext = probeExt(buf);
       if (!ext || buf.byteLength < 4096) throw new Error('该曲受版权/VIP限制，下载不了');
       return { buffer: buf, ext: ext, filename: (song.name + ' - ' + song.artist + '.' + ext).replace(/[\\/:*?"<>|]/g, '_') };
     });
@@ -929,18 +952,19 @@ if (platform === 'kuwo') {
      就是一个「页面打不开」的错误页，看起来跟跳到 404 一模一样。
      这里给规范类型；认不出来的一律 application/octet-stream —— 这样最坏
      也只是老老实实下载，绝不会把页面跳走。 */
-  var AUDIO_MIME = {
+  const AUDIO_MIME = {
     mp3: 'audio/mpeg', m4a: 'audio/mp4', mp4: 'audio/mp4', m4b: 'audio/mp4',
     aac: 'audio/aac', flac: 'audio/flac', ogg: 'audio/ogg', oga: 'audio/ogg',
     opus: 'audio/ogg', wav: 'audio/wav', wma: 'audio/x-ms-wma', ape: 'audio/x-ape'
   };
+
   function mimeOf(ext) {
     return AUDIO_MIME[String(ext || '').toLowerCase()] || 'application/octet-stream';
   }
 
   function saveBlob(buffer, filename, ext) {
-    var blob = new Blob([buffer], { type: mimeOf(ext) });
-    var a = document.createElement('a');
+    const blob = new Blob([buffer], {type: mimeOf(ext)});
+    const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = filename;
     document.body.appendChild(a);
@@ -969,9 +993,9 @@ if (platform === 'kuwo') {
     return withTimeout(urls[i], { redirect: 'follow' }).then(function (r) {
       return r.arrayBuffer();
     }).then(function (buf) {
-      var ext = probeExt(buf);
+      const ext = probeExt(buf);
       if (!ext || buf.byteLength < 4096) throw new Error('不是有效音频');
-      var base = artist ? (name + ' - ' + artist) : name;
+      const base = artist ? (name + ' - ' + artist) : name;
       saveBlob(buf, (base + '.' + ext).replace(/[\\/:*?"<>|]/g, '_'), ext);
       dlSay('下载完成喵～');
       return true;
@@ -988,15 +1012,17 @@ if (platform === 'kuwo') {
    */
   function downloadSmart(opts) {
     opts = opts || {};
-    var name = opts.name || '音乐';
-    var artist = opts.artist || '';
-    var resolve = (opts.song && (opts.song.id || opts.song.name))
-      ? songUrlCandidates(opts.song).catch(function () { return []; })
-      : Promise.resolve([]);
+    const name = opts.name || '音乐';
+    const artist = opts.artist || '';
+    const resolve = (opts.song && (opts.song.id || opts.song.name))
+        ? songUrlCandidates(opts.song).catch(function () {
+          return [];
+        })
+        : Promise.resolve([]);
     return resolve.then(function (list) {
-      var urls = [];
+      const urls = [];
       (list || []).forEach(function (u) { if (u && urls.indexOf(u) < 0) urls.push(u); });
-      var fb = opts.fallback;
+      const fb = opts.fallback;
       if (fb && /^https?:\/\//.test(fb) && urls.indexOf(fb) < 0) urls.push(fb);
       if (!urls.length) { dlSay('拿不到下载地址喵～'); return false; }
       dlSay('开始下载喵…');

@@ -20,7 +20,7 @@ A personal website built as a small digital world — part journal, part archive
 Browse the pages below, or jump straight to what you came for.
 
 <a href="https://zhaokening.ccwu.cc/">
-  <img src="./og-image.png" width="100%" alt="Enter the ZHAOKENING digital space">
+  <img src="./og-image.png" width="1200" alt="Enter the ZHAOKENING digital space">
 </a>
 
 **[ ENTER THE SPACE ↗ ](https://zhaokening.ccwu.cc/)**

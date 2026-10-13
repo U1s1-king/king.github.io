@@ -42,7 +42,7 @@
   }
 
   function buildStage() {
-    var wrap = document.createElement('div');
+    const wrap = document.createElement('div');
     wrap.className = 'fs-wrap';
     wrap.innerHTML =
       '<div class="fs-top">' +
@@ -64,7 +64,8 @@
      历史上 music-plus.js 也往它挂过 openLyricPage()，两边都带
      detailOpen() 守卫，谁先执行谁赢 —— 点封面行为随机。现已收敛到这里：
      点封面 = 开全屏播放页；歌词页由播放页内的 .fs-lyric 按钮切换。 */
-  var opening = false;
+  let opening = false;
+
   function openFull() {
     /* 阶段 B1：桌面端也要有播放页。以前这一句 !narrow() 直接把桌面挡掉，
        再叠加 app.css「隔离兜底」里对 .fs-wrap 的 display:none，
@@ -76,19 +77,21 @@
     if (opening) return false;
     opening = true;
 
-    var wrap = buildStage();
-    var handle = window.AppShell.openDetail({
+    const wrap = buildStage();
+    const handle = window.AppShell.openDetail({
       title: '正在播放',
       content: wrap,
       swipeClose: true,
       allowDesktop: true,
       /* 左右滑 = 上一首/下一首（走原按钮，复用 bundle 的切歌逻辑） */
       onHorizontal: function (dir) {
-        var b = byId(dir > 0 ? 'nextBtn' : 'prevBtn');
+        const b = byId(dir > 0 ? 'nextBtn' : 'prevBtn');
         if (b) b.click();
       },
       /* 归还由 closeDetail 的 releaseAdopted(本层) 负责，这里只复位开锁标记 */
-      onClose: function () { opening = false; }
+      onClose: function () {
+        opening = false;
+      }
     });
 
     /* 按主流播放页的顺序把真实节点搬进去 */
@@ -110,9 +113,9 @@
        的 .detail-view/.fs-modes 规则补齐版式。 */
     take(q('.extra-actions'), q('.fs-modes', wrap));
 
-    var collapse = q('.fs-collapse', wrap);
+    const collapse = q('.fs-collapse', wrap);
     if (collapse) collapse.addEventListener('click', function () { handle.close(); });
-    var list = q('.fs-list', wrap);
+    const list = q('.fs-list', wrap);
     if (list) list.addEventListener('click', function () {
       /* 窄屏没有可开的抽屉（歌单已在首屏，#plDrawer 整块 display:none）：
          收起播放页，滚到「我的歌单」。以前这里是 find #plDrawerOpen 再 click()，
@@ -120,16 +123,16 @@
       if (narrow()) {
         if (window.AppShell.closeDetail) window.AppShell.closeDetail();
         setTimeout(function () {
-          var host = byId('mmMineSection');
+          const host = byId('mmMineSection');
           if (host) host.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 280);
         return;
       }
       /* 桌面端：抽屉是歌单的唯一入口，照旧交给内联脚本那份实现 */
-      var t = byId('plDrawerOpen');
+      const t = byId('plDrawerOpen');
       if (t) t.click();
     });
-    var more = q('.fs-more', wrap);
+    const more = q('.fs-more', wrap);
     if (more) more.addEventListener('click', function () {
       if (window.MusicPlus && window.MusicPlus.menu) window.MusicPlus.menu();
     });
@@ -140,15 +143,15 @@
   /* ---- 入口一：点封面转盘 / 右下角展开按钮 ---- */
   function injectOpeners() {
     /* 先绑封面：两端都要（桌面端没有下面那颗按钮，封面就是唯一入口） */
-    var disc = byId('coverInner');
+    const disc = byId('coverInner');
     if (disc && !disc.__fsOpen) {
       disc.__fsOpen = true;
       disc.addEventListener('click', function () { openFull(); });
     }
     if (!narrow()) return;   /* 右下角那颗按钮的样式只写在 ≤768 里，桌面不注入 */
-    var zone = q('.disc-zone');
+    const zone = q('.disc-zone');
     if (!zone || byId('fsOpenBtn')) return;
-    var btn = document.createElement('button');
+    const btn = document.createElement('button');
     btn.type = 'button';
     btn.id = 'fsOpenBtn';
     btn.className = 'fs-open-btn';
@@ -160,10 +163,10 @@
 
   /* ---- 歌单 sheet：拖动把手下滑关闭 ---- */
   function bindSheetDrag() {
-    var head = q('.pl-drawer-head');
-    var drawer = byId('plDrawer');
+    const head = q('.pl-drawer-head');
+    const drawer = byId('plDrawer');
     if (!head || !drawer) return;
-    var y0 = 0, dy = 0, on = false;
+    let y0 = 0, dy = 0, on = false;
     head.addEventListener('touchstart', function (e) {
       if (e.touches.length !== 1) return;
       on = true; dy = 0; y0 = e.touches[0].clientY;
@@ -179,7 +182,9 @@
       on = false;
       drawer.style.transition = '';
       drawer.style.transform = '';
-      if (dy > 90) { var c = byId('plDrawerClose'); if (c) c.click(); }
+      if (dy > 90) {
+        const c = byId('plDrawerClose');
+        if (c) c.click(); }
     });
   }
 
@@ -192,15 +197,15 @@
      （手机端 CSS 隐藏），旁边插一排 chips 去改它的 value 并派发 change。
      搜索链路一行不改。
      ============================================================ */
-  var PLATFORM_LABELS = {
+  const PLATFORM_LABELS = {
     all: '全部平台', netease: '网易云', tencent: 'QQ音乐',
     kugou: '酷狗', kuwo: '酷我', migu: '咪咕', bilibili: 'B站', itunes: 'iTunes'
   };
 
   function buildPlatformChips() {
-    var sel = byId('ns-platform');
+    const sel = byId('ns-platform');
     if (!sel || byId('nsPlatformChips')) return;
-    var row = document.createElement('div');
+    const row = document.createElement('div');
     row.id = 'nsPlatformChips';
     row.className = 'ns-chips';
     function sync() {
@@ -209,7 +214,7 @@
       });
     }
     Array.prototype.forEach.call(sel.options, function (op) {
-      var b = document.createElement('button');
+      const b = document.createElement('button');
       b.type = 'button';
       b.className = 'ns-chip';
       b.setAttribute('data-value', op.value);
@@ -227,14 +232,17 @@
   }
 
   /* ---- 搜索历史 ---- */
-  var HIST_KEY = 'dsh-search-history';
+  const HIST_KEY = 'dsh-search-history';
+
   function histList() {
     try { return JSON.parse(localStorage.getItem(HIST_KEY) || '[]') || []; } catch (e) { return []; }
   }
   function histPush(kw) {
     kw = String(kw || '').trim();
     if (!kw) return;
-    var list = histList().filter(function (x) { return x !== kw; });
+    const list = histList().filter(function (x) {
+      return x !== kw;
+    });
     list.unshift(kw);
     try { localStorage.setItem(HIST_KEY, JSON.stringify(list.slice(0, 10))); } catch (e) {}
   }
@@ -245,26 +253,28 @@
     if (!narrow()) return;
     if (!window.AppShell || !window.AppShell.openDetail) return;
     if (window.AppShell.detailOpen()) return;
-    var bar = q(kind === 'ns' ? '.ns-searchbar' : '.po-searchbar');
-    var results = byId(kind === 'ns' ? 'ns-results' : 'po-results');
-    var input = byId(kind === 'ns' ? 'ns-search' : 'po-search');
-    var btn = byId(kind === 'ns' ? 'ns-btn' : 'po-btn');
+    const bar = q(kind === 'ns' ? '.ns-searchbar' : '.po-searchbar');
+    const results = byId(kind === 'ns' ? 'ns-results' : 'po-results');
+    const input = byId(kind === 'ns' ? 'ns-search' : 'po-search');
+    const btn = byId(kind === 'ns' ? 'ns-btn' : 'po-btn');
     if (!bar || !results || !input) return;
 
-    var wrap = document.createElement('div');
+    const wrap = document.createElement('div');
     wrap.className = 'ss-wrap';
-    var body = document.createElement('div');
+    const body = document.createElement('div');
     body.className = 'ss-body';
-    var hist = document.createElement('div');
+    const hist = document.createElement('div');
     hist.className = 'ss-hist';
     wrap.appendChild(body);
 
-    var alive = true;
-    var handle = window.AppShell.openDetail({
+    let alive = true;
+    const handle = window.AppShell.openDetail({
       title: '搜索',
       content: wrap,
       /* 归还由 closeDetail 的 releaseAdopted(本层) 负责 */
-      onClose: function () { alive = false; }
+      onClose: function () {
+        alive = false;
+      }
     });
 
     take(bar, body);
@@ -272,9 +282,10 @@
     body.insertBefore(hist, results);   /* 顺序：搜索条 → 历史 → 结果 */
 
     /* 热词：没有历史时也不至于是一片空白 */
-    var HOT_WORDS = ['周杰伦', '林俊杰', '纯音乐', '日语', '钢琴', '古风', 'Lo-Fi', 'ACG'];
-    function mkChip(text, onClick) {
-      var c = document.createElement('button');
+    const HOT_WORDS = ['周杰伦', '林俊杰', '纯音乐', '日语', '钢琴', '古风', 'Lo-Fi', 'ACG'];
+
+    function mkChip(text) {
+      const c = document.createElement('button');
       c.type = 'button';
       c.className = 'ss-hist-chip';
       c.textContent = text;
@@ -282,11 +293,11 @@
       return c;
     }
     function histTitle(text, withClear) {
-      var t = document.createElement('div');
+      const t = document.createElement('div');
       t.className = 'ss-hist-title';
       t.textContent = text;
       if (withClear) {
-        var b = document.createElement('button');
+        const b = document.createElement('button');
         b.type = 'button';
         b.className = 'ss-hist-clear';
         b.textContent = '清空';
@@ -300,19 +311,19 @@
       return t;
     }
     function renderHist() {
-      var list = histList();
+      const list = histList();
       hist.innerHTML = '';
       if (list.length) {
         hist.appendChild(histTitle('最近搜索', true));
-        var row = document.createElement('div');
+        const row = document.createElement('div');
         row.className = 'ss-hist-row';
-        list.forEach(function (kw) { row.appendChild(mkChip(kw, null)); });
+        list.forEach(function (kw) { row.appendChild(mkChip(kw)); });
         hist.appendChild(row);
       }
       hist.appendChild(histTitle('热门搜索', false));
-      var hot = document.createElement('div');
+      const hot = document.createElement('div');
       hot.className = 'ss-hist-row';
-      HOT_WORDS.forEach(function (kw) { hot.appendChild(mkChip(kw, null)); });
+      HOT_WORDS.forEach(function (kw) { hot.appendChild(mkChip(kw)); });
       hist.appendChild(hot);
     }
     renderHist();
@@ -340,8 +351,8 @@
   /* ---- 对外入口：让 music-plus.js 的历史/收藏能「按歌名再搜一次」 ---- */
   window.MusicAppSearch = function (kind, kw) {
     if (!narrow()) return;
-    var el = byId(kind === 'ns' ? 'ns-search' : 'po-search');
-    var btn = byId(kind === 'ns' ? 'ns-btn' : 'po-btn');
+    const el = byId(kind === 'ns' ? 'ns-search' : 'po-search');
+    const btn = byId(kind === 'ns' ? 'ns-btn' : 'po-btn');
     if (!el || !btn) return;
     el.value = kw || '';
     function open() {
@@ -359,7 +370,7 @@
   /* ---- 点搜索框 → 开搜索二级页（手机端不再用页面内联搜索） ---- */
   function bindSearchOpeners() {
     [['ns-search', 'ns'], ['po-search', 'po']].forEach(function (pair) {
-      var el = byId(pair[0]);
+      const el = byId(pair[0]);
       if (!el || el.__fsBound) return;
       el.__fsBound = true;
       el.addEventListener('click', function (e) {
@@ -387,25 +398,25 @@
    * 这里只有两个矩形求交，比挂 IntersectionObserver 便宜。
    * ------------------------------------------------------------ */
   function bindWaifuDodge() {
-    var fab = byId('waifu-fab');
+    const fab = byId('waifu-fab');
     if (!fab) return;
-    var zones = [];
+    const zones = [];
     ['.player-card', '.playlist-card'].forEach(function (s) {
-      var el = q(s);
+      const el = q(s);
       if (el) zones.push(el);
     });
     if (!zones.length) return;
 
-    var raf = 0;
-    var last = null;
+    let raf = 0;
+    let last = null;
 
     function hits() {
       /* fab 被 transform 缩过，getBoundingClientRect 返回的就是缩放后的
          实际框，正是判交需要的那个 */
-      var f = fab.getBoundingClientRect();
+      const f = fab.getBoundingClientRect();
       if (f.width < 1 || f.height < 1) return false;
-      for (var i = 0; i < zones.length; i++) {
-        var r = zones[i].getBoundingClientRect();
+      for (let i = 0; i < zones.length; i++) {
+        const r = zones[i].getBoundingClientRect();
         if (r.height < 1) continue;
         if (!(f.right < r.left || f.left > r.right || f.bottom < r.top || f.top > r.bottom)) return true;
       }
@@ -414,7 +425,7 @@
 
     function apply() {
       raf = 0;
-      var on = hits();
+      const on = hits();
       if (on === last) return;   /* 状态没变就别碰 DOM：滚动时每帧写 class 很浪费 */
       last = on;
       document.documentElement.classList.toggle('waifu-dodge', on);
@@ -426,9 +437,12 @@
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onScroll, { passive: true });
     /* 播放器高度会随歌词/封面变化，起来之后再称几次；约 20 秒后收工 */
-    var ticks = 0;
-    var timer = setInterval(function () {
-      if (++ticks > 20) { clearInterval(timer); return; }
+    let ticks = 0;
+    const timer = setInterval(function () {
+      if (++ticks > 20) {
+        clearInterval(timer);
+        return;
+      }
       onScroll();
     }, 1000);
   }
@@ -454,7 +468,7 @@
   function teardown() {
     document.documentElement.classList.remove('waifu-dodge');
     ['fsOpenBtn', 'nsPlatformChips'].forEach(function (id) {
-      var el = byId(id);
+      const el = byId(id);
       if (el && el.parentNode) el.parentNode.removeChild(el);
     });
     if (window.AppShell && window.AppShell.detailOpen && window.AppShell.detailOpen()) {

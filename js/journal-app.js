@@ -14,21 +14,21 @@
   function narrow() { return window.innerWidth <= 768; }
 
   function teaserOf(card) {
-    var c = card.querySelector('.post-content');
+    const c = card.querySelector('.post-content');
     if (!c) return '';
-    var t = (c.textContent || '').replace(/\s+/g, ' ').trim();
+    const t = (c.textContent || '').replace(/\s+/g, ' ').trim();
     return t.length > 52 ? t.slice(0, 52) + '…' : t;
   }
 
   function decorate(card) {
     if (card.getAttribute('data-pc-ready')) return;
     card.setAttribute('data-pc-ready', '1');
-    var foot = document.createElement('div');
+    const foot = document.createElement('div');
     foot.className = 'pc-foot';
-    var t = document.createElement('span');
+    const t = document.createElement('span');
     t.className = 'pc-teaser';
     t.textContent = teaserOf(card);
-    var more = document.createElement('span');
+    const more = document.createElement('span');
     more.className = 'pc-more';
     more.innerHTML = '阅读全文 <i class="fas fa-chevron-right"></i>';
     foot.appendChild(t);
@@ -43,32 +43,32 @@
   function openPost(card) {
     if (!narrow()) return;
     if (!window.AppShell || !window.AppShell.openDetail) return;
-    var d = (window.AppShell.detailDepth ? window.AppShell.detailDepth() : 0);
+    const d = (window.AppShell.detailDepth ? window.AppShell.detailDepth() : 0);
     if (d >= 3) return;
-    var content = card.querySelector('.post-content');
+    const content = card.querySelector('.post-content');
     if (!content) return;
 
-    var titleEl = card.querySelector('.post-title');
-    var rawTitle = titleEl ? titleEl.textContent : '';
-    var title = rawTitle.replace(/^[^\u4e00-\u9fa5A-Za-z0-9]+/, '').trim() || '日记';
+    const titleEl = card.querySelector('.post-title');
+    const rawTitle = titleEl ? titleEl.textContent : '';
+    const title = rawTitle.replace(/^[^\u4e00-\u9fa5A-Za-z0-9]+/, '').trim() || '日记';
 
-    var wrap = document.createElement('div');
+    const wrap = document.createElement('div');
     wrap.className = 'pc-detail';
     /* 正文里也要有标题：顶栏那条是截断的，而且手机上没有 H1 撑着 */
     if (rawTitle.trim()) {
-      var h = document.createElement('h2');
+      const h = document.createElement('h2');
       h.className = 'pc-detail-title';
       h.textContent = rawTitle.trim();
       wrap.appendChild(h);
     }
-    var meta = card.querySelector('.post-meta');
+    const meta = card.querySelector('.post-meta');
     if (meta) {
-      var m = document.createElement('div');
+      const m = document.createElement('div');
       m.className = 'pc-detail-meta';
       m.innerHTML = meta.innerHTML;
       wrap.appendChild(m);
     }
-    var body = document.createElement('div');
+    const body = document.createElement('div');
     body.className = 'pc-detail-body';
     wrap.appendChild(body);
 
@@ -79,10 +79,11 @@
   /* ---------- 留言板二级页 ----------
      正文节点常驻在 #gbSource（hidden），打开时用 adopt 搬进二级页，关掉自动归还。
      留言脚本和 Turnstile 按需加载：日记页平时不拉它们，点开才拉。 */
-  var gbLoading = false, gbReady = false, gbCbs = [];
+  let gbLoading = false, gbReady = false;
+  const gbCbs = [];
 
   function loadScript(src, cb) {
-    var s = document.createElement('script');
+    const s = document.createElement('script');
     s.src = src;
     s.async = false;
     s.onload = cb;
@@ -106,11 +107,18 @@
       };
       loadScript('https://challenges.cloudflare.com/turnstile/v0/api.js?onload=__jrnTurnstileReady', function () {});
     }
-    var tries = 0;
-    var timer = setInterval(function () {
+    let tries = 0;
+    const timer = setInterval(function () {
       tries++;
-      if (window.turnstile && window.turnstile.render) { clearInterval(timer); cb(); return; }
-      if (tries >= 100) { clearInterval(timer); cb(); }
+      if (window.turnstile && window.turnstile.render) {
+        clearInterval(timer);
+        cb();
+        return;
+      }
+      if (tries >= 100) {
+        clearInterval(timer);
+        cb();
+      }
     }, 100);
   }
 
@@ -126,18 +134,18 @@
       loadScript('js/Guestbook.js', function () {
         loadScript('js/guestbook-app.js', function () {
           gbReady = true;
-          var fns = gbCbs.slice(0);
+          const fns = gbCbs.slice(0);
           gbCbs.length = 0;
-          for (var i = 0; i < fns.length; i++) fns[i]();
+          for (let i = 0; i < fns.length; i++) fns[i]();
         });
       });
     });
   }
 
   function setView(view, fromHash) {
-    var gb = view === 'guestbook';
+    const gb = view === 'guestbook';
     document.documentElement.classList.toggle('gb-view', gb);
-    var sw = document.getElementById('jrnSwitch');
+    const sw = document.getElementById('jrnSwitch');
     if (sw) {
       Array.prototype.forEach.call(sw.querySelectorAll('.jrn-switch-item'), function (b) {
         b.classList.toggle('is-on', (b.getAttribute('data-view') === 'guestbook') === gb);
@@ -156,12 +164,12 @@
   function initJournalSwitch() {
     if (document.documentElement.hasAttribute('data-jrn-switch')) return;
     document.documentElement.setAttribute('data-jrn-switch', '1');
-    var sw = document.getElementById('jrnSwitch');
+    const sw = document.getElementById('jrnSwitch');
     if (sw) {
       sw.addEventListener('click', function (e) {
-        var b = e.target && e.target.closest ? e.target.closest('.jrn-switch-item') : null;
+        const b = e.target && e.target.closest ? e.target.closest('.jrn-switch-item') : null;
         if (!b) return;
-        var gb = b.getAttribute('data-view') === 'guestbook';
+        const gb = b.getAttribute('data-view') === 'guestbook';
         setView(gb ? 'guestbook' : 'journal');
         if (gb) window.scrollTo(0, 0);
       });
@@ -177,7 +185,7 @@
     if (!narrow()) return;
     /* 工具卡收进入口（不依赖有没有日记卡片，所以放在 .post-card 判断之前） */
     buildEntries();
-    var cards = document.querySelectorAll('.post-card');
+    const cards = document.querySelectorAll('.post-card');
     if (!cards.length) return;
     /* 关键：正文的收起与摘要都挂在这个开关上。脚本一旦没跑到（缓存、旧包、
        异常），页面自动退回「完整正文」的原样，而不是变成一页光秃秃的标题。 */
@@ -185,9 +193,9 @@
     Array.prototype.forEach.call(cards, decorate);
 
     document.addEventListener('click', function (e) {
-      var t = e.target;
+      const t = e.target;
       if (!t || !t.closest) return;
-      var card = t.closest('.post-card');
+      const card = t.closest('.post-card');
       /* 日记壳里的卡片本来就在 .detail-view 内，不能一概拦掉。
          规则改成：点的是「日记壳里的卡片」就开三级页，其余详情层
          （图片查看器、今日/学习/专注各页）里的点击仍然不触发开卡。 */
@@ -218,20 +226,20 @@
      回退：一切挂在 html.jrn-app 上，脚本没跑到就整块不生效，
      页面退回改动前的原样（日记正文在上、工具卡原样堆着）。
      ============================================================ */
-  var GROUPS = [
+  const GROUPS = [
     /* 日记壳排第一：它是这个页面的主体，工具卡往后站。
        点它进的是「四篇日记列表 + 关于博主」的二级页，
        再从列表点单篇 → 三级页读正文。 */
-    { key: 'posts', title: '日记', icon: 'fa-book-open', desc: '四篇随笔 · 点开阅读全文' },
-    { key: 'today', title: '今日', icon: 'fa-sun',      desc: '诗句 · 天气 · 心情 · 农历 · 倒计时' },
-    { key: 'learn', title: '学习', icon: 'fa-book',     desc: '每日一词 · 本周天气 · 番茄钟' }
+    {key: 'posts', title: '日记', icon: 'fa-book-open', desc: '四篇随笔 · 点开阅读全文'},
+    {key: 'today', title: '今日', icon: 'fa-sun', desc: '诗句 · 天气 · 心情 · 农历 · 倒计时'},
+    {key: 'learn', title: '学习', icon: 'fa-book', desc: '每日一词 · 本周天气 · 番茄钟'}
   ];
 
   /* 二级页里可再展开的三级页。判据写在选择器上，命中的子块被搬进三级页。 */
-  var SUBPAGES = [
-    { key: 'today', sel: '.journal-weather', title: '今日天气', icon: 'fa-cloud-sun' },
-    { key: 'today', sel: '.lunar-card',      title: '农历黄历', icon: 'fa-moon' },
-    { key: 'learn', sel: '.week-weather',    title: '本周天气', icon: 'fa-calendar-week' }
+  const SUBPAGES = [
+    {key: 'today', sel: '.journal-weather', title: '今日天气', icon: 'fa-cloud-sun'},
+    {key: 'today', sel: '.lunar-card', title: '农历黄历', icon: 'fa-moon'},
+    {key: 'learn', sel: '.week-weather', title: '本周天气', icon: 'fa-calendar-week'}
   ];
 
   function maxDepth() { return 3; }
@@ -240,25 +248,25 @@
   }
 
   function groupCards(key) {
-    var all = document.querySelectorAll('[data-jrn-group="' + key + '"]');
+    const all = document.querySelectorAll('[data-jrn-group="' + key + '"]');
     return Array.prototype.slice.call(all);
   }
 
   /* ---------- 一级页入口卡 ---------- */
   function buildEntries() {
-    var host = document.querySelector('.blog-container');
+    const host = document.querySelector('.blog-container');
     if (!host) return;
     if (document.querySelector('.jrn-entry-row')) return;
-    var row = document.createElement('div');
+    const row = document.createElement('div');
     row.className = 'jrn-entry-row';
     document.documentElement.classList.add('jrn-app');
 
     GROUPS.forEach(function (g) {
-      var cards = groupCards(g.key);
+      const cards = groupCards(g.key);
       /* 工具卡组靠 data-jrn-group 认领；「日记」壳没有这类卡，
          它认的是 .post-card（加上搬到壳里的「关于博主」）。 */
       if (!cards.length && g.key !== 'posts') return;
-      var b = document.createElement('button');
+      const b = document.createElement('button');
       b.type = 'button';
       b.className = 'jrn-entry';
       b.setAttribute('data-group', g.key);
@@ -273,7 +281,7 @@
       row.appendChild(b);
     });
 
-    var first = document.querySelector('.poem-card');
+    const first = document.querySelector('.poem-card');
     if (first && first.parentNode) first.parentNode.insertBefore(row, first);
     else host.insertBefore(row, host.firstChild);
   }
@@ -287,25 +295,25 @@
   function openPostShell(g) {
     if (!narrow() || !window.AppShell || !window.AppShell.openDetail) return;
     if (depth() >= maxDepth()) return;
-    var cards = postCards();
+    const cards = postCards();
     if (!cards.length) return;
 
-    var wrap = document.createElement('div');
+    const wrap = document.createElement('div');
     wrap.className = 'jrn-page pc-shell';
-    var host = document.createElement('div');
+    const host = document.createElement('div');
     host.className = 'pc-shell-list';
     wrap.appendChild(host);
 
     /* 底部「关于博主」跟着一起进去：它是日记页的收尾，
        留在一级页会在 4 个入口下面孤零零地悬着。 */
-    var about = document.querySelector('.blog-container > .st-27791aae');
+    const about = document.querySelector('.blog-container > .st-27791aae');
 
     window.AppShell.openDetail({ title: g.title, content: wrap });
-    for (var i = 0; i < cards.length; i++) {
+    for (let i = 0; i < cards.length; i++) {
       window.AppShell.adopt(cards[i], host);
     }
     if (about) {
-      var abox = document.createElement('div');
+      const abox = document.createElement('div');
       abox.className = 'pc-shell-about';
       wrap.appendChild(abox);
       window.AppShell.adopt(about, abox);
@@ -321,17 +329,17 @@
     if (!narrow() || !window.AppShell || !window.AppShell.openDetail) return;
     if (depth() >= maxDepth()) return;
 
-    var wrap = document.createElement('div');
+    const wrap = document.createElement('div');
     wrap.className = 'jrn-page';
-    var pending = [];
+    const pending = [];
     cards.forEach(function (card) {
       /* 已经开着的二级页里再进一个子页 */
-      var sub = null;
-      for (var i = 0; i < SUBPAGES.length; i++) {
+      let sub = null;
+      for (let i = 0; i < SUBPAGES.length; i++) {
         if (SUBPAGES[i].key === g.key && card.matches(SUBPAGES[i].sel)) { sub = SUBPAGES[i]; break; }
       }
       if (sub) {
-        var entry = document.createElement('button');
+        const entry = document.createElement('button');
         entry.type = 'button';
         entry.className = 'jrn-subentry';
         entry.innerHTML =
@@ -341,7 +349,7 @@
         wrap.appendChild(entry);
         return;   /* 卡片本体留在一级页树里，点进去才搬 */
       }
-      var box = document.createElement('div');
+      const box = document.createElement('div');
       box.className = 'jrn-box';
       wrap.appendChild(box);
       pending.push({ card: card, box: box });
@@ -352,7 +360,7 @@
        父节点、以及搬移时的可见性都处在一个「游离」状态，容易在后续改动里
        踩坑，所以统一成"层先就位、节点后搬"。 */
     window.AppShell.openDetail({ title: g.title, content: wrap });
-    for (var k = 0; k < pending.length; k++) {
+    for (let k = 0; k < pending.length; k++) {
       window.AppShell.adopt(pending[k].card, pending[k].box);
     }
   }
@@ -360,9 +368,9 @@
   /* ---------- 三级页：二级页里的一个子块 ---------- */
   function openSub(sub, card) {
     if (depth() >= maxDepth()) return;
-    var wrap = document.createElement('div');
+    const wrap = document.createElement('div');
     wrap.className = 'jrn-page';
-    var box = document.createElement('div');
+    const box = document.createElement('div');
     box.className = 'jrn-box';
     wrap.appendChild(box);
     window.AppShell.openDetail({ title: sub.title, content: wrap });

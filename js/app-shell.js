@@ -16,34 +16,34 @@
   'use strict';
 
   /* ---------- 站点根：404.html 会在任意深度被命中，不能用相对路径 ---------- */
-  var BASE = '/';
-  var SCRIPT = document.currentScript;
+  let BASE = '/';
+  let SCRIPT = document.currentScript;
   if (!SCRIPT) {
-    var LIST = document.getElementsByTagName('script');
-    for (var i = LIST.length - 1; i >= 0; i--) {
+    const LIST = document.getElementsByTagName('script');
+    for (let i = LIST.length - 1; i >= 0; i--) {
       if (LIST[i].src && /\/app-shell\.js(\?|$)/.test(LIST[i].src)) { SCRIPT = LIST[i]; break; }
     }
   }
   if (SCRIPT && SCRIPT.src) {
-    var M = SCRIPT.src.match(/^(.*\/)js\/app-shell\.js(\?.*)?$/);
+    const M = SCRIPT.src.match(/^(.*\/)js\/app-shell\.js(\?.*)?$/);
     if (M) BASE = M[1];
   }
 
   /* ---------- 1. 环境判定 ---------- */
   /* ?app=1 / #app=1 都能强制，方便调试（file:// 直接打开时用 # 更稳） */
-  var signal = location.search + '&' + location.hash;
-  var forced = /(?:^|[?&#])app=1(?:&|$)/.test(signal) ? true
-             : (/(?:^|[?&#])app=0(?:&|$)/.test(signal) ? false : null);
-  var standalone = false;
+  const signal = location.search + '&' + location.hash;
+  const forced = /(?:^|[?&#])app=1(?:&|$)/.test(signal) ? true
+      : (/(?:^|[?&#])app=0(?:&|$)/.test(signal) ? false : null);
+  let standalone = false;
   try {
     standalone = !!(window.matchMedia && (
       window.matchMedia('(display-mode: standalone)').matches ||
       window.matchMedia('(display-mode: minimal-ui)').matches)) ||
       window.navigator.standalone === true;
   } catch (e) {}
-  var IS_APP = forced !== null ? forced : (!!window.Capacitor || standalone);
+  const IS_APP = forced !== null ? forced : (!!window.Capacitor || standalone);
 
-  var root = document.documentElement;
+  const root = document.documentElement;
 
   /* ============================================================
      二级页面（详情层）—— 主流 App 的 push/pop 骨架
@@ -73,8 +73,8 @@
    历史哨兵：每层压一个 pushState。返回键 / 浏览器后退
    → popstate → 只弹栈顶一层，栈空才真正离开本页。
      ============================================================ */
-  var stack = [];                 /* [{ el, title, onClose }]，末位是栈顶 */
-  var suppressHistClose = false;  /* 自己调 history.back() 时压掉随之而来的 popstate */
+  const stack = [];                 /* [{ el, title, onClose }]，末位是栈顶 */
+  let suppressHistClose = false;  /* 自己调 history.back() 时压掉随之而来的 popstate */
   function top() { return stack.length ? stack[stack.length - 1] : null; }
 
   function isNarrow() { return window.innerWidth <= 768; }
@@ -87,12 +87,13 @@
      @media (max-width: 768px) 里 —— 网页端于是出现「没样式的残留」。
      模块用 AppShell.onMode(fn) 订阅，在跨越时把对端注入的节点拆掉。
      ============================================================ */
-  var modeCbs = [];
+  const modeCbs = [];
+
   function onMode(cb) {
     if (typeof cb !== 'function') return function () {};
     modeCbs.push(cb);
     return function () {
-      var i = modeCbs.indexOf(cb);
+      const i = modeCbs.indexOf(cb);
       if (i >= 0) modeCbs.splice(i, 1);
     };
   }
@@ -100,7 +101,7 @@
      说明条与撰写条、journal 的列表页脚…… 这些类的样式都写在
      @media (max-width: 768px) 里，留在网页端就是没样式的残留。
      音乐页自己还有一层更细的拆装（见 js/music-app.js / music-plus.js）。 */
-  var NARROW_ONLY = [
+  const NARROW_ONLY = [
     '.mgrid-wrap', '.mgrid-head', '.mgrid', '.mgrid-item',
     /* 工具页一级页的分类折叠面板与二级页内容：窄屏注入，变宽必须拆掉 */
     '.tcat-wrap', '.tcat-head', '.tcat', '.tcat-btn', '.tcat-body',
@@ -114,14 +115,15 @@
     '.arc-entry-row', '.arc-entry', '.arc-row', '.arc-sep',
     '#fsOpenBtn', '#nsPlatformChips'
   ];
+
   function clearNarrowOnly() {
-    for (var i = 0; i < NARROW_ONLY.length; i++) {
-      var nodes = document.querySelectorAll(NARROW_ONLY[i]);
-      for (var j = nodes.length - 1; j >= 0; j--) {
+    for (let i = 0; i < NARROW_ONLY.length; i++) {
+      const nodes = document.querySelectorAll(NARROW_ONLY[i]);
+      for (let j = nodes.length - 1; j >= 0; j--) {
         if (nodes[j].parentNode) nodes[j].parentNode.removeChild(nodes[j]);
       }
     }
-    var r = document.documentElement;
+    const r = document.documentElement;
     r.classList.remove('gb-compose-mode');
     r.classList.remove('gb-degraded');
     r.classList.remove('tool-grid');
@@ -134,16 +136,16 @@
   }
   function fireMode(narrow) {
     if (!narrow) clearNarrowOnly();
-    for (var i = 0; i < modeCbs.length; i++) {
+    for (let i = 0; i < modeCbs.length; i++) {
       try { modeCbs[i](narrow); } catch (e) { /* 单个模块出错不影响其它模块 */ }
     }
   }
 
   function setBarDetail(on, title) {
-    var bar = document.querySelector('.app-bar');
+    const bar = document.querySelector('.app-bar');
     if (!bar) return;
-    var t = bar.querySelector('.app-bar-title');
-    var home = bar.querySelector('.app-bar-home');
+    const t = bar.querySelector('.app-bar-title');
+    const home = bar.querySelector('.app-bar-home');
     /* 层数标记：CSS 靠它决定顶栏箭头是「返回上一级」还是「回到首页」，
        也为以后做「三级页再多一级箭头」留了口子。 */
     bar.dataset.depth = String(stack.length);
@@ -175,7 +177,8 @@
      手指从进度条内部任何位置起手都能命中。
      这些控件都靠 pointer 事件自己 seek/改值（见 music-bundle.js:776-801），
      这里让路即可，不需要知道它们是谁。 */
-  var GESTURE_EXEMPT = 'input[type="range"], .progress-bar-bg, .progress-area, [data-no-swipe]';
+  const GESTURE_EXEMPT = 'input[type="range"], .progress-bar-bg, .progress-area, [data-no-swipe]';
+
   function isExempt(target) {
     try {
       return !!(target && target.closest && target.closest(GESTURE_EXEMPT));
@@ -183,7 +186,7 @@
   }
 
   function bindGestures(el, opts) {
-    var x0 = 0, y0 = 0, dx = 0, dy = 0, axis = '', dragging = false;
+    let x0 = 0, y0 = 0, dx = 0, dy = 0, axis = '', dragging = false;
     el.addEventListener('touchstart', function (e) {
       if (e.touches.length !== 1) { dragging = false; return; }
       /* 起手在豁免控件里：整段手势不参与，交给控件自己处理 */
@@ -201,7 +204,7 @@
         axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
       }
       if (axis === 'y' && opts.close) {
-        var d = dy > 0 ? dy : dy * 0.25;
+        const d = dy > 0 ? dy : dy * 0.25;
         el.style.transform = 'translateY(' + d + 'px)';
         el.style.opacity = String(Math.max(0.4, 1 - Math.abs(d) / 500));
       } else if (axis === 'x' && opts.onHorizontal) {
@@ -236,10 +239,10 @@
        就是合法的三级页（见文件头「层栈（v2）」）。上限由 openDetail 的
        调用方各自把关（它们普遍带 if (detailOpen()) return），
        这里再补一道硬上限，防止某条链路无限压栈。 */
-    var MAX_DEPTH = 3;
+    const MAX_DEPTH = 3;
     if (stack.length >= MAX_DEPTH) return { el: null, close: function () {}, setTitle: function () {} };
 
-    var el = document.createElement('div');
+    const el = document.createElement('div');
     el.className = 'detail-view';
     el.setAttribute('role', 'dialog');
     el.setAttribute('aria-modal', 'true');
@@ -262,12 +265,12 @@
     /* 桌面端没有 App Bar 可以挂标题和返回：二级页自己带一条，
        否则桌面端点进去就出不来了。手机端照旧用 App Bar，不加这条。 */
     if (!isNarrow()) {
-      var hd = document.createElement('div');
+      const hd = document.createElement('div');
       hd.className = 'detail-head';
-      var ht = document.createElement('div');
+      const ht = document.createElement('div');
       ht.className = 'detail-head-title';
       ht.textContent = opts.title || '';
-      var hx = document.createElement('button');
+      const hx = document.createElement('button');
       hx.type = 'button';
       hx.className = 'detail-head-close';
       hx.setAttribute('aria-label', '关闭');
@@ -279,7 +282,7 @@
     }
     document.body.appendChild(el);
     document.body.classList.add('detail-open');
-    var self = { el: el, title: opts.title || '', onClose: opts.onClose };
+    const self = {el: el, title: opts.title || '', onClose: opts.onClose};
     stack.push(self);
     requestAnimationFrame(function () { el.classList.add('in'); });
 
@@ -306,7 +309,7 @@
       setTitle: function (t) {
         /* 这一层可能已经被弹掉了（setTitle 常常在异步回调里调用），
            所以按 el 现查而不是比对某个全局变量。 */
-        for (var i = 0; i < stack.length; i++) {
+        for (let i = 0; i < stack.length; i++) {
           if (stack[i].el === el) {
             stack[i].title = t;
             if (i === stack.length - 1) setBarDetail(true, t);
@@ -320,7 +323,7 @@
   function closeDetail(opts) {
     opts = opts || {};
     if (!stack.length) return;
-    var d = stack.pop();          /* 只弹栈顶：下面的层原样留着 */
+    const d = stack.pop();          /* 只弹栈顶：下面的层原样留着 */
     d.el.classList.remove('in');
     if (d.onClose) { try { d.onClose(opts); } catch (e) {} }
     releaseAdopted(d);            /* 只归还这一层搬进来的节点，别动下面各层 */
@@ -354,7 +357,7 @@
   /* 外壳顶栏的左箭头点了之后，会往这里发 detail-back —— 兜底，
      主路径其实是 history.back() 触发上面的 popstate。 */
   window.addEventListener('message', function (e) {
-    var d = e.data;
+    const d = e.data;
     if (!d || d.type !== 'detail-back') return;
     /* 这里要走正常关闭：closeDetail() 会 history.back() 把本 iframe 压下的
        历史哨兵还回去。用 fromHistory 关的话哨兵会留在栈上，越积越多。 */
@@ -378,8 +381,8 @@
     /* viewport-fit=cover：--sat / --sab 才有真值。网页端不开，
        所以手机浏览器里 --sat/--sab 恒为 0，与改动前一致。 */
     try {
-      var vp = document.querySelector('meta[name="viewport"]');
-      var content = vp && vp.getAttribute('content');
+      const vp = document.querySelector('meta[name="viewport"]');
+      const content = vp && vp.getAttribute('content');
       if (content && content.indexOf('viewport-fit') < 0) {
         vp.setAttribute('content', content + ', viewport-fit=cover');
       }
@@ -390,20 +393,21 @@
   /* 顶栏标题按环境取：
      · APP / 外壳 —— 就是页面标题（页面自己的 H1 会被隐藏，顶栏承担标题职责）
      · 手机网页 —— 显示站点名（页面 H1 还在，两个标题不重复，也不伤 SEO） */
-  var SITE_NAME = 'Tomo Ebizuka';
+  const SITE_NAME = 'Tomo Ebizuka';
+
   function pageTitle() {
     if (!IS_APP) return SITE_NAME;
-    var t = (document.title || '').replace(/^[^\u4e00-\u9fa5A-Za-z0-9]+/, '');
+    let t = (document.title || '').replace(/^[^\u4e00-\u9fa5A-Za-z0-9]+/, '');
     t = t.split(/[·|｜]/)[0].trim();
     return t || SITE_NAME;
   }
 
   function buildBar() {
     if (document.querySelector('.app-bar')) return;
-    var bar = document.createElement('header');
+    const bar = document.createElement('header');
     bar.className = 'app-bar';
 
-    var home = document.createElement('a');
+    const home = document.createElement('a');
     home.className = 'app-bar-home';
     home.href = BASE + 'home.html';
     home.setAttribute('aria-label', '回到首页');
@@ -414,11 +418,11 @@
       if (stack.length) { e.preventDefault(); closeDetail(); }
     });
 
-    var title = document.createElement('div');
+    const title = document.createElement('div');
     title.className = 'app-bar-title';
     title.textContent = pageTitle();
 
-    var share = document.createElement('button');
+    const share = document.createElement('button');
     share.type = 'button';
     share.className = 'app-bar-share';
     share.setAttribute('aria-label', '分享');
@@ -437,15 +441,16 @@
   }
 
   /* 下滚隐藏 / 上滚出现。只绑一次；顶栏可能被拆掉重建，所以每次现查。 */
-  var lastY = 0;
-  var barScrollBound = false;
+  let lastY = 0;
+  let barScrollBound = false;
+
   function bindBarScroll() {
     if (barScrollBound) return;
     barScrollBound = true;
     window.addEventListener('scroll', function () {
-      var bar = document.querySelector('.app-bar');
+      const bar = document.querySelector('.app-bar');
       if (!bar) return;
-      var y = window.pageYOffset || 0;
+      const y = window.pageYOffset || 0;
       if (y > lastY + 8 && y > 60) bar.classList.add('bar-hidden');
       else if (y < lastY - 8) bar.classList.remove('bar-hidden');
       lastY = y;
@@ -454,9 +459,10 @@
 
   /* 顶栏只属于窄屏：桌面端不建、不注入 DOM，从根上保证网页端零影响。
      CSS 里还有一层 display:none 兜底，双保险。 */
-  var kbBound = false;
+  let kbBound = false;
+
   function syncBar() {
-    var bar = document.querySelector('.app-bar');
+    const bar = document.querySelector('.app-bar');
     /* forced === true：URL 显式带 ?app=1 / #app=1 时，宽屏也把顶栏建出来，
        好让我们在电脑浏览器里直接看 App 的样子。默认（forced = null）行为不变。 */
     if (isNarrow() || forced === true) {
@@ -473,9 +479,9 @@
 
   /* 键盘弹出：底部导航和迷你条必须让路，否则会浮在键盘上 */
   function bindKeyboard() {
-    var vv = window.visualViewport;
+    const vv = window.visualViewport;
     if (!vv) return;
-    var base = window.innerHeight;
+    let base = window.innerHeight;
     vv.addEventListener('resize', function () {
       if (Math.abs(window.innerHeight - base) > 120) base = window.innerHeight;
       root.classList.toggle('kb-open', (base - vv.height) > 150);
@@ -485,15 +491,15 @@
   /* ---------- 4. 外链交给系统浏览器 ---------- */
   function bindExternal() {
     document.addEventListener('click', function (e) {
-      var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+      const a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
       if (!a) return;
-      var href = a.getAttribute('href') || '';
+      const href = a.getAttribute('href') || '';
       if (!href || href.charAt(0) === '#' || /^javascript:/i.test(href)) return;
-      var abs;
+      let abs;
       try { abs = new URL(a.href, location.href); } catch (err) { return; }
-      var special = /^mailto:|^tel:/i.test(href);
+      const special = /^mailto:|^tel:/i.test(href);
       if (abs.origin === location.origin && !special) return;
-      var P = window.Capacitor && window.Capacitor.Plugins;
+      const P = window.Capacitor && window.Capacitor.Plugins;
       if (P && P.Browser && P.Browser.open) {
         e.preventDefault();
         P.Browser.open({ url: abs.href });
@@ -532,7 +538,8 @@
      adopt(node, into)；closeDetail 会自动 releaseAdopted() 归位，
      调用方不需要自己写 onClose 收拾。
      ============================================================ */
-  var adopted = [];
+  let adopted = [];
+
   function adopt(node, into) {
     if (!node || !into || !node.parentNode) return null;
     /* 记下「搬给哪一层」。层栈化之后这很关键：三级页关掉时只能归还
@@ -544,9 +551,9 @@
   }
   function releaseAdopted(layer) {
     /* 只归还属于这一层的节点；layer 为空时（兼容旧调用）全部归还。 */
-    var keep = [];
-    for (var i = adopted.length - 1; i >= 0; i--) {
-      var it = adopted[i];
+    const keep = [];
+    for (let i = adopted.length - 1; i >= 0; i--) {
+      const it = adopted[i];
       if (layer && it.layer !== layer) { keep.push(it); continue; }
       if (!it.p) continue;
       try {
@@ -575,41 +582,42 @@
   /* ---------- 续播提示条：音乐页之外显示「继续播放《xx》」 ----------
      <audio> 不能跨文档存活（切页文档就被销毁），所以别处没法真的接着放。
      这条只是把断点入口摆出来：点一下回音乐页，那边从记录的秒数继续。 */
-  var RESUME_KEY = 'dsh-music-resume';
+  const RESUME_KEY = 'dsh-music-resume';
+
   function fmtClock(sec) {
     sec = Math.max(0, Math.floor(sec || 0));
-    var m = Math.floor(sec / 60), s = sec % 60;
+    const m = Math.floor(sec / 60), s = sec % 60;
     return m + ':' + (s < 10 ? '0' + s : s);
   }
   function bindResumeBar() {
     if (document.getElementById('resumeBar')) return;
     if (/music\.html$/i.test(location.pathname)) return;   /* 音乐页自己有续播 */
-    var r = null;
+    let r;
     try { r = JSON.parse(localStorage.getItem(RESUME_KEY) || 'null'); } catch (e) { r = null; }
     if (!r || !r.playing || !r.name) return;
     if (Date.now() - (Number(r.ts) || 0) > 12 * 3600 * 1000) return;
 
-    var bar = document.createElement('div');
+    const bar = document.createElement('div');
     bar.id = 'resumeBar';
     bar.className = 'resume-bar';
     bar.setAttribute('role', 'button');
     bar.setAttribute('tabindex', '0');
     bar.setAttribute('title', '继续播放');
-    var img = document.createElement('img');
+    const img = document.createElement('img');
     img.className = 'resume-cover';
     img.alt = '';
     if (r.cover) img.src = r.cover;
-    var meta = document.createElement('div');
+    const meta = document.createElement('div');
     meta.className = 'resume-meta';
-    var nm = document.createElement('div');
+    const nm = document.createElement('div');
     nm.className = 'resume-name';
     nm.textContent = r.name;
-    var sub = document.createElement('div');
+    const sub = document.createElement('div');
     sub.className = 'resume-sub';
     sub.textContent = '继续播放' + (r.artist ? ' · ' + r.artist : '') + ' · ' + fmtClock(Number(r.at) || 0);
     meta.appendChild(nm);
     meta.appendChild(sub);
-    var go = document.createElement('i');
+    const go = document.createElement('i');
     go.className = 'fas fa-play resume-go';
     bar.appendChild(img);
     bar.appendChild(meta);
@@ -631,15 +639,15 @@
        这么来的）。桌面端网页优先级最高，这条是硬约束不是可调项。 */
     syncBar();
     bindResumeBar();
-    var rt = null;
-    var lastNarrow = isNarrow();
+    let rt = null;
+    let lastNarrow = isNarrow();
     window.addEventListener('resize', function () {
       if (rt) return;
       rt = setTimeout(function () {
         rt = null;
         syncBar();
         /* 只有真的跨过 768px 才广播，拖窗口不会反复拆装 */
-        var n = isNarrow();
+        const n = isNarrow();
         if (n !== lastNarrow) { lastNarrow = n; fireMode(n); }
       }, 200);
     });

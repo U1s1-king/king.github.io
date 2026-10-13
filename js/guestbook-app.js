@@ -16,7 +16,7 @@
   /* 原 Guestbook.html 已并入 Journal 的留言板视图（Journal.html#guestbook，
      见 journal-app.js 的深链处理）。这里还留着旧地址的话，APP 里点「用系统
      浏览器打开」会直接落到 404。 */
-  var PAGE_URL = 'https://zhaokening.ccwu.cc/Journal.html#guestbook';
+  const PAGE_URL = 'https://zhaokening.ccwu.cc/Journal.html#guestbook';
 
   function narrow() { return window.innerWidth <= 768; }
   function isApp() { return !!(window.AppShell && window.AppShell.isApp); }
@@ -34,9 +34,9 @@
     if (!isApp()) return;
     document.documentElement.classList.add('gb-degraded');
 
-    var formCard = q('.form-card');
+    const formCard = q('.form-card');
     if (formCard && formCard.parentNode) {
-      var note = document.createElement('div');
+      const note = document.createElement('div');
       note.className = 'gb-note';
       note.innerHTML = noteHtml(
         'App 内无法提交留言',
@@ -44,20 +44,20 @@
         '在浏览器中打开');
       formCard.parentNode.insertBefore(note, formCard);
     }
-    var btn = byId('submitBtn');
+    const btn = byId('submitBtn');
     if (btn) { btn.disabled = true; btn.setAttribute('aria-disabled', 'true'); }
 
     /* 论坛：giscus 脚本可能晚于本文件往 wrapper 里塞 iframe，
        所以这里换掉内容的同时，CSS 里再明确藏掉 iframe。 */
-    var wrap = q('.giscus-wrapper');
+    const wrap = q('.giscus-wrapper');
     if (wrap) {
       wrap.innerHTML = '<div class="gb-note gb-note-forum">' +
         noteHtml('论坛在 App 里加载不出来', 'giscus 需要能校验域名，App 内的 localhost 不在白名单里。',
                  '在浏览器中打开论坛') + '</div>';
     }
-    var tst = byId('turnstileWrap');
+    const tst = byId('turnstileWrap');
     if (tst) {
-      var hint = document.createElement('div');
+      const hint = document.createElement('div');
       hint.className = 'gb-note gb-note-mini';
       hint.innerHTML = '<i class="fas fa-shield-alt"></i><div>人机验证在 App 内不可用（已停用提交按钮）</div>';
       tst.parentNode.insertBefore(hint, tst.nextSibling);
@@ -70,7 +70,7 @@
     if (!window.AppShell || !window.AppShell.openDetail) return;
     if (window.AppShell.detailOpen()) return;
 
-    var wrap = document.createElement('div');
+    const wrap = document.createElement('div');
     wrap.className = 'gb-compose-page';
     /* .in-detail 是给 CSS 用的：列表态靠 :not(.in-detail) 收起表单，
        这样不管表单在树的哪个位置被搬走都不会「搬进去还是隐藏的」 */
@@ -84,7 +84,7 @@
   }
 
   function buildComposerEntry(formCard) {
-    var bar = document.createElement('button');
+    const bar = document.createElement('button');
     bar.type = 'button';
     bar.className = 'gb-compose';
     bar.innerHTML = '<i class="fas fa-pen-fancy"></i> 写留言';
@@ -95,10 +95,10 @@
   /* 提交成功后自动退出写作页：留言列表重渲染就是成功信号，
      提交失败（缺昵称、验证没过）列表不会动，所以不会误关。 */
   function watchSubmit() {
-    var btn = byId('submitBtn');
-    var list = byId('messagesList');
+    const btn = byId('submitBtn');
+    const list = byId('messagesList');
     if (!btn || !list) return;
-    var pending = false;
+    let pending = false;
     btn.addEventListener('click', function () { pending = true; });
     new MutationObserver(function () {
       if (!pending) return;
@@ -109,7 +109,7 @@
 
   function init() {
     degrade();
-    var formCard = q('.form-card');
+    const formCard = q('.form-card');
     if (!formCard || isApp() || !narrow()) return;
     if (q('.gb-compose')) return;
     /* 开关挂 html：脚本没跑到就整块不生效，表单照旧在页面上 */

@@ -32,34 +32,34 @@
   if (window.__L2D_FIX__) return;
   window.__L2D_FIX__ = true;
 
-  var HAS_REAL_ICONS = true;    /* 本站 img/char_icons/ 里有没有真图标 */
+  const HAS_REAL_ICONS = true;    /* 本站 img/char_icons/ 里有没有真图标 */
   /* 必须绝对路径：GitHub Pages 会在任意深度的未知路径下返回 404.html，
      相对路径届时解析成 /some/deep/img/... 而 404，还会连锁触发下面那个
      error 兜底反复回写同一个坏地址，变成请求死循环（实测约 800 次）。 */
   /* 写死 /img/... 虽然解决了深路径问题，但在用 file:// 直接打开 HTML 时会
      解析到磁盘根目录（file:///D:/img/...）而失效。改为从本脚本自身的 URL
      推导站点根，http(s)、file://、任意深度三种情况都能正确工作。 */
-  var BASE = '/';
-  var SCRIPT = document.currentScript;
+  let BASE = '/';
+  let SCRIPT = document.currentScript;
   if (!SCRIPT) {
-    var LIST = document.getElementsByTagName('script');
-    for (var i = LIST.length - 1; i >= 0; i--) {
+    const LIST = document.getElementsByTagName('script');
+    for (let i = LIST.length - 1; i >= 0; i--) {
       if (LIST[i].src && /\/live2d-fix\.js(\?|$)/.test(LIST[i].src)) { SCRIPT = LIST[i]; break; }
     }
   }
   if (SCRIPT && SCRIPT.src) {
-    var MB = SCRIPT.src.match(/^(.*\/)js\/live2d-fix\.js(\?.*)?$/);
+    const MB = SCRIPT.src.match(/^(.*\/)js\/live2d-fix\.js(\?.*)?$/);
     if (MB) BASE = MB[1];
   }
-  var LOCAL_BASE = BASE + 'img/char_icons/';
+  const LOCAL_BASE = BASE + 'img/char_icons/';
   /* 只匹配这两个目录，避免误伤站点自己的 /assets/ */
-  var ICON_PATH = /(?:char_icons\/|live2d\/assets\/)/;
+  const ICON_PATH = /(?:char_icons\/|live2d\/assets\/)/;
   /* 已经指向本站真图就不再替换，防止 error 兜底自我吞噬 */
-  var LOCAL_PATH = /(?:^|\/)img\/char_icons\//;
-  var PNG_ICON = /[^\s"'()<>]*?(?:char_icons\/|live2d\/assets\/)[^\s"'()<>]*?\.png/g;
+  const LOCAL_PATH = /(?:^|\/)img\/char_icons\//;
+  const PNG_ICON = /[^\s"'()<>]*?(?:char_icons\/|live2d\/assets\/)[^\s"'()<>]*?\.png/g;
 
   function numOf(url) {
-    var m = /char_icons\/(\d{3})\.png/.exec(url || '');
+    let m = /char_icons\/(\d{3})\.png/.exec(url || '');
     if (m) return m[1];
     m = /chara_icon_(\d{3})\.png/.exec(url || '');
     if (m) return m[1];
@@ -68,17 +68,17 @@
   }
 
   function svgAvatar(num) {
-    var s =
-      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">' +
-      '<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">' +
-      '<stop offset="0" stop-color="#ffb6c1"/><stop offset="1" stop-color="#e06a8f"/>' +
-      '</linearGradient></defs>' +
-      '<circle cx="32" cy="32" r="32" fill="url(#g)"/>' +
-      '<circle cx="32" cy="24" r="9" fill="#fff" fill-opacity=".95"/>' +
-      '<path d="M14 59c2.6-10.5 9.4-16 18-16s15.4 5.5 18 16z" fill="#fff" fill-opacity=".95"/>' +
-      '<text x="32" y="52" text-anchor="middle" font-family="system-ui,sans-serif" ' +
-      'font-size="12" font-weight="700" fill="#a14563">' + (num || '') + '</text>' +
-      '</svg>';
+    const s =
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">' +
+        '<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">' +
+        '<stop offset="0" stop-color="#ffb6c1"/><stop offset="1" stop-color="#e06a8f"/>' +
+        '</linearGradient></defs>' +
+        '<circle cx="32" cy="32" r="32" fill="url(#g)"/>' +
+        '<circle cx="32" cy="24" r="9" fill="#fff" fill-opacity=".95"/>' +
+        '<path d="M14 59c2.6-10.5 9.4-16 18-16s15.4 5.5 18 16z" fill="#fff" fill-opacity=".95"/>' +
+        '<text x="32" y="52" text-anchor="middle" font-family="system-ui,sans-serif" ' +
+        'font-size="12" font-weight="700" fill="#a14563">' + (num || '') + '</text>' +
+        '</svg>';
     return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(s);
   }
 
@@ -88,7 +88,7 @@
     if (url.indexOf('data:') === 0) return null;
     if (LOCAL_PATH.test(url)) return null;   /* 已是本站真图，别再换 */
     if (!ICON_PATH.test(url)) return null;
-    var num = numOf(url);
+    const num = numOf(url);
     if (HAS_REAL_ICONS && num) return LOCAL_BASE + num + '.png';
     return svgAvatar(num);
   }
@@ -98,14 +98,14 @@
     if (typeof html !== 'string' || html.length < 8) return html;
     if (html.indexOf('char_icons/') < 0 && html.indexOf('live2d/assets/') < 0) return html;
     return html.replace(PNG_ICON, function (whole) {
-      var s = substitute(whole);
+      const s = substitute(whole);
       return s === null ? whole : s;
     });
   }
 
   /* --- 路径 a：img.src = ... --- */
   try {
-    var desc = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, 'src');
+    const desc = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, 'src');
     if (desc && desc.set) {
       Object.defineProperty(HTMLImageElement.prototype, 'src', {
         configurable: true,
@@ -118,10 +118,10 @@
 
   /* --- 路径 a 补充：setAttribute('src', ...) --- */
   try {
-    var origSetAttr = Element.prototype.setAttribute;
+    const origSetAttr = Element.prototype.setAttribute;
     Element.prototype.setAttribute = function (name, value) {
       if (this.tagName === 'IMG' && String(name).toLowerCase() === 'src') {
-        var s = substitute(value);
+        const s = substitute(value);
         if (s) return origSetAttr.call(this, name, s);
       }
       return origSetAttr.call(this, name, value);
@@ -130,7 +130,7 @@
 
   /* --- 路径 b：innerHTML / insertAdjacentHTML 拼字符串 --- */
   try {
-    var iDesc = Object.getOwnPropertyDescriptor(Element.prototype, 'innerHTML');
+    const iDesc = Object.getOwnPropertyDescriptor(Element.prototype, 'innerHTML');
     if (iDesc && iDesc.set) {
       Object.defineProperty(Element.prototype, 'innerHTML', {
         configurable: true,
@@ -141,7 +141,7 @@
     }
   } catch (e) {}
   try {
-    var origIAH = Element.prototype.insertAdjacentHTML;
+    const origIAH = Element.prototype.insertAdjacentHTML;
     Element.prototype.insertAdjacentHTML = function (pos, html) {
       return origIAH.call(this, pos, rewriteHtml(html));
     };
@@ -149,29 +149,29 @@
 
   /* --- 最后一道：万一还有漏网的 --- */
   window.addEventListener('error', function (e) {
-    var t = e.target;
+    const t = e.target;
     /* __l2dFixed 保证每张图只兜底一次，失败也不重试，避免死循环 */
     if (t && t.tagName === 'IMG' && !t.__l2dFixed && ICON_PATH.test(t.src || '')) {
-      var s = substitute(t.src);
+      const s = substitute(t.src);
       if (s) { t.__l2dFixed = true; t.src = s; }
     }
   }, true);
 
   /* ---------- 2. 摘掉 index.json 里指向不存在文件的 physics ---------- */
-  var origFetch = window.fetch;
+  const origFetch = window.fetch;
   if (typeof origFetch === 'function') {
     window.fetch = function (input, init) {
-      var url = (typeof input === 'string') ? input : ((input && input.url) || '');
-      var p = origFetch.apply(this, arguments);
+      const url = (typeof input === 'string') ? input : ((input && input.url) || '');
+      const p = origFetch.apply(this, arguments);
       if (!/\/model\/[^/]+\/index\.json/.test(url)) return p;
       return p.then(function (res) {
         if (!res || !res.ok) return res;
         return res.text().then(function (txt) {
-          var obj;
+          let obj;
           try { obj = JSON.parse(txt); } catch (err) { return res; }
           if (!obj || !obj.physics) return res;
           delete obj.physics;
-          var h = new Headers(res.headers);
+          const h = new Headers(res.headers);
           h.set('Content-Type', 'application/json; charset=utf-8');
           try { h.delete('content-length'); } catch (err) {}
           return new Response(JSON.stringify(obj), { status: 200, statusText: 'OK', headers: h });

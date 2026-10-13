@@ -141,34 +141,40 @@ enEl.textContent = word;
    并且不再把已经显示的单词清掉（单词来自本地词表，本来就一定是好的）。 */
 const DEF_CACHE_KEY = 'jrnWordDefCache';
 function cachedDef(w) {
-try { var m = JSON.parse(localStorage.getItem(DEF_CACHE_KEY) || '{}'); return m[w] || ''; } catch (e) { return ''; }
+try {
+    const m = JSON.parse(localStorage.getItem(DEF_CACHE_KEY) || '{}');
+    return m[w] || ''; } catch (e) { return ''; }
 }
 function cacheDef(w, d) {
 try {
-var m = JSON.parse(localStorage.getItem(DEF_CACHE_KEY) || '{}');
-m[w] = d;
+    const m = JSON.parse(localStorage.getItem(DEF_CACHE_KEY) || '{}');
+    m[w] = d;
 localStorage.setItem(DEF_CACHE_KEY, JSON.stringify(m));
 } catch (e) {}
 }
 async function fetchDef(w, ms) {
-var ctl = (typeof AbortController === 'function') ? new AbortController() : null;
-var to = setTimeout(function () { if (ctl) ctl.abort(); }, ms);
-try {
-var res = await fetch('https://api.mymemory.translated.net/get?q=' + encodeURIComponent(w) + '&langpair=en|zh-CN', ctl ? { signal: ctl.signal } : undefined);
-if (res.status === 429) { var e429 = new Error('rate'); e429.rate = true; throw e429; }
+    const ctl = (typeof AbortController === 'function') ? new AbortController() : null;
+    const to = setTimeout(function () {
+        if (ctl) ctl.abort();
+    }, ms);
+    try {
+    const res = await fetch('https://api.mymemory.translated.net/get?q=' + encodeURIComponent(w) + '&langpair=en|zh-CN', ctl ? {signal: ctl.signal} : undefined);
+    if (res.status === 429) {
+    const e429 = new Error('rate');
+    e429.rate = true; throw e429; }
 if (!res.ok) throw new Error('http ' + res.status);
-var data = await res.json();
-var t = data.responseData && data.responseData.translatedText;
-if (!t) throw new Error('empty');
+    const data = await res.json();
+    const t = data.responseData && data.responseData.translatedText;
+    if (!t) throw new Error('empty');
 return t;
 } finally { clearTimeout(to); }
 }
 /* 有缓存就先上缓存：限流期间也能看到上次查到的释义 */
-var hit = cachedDef(word);
-if (hit) defEl.textContent = '[释义] ' + hit + '（上次查到的）';
+    const hit = cachedDef(word);
+    if (hit) defEl.textContent = '[释义] ' + hit + '（上次查到的）';
 try {
-var translated;
-try { translated = await fetchDef(word, 8000); }
+    let translated;
+    try { translated = await fetchDef(word, 8000); }
 catch (e1) { translated = await fetchDef(word, 8000); }   /* 重试一次 */
 defEl.textContent = '[释义] ' + translated + '（每日一词，明天再来解锁新的～）';
 cacheDef(word, translated);
