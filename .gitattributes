@@ -1,0 +1,43 @@
+# 行尾与文本/二进制的统一约定。
+#
+# 之前没有这个文件，行尾完全依赖各人本机的 core.autocrlf 设置。实际后果是
+# git 每次新增文件都会打印 "LF will be replaced by CRLF the next time Git
+# touches it"，而且同一个文件在不同机器上可能被提交成不同的行尾。
+#
+# 本仓库现状（实测）：仓库内全部为 LF（抽样 40 个 blob 零 CRLF），
+# 工作区在 Windows 上是 CRLF（由 core.autocrlf=true 负责）。下面这条
+# `* text=auto` 把「仓库内一律 LF」这件事固定下来，不再看本机设置，
+# 同时避免对整个工作区做一次性的重新检出（不写 eol=，工作区仍按平台来）。
+* text=auto
+
+# 明确标记为二进制，禁止任何行尾转换或合并时的文本处理。
+# .mask 这种非标准扩展名不写进来的话，git 会当文本去猜，有损坏风险。
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.ico binary
+*.bmp binary
+*.avif binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.eot binary
+*.mp3 binary
+*.m4a binary
+*.ogg binary
+*.wav binary
+*.mp4 binary
+*.webm binary
+*.zip binary
+*.gz binary
+*.pdf binary
+*.webmanifest binary
+*.mask binary
+
+# 这些文件必须保持 LF，否则在 Linux（CI / Cloudflare Pages 构建）上
+# 会因 CRLF 影响 shebang 与逐行解析。
+*.sh text eol=lf
+*.ps1 text eol=crlf
