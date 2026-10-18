@@ -1,7 +1,7 @@
 {
   "login": "U1s1-king",
   "public_repos": 11,
-  "followers": 3,
+  "followers": 4,
   "following": 3,
   "repos": [
     {
@@ -10,7 +10,7 @@
       "description": "一个持续生长的个人数字空间：融合个人记录、数字档案、音乐、实用工具与互动娱乐的独立网站。以细腻的视觉设计与轻量化 Web 技术，构建属于自己的网络世界。",
       "stargazers_count": 2,
       "language": "JavaScript",
-      "updated_at": "2026-10-18T10:12:08Z"
+      "updated_at": "2026-10-18T15:12:52Z"
     },
     {
       "name": "dsh-live2d-mygo",
