@@ -12,7 +12,7 @@
     "attention": 77
   },
   "online": {
-    "total": 114207
+    "total": 272866
   },
   "videos": [
     {
@@ -28,10 +28,10 @@
       "bvid": "BV1cuLdzUECX",
       "title": "《少女乐队的呐喊》官方MV「飛べない蝶は夢を見る」中文字幕（不会飞的蝴蝶也会做梦）",
       "pic": "https://i1.hdslb.com/bfs/archive/0bcc1a9f8cc40bafa30b439f65fb84dfb1e64f28.jpg",
-      "view": 785541,
-      "like": 92638,
-      "coin": 31343,
-      "favorite": 40161
+      "view": 788192,
+      "like": 92685,
+      "coin": 31371,
+      "favorite": 40207
     },
     {
       "bvid": "BV1JzQpYTEft",
@@ -43,5 +43,5 @@
       "favorite": 5304
     }
   ],
-  "updated_at": "2026-10-17T19:56+00:00"
+  "updated_at": "2026-10-18T02:32+00:00"
 }
