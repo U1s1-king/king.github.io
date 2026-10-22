@@ -1,7 +1,7 @@
 {
   "relation": {
     "follower": 276,
-    "following": 77
+    "following": 80
   },
   "card": {
     "name": "唯爱基米希",
@@ -9,10 +9,10 @@
     "level": 5,
     "sign": "喵喵喵~",
     "fans": 276,
-    "attention": 77
+    "attention": 80
   },
   "online": {
-    "total": 501889
+    "total": 13671
   },
   "videos": [
     {
@@ -43,5 +43,5 @@
       "favorite": 5304
     }
   ],
-  "updated_at": "2026-10-22T10:57+00:00"
+  "updated_at": "2026-10-22T16:25+00:00"
 }
