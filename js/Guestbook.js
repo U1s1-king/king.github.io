@@ -47,6 +47,7 @@ const res = await fetch(WORKER_URL, {
 headers: { 'Accept': 'application/json' }
 });
 if (!res.ok) throw new Error('云端读取失败');
+if (!res.ok) throw new Error('云端读取失败');
 const data = await res.json();
 messages = Array.isArray(data.posts) ? data.posts : [];
 } catch (e) {

@@ -189,6 +189,7 @@ defEl.textContent = '[释义] 🌸 暂时查不到，点「换一个」重试';
 enEl.textContent = '🌸 单词加载失败，点「换一个」重试';
 }
 }
+
 loadWord();
 if (refreshBtn) refreshBtn.addEventListener('click', loadWord);
 })();
