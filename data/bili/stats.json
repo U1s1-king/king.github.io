@@ -12,17 +12,17 @@
     "attention": 77
   },
   "online": {
-    "total": 163024
+    "total": 351857
   },
   "videos": [
     {
       "bvid": "BV1KbQ1YGEY8",
       "title": "《少女乐队的呐喊》官方MV「爆ぜて咲く」中文字幕（爆裂绽放）",
       "pic": "https://i1.hdslb.com/bfs/archive/406069ac5be4ef634725999453220caeceb15bcc.jpg",
-      "view": 619631,
-      "like": 49722,
-      "coin": 19442,
-      "favorite": 26023
+      "view": 628071,
+      "like": 49973,
+      "coin": 19609,
+      "favorite": 26256
     },
     {
       "bvid": "BV1cuLdzUECX",
@@ -43,5 +43,5 @@
       "favorite": 5304
     }
   ],
-  "updated_at": "2026-10-30T21:51+00:00"
+  "updated_at": "2026-10-31T03:38+00:00"
 }
