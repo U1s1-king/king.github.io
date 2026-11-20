@@ -1,9 +1,17 @@
 {
   "login": "U1s1-king",
-  "public_repos": 11,
+  "public_repos": 12,
   "followers": 3,
   "following": 3,
   "repos": [
+    {
+      "name": "ocr-web",
+      "html_url": "https://github.com/U1s1-king/ocr-web",
+      "description": "一个答题卡制作扫描阅卷的前端系统",
+      "stargazers_count": 0,
+      "language": "TypeScript",
+      "updated_at": "2026-11-20T04:31:42Z"
+    },
     {
       "name": "king.github.io",
       "html_url": "https://github.com/U1s1-king/king.github.io",
@@ -59,14 +67,6 @@
       "stargazers_count": 2,
       "language": "JavaScript",
       "updated_at": "2026-09-18T10:24:21Z"
-    },
-    {
-      "name": "dsh-live2d-roselia",
-      "html_url": "https://github.com/U1s1-king/dsh-live2d-roselia",
-      "description": null,
-      "stargazers_count": 2,
-      "language": "JavaScript",
-      "updated_at": "2026-09-18T10:24:03Z"
     }
   ]
 }
